@@ -40,7 +40,6 @@ android {
     }
     composeOptions {
         kotlinCompilerExtensionVersion compose_version
-        kotlinCompilerVersion kotlin_version
     }
     packagingOptions {
         resources {
@@ -51,6 +50,9 @@ android {
 
 dependencies {
     implementation project(path: ':common')
+    implementation project(path: ":feature:shoppinglist")
+
+    // DI
     implementation "com.google.dagger:hilt-android:$hilt_version"
     kapt "com.google.dagger:hilt-compiler:$hilt_version"
 

@@ -3,7 +3,6 @@ package co.ke.xently.common.utils
 import android.util.Log
 import co.ke.xently.common.BuildConfig
 import co.ke.xently.common.utils.Log.Type.*
-import java.util.*
 
 object Log {
     enum class Type {
@@ -80,7 +79,7 @@ object Log {
     }
 }
 
-fun isReleaseBuild() = BuildConfig.BUILD_TYPE.toLowerCase(Locale.ROOT).contains(Regex("^release$"))
+fun isReleaseBuild() = BuildConfig.BUILD_TYPE.lowercase().contains(Regex("^release$"))
 
 /*
 fun <T: Service> isServiceRunning(context: Context, clazz: Class<T>): Boolean {

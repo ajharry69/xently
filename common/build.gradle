@@ -37,7 +37,7 @@ dependencies {
 
     // DI
     implementation "com.google.dagger:hilt-android:$hilt_version"
-    kapt "com.google.dagger:hilt-compiler:2.38.1"
+    kapt "com.google.dagger:hilt-compiler:$hilt_version"
 
     // Coroutines
     api "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutine_version"
