@@ -1,6 +1,6 @@
 package co.ke.xently.common.utils.web
 
-enum class AuthScheme(val value: String) {
+enum class AuthScheme(private val value: String) {
     BEARER("Bearer"),
     BASIC("Basic"),;
 

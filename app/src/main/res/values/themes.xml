@@ -19,7 +19,9 @@
         <item name="windowNoTitle">true</item>
     </style>
 
+    <!--
     <style name="Theme.Xently.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
 
     <style name="Theme.Xently.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
+    -->
 </resources>

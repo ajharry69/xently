@@ -1,4 +1,4 @@
-package co.ke.xently.source.local
+package co.ke.xently.source
 
 import org.junit.Test
 

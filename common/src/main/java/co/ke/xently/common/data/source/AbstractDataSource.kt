@@ -8,7 +8,7 @@ import co.ke.xently.common.data.models.PagedData
 
 @Suppress("PropertyName", "MemberVisibilityCanBePrivate")
 abstract class AbstractDataSource<M>(vararg objects: M) {
-    protected val TAG = this::class.java.simpleName
+    protected val TAG: String = this::class.java.simpleName
     protected val MOCK_DATABASE = mutableSetOf<M>()
     protected val observables = MutableLiveData<List<M>>()
 
