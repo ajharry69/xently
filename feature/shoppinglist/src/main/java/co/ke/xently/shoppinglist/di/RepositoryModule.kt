@@ -1,11 +1,10 @@
 package co.ke.xently.shoppinglist.di
 
 import co.ke.xently.common.di.qualifiers.coroutines.IODispatcher
-import co.ke.xently.shoppinglist.di.qualifiers.LocalShoppingListDataSource
-import co.ke.xently.shoppinglist.di.qualifiers.RemoteShoppingListDataSource
-import co.ke.xently.shoppinglist.repository.AbstractShoppingListRepository
+import co.ke.xently.shoppinglist.repository.IShoppingListRepository
 import co.ke.xently.shoppinglist.repository.ShoppingListRepository
-import co.ke.xently.shoppinglist.source.IShoppingListDataSource
+import co.ke.xently.source.local.daos.ShoppingListDao
+import co.ke.xently.source.remote.services.ShoppingListService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -19,10 +18,8 @@ object RepositoryModule {
     @Provides
     @Singleton
     fun provideShoppingListRepository(
-        @LocalShoppingListDataSource
-        local: IShoppingListDataSource,
-        @RemoteShoppingListDataSource
-        remote: IShoppingListDataSource,
+        dao: ShoppingListDao,
+        service: ShoppingListService,
         @IODispatcher ioDispatcher: CoroutineDispatcher,
-    ): AbstractShoppingListRepository = ShoppingListRepository(local, remote, ioDispatcher)
+    ): IShoppingListRepository = ShoppingListRepository(dao, service, ioDispatcher)
 }

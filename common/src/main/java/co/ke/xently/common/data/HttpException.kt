@@ -1,4 +1,4 @@
-package co.ke.xently.common.data.models
+package co.ke.xently.common.data
 
 import co.ke.xently.common.utils.JSON_CONVERTER
 import co.ke.xently.common.utils.Log

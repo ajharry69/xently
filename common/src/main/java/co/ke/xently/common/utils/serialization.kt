@@ -53,16 +53,8 @@ private fun getExclusionStrategy(during: Exclude.During = BOTH): ExclusionStrate
 
 val JSON_CONVERTER: Gson = GsonBuilder()
     .enableComplexMapKeySerialization()
-    .addSerializationExclusionStrategy(
-        getExclusionStrategy(
-            SERIALIZATION
-        )
-    )
-    .addDeserializationExclusionStrategy(
-        getExclusionStrategy(
-            DESERIALIZATION
-        )
-    )
+    .addSerializationExclusionStrategy(getExclusionStrategy(SERIALIZATION))
+    .addDeserializationExclusionStrategy(getExclusionStrategy(DESERIALIZATION))
     .setExclusionStrategies(getExclusionStrategy())
     .serializeNulls()
     .setDateFormat(DateFormat.LONG)

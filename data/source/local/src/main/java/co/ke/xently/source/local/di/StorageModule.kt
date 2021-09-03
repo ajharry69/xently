@@ -3,7 +3,6 @@ package co.ke.xently.source.local.di
 import android.content.Context
 import androidx.room.Room
 import co.ke.xently.source.local.AssistantDatabase
-import co.ke.xently.source.local.BuildConfig
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

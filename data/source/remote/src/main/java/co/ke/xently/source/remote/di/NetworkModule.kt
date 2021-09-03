@@ -6,8 +6,6 @@ import co.ke.xently.common.di.qualifiers.retrofit.RequestHeadersInterceptor
 import co.ke.xently.common.utils.JSON_CONVERTER
 import co.ke.xently.common.utils.TOKEN_VALUE_SHARED_PREFERENCE_KEY
 import co.ke.xently.common.utils.isReleaseBuild
-import co.ke.xently.common.utils.web.HeaderKeys.ACCEPT_LANGUAGE
-import co.ke.xently.common.utils.web.HeaderKeys.AUTHORIZATION
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -31,12 +29,13 @@ object NetworkModule {
         return Interceptor { chain ->
             val request = chain.request()
             val requestBuilder = request.newBuilder()
-                .addHeader(ACCEPT_LANGUAGE, Locale.getDefault().language)
+                .addHeader("Accept-Language", Locale.getDefault().language)
+                .addHeader("Accept", "application/json; version=1.0")
             // Add authorization header iff it wasn't already added by the incoming request
-            if (request.header(AUTHORIZATION) == null) {
-                val authorization = preferences.getString(TOKEN_VALUE_SHARED_PREFERENCE_KEY, "")
-                if (!authorization.isNullOrBlank()) {
-                    requestBuilder.addHeader(AUTHORIZATION, "Bearer $authorization")
+            if (request.header("Authorization") == null) {
+                val authData = preferences.getString(TOKEN_VALUE_SHARED_PREFERENCE_KEY, "")
+                if (!authData.isNullOrBlank()) {
+                    requestBuilder.addHeader("Authorization", "Bearer $authData")
                 }
             }
 
@@ -51,7 +50,7 @@ object NetworkModule {
             level = (if (!isReleaseBuild()) {
                 HttpLoggingInterceptor.Level.BODY
             } else HttpLoggingInterceptor.Level.NONE)
-            redactHeader(AUTHORIZATION)  // Prevents header content logging
+            redactHeader("Authorization")  // Prevents header content logging
         }
     }
 

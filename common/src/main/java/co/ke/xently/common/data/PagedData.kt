@@ -1,4 +1,4 @@
-package co.ke.xently.common.data.models
+package co.ke.xently.common.data
 
 import com.google.gson.reflect.TypeToken
 import co.ke.xently.common.utils.Exclude
