@@ -33,4 +33,7 @@ android {
 
 dependencies {
     api 'androidx.hilt:hilt-navigation-compose:1.0.0-alpha03'
+    // https://developer.android.com/jetpack/compose/libraries#viewmodel
+    api 'androidx.lifecycle:lifecycle-viewmodel-compose:1.0.0-alpha07'
+    api "androidx.compose.material:material:$compose_version"
 }

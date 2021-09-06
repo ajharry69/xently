@@ -1,5 +1,6 @@
 package co.ke.xently.shoppinglist.repository
 
+import android.util.Log
 import co.ke.xently.common.data.sendRequest
 import co.ke.xently.common.di.qualifiers.coroutines.IODispatcher
 import co.ke.xently.data.ShoppingListItem
@@ -31,7 +32,9 @@ class ShoppingListRepository @Inject constructor(
         emit(sendRequest { service.getShoppingList() })
     }.map { result ->
         result.mapCatching {
-            it.results
+            it.results.apply {
+                dao.addShoppingListItems(*toTypedArray())
+            }
         }
     }.flowOn(ioDispatcher)
 }

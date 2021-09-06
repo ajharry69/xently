@@ -35,6 +35,13 @@ android {
 //                '-Xopt-in=kotlin.time.ExperimentalTime',
                 '-Xopt-in=kotlinx.coroutines.ExperimentalCoroutinesApi',
         ]
+        useIR = true
+    }
+    buildFeatures {
+        compose true
+    }
+    composeOptions {
+        kotlinCompilerExtensionVersion compose_version
     }
 }
 

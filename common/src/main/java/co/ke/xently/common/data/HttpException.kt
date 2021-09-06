@@ -5,21 +5,19 @@ import co.ke.xently.common.utils.Log
 import retrofit2.Response
 
 data class HttpException(
-    val error: String?,
     val detail: String?,
     val code: String? = null,
-    val errors: Any? = null,
-    val metadata: Any? = null,
+    val errors: Map<String, HttpException> = mapOf(),
     @Transient
     val response: Response<*> = Response.success(null),
-) : RuntimeException(error)
+) : RuntimeException(detail)
 
 fun Response<*>.error(): HttpException = try {
     val exception = JSON_CONVERTER.fromJson(
         errorBody()?.string(),
         HttpException::class.java
     ).copy(response = this)
-    if (exception.error.isNullOrBlank()) exception.copy(error = message()) else exception
+    if (exception.detail.isNullOrBlank()) exception.copy(detail = message()) else exception
 } catch (ex: IllegalStateException) {
     Log.show("HttpError", ex.message, ex, Log.Type.ERROR)
     HttpException(message(), null, response = this)

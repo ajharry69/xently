@@ -3,11 +3,22 @@ package co.ke.xently
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Surface
-import androidx.compose.material.Text
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.Modifier
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import co.ke.xently.shoppinglist.ui.ShoppingList
+import co.ke.xently.shoppinglist.ui.ShoppingListDetail
+import co.ke.xently.shoppinglist.ui.ShoppingListViewModel
 import co.ke.xently.ui.theme.XentlyTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -16,25 +27,55 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            XentlyTheme {
-                // A surface container using the 'background' color from the theme
-                Surface(color = MaterialTheme.colors.background) {
-                    Greeting("Android")
-                }
-            }
+            XentlyApp()
         }
     }
 }
 
 @Composable
-fun Greeting(name: String) {
-    Text(text = "Hello $name!")
+fun XentlyApp() {
+    XentlyTheme {
+        val navController = rememberNavController()
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text("Xently") },
+                    navigationIcon = {
+                        IconButton(onClick = { }) {
+                            Icon(Icons.Filled.Menu, contentDescription = null)
+                        }
+                    },
+                    actions = {
+                        // RowScope here, so these icons will be placed horizontally
+                        IconButton(onClick = { }) {
+                            Icon(Icons.Filled.Favorite,
+                                contentDescription = "Localized description")
+                        }
+                        IconButton(onClick = { }) {
+                            Icon(Icons.Filled.Search,
+                                contentDescription = "Localized description")
+                        }
+                    }
+                )
+            }
+        ) {
+            XentlyNavHost(navController = navController, modifier = Modifier.padding(it))
+        }
+    }
 }
 
-@Preview(showBackground = true)
 @Composable
-fun DefaultPreview() {
-    XentlyTheme {
-        Greeting("Android")
+fun XentlyNavHost(
+    navController: NavHostController,
+    modifier: Modifier = Modifier,
+    viewModel: ShoppingListViewModel = viewModel(),
+) {
+    NavHost(navController = navController, startDestination = "shoppinglist", modifier = modifier) {
+        composable("shoppinglist") {
+            ShoppingList(viewModel = viewModel)
+        }
+        composable("shoppingdetail") {
+            ShoppingListDetail()
+        }
     }
 }

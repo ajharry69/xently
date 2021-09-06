@@ -2,21 +2,15 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "561ea2bae37577e5c2595f8de211b0bb",
+    "identityHash": "cf51fe7a4b61ad5b29aa36aa5142ca92",
     "entities": [
       {
         "tableName": "shoppinglist",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `localId` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `unit` TEXT NOT NULL, `unitQuantity` REAL NOT NULL, `purchaseQuantity` REAL NOT NULL)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `name` TEXT NOT NULL, `unit` TEXT NOT NULL, `unitQuantity` REAL NOT NULL, `purchaseQuantity` REAL NOT NULL, PRIMARY KEY(`id`))",
         "fields": [
           {
             "fieldPath": "id",
             "columnName": "id",
-            "affinity": "INTEGER",
-            "notNull": true
-          },
-          {
-            "fieldPath": "localId",
-            "columnName": "localId",
             "affinity": "INTEGER",
             "notNull": true
           },
@@ -47,28 +41,18 @@
         ],
         "primaryKey": {
           "columnNames": [
-            "localId"
+            "id"
           ],
-          "autoGenerate": true
+          "autoGenerate": false
         },
-        "indices": [
-          {
-            "name": "index_shoppinglist_localId_id",
-            "unique": true,
-            "columnNames": [
-              "localId",
-              "id"
-            ],
-            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_shoppinglist_localId_id` ON `${TABLE_NAME}` (`localId`, `id`)"
-          }
-        ],
+        "indices": [],
         "foreignKeys": []
       }
     ],
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '561ea2bae37577e5c2595f8de211b0bb')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'cf51fe7a4b61ad5b29aa36aa5142ca92')"
     ]
   }
 }

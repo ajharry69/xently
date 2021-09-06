@@ -15,7 +15,7 @@ suspend fun <T> sendRequest(request: suspend () -> Response<T>): Result<T> {
             val alt = Any() as T
             Result.success(if (statusCode == 204) alt else body ?: alt)
         } else {
-            Result.failure(RuntimeException(response.error().error.toString()))
+            Result.failure(RuntimeException(response.error().detail.toString()))
         }
     } catch (ex: Exception) {
         Result.failure(ex)
