@@ -28,12 +28,18 @@ android {
     }
     kotlinOptions {
         jvmTarget = '1.8'
+        useIR = true
+        freeCompilerArgs += [
+                "-Xopt-in=kotlin.time.ExperimentalTime",
+        ]
     }
 }
 
 dependencies {
+    implementation project(path: ":common")
+
     api 'androidx.hilt:hilt-navigation-compose:1.0.0-alpha03'
     // https://developer.android.com/jetpack/compose/libraries#viewmodel
-    api 'androidx.lifecycle:lifecycle-viewmodel-compose:1.0.0-alpha07'
+    api "androidx.lifecycle:lifecycle-viewmodel-compose:$lifecycle_viewmodel_version"
     api "androidx.compose.material:material:$compose_version"
 }

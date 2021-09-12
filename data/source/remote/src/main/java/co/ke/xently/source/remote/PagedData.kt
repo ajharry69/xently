@@ -1,8 +1,8 @@
-package co.ke.xently.common.data
+package co.ke.xently.source.remote
 
-import com.google.gson.reflect.TypeToken
 import co.ke.xently.common.utils.Exclude
 import co.ke.xently.common.utils.JSON_CONVERTER
+import com.google.gson.reflect.TypeToken
 
 data class PagedData<T>(
     val count: Int = 0,

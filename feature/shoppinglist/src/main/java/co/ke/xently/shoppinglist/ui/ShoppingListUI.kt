@@ -14,21 +14,22 @@ import androidx.compose.ui.Modifier
 
 
 @Composable
-fun ShoppingList(modifier: Modifier = Modifier, viewModel: ShoppingListViewModel) {
+fun ShoppingList(modifier: Modifier = Modifier, viewModel: ShoppingListViewModel, loadRemote: Boolean = false) {
     val result = viewModel.shoppingListResult.collectAsState().value
+    val modifier1 = modifier.fillMaxHeight().fillMaxWidth()
     if (result.isSuccess) {
         val shoppingList = result.getOrThrow()
         if (shoppingList == null) {
-            Box(contentAlignment = Alignment.Center, modifier = modifier.fillMaxHeight().fillMaxWidth()) {
+            Box(contentAlignment = Alignment.Center, modifier = modifier1) {
                 CircularProgressIndicator()
             }
         } else {
                 if (shoppingList.isEmpty()) {
-                    Box(contentAlignment = Alignment.Center, modifier = modifier.fillMaxHeight().fillMaxWidth()) {
+                    Box(contentAlignment = Alignment.Center, modifier = modifier1) {
                         Text(text = "You have no shopping list, yet!")
                     }
                 } else {
-                    LazyColumn(modifier = modifier.fillMaxHeight().fillMaxWidth()) {
+                    LazyColumn(modifier = modifier1) {
                         items(shoppingList) { item ->
                             Text(text = item.name)
                         }
@@ -36,7 +37,7 @@ fun ShoppingList(modifier: Modifier = Modifier, viewModel: ShoppingListViewModel
                 }
         }
     } else {
-        Box(contentAlignment = Alignment.Center, modifier = modifier.fillMaxHeight().fillMaxWidth()) {
+        Box(contentAlignment = Alignment.Center, modifier = modifier1) {
             Text(text = result.exceptionOrNull()?.localizedMessage ?: "An error occurred")
         }
     }

@@ -11,11 +11,16 @@ buildscript {
         hilt_version = '2.38.1'
         room_version = "2.3.0"
         navigation_version = "2.4.0-alpha08"
+        lifecycle_version = "2.4.0-alpha03"
+        lifecycle_viewmodel_version = "1.0.0-alpha07"
 
         // Retrofit
         retrofit_version = '2.9.0'
         logging_interceptor_version = '5.0.0-alpha.2'
         okio_version = '3.0.0-alpha.9'
+
+        // Test
+        coroutines_test_version = "1.5.1"
 
         Properties properties = new Properties()
         try {
