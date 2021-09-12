@@ -1,16 +1,14 @@
 package co.ke.xently.source.local
 
 import androidx.room.TypeConverter
-import co.ke.xently.common.utils.JSON_CONVERTER
-import com.google.gson.reflect.TypeToken
+import java.util.*
 
 object RoomTypeConverters {
-    class StringListConverter {
+    class DateConverter {
         @TypeConverter
-        fun stringSetToJsonArray(strs: Set<String>): String = JSON_CONVERTER.toJson(strs)
+        fun dateToLong(date: Date): Long = date.time
 
         @TypeConverter
-        fun jsonArrayToStringSet(jsonArray: String): Set<String> =
-            JSON_CONVERTER.fromJson(jsonArray, object : TypeToken<Set<String>>() {}.type)
+        fun longToData(date: Long): Date = Date(date)
     }
 }

@@ -2,8 +2,9 @@ package co.ke.xently.data
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import co.ke.xently.common.utils.Exclude
-import co.ke.xently.common.utils.Exclude.During.SERIALIZATION
+import co.ke.xently.common.Exclude
+import co.ke.xently.common.Exclude.During.SERIALIZATION
+import java.util.*
 
 @Entity(tableName = "shoppinglist")
 data class ShoppingListItem(
@@ -14,5 +15,5 @@ data class ShoppingListItem(
     val unit: String,
     val unitQuantity: Float,
     val purchaseQuantity: Float,
-    /*val dateAdded: Date,*/
+    val dateAdded: Date,
 )

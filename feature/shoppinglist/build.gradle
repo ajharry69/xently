@@ -31,9 +31,8 @@ android {
     kotlinOptions {
         jvmTarget = '1.8'
         freeCompilerArgs += [
-//                "-Xuse-experimental=kotlin.Experimental",
-                '-Xopt-in=kotlin.time.ExperimentalTime',
-                '-Xopt-in=kotlinx.coroutines.ExperimentalCoroutinesApi',
+                "-Xopt-in=kotlin.time.ExperimentalTime",
+                "-Xopt-in=kotlinx.coroutines.ExperimentalCoroutinesApi",
         ]
         useIR = true
     }
@@ -55,6 +54,10 @@ dependencies {
     // DI
     implementation "com.google.dagger:hilt-android:$hilt_version"
     kapt "com.google.dagger:hilt-compiler:$hilt_version"
+
+    // This is a transitive dependency to remote data source that's currently only needed by:
+    //  1. `sendRequest(...)` function declared in the remote data source module.
+    implementation "com.squareup.retrofit2:retrofit:$retrofit_version"
 
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.3'

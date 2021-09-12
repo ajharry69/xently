@@ -47,12 +47,6 @@ dependencies {
     api "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutine_version"
     api "org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutine_version"
 
-    // Square and Retrofit
-    api "com.squareup.retrofit2:retrofit:$retrofit_version"
-    api "com.squareup.retrofit2:converter-gson:$retrofit_version"
-    api "com.squareup.okhttp3:logging-interceptor:$logging_interceptor_version"
-    api "com.squareup.okio:okio:$okio_version"
-
     testApi "org.jetbrains.kotlinx:kotlinx-coroutines-test:$coroutines_test_version"
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.3'

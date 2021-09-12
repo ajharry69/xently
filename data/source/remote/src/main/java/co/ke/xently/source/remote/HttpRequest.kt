@@ -1,6 +1,5 @@
 package co.ke.xently.source.remote
 
-import co.ke.xently.common.utils.JSON_CONVERTER
 import retrofit2.Response
 import java.net.ConnectException
 

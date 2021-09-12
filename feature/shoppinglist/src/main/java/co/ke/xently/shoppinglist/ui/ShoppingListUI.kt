@@ -14,9 +14,16 @@ import androidx.compose.ui.Modifier
 
 
 @Composable
-fun ShoppingList(modifier: Modifier = Modifier, viewModel: ShoppingListViewModel, loadRemote: Boolean = false) {
+fun ShoppingList(
+    modifier: Modifier = Modifier,
+    viewModel: ShoppingListViewModel,
+    loadRemote: Boolean = false,
+) {
+    viewModel.shouldLoadRemote(loadRemote)
     val result = viewModel.shoppingListResult.collectAsState().value
-    val modifier1 = modifier.fillMaxHeight().fillMaxWidth()
+    val modifier1 = modifier
+        .fillMaxHeight()
+        .fillMaxWidth()
     if (result.isSuccess) {
         val shoppingList = result.getOrThrow()
         if (shoppingList == null) {
@@ -24,17 +31,17 @@ fun ShoppingList(modifier: Modifier = Modifier, viewModel: ShoppingListViewModel
                 CircularProgressIndicator()
             }
         } else {
-                if (shoppingList.isEmpty()) {
-                    Box(contentAlignment = Alignment.Center, modifier = modifier1) {
-                        Text(text = "You have no shopping list, yet!")
-                    }
-                } else {
-                    LazyColumn(modifier = modifier1) {
-                        items(shoppingList) { item ->
-                            Text(text = item.name)
-                        }
+            if (shoppingList.isEmpty()) {
+                Box(contentAlignment = Alignment.Center, modifier = modifier1) {
+                    Text(text = "You have no shopping list, yet!")
+                }
+            } else {
+                LazyColumn(modifier = modifier1) {
+                    items(shoppingList) { item ->
+                        Text(text = item.name)
                     }
                 }
+            }
         }
     } else {
         Box(contentAlignment = Alignment.Center, modifier = modifier1) {

@@ -12,7 +12,7 @@ abstract class AbstractViewModel : ViewModel() {
         this.remote.value = remote
     }
 
-    protected suspend fun Retry.ddddd(): Retry {
+    protected suspend fun Retry.signalLoadFromCache(): Retry {
         if (canRetry()) {
             shouldLoadRemote(false)
         } else if (!isDefaultState) {

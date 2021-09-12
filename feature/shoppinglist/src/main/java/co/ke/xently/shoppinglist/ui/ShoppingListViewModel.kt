@@ -47,7 +47,7 @@ class ShoppingListViewModel @Inject constructor(
                                 // Fallback to cache if remote failed
                                 if (it.exceptionOrNull() !is ConnectException) {
                                     viewModelScope.launch(computationDispatcher) {
-                                        retry = retry.ddddd()
+                                        retry = retry.signalLoadFromCache()
                                     }
                                 }
                             } else if (!loadRemote && (it.isFailure || it.getOrNull()

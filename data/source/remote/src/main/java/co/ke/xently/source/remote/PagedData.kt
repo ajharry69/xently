@@ -1,7 +1,6 @@
 package co.ke.xently.source.remote
 
-import co.ke.xently.common.utils.Exclude
-import co.ke.xently.common.utils.JSON_CONVERTER
+import co.ke.xently.common.Exclude
 import com.google.gson.reflect.TypeToken
 
 data class PagedData<T>(
