@@ -19,9 +19,6 @@ buildscript {
         logging_interceptor_version = '5.0.0-alpha.2'
         okio_version = '3.0.0-alpha.9'
 
-        // Test
-        coroutines_test_version = "1.5.1"
-
         Properties properties = new Properties()
         try {
             properties.load(project.rootProject.file('local.properties').newDataInputStream())

@@ -17,3 +17,20 @@ data class ShoppingListItem(
     val purchaseQuantity: Float,
     val dateAdded: Date,
 )
+
+open class GroupedShoppingListCount(
+    open val group: String,
+    open val numberOfItems: Int,
+) {
+    override fun equals(other: Any?) = other is GroupedShoppingList && group == other.group
+
+    override fun hashCode(): Int {
+        return group.hashCode()
+    }
+}
+
+data class GroupedShoppingList(
+    override val group: String,
+    val shoppingList: List<ShoppingListItem>,
+    override val numberOfItems: Int = shoppingList.size,
+) : GroupedShoppingListCount(group, numberOfItems)

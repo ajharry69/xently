@@ -1,5 +1,9 @@
 package co.ke.xently.source.remote
 
+import co.ke.xently.common.Retry
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.retry
 import retrofit2.Response
 import java.net.ConnectException
 
@@ -11,6 +15,13 @@ data class HttpException(
     override val message: String?
         get() = detail ?: super.message
 }
+
+fun <T> Flow<Result<T>>.retryCatchIfNecessary(retry: Retry) =
+    retry { cause -> cause is ConnectException && retry.canRetry() }.catch {
+        // Let the collector handle other exceptions
+        if (it is HttpException) throw it
+        if (it is ConnectException) emit(Result.failure(it))
+    }
 
 @Suppress("UNCHECKED_CAST")
 suspend fun <T> sendRequest(

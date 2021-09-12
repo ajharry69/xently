@@ -3,6 +3,8 @@ package co.ke.xently.shoppinglist.ui
 import androidx.lifecycle.viewModelScope
 import co.ke.xently.common.Retry
 import co.ke.xently.common.di.qualifiers.coroutines.ComputationDispatcher
+import co.ke.xently.data.GroupedShoppingList
+import co.ke.xently.data.GroupedShoppingListCount
 import co.ke.xently.data.ShoppingListItem
 import co.ke.xently.feature.AbstractViewModel
 import co.ke.xently.shoppinglist.repository.IShoppingListRepository
@@ -35,6 +37,16 @@ class ShoppingListViewModel @Inject constructor(
     val shoppingListResult: StateFlow<Result<List<ShoppingListItem>?>>
         get() = _shoppingListResult
 
+    private val _groupedShoppingListResult =
+        MutableStateFlow(success<List<GroupedShoppingList>?>(null))
+    val groupedShoppingListResult: StateFlow<Result<List<GroupedShoppingList>?>>
+        get() = _groupedShoppingListResult
+
+    private val _groupedShoppingListCountResult =
+        MutableStateFlow(emptyList<GroupedShoppingListCount>())
+    val groupedShoppingListCountResult: StateFlow<List<GroupedShoppingListCount>>
+        get() = _groupedShoppingListCountResult
+
     init {
         viewModelScope.launch {
             var retry = Retry()
@@ -58,6 +70,22 @@ class ShoppingListViewModel @Inject constructor(
                             }
                         }
                 }
+            }
+        }
+        viewModelScope.launch {
+            groupBy.collectLatest { group ->
+                repository.getGroupedShoppingList(group ?: "dateadded").catch { emit(failure(it)) }
+                    .collectLatest {
+                        _groupedShoppingListResult.value = it
+                    }
+            }
+        }
+        viewModelScope.launch {
+            groupBy.collectLatest { group ->
+                repository.getGroupedShoppingListCount(group ?: "dateadded")
+                    .collectLatest {
+                        _groupedShoppingListCountResult.value = it
+                    }
             }
         }
         viewModelScope.launch {
