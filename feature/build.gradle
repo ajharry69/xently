@@ -42,4 +42,6 @@ dependencies {
     // https://developer.android.com/jetpack/compose/libraries#viewmodel
     api "androidx.lifecycle:lifecycle-viewmodel-compose:$lifecycle_viewmodel_version"
     api "androidx.compose.material:material:$compose_version"
+    debugApi "androidx.compose.ui:ui-tooling-preview:$compose_version"
+    debugApi "androidx.compose.ui:ui-tooling:$compose_version"
 }

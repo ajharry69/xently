@@ -42,10 +42,9 @@ class ShoppingListViewModel @Inject constructor(
     val groupedShoppingListResult: StateFlow<Result<List<GroupedShoppingList>?>>
         get() = _groupedShoppingListResult
 
-    private val _groupedShoppingListCountResult =
+    private val _groupedShoppingListCount =
         MutableStateFlow(emptyList<GroupedShoppingListCount>())
-    val groupedShoppingListCountResult: StateFlow<List<GroupedShoppingListCount>>
-        get() = _groupedShoppingListCountResult
+    val groupedShoppingListCount: StateFlow<List<GroupedShoppingListCount>> get() = _groupedShoppingListCount
 
     init {
         viewModelScope.launch {
@@ -84,7 +83,7 @@ class ShoppingListViewModel @Inject constructor(
             groupBy.collectLatest { group ->
                 repository.getGroupedShoppingListCount(group ?: "dateadded")
                     .collectLatest {
-                        _groupedShoppingListCountResult.value = it
+                        _groupedShoppingListCount.value = it
                     }
             }
         }

@@ -16,7 +16,10 @@ data class ShoppingListItem(
     val unitQuantity: Float,
     val purchaseQuantity: Float,
     val dateAdded: Date,
-)
+) {
+    override fun toString() =
+        "${name.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.ROOT) else it.toString() }}, ${unitQuantity}${unit} - $purchaseQuantity"
+}
 
 open class GroupedShoppingListCount(
     open val group: String,
