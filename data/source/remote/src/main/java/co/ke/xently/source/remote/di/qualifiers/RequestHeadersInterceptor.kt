@@ -1,4 +1,4 @@
-package co.ke.xently.common.di.qualifiers.retrofit
+package co.ke.xently.source.remote.di.qualifiers
 
 import javax.inject.Qualifier
 

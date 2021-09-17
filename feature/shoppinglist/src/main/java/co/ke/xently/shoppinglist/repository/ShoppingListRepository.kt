@@ -57,7 +57,7 @@ class ShoppingListRepository @Inject constructor(
 
     override fun getGroupedShoppingList(groupBy: String): Flow<Result<List<GroupedShoppingList>>> {
         val retry = Retry()
-        return flow { emit(sendRequest(401) { service.getShoppingList(groupBy) }) }
+        return flow { emit(sendRequest(401) { service.getShoppingList(groupBy, "only-if-cached") }) }
             .map { result ->
                 result.mapCatching {
                     it.map { entry ->

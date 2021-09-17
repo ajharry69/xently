@@ -1,15 +1,18 @@
 package co.ke.xently.source.remote.di
 
+import android.content.Context
 import android.content.SharedPreferences
 import co.ke.xently.common.di.qualifiers.EncryptedSharedPreference
-import co.ke.xently.common.di.qualifiers.retrofit.RequestHeadersInterceptor
 import co.ke.xently.common.utils.TOKEN_VALUE_SHARED_PREFERENCE_KEY
 import co.ke.xently.common.utils.isReleaseBuild
 import co.ke.xently.source.remote.BuildConfig
 import co.ke.xently.source.remote.JSON_CONVERTER
+import co.ke.xently.source.remote.di.qualifiers.CacheInterceptor
+import co.ke.xently.source.remote.di.qualifiers.RequestHeadersInterceptor
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import okhttp3.*
 import okhttp3.logging.HttpLoggingInterceptor
@@ -48,6 +51,23 @@ object NetworkModule {
 
     @Provides
     @Singleton
+    @CacheInterceptor
+    fun provideCacheInterceptors(): Interceptor {
+        return Interceptor { chain ->
+            val request = chain.request()
+            var response = chain.proceed(request.newBuilder()
+                .cacheControl(CacheControl.parse(request.headers)).build())
+            if (response.code == 504 && response.request.cacheControl.onlyIfCached) {
+                // See, https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#other
+                response = chain.proceed(response.request.newBuilder()
+                    .cacheControl(CacheControl.FORCE_NETWORK).build())
+            }
+            return@Interceptor response
+        }
+    }
+
+    @Provides
+    @Singleton
     fun provideLoggingInterceptor(): HttpLoggingInterceptor {
         return HttpLoggingInterceptor().apply {
             level = (if (!isReleaseBuild()) {
@@ -60,11 +80,15 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideOkHttpClient(
+        @ApplicationContext context: Context,
         loggingInterceptor: HttpLoggingInterceptor,
+        @CacheInterceptor cacheInterceptor: Interceptor,
         @RequestHeadersInterceptor headerInterceptor: Interceptor,
     ): OkHttpClient {
         return OkHttpClient.Builder()
+            .cache(Cache(context.cacheDir, (5 * 1024 * 1024).toLong()))
             .addInterceptor(headerInterceptor)
+            .addInterceptor(cacheInterceptor) // maintain order - cache may depend on the headers
             .addInterceptor(loggingInterceptor)
             .connectTimeout(60L, TimeUnit.SECONDS)
             .readTimeout(30L, TimeUnit.SECONDS)
