@@ -15,6 +15,7 @@ android {
         consumerProguardFiles "consumer-rules.pro"
 
         buildConfigField "String", "SERVER_BASE_URL", '"' + server_base_url + '"'
+        buildConfigField "String", "DEFAULT_AUTH_TOKEN", '"' + default_auth_token + '"'
     }
 
     buildTypes {

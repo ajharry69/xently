@@ -26,6 +26,7 @@ buildscript {
         }
 
         server_base_url = properties.getProperty("SERVER_BASE_URL", "https://xently.co.ke")
+        default_auth_token = properties.getProperty("DEFAULT_AUTH_TOKEN", "")
     }
     repositories {
         google()
