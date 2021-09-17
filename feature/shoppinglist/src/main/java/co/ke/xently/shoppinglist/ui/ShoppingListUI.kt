@@ -106,13 +106,22 @@ private fun GroupedShoppingListCard(
                         expanded = showDropDownMenu,
                         onDismissRequest = { showDropDownMenu = false },
                     ) {
-                        DropdownMenuItem(onClick = { onRecommendGroupClicked(groupList.group) }) {
+                        DropdownMenuItem(onClick = {
+                            onRecommendGroupClicked(groupList.group)
+                            showDropDownMenu = false
+                        }) {
                             Text(text = stringResource(R.string.fsl_group_menu_recommend))
                         }
-                        DropdownMenuItem(onClick = { onDuplicateGroupClicked(groupList.group) }) {
+                        DropdownMenuItem(onClick = {
+                            onDuplicateGroupClicked(groupList.group)
+                            showDropDownMenu = false
+                        }) {
                             Text(text = stringResource(R.string.fsl_group_menu_duplicate))
                         }
-                        DropdownMenuItem(onClick = { onDeleteGroupClicked(groupList.group) }) {
+                        DropdownMenuItem(onClick = {
+                            onDeleteGroupClicked(groupList.group)
+                            showDropDownMenu = false
+                        }) {
                             Text(text = stringResource(R.string.fsl_group_menu_delete))
                         }
                     }
