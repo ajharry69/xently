@@ -18,6 +18,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import co.ke.xently.shoppinglist.ui.ShoppingList
 import co.ke.xently.shoppinglist.ui.ShoppingListDetail
+import co.ke.xently.shoppinglist.ui.ShoppingListRecommendation
 import co.ke.xently.shoppinglist.ui.ShoppingListViewModel
 import co.ke.xently.ui.theme.XentlyTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -76,6 +77,9 @@ fun XentlyNavHost(
         }
         composable("shoppingdetail") {
             ShoppingListDetail()
+        }
+        composable("shoppingrecommendation") {
+            ShoppingListRecommendation()
         }
     }
 }
