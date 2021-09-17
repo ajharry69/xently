@@ -10,11 +10,14 @@ import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import co.ke.xently.data.GroupedShoppingList
 import co.ke.xently.data.GroupedShoppingListCount
 import co.ke.xently.data.ShoppingListItem
+import co.ke.xently.shoppinglist.R
 import java.util.*
 
 
@@ -42,7 +45,7 @@ fun ShoppingList(
         } else {
             if (groupedShoppingList.isEmpty()) {
                 Box(contentAlignment = Alignment.Center, modifier = modifier1) {
-                    Text(text = "You have no shopping list, yet!")
+                    Text(text = stringResource(R.string.fsl_empty_shopping_list))
                 }
             } else {
                 LazyColumn(modifier = modifier1) {
@@ -55,7 +58,7 @@ fun ShoppingList(
     } else {
         Box(contentAlignment = Alignment.Center, modifier = modifier1) {
             Text(text = groupedShoppingListResult.exceptionOrNull()?.localizedMessage
-                ?: "An error occurred")
+                ?: stringResource(R.string.fsl_generic_error_message))
         }
     }
 }
@@ -64,6 +67,10 @@ fun ShoppingList(
 private fun GroupedShoppingListCard(
     groupList: GroupedShoppingList,
     listCount: List<GroupedShoppingListCount>,
+    onRecommendGroupClicked: ((group: Any) -> Unit) = {},
+    onDuplicateGroupClicked: ((group: Any) -> Unit) = {},
+    onDeleteGroupClicked: ((group: Any) -> Unit) = {},
+    onSeeAllClicked: ((group: Any) -> Unit) = {},
 ) {
     val numberOfItems = listCount.firstOrNull {
         it.group == groupList.group
@@ -71,43 +78,49 @@ private fun GroupedShoppingListCard(
     val itemsPerCard = 3
     var showDropDownMenu by remember { mutableStateOf(false) }
 
-    Card(modifier = Modifier
-        .padding(horizontal = 16.dp)
-        .padding(top = 16.dp)) {
-        Column(modifier = Modifier
-            .padding(vertical = 8.dp)
-            .padding(start = 16.dp)) {
+    Card(
+        modifier = Modifier
+            .padding(horizontal = 16.dp)
+            .padding(top = 16.dp),
+    ) {
+        Column(
+            modifier = Modifier
+                .padding(vertical = 8.dp)
+                .padding(start = 16.dp),
+        ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 Column(modifier = Modifier.padding(bottom = 8.dp)) {
-                    // TODO: Change text (style) to h3
                     Text(text = groupList.group, style = MaterialTheme.typography.h6)
-                    // TODO: Change text (style) to subtitle
-                    Text(text = "$numberOfItems items", style = MaterialTheme.typography.subtitle2)
+                    Text(text = LocalContext.current.resources.getQuantityString(R.plurals.fsl_group_items_count,
+                        numberOfItems, numberOfItems), style = MaterialTheme.typography.subtitle2)
                 }
                 Box(modifier = Modifier.align(Alignment.Top)) {
                     IconButton(onClick = { showDropDownMenu = true }) {
-                        Icon(Icons.Filled.MoreVert, contentDescription = "Show card menu")
+                        Icon(Icons.Filled.MoreVert,
+                            contentDescription = stringResource(R.string.fsl_group_card_menu_content_desc_more))
                     }
                     DropdownMenu(
                         expanded = showDropDownMenu,
                         onDismissRequest = { showDropDownMenu = false },
                     ) {
-                        DropdownMenuItem(onClick = { /*TODO*/ }) {
-                            Text(text = "Recommend")
+                        DropdownMenuItem(onClick = { onRecommendGroupClicked(groupList.group) }) {
+                            Text(text = stringResource(R.string.fsl_group_menu_recommend))
                         }
-                        DropdownMenuItem(onClick = { /*TODO*/ }) {
-                            Text(text = "Duplicate")
+                        DropdownMenuItem(onClick = { onDuplicateGroupClicked(groupList.group) }) {
+                            Text(text = stringResource(R.string.fsl_group_menu_duplicate))
                         }
-                        DropdownMenuItem(onClick = { /*TODO*/ }) {
-                            Text(text = "Delete")
+                        DropdownMenuItem(onClick = { onDeleteGroupClicked(groupList.group) }) {
+                            Text(text = stringResource(R.string.fsl_group_menu_delete))
                         }
                     }
                 }
             }
-            Divider(color = MaterialTheme.colors.onSurface.copy(alpha = 0.2f), thickness = 1.dp, modifier = Modifier.padding(end = 16.dp))
+            Divider(color = MaterialTheme.colors.onSurface.copy(alpha = 0.2f),
+                thickness = 1.dp,
+                modifier = Modifier.padding(end = 16.dp))
             Column {
                 for (item in groupList.shoppingList.take(itemsPerCard)) {
                     ShoppingListCardItem(item, modifier = Modifier
@@ -116,8 +129,12 @@ private fun GroupedShoppingListCard(
                 }
             }
             if (numberOfItems > itemsPerCard) {
-                OutlinedButton(onClick = { /*TODO*/ }, modifier = Modifier.fillMaxWidth().padding(end = 16.dp, bottom = 8.dp)) {
-                    Text(text = "SEE ALL", style = MaterialTheme.typography.button)
+                OutlinedButton(onClick = { onSeeAllClicked(groupList.group) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(end = 16.dp, bottom = 8.dp)) {
+                    Text(text = stringResource(R.string.fsl_group_button_see_all),
+                        style = MaterialTheme.typography.button)
                 }
             }
         }
@@ -125,7 +142,10 @@ private fun GroupedShoppingListCard(
 }
 
 @Composable
-private fun ShoppingListCardItem(item: ShoppingListItem, modifier: Modifier = Modifier) {
+private fun ShoppingListCardItem(
+    item: ShoppingListItem, modifier: Modifier = Modifier,
+    onDeleteClicked: ((id: Long) -> Unit) = {},
+) {
     Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = modifier) {
         Column {
             Text(text = item.name, style = MaterialTheme.typography.body1)
@@ -134,7 +154,8 @@ private fun ShoppingListCardItem(item: ShoppingListItem, modifier: Modifier = Mo
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(text = "${item.purchaseQuantity}", style = MaterialTheme.typography.h6)
-            IconButton(onClick = { /*TODO*/ }) {
+            // TODO: Show delete button on click with ability to navigate to detail page on click
+            IconButton(onClick = { onDeleteClicked(item.id) }) {
                 Icon(Icons.Default.KeyboardArrowRight, contentDescription = null)
             }
         }
@@ -155,12 +176,4 @@ private fun GroupedShoppingListCardPreview() {
         GroupedShoppingList(group = "2021-09-29", shoppingList = shoppingList),
         listOf(GroupedShoppingListCount("2021-09-29", shoppingList.size)),
     )
-}
-
-@Composable
-fun ShoppingListDetail(
-    modifier: Modifier = Modifier,
-//    viewModel: ShoppingListViewModel = viewModel(),
-) {
-    Text("Shopping detail...", modifier = modifier)
 }

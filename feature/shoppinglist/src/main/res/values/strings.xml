@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="fsl_group_button_see_all">SEE ALL</string>
+    <string name="fsl_group_menu_recommend">Recommend</string>
+    <string name="fsl_group_menu_duplicate">Duplicate</string>
+    <string name="fsl_group_menu_delete">Delete</string>
+    <string name="fsl_group_card_menu_content_desc_more">Show card menu</string>
+    <string name="fsl_empty_shopping_list">You have no shopping list, yet!</string>
+    <string name="fsl_generic_error_message">An error occurred</string>
+</resources>

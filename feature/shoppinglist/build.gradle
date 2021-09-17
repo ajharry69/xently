@@ -33,6 +33,7 @@ android {
         freeCompilerArgs += [
                 "-Xopt-in=kotlin.time.ExperimentalTime",
                 "-Xopt-in=kotlinx.coroutines.ExperimentalCoroutinesApi",
+                "-Xopt-in=androidx.compose.material.ExperimentalMaterialApi",
         ]
         useIR = true
     }
