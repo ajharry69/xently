@@ -15,7 +15,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import co.ke.xently.data.GroupedShoppingList
-import co.ke.xently.data.GroupedShoppingListCount
 import co.ke.xently.data.ShoppingListItem
 import co.ke.xently.shoppinglist.R
 import java.util.*
@@ -29,7 +28,6 @@ fun ShoppingList(
 ) {
     viewModel.shouldLoadRemote(loadRemote)
     val groupedShoppingListResult = viewModel.groupedShoppingListResult.collectAsState().value
-    // TODO: Return as Map for faster lookup
     val groupedShoppingListCount = viewModel.groupedShoppingListCount.collectAsState().value
 
     val modifier1 = modifier
@@ -49,7 +47,7 @@ fun ShoppingList(
                 }
             } else {
                 LazyColumn(modifier = modifier1) {
-                    items(groupedShoppingList) { groupList: GroupedShoppingList ->
+                    items(groupedShoppingList) { groupList ->
                         GroupedShoppingListCard(groupList, groupedShoppingListCount)
                     }
                 }
@@ -66,17 +64,15 @@ fun ShoppingList(
 @Composable
 private fun GroupedShoppingListCard(
     groupList: GroupedShoppingList,
-    listCount: List<GroupedShoppingListCount>,
+    listCount: Map<Any, Int>,
     onRecommendGroupClicked: ((group: Any) -> Unit) = {},
     onDuplicateGroupClicked: ((group: Any) -> Unit) = {},
     onDeleteGroupClicked: ((group: Any) -> Unit) = {},
     onSeeAllClicked: ((group: Any) -> Unit) = {},
 ) {
-    val numberOfItems = listCount.firstOrNull {
-        it.group == groupList.group
-    }?.numberOfItems ?: groupList.numberOfItems
     val itemsPerCard = 3
     var showDropDownMenu by remember { mutableStateOf(false) }
+    val numberOfItems = listCount.getOrElse(groupList.group) { groupList.numberOfItems }
 
     Card(
         modifier = Modifier
@@ -183,6 +179,6 @@ private fun GroupedShoppingListCardPreview() {
     )
     GroupedShoppingListCard(
         GroupedShoppingList(group = "2021-09-29", shoppingList = shoppingList),
-        listOf(GroupedShoppingListCount("2021-09-29", shoppingList.size)),
+        mapOf(Pair("2021-09-29", shoppingList.size)),
     )
 }

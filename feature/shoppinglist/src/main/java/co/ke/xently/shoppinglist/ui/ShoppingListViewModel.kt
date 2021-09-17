@@ -43,8 +43,8 @@ class ShoppingListViewModel @Inject constructor(
         get() = _groupedShoppingListResult
 
     private val _groupedShoppingListCount =
-        MutableStateFlow(emptyList<GroupedShoppingListCount>())
-    val groupedShoppingListCount: StateFlow<List<GroupedShoppingListCount>> get() = _groupedShoppingListCount
+        MutableStateFlow(mapOf<Any, Int>())
+    val groupedShoppingListCount: StateFlow<Map<Any, Int>> get() = _groupedShoppingListCount
 
     init {
         viewModelScope.launch {

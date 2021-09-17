@@ -12,5 +12,5 @@ interface IShoppingListRepository {
 
     fun getGroupedShoppingList(groupBy: String): Flow<Result<List<GroupedShoppingList>>>
 
-    fun getGroupedShoppingListCount(groupBy: String): Flow<List<GroupedShoppingListCount>>
+    fun getGroupedShoppingListCount(groupBy: String): Flow<Map<Any, Int>>
 }

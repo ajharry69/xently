@@ -75,5 +75,9 @@ class ShoppingListRepository @Inject constructor(
     override fun getGroupedShoppingListCount(groupBy: String) = when (groupBy) {
         "dateadded" -> dao.getGroupCountByDateAdded()
         else -> flow { }
+    }.mapLatest {
+        mutableMapOf<Any, Int>().apply {
+            for (item in it) put(item.group, item.numberOfItems)
+        }.toMap()
     }
 }

@@ -20,6 +20,7 @@ import java.util.*
 import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 
+// TODO: Add caching support
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
