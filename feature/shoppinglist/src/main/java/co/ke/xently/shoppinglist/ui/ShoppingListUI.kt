@@ -6,7 +6,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -14,6 +16,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavHostController
 import co.ke.xently.data.GroupedShoppingList
 import co.ke.xently.data.ShoppingListItem
 import co.ke.xently.shoppinglist.R
@@ -24,6 +27,7 @@ import java.util.*
 fun ShoppingList(
     modifier: Modifier = Modifier,
     viewModel: ShoppingListViewModel,
+    navController: NavHostController,
     loadRemote: Boolean = false,
 ) {
     viewModel.shouldLoadRemote(loadRemote)
@@ -34,29 +38,53 @@ fun ShoppingList(
         .fillMaxHeight()
         .fillMaxWidth()
 
-    if (groupedShoppingListResult.isSuccess) {
-        val groupedShoppingList = groupedShoppingListResult.getOrThrow()
-        if (groupedShoppingList == null) {
-            Box(contentAlignment = Alignment.Center, modifier = modifier1) {
-                CircularProgressIndicator()
-            }
-        } else {
-            if (groupedShoppingList.isEmpty()) {
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Xently") },
+                navigationIcon = {
+                    IconButton(onClick = { }) {
+                        Icon(Icons.Filled.Menu, contentDescription = null)
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { }) {
+                        Icon(Icons.Filled.Search,
+                            contentDescription = "Localized description")
+                    }
+                }
+            )
+        },
+    ) {
+        if (groupedShoppingListResult.isSuccess) {
+            val groupedShoppingList = groupedShoppingListResult.getOrThrow()
+            if (groupedShoppingList == null) {
                 Box(contentAlignment = Alignment.Center, modifier = modifier1) {
-                    Text(text = stringResource(R.string.fsl_empty_shopping_list))
+                    CircularProgressIndicator()
                 }
             } else {
-                LazyColumn(modifier = modifier1) {
-                    items(groupedShoppingList) { groupList ->
-                        GroupedShoppingListCard(groupList, groupedShoppingListCount)
+                if (groupedShoppingList.isEmpty()) {
+                    Box(contentAlignment = Alignment.Center, modifier = modifier1) {
+                        Text(text = stringResource(R.string.fsl_empty_shopping_list))
+                    }
+                } else {
+                    LazyColumn(modifier = modifier1) {
+                        items(groupedShoppingList) { groupList ->
+                            GroupedShoppingListCard(
+                                groupList, groupedShoppingListCount,
+                                onRecommendGroupClicked = { group ->
+                                    navController.navigate("shoppingrecommendation/$group")
+                                },
+                            )
+                        }
                     }
                 }
             }
-        }
-    } else {
-        Box(contentAlignment = Alignment.Center, modifier = modifier1) {
-            Text(text = groupedShoppingListResult.exceptionOrNull()?.localizedMessage
-                ?: stringResource(R.string.fsl_generic_error_message))
+        } else {
+            Box(contentAlignment = Alignment.Center, modifier = modifier1) {
+                Text(text = groupedShoppingListResult.exceptionOrNull()?.localizedMessage
+                    ?: stringResource(R.string.fsl_generic_error_message))
+            }
         }
     }
 }
