@@ -12,8 +12,8 @@ import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.compose.navArgument
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import co.ke.xently.shoppinglist.ui.ShoppingList
 import co.ke.xently.shoppinglist.ui.ShoppingListDetail
 import co.ke.xently.shoppinglist.ui.ShoppingListRecommendation
@@ -26,17 +26,12 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            XentlyApp()
-        }
-    }
-}
-
-@Composable
-fun XentlyApp() {
-    XentlyTheme {
-        val navController = rememberNavController()
-        Scaffold {
-            XentlyNavHost(navController = navController, modifier = Modifier.padding(it))
+            XentlyTheme {
+                val navController = rememberNavController()
+                Scaffold {
+                    XentlyNavHost(navController = navController, modifier = Modifier.padding(it))
+                }
+            }
         }
     }
 }

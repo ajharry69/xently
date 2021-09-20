@@ -1,7 +1,7 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 buildscript {
     ext {
-        compose_version = '1.1.0-alpha03'
+        compose_version = '1.1.0-alpha04'
         // For compatibility with the above version of jetpack compose
         kotlin_version = '1.5.30'
         coroutine_version = '1.5.2-native-mt'
@@ -10,9 +10,9 @@ buildscript {
         dagger_version = '2.29.1'
         hilt_version = '2.38.1'
         room_version = "2.3.0"
-        navigation_version = "2.4.0-alpha08"
-        lifecycle_version = "2.4.0-alpha03"
-        lifecycle_viewmodel_version = "1.0.0-alpha07"
+        navigation_version = '2.4.0-alpha09'
+        lifecycle_version = '2.4.0-beta01'
+        lifecycle_viewmodel_version = '2.4.0-beta01'
 
         // Retrofit
         retrofit_version = '2.9.0'
