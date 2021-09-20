@@ -16,10 +16,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavHostController
 import co.ke.xently.data.GroupedShoppingList
 import co.ke.xently.data.ShoppingListItem
 import co.ke.xently.shoppinglist.R
+import kotlinx.coroutines.launch
 import java.util.*
 
 
@@ -27,18 +27,18 @@ import java.util.*
 fun ShoppingList(
     modifier: Modifier = Modifier,
     viewModel: ShoppingListViewModel,
-    navController: NavHostController,
     loadRemote: Boolean = false,
 ) {
+    val coroutineScope = rememberCoroutineScope()
+    val scaffoldState = rememberBottomSheetScaffoldState()
+
     viewModel.shouldLoadRemote(loadRemote)
     val groupedShoppingListResult = viewModel.groupedShoppingListResult.collectAsState().value
     val groupedShoppingListCount = viewModel.groupedShoppingListCount.collectAsState().value
+    var groupToRecommend by remember { mutableStateOf<Any?>(null) }
 
-    val modifier1 = modifier
-        .fillMaxHeight()
-        .fillMaxWidth()
-
-    Scaffold(
+    BottomSheetScaffold(
+        scaffoldState = scaffoldState,
         topBar = {
             TopAppBar(
                 title = { Text("Xently") },
@@ -49,31 +49,50 @@ fun ShoppingList(
                 },
                 actions = {
                     IconButton(onClick = { }) {
-                        Icon(Icons.Filled.Search,
-                            contentDescription = "Localized description")
+                        Icon(
+                            Icons.Filled.Search,
+                            contentDescription = "Localized description"
+                        )
                     }
                 }
             )
         },
+        sheetContent = {
+            if (groupToRecommend != null) {
+                ShoppingListRecommendation(
+                    group = groupToRecommend!!,
+                    viewModel = viewModel,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 16.dp),
+                )
+            }
+        },
+        sheetPeekHeight = 0.dp,
     ) {
         if (groupedShoppingListResult.isSuccess) {
             val groupedShoppingList = groupedShoppingListResult.getOrThrow()
-            if (groupedShoppingList == null) {
-                Box(contentAlignment = Alignment.Center, modifier = modifier1) {
-                    CircularProgressIndicator()
+            when {
+                groupedShoppingList == null -> {
+                    Box(contentAlignment = Alignment.Center, modifier = modifier) {
+                        CircularProgressIndicator()
+                    }
                 }
-            } else {
-                if (groupedShoppingList.isEmpty()) {
-                    Box(contentAlignment = Alignment.Center, modifier = modifier1) {
+                groupedShoppingList.isEmpty() -> {
+                    Box(contentAlignment = Alignment.Center, modifier = modifier) {
                         Text(text = stringResource(R.string.fsl_empty_shopping_list))
                     }
-                } else {
-                    LazyColumn(modifier = modifier1) {
+                }
+                else -> {
+                    LazyColumn(modifier = modifier) {
                         items(groupedShoppingList) { groupList ->
                             GroupedShoppingListCard(
                                 groupList, groupedShoppingListCount,
                                 onRecommendGroupClicked = { group ->
-                                    navController.navigate("shoppingrecommendation/$group")
+                                    coroutineScope.launch {
+                                        scaffoldState.bottomSheetState.expand()
+                                    }
+                                    groupToRecommend = group
                                 },
                             )
                         }
@@ -81,10 +100,60 @@ fun ShoppingList(
                 }
             }
         } else {
-            Box(contentAlignment = Alignment.Center, modifier = modifier1) {
-                Text(text = groupedShoppingListResult.exceptionOrNull()?.localizedMessage
-                    ?: stringResource(R.string.fsl_generic_error_message))
+            Box(contentAlignment = Alignment.Center, modifier = modifier) {
+                Text(
+                    text = groupedShoppingListResult.exceptionOrNull()?.localizedMessage
+                        ?: stringResource(R.string.fsl_generic_error_message)
+                )
             }
+        }
+    }
+}
+
+@Composable
+private fun ShoppingListRecommendation(
+    group: Any,
+    viewModel: ShoppingListViewModel,
+    modifier: Modifier = Modifier,
+) {
+    val shoppingListResult = viewModel.shoppingListResult.collectAsState().value
+
+    if (shoppingListResult.isSuccess) {
+        val shoppingList = shoppingListResult.getOrThrow()
+        when {
+            shoppingList == null -> {
+                Box(contentAlignment = Alignment.Center, modifier = modifier) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        CircularProgressIndicator()
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(text = stringResource(R.string.fsl_data_loading))
+                    }
+                }
+            }
+            shoppingList.isEmpty() -> {
+                Box(contentAlignment = Alignment.Center, modifier = modifier) {
+                    Text(text = stringResource(R.string.fsl_empty_shopping_list))
+                }
+            }
+            else -> {
+                LazyColumn(modifier = modifier) {
+                    items(shoppingList) { item ->
+                        ShoppingListCardItem(
+                            item = item,
+                            modifier = Modifier
+                                .padding(vertical = 8.dp)
+                                .fillMaxWidth(),
+                        )
+                    }
+                }
+            }
+        }
+    } else {
+        Box(contentAlignment = Alignment.Center, modifier = modifier) {
+            Text(
+                text = shoppingListResult.exceptionOrNull()?.localizedMessage
+                    ?: stringResource(R.string.fsl_generic_error_message)
+            )
         }
     }
 }
@@ -118,13 +187,19 @@ private fun GroupedShoppingListCard(
             ) {
                 Column(modifier = Modifier.padding(bottom = 8.dp)) {
                     Text(text = groupList.group, style = MaterialTheme.typography.h6)
-                    Text(text = LocalContext.current.resources.getQuantityString(R.plurals.fsl_group_items_count,
-                        numberOfItems, numberOfItems), style = MaterialTheme.typography.subtitle2)
+                    Text(
+                        text = LocalContext.current.resources.getQuantityString(
+                            R.plurals.fsl_group_items_count,
+                            numberOfItems, numberOfItems
+                        ), style = MaterialTheme.typography.subtitle2
+                    )
                 }
                 Box(modifier = Modifier.align(Alignment.Top)) {
                     IconButton(onClick = { showDropDownMenu = true }) {
-                        Icon(Icons.Filled.MoreVert,
-                            contentDescription = stringResource(R.string.fsl_group_card_menu_content_desc_more))
+                        Icon(
+                            Icons.Filled.MoreVert,
+                            contentDescription = stringResource(R.string.fsl_group_card_menu_content_desc_more)
+                        )
                     }
                     DropdownMenu(
                         expanded = showDropDownMenu,
@@ -151,23 +226,31 @@ private fun GroupedShoppingListCard(
                     }
                 }
             }
-            Divider(color = MaterialTheme.colors.onSurface.copy(alpha = 0.2f),
+            Divider(
+                color = MaterialTheme.colors.onSurface.copy(alpha = 0.2f),
                 thickness = 1.dp,
-                modifier = Modifier.padding(end = 16.dp))
+                modifier = Modifier.padding(end = 16.dp)
+            )
             Column {
                 for (item in groupList.shoppingList.take(itemsPerCard)) {
-                    ShoppingListCardItem(item, modifier = Modifier
-                        .padding(vertical = 8.dp)
-                        .fillMaxWidth())
+                    ShoppingListCardItem(
+                        item, modifier = Modifier
+                            .padding(vertical = 8.dp)
+                            .fillMaxWidth()
+                    )
                 }
             }
             if (numberOfItems > itemsPerCard) {
-                OutlinedButton(onClick = { onSeeAllClicked(groupList.group) },
+                OutlinedButton(
+                    onClick = { onSeeAllClicked(groupList.group) },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(end = 16.dp, bottom = 8.dp)) {
-                    Text(text = stringResource(R.string.fsl_group_button_see_all),
-                        style = MaterialTheme.typography.button)
+                        .padding(end = 16.dp, bottom = 8.dp)
+                ) {
+                    Text(
+                        text = stringResource(R.string.fsl_group_button_see_all),
+                        style = MaterialTheme.typography.button
+                    )
                 }
             }
         }
@@ -182,8 +265,10 @@ private fun ShoppingListCardItem(
     Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = modifier) {
         Column {
             Text(text = item.name, style = MaterialTheme.typography.body1)
-            Text(text = "${item.unitQuantity} ${item.unit}",
-                style = MaterialTheme.typography.caption)
+            Text(
+                text = "${item.unitQuantity} ${item.unit}",
+                style = MaterialTheme.typography.caption
+            )
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(text = "${item.purchaseQuantity}", style = MaterialTheme.typography.h6)

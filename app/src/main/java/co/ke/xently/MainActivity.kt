@@ -3,6 +3,8 @@ package co.ke.xently
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Scaffold
 import androidx.compose.runtime.Composable
@@ -16,7 +18,6 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import co.ke.xently.shoppinglist.ui.ShoppingList
 import co.ke.xently.shoppinglist.ui.ShoppingListDetail
-import co.ke.xently.shoppinglist.ui.ShoppingListRecommendation
 import co.ke.xently.shoppinglist.ui.ShoppingListViewModel
 import co.ke.xently.ui.theme.XentlyTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -44,7 +45,12 @@ fun XentlyNavHost(
 ) {
     NavHost(navController = navController, startDestination = "shoppinglist", modifier = modifier) {
         composable("shoppinglist") {
-            ShoppingList(viewModel = viewModel, navController = navController)
+            ShoppingList(
+                viewModel = viewModel,
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .fillMaxWidth(),
+            )
         }
         composable(
             "shoppingdetail/{groupId}",
@@ -55,16 +61,6 @@ fun XentlyNavHost(
             ),
         ) {
             ShoppingListDetail()
-        }
-        composable(
-            "shoppingrecommendation/{group}",
-            listOf(
-                navArgument("group") {
-                    type = NavType.StringType
-                },
-            ),
-        ) {
-            ShoppingListRecommendation()
         }
     }
 }
