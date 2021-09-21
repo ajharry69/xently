@@ -1,8 +1,8 @@
 package co.ke.xently.shoppinglist.repository
 
 import co.ke.xently.data.GroupedShoppingList
-import co.ke.xently.data.GroupedShoppingListCount
 import co.ke.xently.data.ShoppingListItem
+import co.ke.xently.data.ShoppingListRecommendation
 import kotlinx.coroutines.flow.Flow
 
 interface IShoppingListRepository {
@@ -13,4 +13,8 @@ interface IShoppingListRepository {
     fun getGroupedShoppingList(groupBy: String): Flow<Result<List<GroupedShoppingList>>>
 
     fun getGroupedShoppingListCount(groupBy: String): Flow<Map<Any, Int>>
+
+    fun getShoppingListItem(itemId: Long): Flow<Result<ShoppingListItem>>
+
+    fun getRecommendations(group: String, groupBy: String): Flow<Result<ShoppingListRecommendation>>
 }

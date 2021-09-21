@@ -7,5 +7,10 @@
     <string name="fsl_group_card_menu_content_desc_more">Show card menu</string>
     <string name="fsl_empty_shopping_list">You have no shopping list, yet!</string>
     <string name="fsl_generic_error_message">An error occurred</string>
-    <string name="fsl_data_loading">Loading...</string>
+    <string name="fsl_data_loading">Loading…</string>
+    <string name="fsl_add_item_text">ADD ITEM</string>
+    <string name="fsl_detail_screen_toolbar_title">%1$s item</string>
+    <string name="fsl_update">Update</string>
+    <string name="fsl_add">Add</string>
+    <string name="fsl_menu_navigation_icon_content_desc_back">Navigate back</string>
 </resources>

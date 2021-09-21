@@ -1,5 +1,6 @@
 package co.ke.xently.shoppinglist.ui
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -16,6 +17,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavHostController
 import co.ke.xently.data.GroupedShoppingList
 import co.ke.xently.data.ShoppingListItem
 import co.ke.xently.shoppinglist.R
@@ -27,6 +29,7 @@ import java.util.*
 fun ShoppingList(
     modifier: Modifier = Modifier,
     viewModel: ShoppingListViewModel,
+    navController: NavHostController,
     loadRemote: Boolean = false,
 ) {
     val coroutineScope = rememberCoroutineScope()
@@ -87,7 +90,7 @@ fun ShoppingList(
                     LazyColumn(modifier = modifier) {
                         items(groupedShoppingList) { groupList ->
                             GroupedShoppingListCard(
-                                groupList, groupedShoppingListCount,
+                                groupList, groupedShoppingListCount, navController,
                                 onRecommendGroupClicked = { group ->
                                     coroutineScope.launch {
                                         scaffoldState.bottomSheetState.expand()
@@ -116,7 +119,10 @@ private fun ShoppingListRecommendation(
     viewModel: ShoppingListViewModel,
     modifier: Modifier = Modifier,
 ) {
-    val shoppingListResult = viewModel.shoppingListResult.collectAsState().value
+    val coroutineScope = rememberCoroutineScope()
+    val recommendation by viewModel.getRecommendations(group = group)
+        .collectAsState(Result.success(null), coroutineScope.coroutineContext)
+    val shoppingListResult by viewModel.shoppingListResult.collectAsState(coroutineScope.coroutineContext)
 
     if (shoppingListResult.isSuccess) {
         val shoppingList = shoppingListResult.getOrThrow()
@@ -162,10 +168,11 @@ private fun ShoppingListRecommendation(
 private fun GroupedShoppingListCard(
     groupList: GroupedShoppingList,
     listCount: Map<Any, Int>,
-    onRecommendGroupClicked: ((group: Any) -> Unit) = {},
-    onDuplicateGroupClicked: ((group: Any) -> Unit) = {},
-    onDeleteGroupClicked: ((group: Any) -> Unit) = {},
-    onSeeAllClicked: ((group: Any) -> Unit) = {},
+    navController: NavHostController? = null,
+    onRecommendGroupClicked: (group: Any) -> Unit = {},
+    onDuplicateGroupClicked: (group: Any) -> Unit = {},
+    onDeleteGroupClicked: (group: Any) -> Unit = {},
+    onSeeAllClicked: (group: Any) -> Unit = {},
 ) {
     val itemsPerCard = 3
     var showDropDownMenu by remember { mutableStateOf(false) }
@@ -237,6 +244,9 @@ private fun GroupedShoppingListCard(
                         item, modifier = Modifier
                             .padding(vertical = 8.dp)
                             .fillMaxWidth()
+                            .clickable {
+                                navController?.navigate("shopping-list/${item.id}")
+                            }
                     )
                 }
             }

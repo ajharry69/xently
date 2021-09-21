@@ -4,16 +4,13 @@ import androidx.lifecycle.viewModelScope
 import co.ke.xently.common.Retry
 import co.ke.xently.common.di.qualifiers.coroutines.ComputationDispatcher
 import co.ke.xently.data.GroupedShoppingList
-import co.ke.xently.data.GroupedShoppingListCount
 import co.ke.xently.data.ShoppingListItem
+import co.ke.xently.data.ShoppingListRecommendation
 import co.ke.xently.feature.AbstractViewModel
 import co.ke.xently.shoppinglist.repository.IShoppingListRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.net.ConnectException
 import javax.inject.Inject
@@ -28,6 +25,8 @@ class ShoppingListViewModel @Inject constructor(
 ) : AbstractViewModel() {
     private val groupBy = MutableStateFlow<String?>(null)
     private val shoppingListItem = MutableStateFlow<ShoppingListItem?>(null)
+    private val shoppingListItemId = MutableStateFlow<Long?>(null)
+
     private val _shoppingItemResult = MutableStateFlow(success<ShoppingListItem?>(null))
     val shoppingItemResult: StateFlow<Result<ShoppingListItem?>>
         get() = _shoppingItemResult
@@ -89,19 +88,38 @@ class ShoppingListViewModel @Inject constructor(
         }
         viewModelScope.launch {
             shoppingListItem.collectLatest { item ->
-                if (item != null) repository.addShoppingListItem(item).catch { emit(failure(it)) }
-                    .collectLatest {
-                        _shoppingItemResult.value = it
-                    }
+                if (item != null) {
+                    repository.addShoppingListItem(item).catch { emit(failure(it)) }
+                        .collectLatest {
+                            _shoppingItemResult.value = it
+                        }
+                }
+            }
+        }
+        viewModelScope.launch {
+            shoppingListItemId.collectLatest { itemId ->
+                if (itemId != null) {
+                    repository.getShoppingListItem(itemId).catch { emit(failure(it)) }
+                        .collectLatest {
+                            _shoppingItemResult.value = it
+                        }
+                }
             }
         }
     }
 
-    fun setGroupBy(groupBy: String) {
+    /*fun setGroupBy(groupBy: String) {
         this.groupBy.value = groupBy
-    }
+    }*/
 
     fun addShoppingListItem(item: ShoppingListItem) {
         this.shoppingListItem.value = item
     }
+
+    fun getShoppingListItem(itemId: Long?) {
+        shoppingListItemId.value = itemId
+    }
+
+    fun getRecommendations(group: Any): Flow<Result<ShoppingListRecommendation?>> =
+        repository.getRecommendations(group.toString(), groupBy.value ?: "dateadded").conflate()
 }

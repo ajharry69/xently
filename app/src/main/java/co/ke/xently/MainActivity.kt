@@ -43,24 +43,29 @@ fun XentlyNavHost(
     modifier: Modifier = Modifier,
     viewModel: ShoppingListViewModel = viewModel(),
 ) {
-    NavHost(navController = navController, startDestination = "shoppinglist", modifier = modifier) {
-        composable("shoppinglist") {
+    NavHost(
+        navController = navController,
+        startDestination = "shopping-list",
+        modifier = modifier,
+    ) {
+        composable("shopping-list") {
             ShoppingList(
                 viewModel = viewModel,
                 modifier = Modifier
                     .fillMaxHeight()
                     .fillMaxWidth(),
+                navController = navController,
             )
         }
         composable(
-            "shoppingdetail/{groupId}",
+            "shopping-list/{groupId}",
             listOf(
                 navArgument("groupId") {
                     type = NavType.LongType
                 },
             ),
         ) {
-            ShoppingListDetail()
+            ShoppingListDetail(it.arguments?.getLong("groupId"), viewModel = viewModel, navController = navController)
         }
     }
 }

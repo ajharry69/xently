@@ -21,18 +21,19 @@ class ShoppingListRepository @Inject constructor(
     @IODispatcher
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : IShoppingListRepository {
-    override fun addShoppingListItem(item: ShoppingListItem) = flow {
-        emit(sendRequest(401) { service.addShoppingListItem(item) })
-    }.onEach {
-        dao.addShoppingListItems(item)
-    }.flowOn(ioDispatcher)
+    override fun addShoppingListItem(item: ShoppingListItem) = Retry().run {
+        flow {
+            emit(sendRequest(401) { service.addShoppingListItem(item) })
+        }.onEach {
+            dao.addShoppingListItems(item)
+        }.retryCatchIfNecessary(this).flowOn(ioDispatcher)
+    }
 
     override fun getShoppingList(
         groupBy: String?,
         remote: Boolean,
-    ): Flow<Result<List<ShoppingListItem>>> {
-        val retry = Retry()
-        return if (remote) {
+    ): Flow<Result<List<ShoppingListItem>>> = Retry().run {
+        if (remote) {
             flow { emit(sendRequest(401) { service.getShoppingList() }) }
                 .map { result ->
                     result.mapCatching {
@@ -41,7 +42,7 @@ class ShoppingListRepository @Inject constructor(
                         }
                     }
                 }
-                .retryCatchIfNecessary(retry)
+                .retryCatchIfNecessary(this)
                 .flowOn(ioDispatcher)
                 .onCompletion {
                     // Return cached records. Caveats:
@@ -55,21 +56,19 @@ class ShoppingListRepository @Inject constructor(
         }
     }
 
-    override fun getGroupedShoppingList(groupBy: String): Flow<Result<List<GroupedShoppingList>>> {
-        val retry = Retry()
-        return flow { emit(sendRequest(401) { service.getShoppingList(groupBy, "only-if-cached") }) }
-            .map { result ->
-                result.mapCatching {
-                    it.map { entry ->
-                        val shoppingList = entry.value.apply {
-                            dao.addShoppingListItems(*toTypedArray())
-                        }
-                        GroupedShoppingList(group = entry.key, shoppingList = shoppingList)
+    override fun getGroupedShoppingList(groupBy: String) = Retry().run {
+        flow {
+            emit(sendRequest(401) { service.getShoppingList(groupBy = groupBy) })
+        }.map { result ->
+            result.mapCatching {
+                it.map { entry ->
+                    val shoppingList = entry.value.apply {
+                        dao.addShoppingListItems(*toTypedArray())
                     }
+                    GroupedShoppingList(group = entry.key, shoppingList = shoppingList)
                 }
             }
-            .retryCatchIfNecessary(retry)
-            .flowOn(ioDispatcher)
+        }.retryCatchIfNecessary(this).flowOn(ioDispatcher)
     }
 
     override fun getGroupedShoppingListCount(groupBy: String) = when (groupBy) {
@@ -79,5 +78,21 @@ class ShoppingListRepository @Inject constructor(
         mutableMapOf<Any, Int>().apply {
             for (item in it) put(item.group, item.numberOfItems)
         }.toMap()
+    }
+
+    override fun getShoppingListItem(itemId: Long) = Retry().run {
+        dao.getShoppingListItem(itemId).map {
+            if (it == null) {
+                sendRequest(401) { service.getShoppingListItem(itemId) }
+            } else {
+                Result.success(it)
+            }
+        }.retryCatchIfNecessary(this).flowOn(ioDispatcher)
+    }
+
+    override fun getRecommendations(group: String, groupBy: String) = Retry().run {
+        flow {
+            emit(sendRequest(401) { service.getRecommendations(group, groupBy) })
+        }.retryCatchIfNecessary(this).flowOn(ioDispatcher)
     }
 }
