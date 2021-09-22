@@ -10,7 +10,7 @@ interface ShoppingListService {
     @POST("shopping-list/")
     suspend fun addShoppingListItem(@Body item: ShoppingListItem): Response<ShoppingListItem>
 
-    @GET("shopping-list/{id}")
+    @GET("shopping-list/{id}/")
     suspend fun getShoppingListItem(
         @Path("id") id: Long,
         @Header("Cache-Control") cacheControl: String = "only-if-cached",

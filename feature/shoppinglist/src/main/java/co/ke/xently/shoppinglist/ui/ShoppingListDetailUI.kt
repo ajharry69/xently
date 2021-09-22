@@ -39,15 +39,15 @@ fun ShoppingListDetail(
     )
     val item = itemResult.getOrNull() ?: ShoppingListItem()
 
-    var name by remember(itemResult, item) { mutableStateOf(TextFieldValue(item.name)) }
-    var unit by remember(itemResult, item) { mutableStateOf(TextFieldValue(item.unit)) }
-    var unitQuantity by remember(itemResult, item) {
+    var name by remember(itemId, itemResult, item) { mutableStateOf(TextFieldValue(item.name)) }
+    var unit by remember(itemId, itemResult, item) { mutableStateOf(TextFieldValue(item.unit)) }
+    var unitQuantity by remember(itemId, itemResult, item) {
         mutableStateOf(TextFieldValue(item.unitQuantity.toString()))
     }
-    var purchaseQuantity by remember(itemResult, item) {
+    var purchaseQuantity by remember(itemId, itemResult, item) {
         mutableStateOf(TextFieldValue(item.purchaseQuantity.toString()))
     }
-    var dateAdded by remember(itemResult, item) {
+    var dateAdded by remember(itemId, itemResult, item) {
         mutableStateOf(TextFieldValue(item.dateAdded.toString()))
     }
 

@@ -16,8 +16,8 @@ interface ShoppingListDao {
     @Query("SELECT * FROM shoppinglist;")
     fun getShoppingList(): Flow<List<ShoppingListItem>>
 
-    @Query("SELECT * FROM shoppinglist WHERE id = :itemId;")
-    fun getShoppingListItem(itemId: Long): Flow<ShoppingListItem?>
+    @Query("SELECT * FROM shoppinglist WHERE id = :id;")
+    fun getShoppingListItem(id: Long): Flow<ShoppingListItem?>
 
     @Query("SELECT dateAdded AS `group`, COUNT(dateAdded) AS numberOfItems FROM shoppinglist GROUP BY dateAdded;")
     fun getGroupCountByDateAdded(): Flow<List<GroupedShoppingListCount>>

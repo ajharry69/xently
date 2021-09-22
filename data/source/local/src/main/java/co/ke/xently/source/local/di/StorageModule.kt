@@ -7,8 +7,8 @@ import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 import co.ke.xently.common.di.qualifiers.EncryptedSharedPreference
 import co.ke.xently.common.di.qualifiers.UnencryptedSharedPreference
-import co.ke.xently.common.utils.ENCRYPTED_SHARED_PREFERENCE_KEY
-import co.ke.xently.common.utils.UNENCRYPTED_SHARED_PREFERENCE_KEY
+import co.ke.xently.common.ENCRYPTED_SHARED_PREFERENCE_KEY
+import co.ke.xently.common.UNENCRYPTED_SHARED_PREFERENCE_KEY
 import co.ke.xently.source.local.AssistantDatabase
 import dagger.Module
 import dagger.Provides

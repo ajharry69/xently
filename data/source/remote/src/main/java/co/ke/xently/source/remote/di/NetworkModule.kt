@@ -2,9 +2,9 @@ package co.ke.xently.source.remote.di
 
 import android.content.Context
 import android.content.SharedPreferences
+import co.ke.xently.common.TOKEN_VALUE_SHARED_PREFERENCE_KEY
 import co.ke.xently.common.di.qualifiers.EncryptedSharedPreference
-import co.ke.xently.common.utils.TOKEN_VALUE_SHARED_PREFERENCE_KEY
-import co.ke.xently.common.utils.isReleaseBuild
+import co.ke.xently.common.isReleaseBuild
 import co.ke.xently.source.remote.BuildConfig
 import co.ke.xently.source.remote.JSON_CONVERTER
 import co.ke.xently.source.remote.di.qualifiers.CacheInterceptor
@@ -30,27 +30,32 @@ object NetworkModule {
     @RequestHeadersInterceptor
     fun provideRequestHeadersInterceptors(@EncryptedSharedPreference preferences: SharedPreferences): Interceptor {
         return Interceptor { chain ->
-            val version = if (BuildConfig.API_VERSION.isNotBlank()) {
-                "; version=${BuildConfig.API_VERSION}"
-            } else ""
-
             val request = chain.request()
-            val requestBuilder = request.newBuilder()
-                .addHeader("Accept-Language", Locale.getDefault().language)
-                .addHeader("Accept", "application/json${version}")
 
-            // Add authorization header iff it wasn't already added by the incoming request
-            if (request.header("Authorization") == null) {
-                val authData = preferences.getString(
-                    TOKEN_VALUE_SHARED_PREFERENCE_KEY,
-                    BuildConfig.API_DEFAULT_AUTH_TOKEN,
-                )
-                if (!authData.isNullOrBlank()) {
-                    requestBuilder.addHeader("Authorization", "Bearer $authData")
-                }
-            }
+            return@Interceptor chain.proceed(
+                request.newBuilder().apply {
+                    // Add the following headers iff they weren't already added by the
+                    // incoming request
 
-            return@Interceptor chain.proceed(requestBuilder.build())
+                    if (request.header("Accept-Language") == null) {
+                        addHeader("Accept-Language", Locale.getDefault().language)
+                    }
+
+                    if (request.header("Accept") == null) {
+                        val version = if (BuildConfig.API_VERSION.isNotBlank()) {
+                            "; version=${BuildConfig.API_VERSION}"
+                        } else ""
+                        addHeader("Accept", "application/json${version}")
+                    }
+
+                    if (request.header("Authorization") == null) {
+                        preferences.getString(
+                            TOKEN_VALUE_SHARED_PREFERENCE_KEY,
+                            BuildConfig.API_DEFAULT_AUTH_TOKEN,
+                        )?.also { addHeader("Authorization", "Bearer $it") }
+                    }
+                }.build(),
+            )
         }
     }
 
@@ -109,7 +114,7 @@ object NetworkModule {
     @Singleton
     fun provideRetrofit(okHttpClient: OkHttpClient): Retrofit {
         return Retrofit.Builder()
-            .baseUrl("${BuildConfig.SERVER_BASE_URL}/api/")
+            .baseUrl(BuildConfig.API_BASE_URL)
             .addConverterFactory(GsonConverterFactory.create(JSON_CONVERTER))
             .client(okHttpClient)
             .build()

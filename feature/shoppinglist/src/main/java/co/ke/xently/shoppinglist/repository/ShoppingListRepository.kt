@@ -80,10 +80,10 @@ class ShoppingListRepository @Inject constructor(
         }.toMap()
     }
 
-    override fun getShoppingListItem(itemId: Long) = Retry().run {
-        dao.getShoppingListItem(itemId).map { item ->
+    override fun getShoppingListItem(id: Long) = Retry().run {
+        dao.getShoppingListItem(id).map { item ->
             if (item == null) {
-                sendRequest(401) { service.getShoppingListItem(itemId) }.apply {
+                sendRequest(401) { service.getShoppingListItem(id) }.apply {
                     getOrNull()?.also {
                         dao.addShoppingListItems(it)
                     }

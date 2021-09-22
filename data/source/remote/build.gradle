@@ -15,7 +15,7 @@ android {
         consumerProguardFiles "consumer-rules.pro"
 
         buildConfigField "String", "API_VERSION", '"' + api_version + '"'
-        buildConfigField "String", "SERVER_BASE_URL", '"' + server_base_url + '"'
+        buildConfigField "String", "API_BASE_URL", '"' + api_base_url + '"'
         buildConfigField "String", "API_DEFAULT_AUTH_TOKEN", '"' + api_default_auth_token + '"'
     }
 

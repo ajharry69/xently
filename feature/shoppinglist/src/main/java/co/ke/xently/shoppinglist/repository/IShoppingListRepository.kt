@@ -14,7 +14,7 @@ interface IShoppingListRepository {
 
     fun getGroupedShoppingListCount(groupBy: String): Flow<Map<Any, Int>>
 
-    fun getShoppingListItem(itemId: Long): Flow<Result<ShoppingListItem>>
+    fun getShoppingListItem(id: Long): Flow<Result<ShoppingListItem>>
 
     fun getRecommendations(group: String, groupBy: String): Flow<Result<ShoppingListRecommendation>>
 }
