@@ -14,8 +14,9 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
 
+        buildConfigField "String", "API_VERSION", '"' + api_version + '"'
         buildConfigField "String", "SERVER_BASE_URL", '"' + server_base_url + '"'
-        buildConfigField "String", "DEFAULT_AUTH_TOKEN", '"' + default_auth_token + '"'
+        buildConfigField "String", "API_DEFAULT_AUTH_TOKEN", '"' + api_default_auth_token + '"'
     }
 
     buildTypes {

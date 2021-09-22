@@ -30,15 +30,20 @@ object NetworkModule {
     @RequestHeadersInterceptor
     fun provideRequestHeadersInterceptors(@EncryptedSharedPreference preferences: SharedPreferences): Interceptor {
         return Interceptor { chain ->
+            val version = if (BuildConfig.API_VERSION.isNotBlank()) {
+                "; version=${BuildConfig.API_VERSION}"
+            } else ""
+
             val request = chain.request()
             val requestBuilder = request.newBuilder()
                 .addHeader("Accept-Language", Locale.getDefault().language)
-                .addHeader("Accept", "application/json; version=1.0")
+                .addHeader("Accept", "application/json${version}")
+
             // Add authorization header iff it wasn't already added by the incoming request
             if (request.header("Authorization") == null) {
                 val authData = preferences.getString(
                     TOKEN_VALUE_SHARED_PREFERENCE_KEY,
-                    BuildConfig.DEFAULT_AUTH_TOKEN,
+                    BuildConfig.API_DEFAULT_AUTH_TOKEN,
                 )
                 if (!authData.isNullOrBlank()) {
                     requestBuilder.addHeader("Authorization", "Bearer $authData")
@@ -55,12 +60,16 @@ object NetworkModule {
     fun provideCacheInterceptors(): Interceptor {
         return Interceptor { chain ->
             val request = chain.request()
-            var response = chain.proceed(request.newBuilder()
-                .cacheControl(CacheControl.parse(request.headers)).build())
+            var response = chain.proceed(
+                request.newBuilder()
+                    .cacheControl(CacheControl.parse(request.headers)).build()
+            )
             if (response.code == 504 && response.request.cacheControl.onlyIfCached) {
                 // See, https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#other
-                response = chain.proceed(response.request.newBuilder()
-                    .cacheControl(CacheControl.FORCE_NETWORK).build())
+                response = chain.proceed(
+                    response.request.newBuilder()
+                        .cacheControl(CacheControl.FORCE_NETWORK).build()
+                )
             }
             return@Interceptor response
         }
