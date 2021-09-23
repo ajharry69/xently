@@ -2,11 +2,11 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "f4f46dbd662513971ffc9dbede63bde5",
+    "identityHash": "655ff5911ffe9dd45818c8253f009cd0",
     "entities": [
       {
         "tableName": "shoppinglist",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `name` TEXT NOT NULL, `unit` TEXT NOT NULL, `unitQuantity` REAL NOT NULL, `purchaseQuantity` REAL NOT NULL, `dateAdded` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `name` TEXT NOT NULL, `unit` TEXT NOT NULL, `unitQuantity` REAL NOT NULL, `purchaseQuantity` REAL NOT NULL, `dateAdded` INTEGER NOT NULL, `naturalInput` TEXT NOT NULL, PRIMARY KEY(`id`))",
         "fields": [
           {
             "fieldPath": "id",
@@ -43,6 +43,12 @@
             "columnName": "dateAdded",
             "affinity": "INTEGER",
             "notNull": true
+          },
+          {
+            "fieldPath": "naturalInput",
+            "columnName": "naturalInput",
+            "affinity": "TEXT",
+            "notNull": true
           }
         ],
         "primaryKey": {
@@ -58,7 +64,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'f4f46dbd662513971ffc9dbede63bde5')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '655ff5911ffe9dd45818c8253f009cd0')"
     ]
   }
 }

@@ -1,7 +1,7 @@
 package co.ke.xently.source.remote.services
 
 import co.ke.xently.data.ShoppingListItem
-import co.ke.xently.data.ShoppingListRecommendation
+import co.ke.xently.data.RecommendationReport
 import co.ke.xently.source.remote.PagedData
 import retrofit2.Response
 import retrofit2.http.*
@@ -32,5 +32,5 @@ interface ShoppingListService {
         @Query("group") group: String,
         @Query("group_by") groupBy: String,
         @Header("Cache-Control") cacheControl: String = "only-if-cached",
-    ): Response<ShoppingListRecommendation>
+    ): Response<RecommendationReport>
 }

@@ -16,9 +16,11 @@ data class ShoppingListItem(
     val unitQuantity: Float = 1f,
     val purchaseQuantity: Float = 1f,
     val dateAdded: Date = Date(),
+    val naturalInput: String = "",
 ) {
-    override fun toString() =
+    override fun toString() = if (naturalInput.isNotBlank()) naturalInput else {
         "${name.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.ROOT) else it.toString() }}, ${unitQuantity}${unit} - $purchaseQuantity"
+    }
 }
 
 open class GroupedShoppingListCount(
@@ -39,11 +41,11 @@ data class GroupedShoppingList(
 ) : GroupedShoppingListCount(group, numberOfItems)
 
 
-data class ShoppingListRecommendation(
+data class RecommendationReport(
     val lookupDuration: Float = 0f,
     val count: Count = Count(),
     val recommendations: List<Recommendation> = emptyList(),
-    // TODO: Add missed items...
+    val missedItems: List<ShoppingListItem> = emptyList(),
 ) {
     data class Count(val hitItems: Int = 0, val shopsVisited: Int = 0)
 
@@ -59,7 +61,14 @@ data class ShoppingListRecommendation(
         data class Hits(
             val count: Int = 0,
             val totalPrice: Float = 0f,
-            val item: List<ShoppingListItem> = emptyList(),
-        )
+            val items: List<Item> = emptyList(),
+        ) {
+            data class Item(
+                val item: ShoppingListItem = ShoppingListItem(),
+                val purchaseQuantity: Float = 0f,
+                val unitPrice: Float = 0f,
+                val totalPrice: Float = 0f,
+            )
+        }
     }
 }

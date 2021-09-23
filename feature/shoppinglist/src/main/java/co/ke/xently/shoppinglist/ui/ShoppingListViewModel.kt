@@ -5,7 +5,7 @@ import co.ke.xently.common.Retry
 import co.ke.xently.common.di.qualifiers.coroutines.ComputationDispatcher
 import co.ke.xently.data.GroupedShoppingList
 import co.ke.xently.data.ShoppingListItem
-import co.ke.xently.data.ShoppingListRecommendation
+import co.ke.xently.data.RecommendationReport
 import co.ke.xently.feature.AbstractViewModel
 import co.ke.xently.shoppinglist.repository.IShoppingListRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -120,6 +120,6 @@ class ShoppingListViewModel @Inject constructor(
         shoppingListItemId.value = itemId
     }
 
-    fun getRecommendations(group: Any): Flow<Result<ShoppingListRecommendation?>> =
+    fun getRecommendations(group: Any): Flow<Result<RecommendationReport?>> =
         repository.getRecommendations(group.toString(), groupBy.value ?: "dateadded").conflate()
 }

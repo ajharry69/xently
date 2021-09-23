@@ -2,7 +2,7 @@ package co.ke.xently.shoppinglist.repository
 
 import co.ke.xently.data.GroupedShoppingList
 import co.ke.xently.data.ShoppingListItem
-import co.ke.xently.data.ShoppingListRecommendation
+import co.ke.xently.data.RecommendationReport
 import kotlinx.coroutines.flow.Flow
 
 interface IShoppingListRepository {
@@ -16,5 +16,5 @@ interface IShoppingListRepository {
 
     fun getShoppingListItem(id: Long): Flow<Result<ShoppingListItem>>
 
-    fun getRecommendations(group: String, groupBy: String): Flow<Result<ShoppingListRecommendation>>
+    fun getRecommendations(group: String, groupBy: String): Flow<Result<RecommendationReport>>
 }
