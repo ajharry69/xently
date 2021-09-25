@@ -43,11 +43,19 @@ data class GroupedShoppingList(
 
 data class RecommendationReport(
     val lookupDuration: Float = 0f,
-    val count: Count = Count(),
-    val recommendations: List<Recommendation> = emptyList(),
     val missedItems: List<ShoppingListItem> = emptyList(),
+    val recommendations: List<Recommendation> = emptyList(),
+    val count: Count = Count().copy(
+        missedItems = missedItems.size,
+        recommendations = recommendations.size,
+    ),
 ) {
-    data class Count(val hitItems: Int = 0, val shopsVisited: Int = 0)
+    data class Count(
+        val hitItems: Int = 0,
+        val missedItems: Int = 0,
+        val recommendations: Int = 0,
+        val shopsVisited: Int = 0,
+    )
 
     data class Recommendation(
         val id: Long = -1L,
@@ -56,7 +64,18 @@ data class RecommendationReport(
         val hits: Hits = Hits(),
         val addresses: List<Address> = emptyList(),
     ) {
-        data class Address(val id: Long = -1L)
+        val estimatedDistance: String = "2 km" // TODO: Move this in `Recommendation` constructor
+
+        data class Address(
+            val id: Long = -1L,
+            val town: String = "",
+            val location: List<Double> = emptyList(),
+        ) {
+            val latitude: Double
+                get() = location.component1()
+            val longitude: Double
+                get() = location.component2()
+        }
 
         data class Hits(
             val count: Int = 0,

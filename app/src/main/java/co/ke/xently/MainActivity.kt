@@ -16,7 +16,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import co.ke.xently.shoppinglist.ui.ShoppingList
+import co.ke.xently.shoppinglist.ui.ShoppingListScreen
 import co.ke.xently.shoppinglist.ui.ShoppingListDetail
 import co.ke.xently.shoppinglist.ui.ShoppingListViewModel
 import co.ke.xently.ui.theme.XentlyTheme
@@ -49,7 +49,7 @@ fun XentlyNavHost(
         modifier = modifier,
     ) {
         composable("shopping-list") {
-            ShoppingList(
+            ShoppingListScreen(
                 viewModel = viewModel,
                 modifier = Modifier
                     .fillMaxHeight()
