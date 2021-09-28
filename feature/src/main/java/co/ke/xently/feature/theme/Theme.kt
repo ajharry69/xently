@@ -1,4 +1,4 @@
-package co.ke.xently.ui.theme
+package co.ke.xently.feature.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material.MaterialTheme

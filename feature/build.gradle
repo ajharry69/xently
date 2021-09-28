@@ -33,10 +33,19 @@ android {
                 "-Xopt-in=kotlin.time.ExperimentalTime",
         ]
     }
+    buildFeatures {
+        compose true
+    }
+    composeOptions {
+        kotlinCompilerExtensionVersion compose_version
+    }
 }
 
 dependencies {
     implementation project(path: ":common")
+
+    // Navigation
+    api "androidx.navigation:navigation-compose:$navigation_version"
 
     api 'androidx.hilt:hilt-navigation-compose:1.0.0-alpha03'
     // https://developer.android.com/jetpack/compose/libraries#viewmodel
