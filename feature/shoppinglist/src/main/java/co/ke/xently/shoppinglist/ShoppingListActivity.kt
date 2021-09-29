@@ -5,8 +5,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -17,7 +15,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import co.ke.xently.feature.theme.XentlyTheme
-import co.ke.xently.shoppinglist.ui.detail.ShoppingListDetail
+import co.ke.xently.shoppinglist.ui.detail.ShoppingListItemScreen
 import co.ke.xently.shoppinglist.ui.list.ShoppingListScreen
 import co.ke.xently.shoppinglist.ui.list.ShoppingListViewModel
 import dagger.hilt.android.AndroidEntryPoint
@@ -28,19 +26,16 @@ class ShoppingListActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             XentlyTheme {
-                val navController = rememberNavController()
-                Scaffold {
-                    XentlyNavHost(navController = navController, modifier = Modifier.padding(it))
-                }
+                ShoppingListNavHost()
             }
         }
     }
 }
 
 @Composable
-internal fun XentlyNavHost(
-    navController: NavHostController,
+internal fun ShoppingListNavHost(
     modifier: Modifier = Modifier,
+    navController: NavHostController = rememberNavController(),
     viewModel: ShoppingListViewModel = viewModel(),
 ) {
     NavHost(
@@ -50,24 +45,24 @@ internal fun XentlyNavHost(
     ) {
         composable("shopping-list") {
             ShoppingListScreen(
-                viewModel = viewModel,
                 modifier = Modifier
                     .fillMaxHeight()
                     .fillMaxWidth(),
-                navController = navController,
+                viewModel = viewModel,
+                onShoppingListItemClicked = { navController.navigate("shopping-list/${it}") },
             )
         }
         composable(
-            "shopping-list/{groupId}",
+            "shopping-list/{itemId}",
             listOf(
-                navArgument("groupId") {
+                navArgument("itemId") {
                     type = NavType.LongType
                 },
             ),
         ) {
-            ShoppingListDetail(it.arguments?.getLong("groupId")) {
+            ShoppingListItemScreen(it.arguments?.getLong("itemId"), onNavigationIconClicked = {
                 navController.navigateUp()
-            }
+            })
         }
     }
 }
