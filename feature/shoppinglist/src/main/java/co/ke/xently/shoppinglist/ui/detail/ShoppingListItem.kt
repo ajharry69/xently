@@ -1,4 +1,4 @@
-package co.ke.xently.shoppinglist.ui
+package co.ke.xently.shoppinglist.ui.detail
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -11,7 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavHostController
+import androidx.hilt.navigation.compose.hiltViewModel
 import co.ke.xently.data.ShoppingListItem
 import co.ke.xently.shoppinglist.R
 import kotlinx.coroutines.launch
@@ -22,12 +22,12 @@ import okhttp3.internal.http.toHttpDateOrNull
 fun ShoppingListDetail(
     itemId: Long?,
     modifier: Modifier = Modifier,
-    viewModel: ShoppingListViewModel,
-    navController: NavHostController,
+    viewModel: ShoppingListItemViewModel = hiltViewModel(),
+    onNavigationIconClicked: (() -> Unit) = {},
 ) {
-    val coroutineScope = rememberCoroutineScope()
-    val scaffoldState = rememberScaffoldState()
     val scrollState = rememberScrollState()
+    val scaffoldState = rememberScaffoldState()
+    val coroutineScope = rememberCoroutineScope()
 
     viewModel.getShoppingListItem(itemId)
     val itemResult by viewModel.shoppingItemResult.collectAsState(
@@ -59,7 +59,7 @@ fun ShoppingListDetail(
             TopAppBar(
                 title = { Text(text = toolbarTitle) },
                 navigationIcon = {
-                    IconButton(onClick = { navController.navigateUp() }) {
+                    IconButton(onClick = onNavigationIconClicked) {
                         Icon(
                             Icons.Default.ArrowBack,
                             contentDescription = stringResource(R.string.fsl_menu_navigation_icon_content_desc_back),

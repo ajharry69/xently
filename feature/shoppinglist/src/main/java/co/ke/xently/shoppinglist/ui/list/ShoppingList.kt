@@ -1,4 +1,4 @@
-package co.ke.xently.shoppinglist.ui
+package co.ke.xently.shoppinglist.ui.list
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*

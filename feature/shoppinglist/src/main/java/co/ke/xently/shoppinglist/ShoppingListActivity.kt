@@ -17,9 +17,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import co.ke.xently.feature.theme.XentlyTheme
-import co.ke.xently.shoppinglist.ui.ShoppingListDetail
-import co.ke.xently.shoppinglist.ui.ShoppingListScreen
-import co.ke.xently.shoppinglist.ui.ShoppingListViewModel
+import co.ke.xently.shoppinglist.ui.detail.ShoppingListDetail
+import co.ke.xently.shoppinglist.ui.list.ShoppingListScreen
+import co.ke.xently.shoppinglist.ui.list.ShoppingListViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -65,11 +65,9 @@ internal fun XentlyNavHost(
                 },
             ),
         ) {
-            ShoppingListDetail(
-                it.arguments?.getLong("groupId"),
-                viewModel = viewModel,
-                navController = navController
-            )
+            ShoppingListDetail(it.arguments?.getLong("groupId")) {
+                navController.navigateUp()
+            }
         }
     }
 }
