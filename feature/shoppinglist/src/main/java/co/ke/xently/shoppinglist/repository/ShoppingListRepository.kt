@@ -15,7 +15,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class ShoppingListRepository @Inject constructor(
+internal class ShoppingListRepository @Inject constructor(
     private val dao: ShoppingListDao,
     private val service: ShoppingListService,
     @IODispatcher
@@ -94,9 +94,21 @@ class ShoppingListRepository @Inject constructor(
         }.retryCatchIfNecessary(this).flowOn(ioDispatcher)
     }
 
-    override fun getRecommendations(group: String, groupBy: String) = Retry().run {
+    override fun getRecommendations(recommendBy: Any, groupBy: String) = Retry().run {
         flow {
-            emit(sendRequest(401) { service.getRecommendations(group, groupBy) })
+            emit(sendRequest(401) {
+                when (recommendBy) {
+                    is ShoppingListItem -> {
+                        service.getRecommendations(listOf(recommendBy))
+                    }
+                    is List<*> -> {
+                        service.getRecommendations(recommendBy as List<ShoppingListItem>)
+                    }
+                    else -> {
+                        service.getRecommendations(recommendBy.toString(), groupBy)
+                    }
+                }
+            })
         }.retryCatchIfNecessary(this).flowOn(ioDispatcher)
     }
 }

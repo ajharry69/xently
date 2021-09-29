@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -17,7 +16,7 @@ import androidx.navigation.navArgument
 import co.ke.xently.feature.theme.XentlyTheme
 import co.ke.xently.shoppinglist.ui.detail.ShoppingListItemScreen
 import co.ke.xently.shoppinglist.ui.list.ShoppingListScreen
-import co.ke.xently.shoppinglist.ui.list.ShoppingListViewModel
+import co.ke.xently.shoppinglist.ui.list.grouped.ShoppingListGroupedScreen
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -36,19 +35,25 @@ class ShoppingListActivity : ComponentActivity() {
 internal fun ShoppingListNavHost(
     modifier: Modifier = Modifier,
     navController: NavHostController = rememberNavController(),
-    viewModel: ShoppingListViewModel = viewModel(),
 ) {
     NavHost(
         navController = navController,
-        startDestination = "shopping-list",
+        startDestination = "shopping-list-grouped",
         modifier = modifier,
     ) {
+        composable("shopping-list-grouped") {
+            ShoppingListGroupedScreen(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .fillMaxWidth(),
+                onShoppingListItemClicked = { navController.navigate("shopping-list/${it}") },
+            )
+        }
         composable("shopping-list") {
             ShoppingListScreen(
                 modifier = Modifier
                     .fillMaxHeight()
                     .fillMaxWidth(),
-                viewModel = viewModel,
                 onShoppingListItemClicked = { navController.navigate("shopping-list/${it}") },
             )
         }

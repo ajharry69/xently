@@ -1,5 +1,6 @@
 package co.ke.xently.shoppinglist.ui.list
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -14,33 +15,32 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import co.ke.xently.data.ShoppingListItem
 import co.ke.xently.shoppinglist.R
-import co.ke.xently.shoppinglist.ui.list.grouped.GroupedShoppingListCard
 import co.ke.xently.shoppinglist.ui.list.recommendation.ShoppingListRecommendationScreen
 import kotlinx.coroutines.launch
 
 
 @Composable
-fun ShoppingListScreen(
+internal fun ShoppingListScreen(
     modifier: Modifier = Modifier,
-    viewModel: ShoppingListViewModel,
     loadRemote: Boolean = false,
+    viewModel: ShoppingListViewModel = hiltViewModel(),
     onShoppingListItemClicked: (itemId: Long) -> Unit,
 ) {
     val coroutineScope = rememberCoroutineScope()
     val scaffoldState = rememberBottomSheetScaffoldState()
 
     viewModel.shouldLoadRemote(loadRemote)
-    val groupedShoppingListResult = viewModel.groupedShoppingListResult.collectAsState().value
-    val groupedShoppingListCount = viewModel.groupedShoppingListCount.collectAsState().value
-    var groupToRecommend by remember { mutableStateOf<Any?>(null) }
+    val shoppingListResult = viewModel.shoppingListResult.collectAsState().value
+    var itemToRecommendBy by remember { mutableStateOf<ShoppingListItem?>(null) }
 
     BottomSheetScaffold(
         scaffoldState = scaffoldState,
         topBar = {
             TopAppBar(
-                title = { Text("Xently") },
+                title = { Text(stringResource(id = R.string.fsl_toolbar_title)) },
                 navigationIcon = {
                     IconButton(onClick = { }) {
                         Icon(Icons.Filled.Menu, contentDescription = null)
@@ -57,10 +57,9 @@ fun ShoppingListScreen(
             )
         },
         sheetContent = {
-            if (groupToRecommend != null) {
+            if (itemToRecommendBy != null) {
                 ShoppingListRecommendationScreen(
-                    group = groupToRecommend!!,
-                    viewModel = viewModel,
+                    recommendBy = itemToRecommendBy!!,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(start = 16.dp),
@@ -69,30 +68,30 @@ fun ShoppingListScreen(
         },
         sheetPeekHeight = 0.dp,
     ) {
-        if (groupedShoppingListResult.isSuccess) {
-            val groupedShoppingList = groupedShoppingListResult.getOrThrow()
+        if (shoppingListResult.isSuccess) {
+            val shoppingList = shoppingListResult.getOrThrow()
             when {
-                groupedShoppingList == null -> {
+                shoppingList == null -> {
                     Box(contentAlignment = Alignment.Center, modifier = modifier) {
                         CircularProgressIndicator()
                     }
                 }
-                groupedShoppingList.isEmpty() -> {
+                shoppingList.isEmpty() -> {
                     Box(contentAlignment = Alignment.Center, modifier = modifier) {
                         Text(text = stringResource(R.string.fsl_empty_shopping_list))
                     }
                 }
                 else -> {
                     LazyColumn(modifier = modifier) {
-                        items(groupedShoppingList) { groupList ->
-                            GroupedShoppingListCard(
-                                groupList, groupedShoppingListCount,
-                                onShoppingListItemClicked = onShoppingListItemClicked,
-                                onRecommendGroupClicked = { group ->
+                        items(shoppingList) { item ->
+                            ShoppingListItemCard(
+                                item,
+                                onItemClicked = onShoppingListItemClicked,
+                                onRecommendClicked = {
                                     coroutineScope.launch {
                                         scaffoldState.bottomSheetState.expand()
                                     }
-                                    groupToRecommend = group
+                                    itemToRecommendBy = item
                                 },
                             )
                         }
@@ -102,7 +101,7 @@ fun ShoppingListScreen(
         } else {
             Box(contentAlignment = Alignment.Center, modifier = modifier) {
                 Text(
-                    text = groupedShoppingListResult.exceptionOrNull()?.localizedMessage
+                    text = shoppingListResult.exceptionOrNull()?.localizedMessage
                         ?: stringResource(R.string.fsl_generic_error_message)
                 )
             }
@@ -111,13 +110,16 @@ fun ShoppingListScreen(
 }
 
 @Composable
-internal fun ShoppingListCardItem(
+internal fun ShoppingListItemCard(
     item: ShoppingListItem, modifier: Modifier = Modifier,
+    onItemClicked: ((id: Long) -> Unit) = {},
     onRecommendClicked: ((id: Long) -> Unit) = {},
     onDeleteClicked: ((id: Long) -> Unit) = {},
 ) {
     var showDropMenu by remember { mutableStateOf(false) }
-    Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = modifier) {
+    Row(
+        horizontalArrangement = Arrangement.SpaceBetween,
+        modifier = modifier.clickable { onItemClicked(item.id) }) {
         Column {
             Text(text = item.name, style = MaterialTheme.typography.body1)
             Text(

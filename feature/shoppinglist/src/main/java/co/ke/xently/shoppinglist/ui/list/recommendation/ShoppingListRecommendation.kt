@@ -11,22 +11,22 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import co.ke.xently.data.RecommendationReport
 import co.ke.xently.data.RecommendationReport.Recommendation
 import co.ke.xently.shoppinglist.R
-import co.ke.xently.shoppinglist.ui.list.ShoppingListCardItem
-import co.ke.xently.shoppinglist.ui.list.ShoppingListViewModel
+import co.ke.xently.shoppinglist.ui.list.ShoppingListItemCard
 import java.text.DecimalFormat
 
 
 @Composable
 internal fun ShoppingListRecommendationScreen(
-    group: Any,
-    viewModel: ShoppingListViewModel,
+    recommendBy: Any,
     modifier: Modifier = Modifier,
+    viewModel: ShoppingListRecommendationViewModel = hiltViewModel(),
 ) {
     val coroutineScope = rememberCoroutineScope()
-    val recommendationReportResult by viewModel.getRecommendations(group = group)
+    val recommendationReportResult by viewModel.getRecommendations(recommendBy = recommendBy)
         .collectAsState(Result.success(null), coroutineScope.coroutineContext)
 
     if (recommendationReportResult.isSuccess) {
@@ -71,7 +71,7 @@ internal fun ShoppingListRecommendationScreen(
                         item {
                             RecommendationReportItemGroup(title = "Missed items") {
                                 report.missedItems.forEach { item ->
-                                    ShoppingListCardItem(
+                                    ShoppingListItemCard(
                                         item = item,
                                         modifier = Modifier
                                             .fillMaxWidth()

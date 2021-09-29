@@ -1,10 +1,13 @@
 package co.ke.xently.shoppinglist.ui.list.grouped
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -12,15 +15,105 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import co.ke.xently.data.GroupedShoppingList
 import co.ke.xently.data.ShoppingListItem
 import co.ke.xently.shoppinglist.R
-import co.ke.xently.shoppinglist.ui.list.ShoppingListCardItem
+import co.ke.xently.shoppinglist.ui.list.ShoppingListItemCard
+import co.ke.xently.shoppinglist.ui.list.recommendation.ShoppingListRecommendationScreen
+import kotlinx.coroutines.launch
 import java.util.*
 
+@Composable
+internal fun ShoppingListGroupedScreen(
+    modifier: Modifier = Modifier,
+    viewModel: ShoppingListGroupedViewModel = hiltViewModel(),
+    loadRemote: Boolean = false,
+    onShoppingListItemClicked: (itemId: Long) -> Unit,
+) {
+    val coroutineScope = rememberCoroutineScope()
+    val scaffoldState = rememberBottomSheetScaffoldState()
+
+    viewModel.shouldLoadRemote(loadRemote)
+    val groupedShoppingListResult = viewModel.groupedShoppingListResult.collectAsState().value
+    val groupedShoppingListCount = viewModel.groupedShoppingListCount.collectAsState().value
+    var groupToRecommend by remember { mutableStateOf<Any?>(null) }
+
+    BottomSheetScaffold(
+        scaffoldState = scaffoldState,
+        topBar = {
+            TopAppBar(
+                title = { Text(stringResource(id = R.string.fsl_toolbar_title)) },
+                navigationIcon = {
+                    IconButton(onClick = { }) {
+                        Icon(Icons.Filled.Menu, contentDescription = null)
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { }) {
+                        Icon(
+                            Icons.Filled.Search,
+                            contentDescription = "Localized description"
+                        )
+                    }
+                }
+            )
+        },
+        sheetContent = {
+            if (groupToRecommend != null) {
+                ShoppingListRecommendationScreen(
+                    recommendBy = groupToRecommend!!,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 16.dp),
+                )
+            }
+        },
+        sheetPeekHeight = 0.dp,
+    ) {
+        if (groupedShoppingListResult.isSuccess) {
+            val groupedShoppingList = groupedShoppingListResult.getOrThrow()
+            when {
+                groupedShoppingList == null -> {
+                    Box(contentAlignment = Alignment.Center, modifier = modifier) {
+                        CircularProgressIndicator()
+                    }
+                }
+                groupedShoppingList.isEmpty() -> {
+                    Box(contentAlignment = Alignment.Center, modifier = modifier) {
+                        Text(text = stringResource(R.string.fsl_empty_shopping_list))
+                    }
+                }
+                else -> {
+                    LazyColumn(modifier = modifier) {
+                        items(groupedShoppingList) { groupList ->
+                            GroupedShoppingListCard(
+                                groupList, groupedShoppingListCount,
+                                onShoppingListItemClicked = onShoppingListItemClicked,
+                                onRecommendGroupClicked = { group ->
+                                    coroutineScope.launch {
+                                        scaffoldState.bottomSheetState.expand()
+                                    }
+                                    groupToRecommend = group
+                                },
+                            )
+                        }
+                    }
+                }
+            }
+        } else {
+            Box(contentAlignment = Alignment.Center, modifier = modifier) {
+                Text(
+                    text = groupedShoppingListResult.exceptionOrNull()?.localizedMessage
+                        ?: stringResource(R.string.fsl_generic_error_message)
+                )
+            }
+        }
+    }
+}
 
 @Composable
-internal fun GroupedShoppingListCard(
+private fun GroupedShoppingListCard(
     groupList: GroupedShoppingList,
     listCount: Map<Any, Int>,
     onShoppingListItemClicked: ((itemId: Long) -> Unit) = {},
@@ -95,13 +188,10 @@ internal fun GroupedShoppingListCard(
             )
             Column {
                 for (item in groupList.shoppingList.take(itemsPerCard)) {
-                    ShoppingListCardItem(
-                        item, modifier = Modifier
+                    ShoppingListItemCard(
+                        item, onItemClicked = onShoppingListItemClicked, modifier = Modifier
                             .padding(vertical = 8.dp)
                             .fillMaxWidth()
-                            .clickable {
-                                onShoppingListItemClicked(item.id)
-                            }
                     )
                 }
             }

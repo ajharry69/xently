@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="fsl_title">Shopping list</string>
+    <string name="fsl_toolbar_title">Shopping list</string>
     <string name="fsl_group_button_see_all">SEE ALL</string>
     <string name="fsl_group_menu_recommend">Recommend</string>
     <string name="fsl_group_menu_duplicate">Duplicate</string>
