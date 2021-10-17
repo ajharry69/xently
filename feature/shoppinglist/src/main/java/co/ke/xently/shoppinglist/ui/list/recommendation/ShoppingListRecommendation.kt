@@ -15,7 +15,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import co.ke.xently.data.RecommendationReport
 import co.ke.xently.data.RecommendationReport.Recommendation
 import co.ke.xently.shoppinglist.R
+import co.ke.xently.shoppinglist.ui.GoogleMapView
 import co.ke.xently.shoppinglist.ui.list.ShoppingListItemCard
+import com.google.android.libraries.maps.GoogleMap
+import com.google.android.libraries.maps.model.LatLng
 import java.text.DecimalFormat
 
 
@@ -24,6 +27,7 @@ internal fun ShoppingListRecommendationScreen(
     recommendBy: Any,
     modifier: Modifier = Modifier,
     viewModel: ShoppingListRecommendationViewModel = hiltViewModel(),
+    onLocationPermissionNotGranted: ((GoogleMap) -> Unit) = {},
 ) {
     val coroutineScope = rememberCoroutineScope()
     val recommendationReportResult by viewModel.getRecommendations(recommendBy = recommendBy)
@@ -43,8 +47,22 @@ internal fun ShoppingListRecommendationScreen(
             else -> {
                 LazyColumn(modifier = modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     item {
-                        // TODO: Show map
-                        RecommendationReportItemGroup(title = "Synopsis") {
+                        GoogleMapView(
+                            Modifier.height(250.dp),
+                            LatLng(0.0, 0.0),
+                            report.recommendations.flatMap {
+                                it.addresses.map { address ->
+                                    LatLng(address.latitude, address.longitude)
+                                }
+                            }.toTypedArray(),
+                            onLocationPermissionNotGranted,
+                        )
+                    }
+                    item {
+                        RecommendationReportItemGroup(
+                            modifier = Modifier.padding(start = 16.dp),
+                            title = "Synopsis",
+                        ) {
                             RecommendationReportSynopsisCard(
                                 report = report,
                                 modifier = Modifier
@@ -55,7 +73,10 @@ internal fun ShoppingListRecommendationScreen(
                     }
                     if (report.count.hitItems > 0) {
                         item {
-                            RecommendationReportItemGroup(title = "Recommendations") {
+                            RecommendationReportItemGroup(
+                                modifier = Modifier.padding(start = 16.dp),
+                                title = "Recommendations",
+                            ) {
                                 Column {
                                     report.recommendations.forEach {
                                         RecommendationCardItem(
@@ -69,7 +90,9 @@ internal fun ShoppingListRecommendationScreen(
                     }
                     if (report.count.missedItems > 0) {
                         item {
-                            RecommendationReportItemGroup(title = "Missed items") {
+                            RecommendationReportItemGroup(
+                                modifier = Modifier.padding(start = 16.dp), title = "Missed items",
+                            ) {
                                 report.missedItems.forEach { item ->
                                     ShoppingListItemCard(
                                         item = item,

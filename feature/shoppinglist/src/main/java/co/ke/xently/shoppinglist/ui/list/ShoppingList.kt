@@ -60,9 +60,7 @@ internal fun ShoppingListScreen(
             if (itemToRecommendBy != null) {
                 ShoppingListRecommendationScreen(
                     recommendBy = itemToRecommendBy!!,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 16.dp),
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
         },

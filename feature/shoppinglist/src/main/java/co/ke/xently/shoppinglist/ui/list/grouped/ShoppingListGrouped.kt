@@ -63,9 +63,7 @@ internal fun ShoppingListGroupedScreen(
             if (groupToRecommend != null) {
                 ShoppingListRecommendationScreen(
                     recommendBy = groupToRecommend!!,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 16.dp),
+                    modifier = Modifier.fillMaxWidth(),
                 )
             }
         },
