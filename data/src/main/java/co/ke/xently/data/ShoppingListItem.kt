@@ -4,6 +4,7 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import co.ke.xently.common.Exclude
 import co.ke.xently.common.Exclude.During.SERIALIZATION
+import java.text.DecimalFormat
 import java.util.*
 
 @Entity(tableName = "shoppinglist")
@@ -65,6 +66,9 @@ data class RecommendationReport(
         val addresses: List<Address> = emptyList(),
     ) {
         val estimatedDistance: String = "2 km" // TODO: Move this in `Recommendation` constructor
+
+        val printableTotalPrice: String
+            get() = DecimalFormat("KES ###,###.##").format(hits.totalPrice)
 
         data class Address(
             val id: Long = -1L,

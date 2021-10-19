@@ -17,8 +17,8 @@ import co.ke.xently.data.RecommendationReport.Recommendation
 import co.ke.xently.shoppinglist.R
 import co.ke.xently.shoppinglist.ui.GoogleMapView
 import co.ke.xently.shoppinglist.ui.list.ShoppingListItemCard
-import com.google.android.libraries.maps.GoogleMap
 import com.google.android.libraries.maps.model.LatLng
+import com.google.android.libraries.maps.model.MarkerOptions
 import java.text.DecimalFormat
 
 
@@ -27,7 +27,6 @@ internal fun ShoppingListRecommendationScreen(
     recommendBy: Any,
     modifier: Modifier = Modifier,
     viewModel: ShoppingListRecommendationViewModel = hiltViewModel(),
-    onLocationPermissionNotGranted: ((GoogleMap) -> Unit) = {},
 ) {
     val coroutineScope = rememberCoroutineScope()
     val recommendationReportResult by viewModel.getRecommendations(recommendBy = recommendBy)
@@ -52,10 +51,13 @@ internal fun ShoppingListRecommendationScreen(
                             LatLng(0.0, 0.0),
                             report.recommendations.flatMap {
                                 it.addresses.map { address ->
-                                    LatLng(address.latitude, address.longitude)
+                                    MarkerOptions().apply {
+                                        title("${it.name}, ${it.taxPin}")
+                                        snippet("${it.hits.count} item(s), ${it.printableTotalPrice}")
+                                        position(LatLng(address.latitude, address.longitude))
+                                    }
                                 }
                             }.toTypedArray(),
-                            onLocationPermissionNotGranted,
                         )
                     }
                     item {
@@ -172,9 +174,8 @@ private fun RecommendationCardItem(
     Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = modifier) {
         Column {
             Text(text = recommendation.name, style = MaterialTheme.typography.body1)
-            val totalPrice = DecimalFormat("KES ###,###.##").format(recommendation.hits.totalPrice)
             Text(
-                text = "$totalPrice | ${recommendation.estimatedDistance} away",
+                text = "${recommendation.printableTotalPrice} | ${recommendation.estimatedDistance} away",
                 style = MaterialTheme.typography.caption
             )
         }

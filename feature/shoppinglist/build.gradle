@@ -35,6 +35,7 @@ android {
                 "-Xopt-in=kotlin.time.ExperimentalTime",
                 "-Xopt-in=kotlinx.coroutines.ExperimentalCoroutinesApi",
                 "-Xopt-in=androidx.compose.material.ExperimentalMaterialApi",
+                "-Xopt-in=com.google.accompanist.permissions.ExperimentalPermissionsApi",
         ]
         useIR = true
     }

@@ -1,19 +1,20 @@
 package co.ke.xently.shoppinglist.ui
 
 import android.Manifest
-import android.content.pm.PackageManager
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
+import android.annotation.SuppressLint
+import androidx.compose.material.AlertDialog
+import androidx.compose.material.Text
+import androidx.compose.material.TextButton
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.viewinterop.NoOpUpdate
-import androidx.core.app.ActivityCompat
+import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.google.android.libraries.maps.CameraUpdateFactory
-import com.google.android.libraries.maps.GoogleMap
 import com.google.android.libraries.maps.MapView
 import com.google.android.libraries.maps.model.LatLng
-import com.google.maps.android.ktx.addMarker
+import com.google.android.libraries.maps.model.MarkerOptions
 import com.google.maps.android.ktx.awaitMap
 
 
@@ -21,8 +22,7 @@ import com.google.maps.android.ktx.awaitMap
 internal fun GoogleMapView(
     modifier: Modifier,
     currentPosition: LatLng,
-    markerPositions: Array<LatLng>,
-    onLocationPermissionNotGranted: (GoogleMap) -> Unit,
+    markerPositions: Array<MarkerOptions>,
     onMapViewUpdated: (MapView) -> Unit = NoOpUpdate,
 ) {
     // The MapView lifecycle is handled by this composable. As the MapView also needs to be updated
@@ -35,53 +35,68 @@ internal fun GoogleMapView(
         mapView,
         currentPosition,
         markerPositions,
-        onLocationPermissionNotGranted,
         onMapViewUpdated,
     )
 }
 
-private suspend fun MapView.xentlyAwaitedMap(onLocationPermissionNotGranted: (GoogleMap) -> Unit): GoogleMap {
-    return awaitMap().apply {
-        uiSettings.apply {
-            isZoomControlsEnabled = true
-            isZoomGesturesEnabled = true
-            isMyLocationButtonEnabled = true
-        }
-        if (ActivityCompat.checkSelfPermission(
-                context,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
-                context,
-                Manifest.permission.ACCESS_COARSE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            onLocationPermissionNotGranted(this)
-        } else isMyLocationEnabled = true
-    }
-}
-
+@SuppressLint("MissingPermission")
 @Composable
 internal fun GoogleMapViewContainer(
     modifier: Modifier,
     map: MapView,
     currentPosition: LatLng,
-    markerPositions: Array<LatLng>,
-    onLocationPermissionNotGranted: (GoogleMap) -> Unit,
+    markerPositions: Array<MarkerOptions>,
     onMapViewUpdated: (MapView) -> Unit = NoOpUpdate,
 ) {
+    var showRationale by rememberSaveable { mutableStateOf(true) }
+
+    val permissionState = rememberMultiplePermissionsState(
+        listOf(
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.ACCESS_COARSE_LOCATION,
+        )
+    )
+
+    if (!permissionState.permissionRequested) {
+        SideEffect {
+            permissionState.launchMultiplePermissionRequest()
+        }
+    }
+    // If the user denied the permission but a rationale should be shown, or the user sees
+    // the permission for the first time, explain why the feature is needed by the app and allow
+    // the user to be presented with the permission again or to not see the rationale any more.
+    else if (permissionState.shouldShowRationale && showRationale) {
+        AlertDialog(
+            onDismissRequest = { showRationale = false },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        permissionState.launchMultiplePermissionRequest()
+                        showRationale = false
+                    },
+                ) { Text("REQUEST PERMISSION") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showRationale = false }) {
+                    Text("DON'T SHOW AGAIN")
+                }
+            },
+            text = { Text("Location service is important for effective shop recommendation by this app. Please grant the permission.") },
+        )
+    }
     val cameraPositions = remember(*markerPositions) { markerPositions }
 
-    LaunchedEffect(map) {
-        val googleMap = map.xentlyAwaitedMap(onLocationPermissionNotGranted)
+    LaunchedEffect(map, permissionState.allPermissionsGranted) {
+        val googleMap = map.awaitMap().apply {
+            uiSettings.apply {
+                isZoomControlsEnabled = true
+                isZoomGesturesEnabled = true
+                isMyLocationButtonEnabled = true
+            }
+            isMyLocationEnabled = permissionState.allPermissionsGranted
+        }
         cameraPositions.forEach {
-            googleMap.addMarker { position(it) }
+            googleMap.addMarker(it)
         }
         googleMap.moveCamera(CameraUpdateFactory.newLatLng(currentPosition))
     }
