@@ -3,6 +3,7 @@ package co.ke.xently.shoppinglist.repository
 import co.ke.xently.common.Retry
 import co.ke.xently.common.di.qualifiers.coroutines.IODispatcher
 import co.ke.xently.data.GroupedShoppingList
+import co.ke.xently.data.RecommendationRequest
 import co.ke.xently.data.ShoppingListItem
 import co.ke.xently.source.local.daos.ShoppingListDao
 import co.ke.xently.source.remote.retryCatchIfNecessary
@@ -21,6 +22,7 @@ internal class ShoppingListRepository @Inject constructor(
     @IODispatcher
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : IShoppingListRepository {
+    // TODO: Use memoization to retrieve all grouped shopping list items...
     override fun addShoppingListItem(item: ShoppingListItem) = Retry().run {
         flow {
             emit(sendRequest(401) { service.addShoppingListItem(item) })
@@ -94,17 +96,28 @@ internal class ShoppingListRepository @Inject constructor(
         }.retryCatchIfNecessary(this).flowOn(ioDispatcher)
     }
 
-    override fun getRecommendations(recommendBy: Any, groupBy: String) = Retry().run {
+    @Suppress("UNCHECKED_CAST")
+    override fun getRecommendations(
+        recommendBy: Any,
+        recommendFrom: RecommendFrom,
+        groupBy: String,
+        saveList: Boolean
+    ) = Retry().run {
         flow {
             emit(sendRequest(401) {
-                when (recommendBy) {
-                    is ShoppingListItem -> {
-                        service.getRecommendations(listOf(recommendBy))
+                when (recommendFrom) {
+                    RecommendFrom.Item -> {
+                        val item = if (recommendBy !is ShoppingListItem)
+                            dao.getShoppingListItem(recommendBy.toString().toLong())
+                                .first()!! else recommendBy
+                        service.getRecommendations(RecommendationRequest(listOf(item), saveList))
                     }
-                    is List<*> -> {
-                        service.getRecommendations(recommendBy as List<ShoppingListItem>)
+                    RecommendFrom.ItemList -> {
+                        service.getRecommendations(
+                            RecommendationRequest(recommendBy as List<ShoppingListItem>, saveList)
+                        )
                     }
-                    else -> {
+                    RecommendFrom.GroupedList -> {
                         service.getRecommendations(recommendBy.toString(), groupBy)
                     }
                 }

@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.runtime.*
@@ -15,95 +16,121 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import co.ke.xently.data.RecommendationReport
 import co.ke.xently.data.RecommendationReport.Recommendation
 import co.ke.xently.shoppinglist.R
+import co.ke.xently.shoppinglist.repository.RecommendFrom
 import co.ke.xently.shoppinglist.ui.GoogleMapView
 import co.ke.xently.shoppinglist.ui.list.ShoppingListItemCard
 import com.google.android.libraries.maps.model.LatLng
 import com.google.android.libraries.maps.model.MarkerOptions
 import java.text.DecimalFormat
 
-
 @Composable
 internal fun ShoppingListRecommendationScreen(
     recommendBy: Any,
     modifier: Modifier = Modifier,
+    recommendFrom: RecommendFrom = RecommendFrom.GroupedList,
     viewModel: ShoppingListRecommendationViewModel = hiltViewModel(),
+    onNavigationIconClicked: (() -> Unit) = {},
 ) {
+    val scaffoldState = rememberScaffoldState()
     val coroutineScope = rememberCoroutineScope()
-    val recommendationReportResult by viewModel.getRecommendations(recommendBy = recommendBy)
-        .collectAsState(Result.success(null), coroutineScope.coroutineContext)
+    val recommendationReportResult by viewModel.getRecommendations(
+        recommendBy = recommendBy,
+        recommendFrom = recommendFrom,
+    ).collectAsState(Result.success(null), coroutineScope.coroutineContext)
 
-    if (recommendationReportResult.isSuccess) {
-        when (val report = recommendationReportResult.getOrThrow()) {
-            null -> {
-                Box(contentAlignment = Alignment.Center, modifier = modifier) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        CircularProgressIndicator()
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text(text = stringResource(R.string.fsl_data_loading))
-                    }
-                }
-            }
-            else -> {
-                LazyColumn(modifier = modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    item {
-                        GoogleMapView(
-                            Modifier.height(250.dp),
-                            LatLng(0.0, 0.0),
-                            report.recommendations.flatMap {
-                                it.addresses.map { address ->
-                                    MarkerOptions().apply {
-                                        title("${it.name}, ${it.taxPin}")
-                                        snippet("${it.hits.count} item(s), ${it.printableTotalPrice}")
-                                        position(LatLng(address.latitude, address.longitude))
-                                    }
-                                }
-                            }.toTypedArray(),
+    Scaffold(
+        scaffoldState = scaffoldState,
+        topBar = {
+            TopAppBar(
+                title = { Text(text = "Recommendations") },
+                navigationIcon = {
+                    IconButton(onClick = onNavigationIconClicked) {
+                        Icon(
+                            Icons.Default.ArrowBack,
+                            contentDescription = stringResource(R.string.fsl_menu_navigation_icon_content_desc_back),
                         )
                     }
-                    item {
-                        RecommendationReportItemGroup(
-                            modifier = Modifier.padding(start = 16.dp),
-                            title = "Synopsis",
-                        ) {
-                            RecommendationReportSynopsisCard(
-                                report = report,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(end = 16.dp),
-                            )
+                },
+            )
+        },
+    ) {
+        if (recommendationReportResult.isSuccess) {
+            when (val report = recommendationReportResult.getOrThrow()) {
+                null -> {
+                    Box(contentAlignment = Alignment.Center, modifier = modifier.padding(it)) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            CircularProgressIndicator()
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text(text = stringResource(R.string.fsl_data_loading))
                         }
                     }
-                    if (report.count.hitItems > 0) {
+                }
+                else -> {
+                    LazyColumn(
+                        modifier = modifier.padding(it),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        item {
+                            GoogleMapView(
+                                Modifier.height(250.dp),
+                                LatLng(0.0, 0.0),
+                                report.recommendations.flatMap {
+                                    it.addresses.map { address ->
+                                        MarkerOptions().apply {
+                                            title("${it.name}, ${it.taxPin}")
+                                            snippet("${it.hits.count} item(s), ${it.printableTotalPrice}")
+                                            position(LatLng(address.latitude, address.longitude))
+                                        }
+                                    }
+                                }.toTypedArray(),
+                            )
+                        }
                         item {
                             RecommendationReportItemGroup(
                                 modifier = Modifier.padding(start = 16.dp),
-                                title = "Recommendations",
+                                title = "Synopsis",
                             ) {
-                                Column {
-                                    report.recommendations.forEach {
-                                        RecommendationCardItem(
-                                            recommendation = it,
-                                            modifier = Modifier.fillMaxWidth()
-                                        )
+                                RecommendationReportSynopsisCard(
+                                    report = report,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(end = 16.dp),
+                                )
+                            }
+                        }
+                        if (report.count.hitItems > 0) {
+                            item {
+                                RecommendationReportItemGroup(
+                                    modifier = Modifier.padding(start = 16.dp),
+                                    title = "Recommendations",
+                                ) {
+                                    Column {
+                                        report.recommendations.forEach {
+                                            RecommendationCardItem(
+                                                recommendation = it,
+                                                modifier = Modifier.fillMaxWidth()
+                                            )
+                                        }
                                     }
                                 }
                             }
                         }
-                    }
-                    if (report.count.missedItems > 0) {
-                        item {
-                            RecommendationReportItemGroup(
-                                modifier = Modifier.padding(start = 16.dp), title = "Missed items",
-                            ) {
-                                report.missedItems.forEach { item ->
-                                    ShoppingListItemCard(
-                                        item = item,
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(vertical = 8.dp)
-                                            .fillMaxWidth(),
-                                    ) {
-                                        // TODO: Implement click listener...
+                        if (report.count.missedItems > 0) {
+                            item {
+                                RecommendationReportItemGroup(
+                                    modifier = Modifier.padding(start = 16.dp),
+                                    title = "Missed items",
+                                ) {
+                                    report.missedItems.forEach { item ->
+                                        ShoppingListItemCard(
+                                            item = item,
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(vertical = 8.dp)
+                                                .fillMaxWidth(),
+                                        ) {
+                                            // TODO: Implement click listener...
+                                        }
                                     }
                                 }
                             }
@@ -111,13 +138,13 @@ internal fun ShoppingListRecommendationScreen(
                     }
                 }
             }
-        }
-    } else {
-        Box(contentAlignment = Alignment.Center, modifier = modifier) {
-            Text(
-                text = recommendationReportResult.exceptionOrNull()?.localizedMessage
-                    ?: stringResource(R.string.fsl_generic_error_message)
-            )
+        } else {
+            Box(contentAlignment = Alignment.Center, modifier = modifier.padding(it)) {
+                Text(
+                    text = recommendationReportResult.exceptionOrNull()?.localizedMessage
+                        ?: stringResource(R.string.fsl_generic_error_message)
+                )
+            }
         }
     }
 }

@@ -23,7 +23,7 @@ fun <T> Flow<Result<T>>.retryCatchIfNecessary(retry: Retry) =
         if (it is ConnectException) emit(Result.failure(it))
     }
 
-@Suppress("UNCHECKED_CAST")
+@Suppress("UNCHECKED_CAST", "BlockingMethodInNonBlockingContext")
 suspend fun <T> sendRequest(
     vararg throwOnStatusCode: Int,
     request: suspend () -> Response<T>,

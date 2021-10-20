@@ -20,8 +20,6 @@ import co.ke.xently.data.GroupedShoppingList
 import co.ke.xently.data.ShoppingListItem
 import co.ke.xently.shoppinglist.R
 import co.ke.xently.shoppinglist.ui.list.ShoppingListItemCard
-import co.ke.xently.shoppinglist.ui.list.recommendation.ShoppingListRecommendationScreen
-import kotlinx.coroutines.launch
 import java.util.*
 
 @Composable
@@ -30,44 +28,36 @@ internal fun ShoppingListGroupedScreen(
     viewModel: ShoppingListGroupedViewModel = hiltViewModel(),
     loadRemote: Boolean = false,
     onShoppingListItemClicked: (itemId: Long) -> Unit,
+    onShoppingListItemRecommendClicked: (itemId: Long) -> Unit,
+    onRecommendGroupClicked: (group: Any) -> Unit = {},
+    onSeeAllClicked: (group: Any) -> Unit = {},
 ) {
-    val coroutineScope = rememberCoroutineScope()
-    val scaffoldState = rememberBottomSheetScaffoldState()
+    val scaffoldState = rememberScaffoldState()
 
     viewModel.shouldLoadRemote(loadRemote)
     val groupedShoppingListResult = viewModel.groupedShoppingListResult.collectAsState().value
     val groupedShoppingListCount = viewModel.groupedShoppingListCount.collectAsState().value
-    var groupToRecommend by remember { mutableStateOf<Any?>(null) }
 
-    BottomSheetScaffold(
+    Scaffold(
         scaffoldState = scaffoldState,
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(id = R.string.fsl_toolbar_title)) },
                 navigationIcon = {
                     IconButton(onClick = { }) {
-                        Icon(Icons.Filled.Menu, contentDescription = null)
+                        Icon(Icons.Default.Menu, contentDescription = null)
                     }
                 },
                 actions = {
                     IconButton(onClick = { }) {
                         Icon(
-                            Icons.Filled.Search,
+                            Icons.Default.Search,
                             contentDescription = "Localized description"
                         )
                     }
                 }
             )
         },
-        sheetContent = {
-            if (groupToRecommend != null) {
-                ShoppingListRecommendationScreen(
-                    recommendBy = groupToRecommend!!,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-            }
-        },
-        sheetPeekHeight = 0.dp,
     ) {
         if (groupedShoppingListResult.isSuccess) {
             val groupedShoppingList = groupedShoppingListResult.getOrThrow()
@@ -88,12 +78,9 @@ internal fun ShoppingListGroupedScreen(
                             GroupedShoppingListCard(
                                 groupList, groupedShoppingListCount,
                                 onShoppingListItemClicked = onShoppingListItemClicked,
-                                onRecommendGroupClicked = { group ->
-                                    coroutineScope.launch {
-                                        scaffoldState.bottomSheetState.expand()
-                                    }
-                                    groupToRecommend = group
-                                },
+                                onShoppingListItemRecommendClicked = onShoppingListItemRecommendClicked,
+                                onRecommendGroupClicked = onRecommendGroupClicked,
+                                onSeeAllClicked = onSeeAllClicked,
                             )
                         }
                     }
@@ -115,6 +102,7 @@ private fun GroupedShoppingListCard(
     groupList: GroupedShoppingList,
     listCount: Map<Any, Int>,
     onShoppingListItemClicked: ((itemId: Long) -> Unit) = {},
+    onShoppingListItemRecommendClicked: ((itemId: Long) -> Unit) = {},
     onRecommendGroupClicked: (group: Any) -> Unit = {},
     onDuplicateGroupClicked: (group: Any) -> Unit = {},
     onDeleteGroupClicked: (group: Any) -> Unit = {},
@@ -187,9 +175,12 @@ private fun GroupedShoppingListCard(
             Column {
                 for (item in groupList.shoppingList.take(itemsPerCard)) {
                     ShoppingListItemCard(
-                        item, onItemClicked = onShoppingListItemClicked, modifier = Modifier
+                        item,
+                        modifier = Modifier
                             .padding(vertical = 8.dp)
-                            .fillMaxWidth()
+                            .fillMaxWidth(),
+                        onItemClicked = onShoppingListItemClicked,
+                        onRecommendClicked = onShoppingListItemRecommendClicked,
                     )
                 }
             }

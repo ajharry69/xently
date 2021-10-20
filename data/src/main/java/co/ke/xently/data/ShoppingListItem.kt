@@ -16,7 +16,9 @@ data class ShoppingListItem(
     val unit: String = "piece",
     val unitQuantity: Float = 1f,
     val purchaseQuantity: Float = 1f,
+    @Exclude(SERIALIZATION)
     val dateAdded: Date = Date(),
+    @Exclude(SERIALIZATION)
     val naturalInput: String = "",
 ) {
     override fun toString() = if (naturalInput.isNotBlank()) naturalInput else {
@@ -95,3 +97,9 @@ data class RecommendationReport(
         }
     }
 }
+
+data class RecommendationRequest(
+    val items: List<ShoppingListItem>,
+    // Save shopping list items...
+    val persist: Boolean = true,
+)

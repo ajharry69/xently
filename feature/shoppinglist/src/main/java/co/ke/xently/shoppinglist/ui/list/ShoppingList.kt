@@ -6,10 +6,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -18,8 +18,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import co.ke.xently.data.ShoppingListItem
 import co.ke.xently.shoppinglist.R
-import co.ke.xently.shoppinglist.ui.list.recommendation.ShoppingListRecommendationScreen
-import kotlinx.coroutines.launch
 
 
 @Composable
@@ -28,43 +26,49 @@ internal fun ShoppingListScreen(
     loadRemote: Boolean = false,
     viewModel: ShoppingListViewModel = hiltViewModel(),
     onShoppingListItemClicked: (itemId: Long) -> Unit,
+    onRecommendClicked: (itemId: Long) -> Unit,
+    onRecommendOptionsMenuClicked: (List<ShoppingListItem>?) -> Unit,
+    onNavigationIconClicked: (() -> Unit) = {},
 ) {
-    val coroutineScope = rememberCoroutineScope()
-    val scaffoldState = rememberBottomSheetScaffoldState()
+    val scaffoldState = rememberScaffoldState()
+    var showOptionsMenu by remember { mutableStateOf(false) }
 
     viewModel.shouldLoadRemote(loadRemote)
     val shoppingListResult = viewModel.shoppingListResult.collectAsState().value
-    var itemToRecommendBy by remember { mutableStateOf<ShoppingListItem?>(null) }
 
-    BottomSheetScaffold(
+    Scaffold(
         scaffoldState = scaffoldState,
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(id = R.string.fsl_toolbar_title)) },
                 navigationIcon = {
-                    IconButton(onClick = { }) {
-                        Icon(Icons.Filled.Menu, contentDescription = null)
+                    IconButton(onClick = onNavigationIconClicked) {
+                        Icon(
+                            Icons.Default.ArrowBack,
+                            contentDescription = stringResource(R.string.fsl_menu_navigation_icon_content_desc_back),
+                        )
                     }
                 },
                 actions = {
-                    IconButton(onClick = { }) {
+                    IconButton(onClick = { showOptionsMenu = !showOptionsMenu }) {
                         Icon(
-                            Icons.Filled.Search,
-                            contentDescription = "Localized description"
+                            Icons.Default.MoreVert,
+                            contentDescription = "More shopping list screen options menu",
                         )
+                    }
+                    DropdownMenu(
+                        expanded = showOptionsMenu,
+                        onDismissRequest = { showOptionsMenu = false }) {
+                        DropdownMenuItem(onClick = {
+                            showOptionsMenu = false
+                            onRecommendOptionsMenuClicked(shoppingListResult.getOrNull())
+                        }) {
+                            Text(text = stringResource(R.string.fsl_group_menu_recommend))
+                        }
                     }
                 }
             )
         },
-        sheetContent = {
-            if (itemToRecommendBy != null) {
-                ShoppingListRecommendationScreen(
-                    recommendBy = itemToRecommendBy!!,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-        },
-        sheetPeekHeight = 0.dp,
     ) {
         if (shoppingListResult.isSuccess) {
             val shoppingList = shoppingListResult.getOrThrow()
@@ -84,13 +88,12 @@ internal fun ShoppingListScreen(
                         items(shoppingList) { item ->
                             ShoppingListItemCard(
                                 item,
+                                modifier = Modifier
+                                    .padding(start = 16.dp)
+                                    .padding(vertical = 8.dp)
+                                    .fillMaxWidth(),
                                 onItemClicked = onShoppingListItemClicked,
-                                onRecommendClicked = {
-                                    coroutineScope.launch {
-                                        scaffoldState.bottomSheetState.expand()
-                                    }
-                                    itemToRecommendBy = item
-                                },
+                                onRecommendClicked = onRecommendClicked,
                             )
                         }
                     }

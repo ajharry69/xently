@@ -1,6 +1,7 @@
 package co.ke.xently.source.remote.services
 
 import co.ke.xently.data.RecommendationReport
+import co.ke.xently.data.RecommendationRequest
 import co.ke.xently.data.ShoppingListItem
 import co.ke.xently.source.remote.PagedData
 import retrofit2.Response
@@ -35,5 +36,5 @@ interface ShoppingListService {
     ): Response<RecommendationReport>
 
     @POST("shopping-list/recommendations/")
-    suspend fun getRecommendations(@Body items: List<ShoppingListItem>): Response<RecommendationReport>
+    suspend fun getRecommendations(@Body request: RecommendationRequest): Response<RecommendationReport>
 }
