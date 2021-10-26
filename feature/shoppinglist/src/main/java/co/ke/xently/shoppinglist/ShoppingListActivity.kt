@@ -14,8 +14,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import co.ke.xently.feature.theme.XentlyTheme
-import co.ke.xently.shoppinglist.repository.RecommendFrom
-import co.ke.xently.shoppinglist.repository.RecommendFrom.GroupedList
+import co.ke.xently.shoppinglist.Recommend.From
 import co.ke.xently.shoppinglist.ui.detail.ShoppingListItemScreen
 import co.ke.xently.shoppinglist.ui.list.ShoppingListScreen
 import co.ke.xently.shoppinglist.ui.list.grouped.ShoppingListGroupedScreen
@@ -45,7 +44,7 @@ internal fun ShoppingListNavHost(
         modifier = modifier,
     ) {
         val onShoppingListItemRecommendClicked: (itemId: Long) -> Unit = {
-            navController.navigate("shopping-list/recommendations/${it}?from=${RecommendFrom.Item}")
+            navController.navigate("shopping-list/recommendations/${it}?from=${From.Item}")
         }
         val onShoppingListItemClicked: (itemId: Long) -> Unit = {
             navController.navigate("shopping-list/${it}")
@@ -77,16 +76,16 @@ internal fun ShoppingListNavHost(
         composable(
             "shopping-list/recommendations/{recommendBy}?from={from}",
             listOf(navArgument("recommendBy") {}, navArgument("from") {
-                defaultValue = GroupedList.name
+                defaultValue = From.GroupedList.name
             })
         ) {
             ShoppingListRecommendationScreen(
                 modifier = Modifier
                     .fillMaxHeight()
                     .fillMaxWidth(),
-                recommendBy = it.arguments?.get("recommendBy")!!,
-                recommendFrom = RecommendFrom.valueOf(
-                    it.arguments?.getString("from", GroupedList.name)!!
+                recommend = Recommend(
+                    it.arguments?.get("recommendBy")!!,
+                    From.valueOf(it.arguments?.getString("from", From.GroupedList.name)!!),
                 ),
             ) { navController.navigateUp() }
         }

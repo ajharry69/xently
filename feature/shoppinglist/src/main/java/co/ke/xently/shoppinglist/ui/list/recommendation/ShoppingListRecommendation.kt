@@ -16,7 +16,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import co.ke.xently.data.RecommendationReport
 import co.ke.xently.data.RecommendationReport.Recommendation
 import co.ke.xently.shoppinglist.R
-import co.ke.xently.shoppinglist.repository.RecommendFrom
+import co.ke.xently.shoppinglist.Recommend
 import co.ke.xently.shoppinglist.ui.GoogleMapView
 import co.ke.xently.shoppinglist.ui.list.ShoppingListItemCard
 import com.google.android.libraries.maps.model.LatLng
@@ -25,18 +25,15 @@ import java.text.DecimalFormat
 
 @Composable
 internal fun ShoppingListRecommendationScreen(
-    recommendBy: Any,
     modifier: Modifier = Modifier,
-    recommendFrom: RecommendFrom = RecommendFrom.GroupedList,
+    recommend: Recommend = Recommend(),
     viewModel: ShoppingListRecommendationViewModel = hiltViewModel(),
     onNavigationIconClicked: (() -> Unit) = {},
 ) {
     val scaffoldState = rememberScaffoldState()
-    val coroutineScope = rememberCoroutineScope()
-    val recommendationReportResult by viewModel.getRecommendations(
-        recommendBy = recommendBy,
-        recommendFrom = recommendFrom,
-    ).collectAsState(Result.success(null), coroutineScope.coroutineContext)
+
+    viewModel.setRecommend(recommend)
+    val recommendationReportResult by viewModel.recommendationReportResult.collectAsState()
 
     Scaffold(
         scaffoldState = scaffoldState,

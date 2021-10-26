@@ -5,6 +5,9 @@ import co.ke.xently.common.di.qualifiers.coroutines.IODispatcher
 import co.ke.xently.data.GroupedShoppingList
 import co.ke.xently.data.RecommendationRequest
 import co.ke.xently.data.ShoppingListItem
+import co.ke.xently.shoppinglist.GroupBy
+import co.ke.xently.shoppinglist.GroupBy.DateAdded
+import co.ke.xently.shoppinglist.Recommend
 import co.ke.xently.source.local.daos.ShoppingListDao
 import co.ke.xently.source.remote.retryCatchIfNecessary
 import co.ke.xently.source.remote.sendRequest
@@ -31,36 +34,34 @@ internal class ShoppingListRepository @Inject constructor(
         }.retryCatchIfNecessary(this).flowOn(ioDispatcher)
     }
 
-    override fun getShoppingList(
-        groupBy: String?,
-        remote: Boolean,
-    ): Flow<Result<List<ShoppingListItem>>> = Retry().run {
-        if (remote) {
-            flow { emit(sendRequest(401) { service.getShoppingList() }) }
-                .map { result ->
-                    result.mapCatching {
-                        it.results.apply {
-                            dao.addShoppingListItems(*toTypedArray())
+    override fun getShoppingList(remote: Boolean): Flow<Result<List<ShoppingListItem>>> =
+        Retry().run {
+            if (remote) {
+                flow { emit(sendRequest(401) { service.getShoppingList() }) }
+                    .map { result ->
+                        result.mapCatching {
+                            it.results.apply {
+                                dao.addShoppingListItems(*toTypedArray())
+                            }
                         }
                     }
+                    .retryCatchIfNecessary(this)
+                    .flowOn(ioDispatcher)
+                    .onCompletion {
+                        // Return cached records. Caveats:
+                        //  1. No error propagation
+                        if (it == null) emitAll(getShoppingList(false))
+                    }
+            } else {
+                dao.getShoppingList().map { shoppingList ->
+                    Result.success(shoppingList)
                 }
-                .retryCatchIfNecessary(this)
-                .flowOn(ioDispatcher)
-                .onCompletion {
-                    // Return cached records. Caveats:
-                    //  1. No error propagation
-                    if (it == null) emitAll(getShoppingList(groupBy, false))
-                }
-        } else {
-            dao.getShoppingList().map { shoppingList ->
-                Result.success(shoppingList)
             }
         }
-    }
 
-    override fun getGroupedShoppingList(groupBy: String) = Retry().run {
+    override fun getGroupedShoppingList(groupBy: GroupBy) = Retry().run {
         flow {
-            emit(sendRequest(401) { service.getShoppingList(groupBy = groupBy) })
+            emit(sendRequest(401) { service.getShoppingList(groupBy = groupBy.name.lowercase()) })
         }.map { result ->
             result.mapCatching {
                 it.map { entry ->
@@ -73,9 +74,8 @@ internal class ShoppingListRepository @Inject constructor(
         }.retryCatchIfNecessary(this).flowOn(ioDispatcher)
     }
 
-    override fun getGroupedShoppingListCount(groupBy: String) = when (groupBy) {
-        "dateadded" -> dao.getGroupCountByDateAdded()
-        else -> flow { }
+    override fun getGroupedShoppingListCount(groupBy: GroupBy) = when (groupBy) {
+        DateAdded -> dao.getGroupCountByDateAdded()
     }.mapLatest {
         mutableMapOf<Any, Int>().apply {
             for (item in it) put(item.group, item.numberOfItems)
@@ -97,28 +97,31 @@ internal class ShoppingListRepository @Inject constructor(
     }
 
     @Suppress("UNCHECKED_CAST")
-    override fun getRecommendations(
-        recommendBy: Any,
-        recommendFrom: RecommendFrom,
-        groupBy: String,
-        saveList: Boolean
-    ) = Retry().run {
+    override fun getRecommendations(recommend: Recommend) = Retry().run {
         flow {
             emit(sendRequest(401) {
-                when (recommendFrom) {
-                    RecommendFrom.Item -> {
-                        val item = if (recommendBy !is ShoppingListItem)
-                            dao.getShoppingListItem(recommendBy.toString().toLong())
-                                .first()!! else recommendBy
-                        service.getRecommendations(RecommendationRequest(listOf(item), saveList))
-                    }
-                    RecommendFrom.ItemList -> {
+                when (recommend.from) {
+                    Recommend.From.Item -> {
+                        val item = if (recommend.by !is ShoppingListItem)
+                            dao.getShoppingListItem(recommend.by.toString().toLong())
+                                .first()!! else recommend.by
                         service.getRecommendations(
-                            RecommendationRequest(recommendBy as List<ShoppingListItem>, saveList)
+                            RecommendationRequest(listOf(item), recommend.saveBy)
                         )
                     }
-                    RecommendFrom.GroupedList -> {
-                        service.getRecommendations(recommendBy.toString(), groupBy)
+                    Recommend.From.ItemList -> {
+                        service.getRecommendations(
+                            RecommendationRequest(
+                                recommend.by as List<ShoppingListItem>,
+                                recommend.saveBy
+                            )
+                        )
+                    }
+                    Recommend.From.GroupedList -> {
+                        service.getRecommendations(
+                            recommend.by.toString(),
+                            recommend.groupBy.name.lowercase()
+                        )
                     }
                 }
             })

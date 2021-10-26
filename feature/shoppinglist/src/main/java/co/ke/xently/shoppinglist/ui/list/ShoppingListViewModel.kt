@@ -4,6 +4,7 @@ import androidx.lifecycle.viewModelScope
 import co.ke.xently.common.Retry
 import co.ke.xently.common.di.qualifiers.coroutines.ComputationDispatcher
 import co.ke.xently.data.ShoppingListItem
+import co.ke.xently.feature.AbstractViewModel
 import co.ke.xently.shoppinglist.repository.IShoppingListRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
@@ -22,7 +23,7 @@ internal class ShoppingListViewModel @Inject constructor(
     private val repository: IShoppingListRepository,
     @ComputationDispatcher
     private val computationDispatcher: CoroutineDispatcher,
-) : AbstractShoppingListViewModel() {
+) : AbstractViewModel() {
     // interpret `null` as loading...
     private val _shoppingListResult = MutableStateFlow(success<List<ShoppingListItem>?>(null))
     val shoppingListResult: StateFlow<Result<List<ShoppingListItem>?>>
@@ -32,25 +33,24 @@ internal class ShoppingListViewModel @Inject constructor(
         viewModelScope.launch {
             var retry = Retry()
             remote.collectLatest { loadRemote ->
-                groupBy.collectLatest { group ->
-                    repository.getShoppingList(group, loadRemote).catch { emit(failure(it)) }
-                        .collectLatest {
-                            _shoppingListResult.value = it
-                            if (loadRemote && it.isFailure) {
-                                // Fallback to cache if remote failed
-                                if (it.exceptionOrNull() !is ConnectException) {
-                                    viewModelScope.launch(computationDispatcher) {
-                                        retry = retry.signalLoadFromCache()
-                                    }
+                repository.getShoppingList(loadRemote)
+                    .catch { emit(failure(it)) }
+                    .collectLatest {
+                        _shoppingListResult.value = it
+                        if (loadRemote && it.isFailure) {
+                            // Fallback to cache if remote failed
+                            if (it.exceptionOrNull() !is ConnectException) {
+                                viewModelScope.launch(computationDispatcher) {
+                                    retry = retry.signalLoadFromCache()
                                 }
-                            } else if (!loadRemote && (it.isFailure || it.getOrNull()
-                                    .isNullOrEmpty())
-                            ) {
-                                // Force refresh from remote if cache is empty
-                                shouldLoadRemote(true)
                             }
+                        } else if (!loadRemote && (it.isFailure || it.getOrNull()
+                                .isNullOrEmpty())
+                        ) {
+                            // Force refresh from remote if cache is empty
+                            shouldLoadRemote(true)
                         }
-                }
+                    }
             }
         }
     }
