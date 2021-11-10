@@ -24,6 +24,7 @@ internal fun GoogleMapView(
     currentPosition: LatLng,
     markerPositions: Array<MarkerOptions>,
     onMapViewUpdated: (MapView) -> Unit = NoOpUpdate,
+    onLocationPermissionChanged: ((permissionGranted: Boolean) -> Unit) = {},
 ) {
     // The MapView lifecycle is handled by this composable. As the MapView also needs to be updated
     // with input from Compose UI, those updates are encapsulated into the GoogleMapViewContainer
@@ -36,6 +37,7 @@ internal fun GoogleMapView(
         currentPosition,
         markerPositions,
         onMapViewUpdated,
+        onLocationPermissionChanged,
     )
 }
 
@@ -47,6 +49,7 @@ internal fun GoogleMapViewContainer(
     currentPosition: LatLng,
     markerPositions: Array<MarkerOptions>,
     onMapViewUpdated: (MapView) -> Unit = NoOpUpdate,
+    onLocationPermissionChanged: (permissionGranted: Boolean) -> Unit,
 ) {
     var showRationale by rememberSaveable { mutableStateOf(true) }
 
@@ -87,6 +90,7 @@ internal fun GoogleMapViewContainer(
     val cameraPositions = remember(*markerPositions) { markerPositions }
 
     LaunchedEffect(map, permissionState.allPermissionsGranted) {
+        onLocationPermissionChanged(permissionState.allPermissionsGranted)
         val googleMap = map.awaitMap().apply {
             uiSettings.apply {
                 isZoomControlsEnabled = true

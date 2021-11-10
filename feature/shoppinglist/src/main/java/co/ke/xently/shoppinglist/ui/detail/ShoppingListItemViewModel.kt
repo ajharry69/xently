@@ -23,22 +23,24 @@ class ShoppingListItemViewModel @Inject constructor(private val repository: ISho
 
     init {
         viewModelScope.launch {
-            shoppingListItem.collectLatest { item ->
-                if (item != null) {
-                    repository.addShoppingListItem(item).catch { emit(Result.failure(it)) }
-                        .collectLatest {
-                            _shoppingItemResult.value = it
-                        }
+            launch {
+                shoppingListItem.collectLatest { item ->
+                    if (item != null) {
+                        repository.addShoppingListItem(item).catch { emit(Result.failure(it)) }
+                            .collectLatest {
+                                _shoppingItemResult.value = it
+                            }
+                    }
                 }
             }
-        }
-        viewModelScope.launch {
-            shoppingListItemId.collectLatest { itemId ->
-                if (itemId != null) {
-                    repository.getShoppingListItem(itemId).catch { emit(Result.failure(it)) }
-                        .collectLatest {
-                            _shoppingItemResult.value = it
-                        }
+            launch {
+                shoppingListItemId.collectLatest { itemId ->
+                    if (itemId != null) {
+                        repository.getShoppingListItem(itemId).catch { emit(Result.failure(it)) }
+                            .collectLatest {
+                                _shoppingItemResult.value = it
+                            }
+                    }
                 }
             }
         }

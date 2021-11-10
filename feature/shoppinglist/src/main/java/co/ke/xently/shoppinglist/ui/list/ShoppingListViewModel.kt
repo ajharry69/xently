@@ -1,10 +1,11 @@
 package co.ke.xently.shoppinglist.ui.list
 
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.ke.xently.common.Retry
 import co.ke.xently.common.di.qualifiers.coroutines.ComputationDispatcher
 import co.ke.xently.data.ShoppingListItem
-import co.ke.xently.feature.AbstractViewModel
+import co.ke.xently.feature.IRetryViewModel
 import co.ke.xently.shoppinglist.repository.IShoppingListRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
@@ -23,7 +24,7 @@ internal class ShoppingListViewModel @Inject constructor(
     private val repository: IShoppingListRepository,
     @ComputationDispatcher
     private val computationDispatcher: CoroutineDispatcher,
-) : AbstractViewModel() {
+) : ViewModel(), IRetryViewModel {
     // interpret `null` as loading...
     private val _shoppingListResult = MutableStateFlow(success<List<ShoppingListItem>?>(null))
     val shoppingListResult: StateFlow<Result<List<ShoppingListItem>?>>

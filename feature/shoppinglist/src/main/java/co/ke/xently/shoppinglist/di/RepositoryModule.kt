@@ -1,5 +1,8 @@
 package co.ke.xently.shoppinglist.di
 
+import android.content.SharedPreferences
+import co.ke.xently.common.di.qualifiers.EncryptedSharedPreference
+import co.ke.xently.common.di.qualifiers.UnencryptedSharedPreference
 import co.ke.xently.common.di.qualifiers.coroutines.IODispatcher
 import co.ke.xently.shoppinglist.repository.IShoppingListRepository
 import co.ke.xently.shoppinglist.repository.ShoppingListRepository
@@ -20,6 +23,11 @@ internal object RepositoryModule {
     fun provideShoppingListRepository(
         dao: ShoppingListDao,
         service: ShoppingListService,
-        @IODispatcher ioDispatcher: CoroutineDispatcher,
-    ): IShoppingListRepository = ShoppingListRepository(dao, service, ioDispatcher)
+        @EncryptedSharedPreference
+        sharedPreference: SharedPreferences,
+        @UnencryptedSharedPreference
+        unencryptedPreference: SharedPreferences,
+        @IODispatcher
+        ioDispatcher: CoroutineDispatcher,
+    ): IShoppingListRepository = ShoppingListRepository(dao, service, sharedPreference, unencryptedPreference, ioDispatcher)
 }

@@ -1,18 +1,18 @@
 package co.ke.xently.feature
 
-import androidx.lifecycle.ViewModel
 import co.ke.xently.common.Retry
 import kotlinx.coroutines.flow.MutableStateFlow
 
-abstract class AbstractViewModel : ViewModel() {
+interface IRetryViewModel {
 
-    protected val remote = MutableStateFlow(false)
+    val remote: MutableStateFlow<Boolean>
+        get() = MutableStateFlow(false)
 
     fun shouldLoadRemote(remote: Boolean) {
         this.remote.value = remote
     }
 
-    protected suspend fun Retry.signalLoadFromCache(): Retry {
+    suspend fun Retry.signalLoadFromCache(): Retry {
         if (canRetry()) {
             shouldLoadRemote(false)
         } else if (!isDefaultState) {

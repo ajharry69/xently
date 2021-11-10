@@ -26,7 +26,6 @@ import java.util.*
 internal fun ShoppingListGroupedScreen(
     modifier: Modifier = Modifier,
     viewModel: ShoppingListGroupedViewModel = hiltViewModel(),
-    loadRemote: Boolean = false,
     onShoppingListItemClicked: (itemId: Long) -> Unit,
     onShoppingListItemRecommendClicked: (itemId: Long) -> Unit,
     onRecommendGroupClicked: (group: Any) -> Unit = {},
@@ -34,7 +33,6 @@ internal fun ShoppingListGroupedScreen(
 ) {
     val scaffoldState = rememberScaffoldState()
 
-    viewModel.shouldLoadRemote(loadRemote)
     val groupedShoppingListResult = viewModel.groupedShoppingListResult.collectAsState().value
     val groupedShoppingListCount = viewModel.groupedShoppingListCount.collectAsState().value
 

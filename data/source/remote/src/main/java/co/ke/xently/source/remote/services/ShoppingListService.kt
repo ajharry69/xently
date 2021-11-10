@@ -8,6 +8,12 @@ import retrofit2.Response
 import retrofit2.http.*
 
 interface ShoppingListService {
+    @POST("accounts/{id}/update-location/")
+    suspend fun updateLocation(
+        @Path("id") userId: Long = 1L,
+        @Body location: Array<Double>,
+    ): Response<Unit>
+
     @POST("shopping-list/")
     suspend fun addShoppingListItem(@Body item: ShoppingListItem): Response<ShoppingListItem>
 

@@ -69,17 +69,18 @@ internal fun ShoppingListRecommendationScreen(
                     ) {
                         item {
                             GoogleMapView(
-                                Modifier.height(250.dp),
+                                Modifier.height(278.dp),
                                 LatLng(0.0, 0.0),
-                                report.recommendations.flatMap {
-                                    it.addresses.map { address ->
+                                report.recommendations.flatMap { recommendation ->
+                                    recommendation.addresses.map { address ->
                                         MarkerOptions().apply {
-                                            title("${it.name}, ${it.taxPin}")
-                                            snippet("${it.hits.count} item(s), ${it.printableTotalPrice}")
+                                            title("${recommendation.name}, ${recommendation.taxPin}")
+                                            snippet("${recommendation.hits.count} item(s), ${recommendation.printableTotalPrice}")
                                             position(LatLng(address.latitude, address.longitude))
                                         }
                                     }
                                 }.toTypedArray(),
+                                onLocationPermissionChanged = viewModel::setLocationPermissionGranted,
                             )
                         }
                         item {
@@ -102,9 +103,9 @@ internal fun ShoppingListRecommendationScreen(
                                     title = "Recommendations",
                                 ) {
                                     Column {
-                                        report.recommendations.forEach {
+                                        report.recommendations.forEach { recommendation ->
                                             RecommendationCardItem(
-                                                recommendation = it,
+                                                recommendation = recommendation,
                                                 modifier = Modifier.fillMaxWidth()
                                             )
                                         }

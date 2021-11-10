@@ -1,8 +1,8 @@
 package co.ke.xently.shoppinglist.ui.list.grouped
 
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.ke.xently.data.GroupedShoppingList
-import co.ke.xently.feature.AbstractViewModel
 import co.ke.xently.shoppinglist.GroupBy
 import co.ke.xently.shoppinglist.repository.IShoppingListRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -16,7 +16,7 @@ import javax.inject.Inject
 @HiltViewModel
 internal class ShoppingListGroupedViewModel @Inject constructor(
     private val repository: IShoppingListRepository,
-) : AbstractViewModel() {
+) : ViewModel() {
     private val _groupedShoppingListResult =
         MutableStateFlow(Result.success<List<GroupedShoppingList>?>(null))
     val groupedShoppingListResult: StateFlow<Result<List<GroupedShoppingList>?>>
@@ -29,18 +29,20 @@ internal class ShoppingListGroupedViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            groupBy.collectLatest { group ->
-                repository.getGroupedShoppingList(group).catch {
-                    emit(Result.failure(it))
-                }.collectLatest {
-                    _groupedShoppingListResult.value = it
+            launch {
+                groupBy.collectLatest { group ->
+                    repository.getGroupedShoppingList(group).catch {
+                        emit(Result.failure(it))
+                    }.collectLatest {
+                        _groupedShoppingListResult.value = it
+                    }
                 }
             }
-        }
-        viewModelScope.launch {
-            groupBy.collectLatest { group ->
-                repository.getGroupedShoppingListCount(group).collectLatest {
-                    _groupedShoppingListCount.value = it
+            launch {
+                groupBy.collectLatest { group ->
+                    repository.getGroupedShoppingListCount(group).collectLatest {
+                        _groupedShoppingListCount.value = it
+                    }
                 }
             }
         }

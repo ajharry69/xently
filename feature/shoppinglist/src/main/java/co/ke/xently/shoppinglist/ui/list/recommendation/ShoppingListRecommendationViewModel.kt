@@ -1,8 +1,10 @@
 package co.ke.xently.shoppinglist.ui.list.recommendation
 
+import android.app.Application
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import co.ke.xently.data.RecommendationReport
-import co.ke.xently.feature.AbstractViewModel
+import co.ke.xently.shoppinglist.LocationPermissionViewModel
 import co.ke.xently.shoppinglist.Recommend
 import co.ke.xently.shoppinglist.repository.IShoppingListRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -15,8 +17,10 @@ import javax.inject.Inject
 
 @HiltViewModel
 internal class ShoppingListRecommendationViewModel @Inject constructor(
+    app: Application,
+    savedStateHandle: SavedStateHandle,
     private val repository: IShoppingListRepository,
-) : AbstractViewModel() {
+) : LocationPermissionViewModel(app, savedStateHandle) {
     private val _recommendationReportResult =
         MutableStateFlow(Result.success<RecommendationReport?>(null))
     val recommendationReportResult: StateFlow<Result<RecommendationReport?>>
