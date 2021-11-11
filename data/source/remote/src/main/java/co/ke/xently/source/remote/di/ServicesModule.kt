@@ -1,5 +1,6 @@
 package co.ke.xently.source.remote.di
 
+import co.ke.xently.source.remote.services.ShopService
 import co.ke.xently.source.remote.services.ShoppingListService
 import dagger.Module
 import dagger.Provides
@@ -13,4 +14,8 @@ object ServicesModule {
     @Provides
     fun provideShoppingListService(retrofit: Retrofit): ShoppingListService =
         retrofit.create(ShoppingListService::class.java)
+
+    @Provides
+    fun provideShopService(retrofit: Retrofit): ShopService =
+        retrofit.create(ShopService::class.java)
 }
