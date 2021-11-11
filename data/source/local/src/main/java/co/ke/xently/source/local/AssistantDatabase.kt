@@ -5,7 +5,7 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import co.ke.xently.data.Shop
 import co.ke.xently.data.ShoppingListItem
-import co.ke.xently.source.local.daos.ShopDao
+import co.ke.xently.source.local.daos.ShopsDao
 import co.ke.xently.source.local.daos.ShoppingListDao
 
 @Database(
@@ -18,6 +18,6 @@ import co.ke.xently.source.local.daos.ShoppingListDao
 )
 @TypeConverters(RoomTypeConverters.DateConverter::class)
 abstract class AssistantDatabase : RoomDatabase() {
-    abstract val shopDao: ShopDao
+    abstract val shopsDao: ShopsDao
     abstract val shoppingListDao: ShoppingListDao
 }

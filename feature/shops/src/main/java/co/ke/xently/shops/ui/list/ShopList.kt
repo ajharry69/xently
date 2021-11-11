@@ -5,12 +5,13 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.hilt.navigation.compose.hiltViewModel
 import co.ke.xently.data.Shop
 
 @Composable
-fun ShopsList(modifier: Modifier = Modifier) {
+fun ShopList(modifier: Modifier = Modifier, viewModel: ShopListViewModel = hiltViewModel()) {
     Scaffold {
-        LazyColumn {
+        LazyColumn(modifier = modifier) {
             items(arrayListOf<Shop>()) {
 
             }
