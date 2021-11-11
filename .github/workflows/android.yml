@@ -20,7 +20,11 @@ jobs:
           distribution: "adopt"
 
       - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
+        run: |
+          chmod +x gradlew
+          cat > local.properties <<EOF
+          MAPS_API_KEY=${{ secrets.MAPS_API_KEY }}
+          EOF
 
       - name: Build with Gradle
         run: ./gradlew build
@@ -41,7 +45,11 @@ jobs:
           distribution: "adopt"
 
       - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
+        run: |
+          chmod +x gradlew
+          cat > local.properties <<EOF
+          MAPS_API_KEY=${{ secrets.MAPS_API_KEY }}
+          EOF
 
       - name: Run tests
         run: ./gradlew test
@@ -66,6 +74,13 @@ jobs:
         with:
           java-version: "11"
           distribution: "adopt"
+
+      - name: Grant execute permission for gradlew
+        run: |
+          chmod +x gradlew
+          cat > local.properties <<EOF
+          MAPS_API_KEY=${{ secrets.MAPS_API_KEY }}
+          EOF
 
       - name: Gradle cache
         uses: actions/cache@v2

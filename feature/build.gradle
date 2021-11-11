@@ -1,0 +1,57 @@
+plugins {
+    id 'com.android.library'
+    id 'kotlin-android'
+}
+
+android {
+    compileSdk 31
+
+    defaultConfig {
+        minSdk 21
+        targetSdk 31
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        consumerProguardFiles "consumer-rules.pro"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    kotlinOptions {
+        jvmTarget = '1.8'
+        useIR = true
+        freeCompilerArgs += [
+                "-Xopt-in=kotlin.time.ExperimentalTime",
+        ]
+    }
+    buildFeatures {
+        compose true
+    }
+    composeOptions {
+        kotlinCompilerExtensionVersion compose_version
+    }
+}
+
+dependencies {
+    implementation project(path: ":common")
+
+    // Navigation
+    api "androidx.navigation:navigation-compose:$navigation_version"
+
+    api 'androidx.hilt:hilt-navigation-compose:1.0.0-alpha03'
+    // https://developer.android.com/jetpack/compose/libraries#viewmodel
+    api "androidx.lifecycle:lifecycle-viewmodel-compose:$lifecycle_viewmodel_version"
+    api "com.google.accompanist:accompanist-permissions:0.20.0"
+    api "androidx.compose.material:material:$compose_version"
+    api "androidx.compose.ui:ui-tooling-preview:$compose_version"
+    debugApi "androidx.compose.ui:ui-tooling:$compose_version"
+}

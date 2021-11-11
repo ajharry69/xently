@@ -1,29 +1,45 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 buildscript {
     ext {
-        compose_version = '1.0.1'
+        compose_version = '1.1.0-beta01'
         // For compatibility with the above version of jetpack compose
-        kotlin_version = '1.5.21'
-        coroutine_version = '1.5.1-native-mt'
+        kotlin_version = '1.5.31'
+        coroutine_version = '1.5.2'
 
         // Jetpack
         dagger_version = '2.29.1'
-        hilt_version = '2.38.1'
+        hilt_version = '2.39.1'
+        room_version = "2.3.0"
+        navigation_version = '2.4.0-beta01'
+        lifecycle_version = '2.4.0-beta01'
+        lifecycle_viewmodel_version = '2.4.0'
 
         // Retrofit
         retrofit_version = '2.9.0'
         logging_interceptor_version = '5.0.0-alpha.2'
-        okio_version = '3.0.0-alpha.9'
+        okio_version = '3.0.0'
+
+        Properties properties = new Properties()
+        try {
+            properties.load(project.rootProject.file('local.properties').newDataInputStream())
+        } catch (Exception ignored) {
+        }
+
+        // Release requires a pinned version. Therefore, to use latest in dev, set empty value
+        // to the (`API_VERSION`) variable.
+        api_version = properties.getProperty("API_VERSION", "1.0")
+        api_default_auth_token = properties.getProperty("API_DEFAULT_AUTH_TOKEN", "")
+        api_base_url = properties.getProperty("API_BASE_URL", "https://xently.co.ke/api/")
     }
     repositories {
         google()
         mavenCentral()
     }
     dependencies {
-        classpath "com.android.tools.build:gradle:7.0.1"
+        classpath "com.android.tools.build:gradle:7.0.3"
         classpath "com.google.dagger:hilt-android-gradle-plugin:$hilt_version"
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-
+        classpath "com.google.android.libraries.mapsplatform.secrets-gradle-plugin:secrets-gradle-plugin:2.0.0"
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
     }
@@ -32,3 +48,10 @@ buildscript {
 task clean(type: Delete) {
     delete rootProject.buildDir
 }
+
+/*
+tasks.withType<KotlinCompile> {
+//    kotlinOptions.languageVersion = "1.5"
+    jvmTarget = '1.8'
+    useIR = true
+}*/
