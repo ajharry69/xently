@@ -61,7 +61,7 @@ internal class ShoppingListRepository @Inject constructor(
         flow {
             emit(sendRequest(401) { service.addShoppingListItem(item) })
         }.onEach {
-            dao.addShoppingListItems(item)
+            dao.addShoppingListItems(it.getOrThrow())
         }.retryCatchIfNecessary(this).flowOn(ioDispatcher)
     }
 

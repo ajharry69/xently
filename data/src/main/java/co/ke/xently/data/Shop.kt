@@ -10,6 +10,7 @@ data class Shop(
     @PrimaryKey(autoGenerate = false)
     val id: Long = -1L,
     val name: String = "",
-//    @Ignore
-//    val addresses: List<Address> = emptyList(),
+    val taxPin: String = "",
+    val productsCount: Int = 0,
+    val addressesCount: Int = 0,
 )

@@ -1,3 +1,8 @@
 <resources>
     <string name="title_activity_shops">Shops</string>
+    <string name="fs_generic_error_message">An unexpected error encountered</string>
+    <string name="fs_empty_shop_list">No shops added, yet!</string>
+    <string name="fs_shop_item_menu_addresses">Addresses</string>
+    <string name="fs_shop_item_menu_products">Products</string>
+    <string name="fs_shop_item_menu_content_description">More (menu) options for %1$s</string>
 </resources>

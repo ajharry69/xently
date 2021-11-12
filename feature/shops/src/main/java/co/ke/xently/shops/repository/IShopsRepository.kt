@@ -7,5 +7,5 @@ interface IShopsRepository {
     fun addShop(shop: Shop): Flow<Result<Shop>>
     fun updateShop(shop: Shop): Flow<Result<Shop>>
     fun getShop(id: Long): Flow<Result<Shop>>
-    fun getShopList(): Flow<Result<List<Shop>>>
+    fun getShopList(remote: Boolean): Flow<Result<List<Shop>>>
 }

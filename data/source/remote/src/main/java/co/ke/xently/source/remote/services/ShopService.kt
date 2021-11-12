@@ -1,6 +1,7 @@
 package co.ke.xently.source.remote.services
 
 import co.ke.xently.data.Shop
+import co.ke.xently.source.remote.PagedData
 import retrofit2.Response
 import retrofit2.http.*
 
@@ -9,7 +10,7 @@ interface ShopService {
     suspend fun getShopList(
         @Header("Cache-Control")
         cacheControl: String = "only-if-cached",
-    ): Response<List<Shop>>
+    ): Response<PagedData<Shop>>
 
     @GET("shops/{id}/")
     suspend fun getShop(
@@ -19,8 +20,8 @@ interface ShopService {
         cacheControl: String = "only-if-cached",
     ): Response<Shop>
 
-    @POST("shops/{id}/")
-    suspend fun addShop(@Path("id") id: Long, @Body shop: Shop): Response<Shop>
+    @POST("shops/")
+    suspend fun addShop(@Body shop: Shop): Response<Shop>
 
     @PUT("shops/{id}/")
     suspend fun updateShop(@Path("id") id: Long, @Body shop: Shop): Response<Shop>
