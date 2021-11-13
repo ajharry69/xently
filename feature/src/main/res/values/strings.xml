@@ -1,3 +1,6 @@
 <resources>
     <string name="app_name">Xently</string>
+    <string name="stop_location_tracking_button_text">Stop tracking</string>
+    <string name="show_screen_button_text">Show screen</string>
+    <string name="location_tracking_notification_text">Tracking your location for better shop recommendation…</string>
 </resources>

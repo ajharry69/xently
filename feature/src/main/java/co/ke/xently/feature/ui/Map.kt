@@ -1,4 +1,4 @@
-package co.ke.xently.shoppinglist.ui
+package co.ke.xently.feature.ui
 
 import android.Manifest
 import android.annotation.SuppressLint
@@ -19,10 +19,10 @@ import com.google.maps.android.ktx.awaitMap
 
 
 @Composable
-internal fun GoogleMapView(
+fun GoogleMapView(
     modifier: Modifier,
-    currentPosition: LatLng,
-    markerPositions: Array<MarkerOptions>,
+    currentPosition: LatLng = rememberMyLocation(),
+    markerPositions: Array<MarkerOptions> = arrayOf(),
     onMapViewUpdated: (MapView) -> Unit = NoOpUpdate,
     onLocationPermissionChanged: ((permissionGranted: Boolean) -> Unit) = {},
 ) {
@@ -43,7 +43,7 @@ internal fun GoogleMapView(
 
 @SuppressLint("MissingPermission")
 @Composable
-internal fun GoogleMapViewContainer(
+fun GoogleMapViewContainer(
     modifier: Modifier,
     map: MapView,
     currentPosition: LatLng,
@@ -51,6 +51,9 @@ internal fun GoogleMapViewContainer(
     onMapViewUpdated: (MapView) -> Unit = NoOpUpdate,
     onLocationPermissionChanged: (permissionGranted: Boolean) -> Unit,
 ) {
+    val myLocation by rememberSaveable(currentPosition.latitude, currentPosition.longitude) {
+        mutableStateOf(currentPosition)
+    }
     var showRationale by rememberSaveable { mutableStateOf(true) }
 
     val permissionState = rememberMultiplePermissionsState(
@@ -95,14 +98,15 @@ internal fun GoogleMapViewContainer(
             uiSettings.apply {
                 isZoomControlsEnabled = true
                 isZoomGesturesEnabled = true
-                isMyLocationButtonEnabled = true
+                isMyLocationButtonEnabled = permissionState.allPermissionsGranted
             }
             isMyLocationEnabled = permissionState.allPermissionsGranted
+            setMinZoomPreference(15f)
         }
         cameraPositions.forEach {
             googleMap.addMarker(it)
         }
-        googleMap.moveCamera(CameraUpdateFactory.newLatLng(currentPosition))
+        googleMap.moveCamera(CameraUpdateFactory.newLatLng(myLocation))
     }
     AndroidView(modifier = modifier, factory = { map }, update = onMapViewUpdated)
 }

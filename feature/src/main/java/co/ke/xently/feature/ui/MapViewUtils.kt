@@ -14,18 +14,23 @@
  * limitations under the License.
  */
 
-package co.ke.xently.shoppinglist.ui
+package co.ke.xently.feature.ui
 
+import android.content.SharedPreferences
+import android.content.SharedPreferences.OnSharedPreferenceChangeListener
 import android.os.Bundle
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.remember
+import android.util.Log
+import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
-import co.ke.xently.shoppinglist.R
+import co.ke.xently.common.MY_LOCATION_LATITUDE_SHARED_PREFERENCE_KEY
+import co.ke.xently.common.MY_LOCATION_LONGITUDE_SHARED_PREFERENCE_KEY
+import co.ke.xently.feature.R
+import co.ke.xently.source.local.di.StorageModule.provideEncryptedSharedPreference
 import com.google.android.libraries.maps.MapView
+import com.google.android.libraries.maps.model.LatLng
 
 private fun getMapLifecycleObserver(mapView: MapView): LifecycleEventObserver =
     LifecycleEventObserver { _, event ->
@@ -63,4 +68,39 @@ fun rememberMapViewWithLifecycle(): MapView {
     }
 
     return mapView
+}
+
+internal const val DEFAULT_LATITUDE = -1.306635
+internal const val DEFAULT_LONGITUDE = -1.306635
+
+@Composable
+fun rememberMyLocation(sharedPreference: SharedPreferences? = null): LatLng {
+    val preferences = sharedPreference ?: provideEncryptedSharedPreference(
+        LocalContext.current
+    )
+
+    fun myLocation(): LatLng {
+        val latitude =
+            preferences.getString(MY_LOCATION_LATITUDE_SHARED_PREFERENCE_KEY, null)?.toDouble()
+                ?: DEFAULT_LATITUDE
+        val longitude =
+            preferences.getString(MY_LOCATION_LONGITUDE_SHARED_PREFERENCE_KEY, null)?.toDouble()
+                ?: DEFAULT_LONGITUDE
+        Log.d("ShoppingListActivity", "myLocation: <$latitude,$longitude>")
+        return LatLng(latitude, longitude)
+    }
+
+    var coordinates by remember { mutableStateOf(myLocation()) }
+
+    val preferenceChanged = OnSharedPreferenceChangeListener { _, _ ->
+        coordinates = myLocation()
+    }
+
+    DisposableEffect(preferences) {
+        preferences.registerOnSharedPreferenceChangeListener(preferenceChanged)
+        onDispose {
+            preferences.unregisterOnSharedPreferenceChangeListener(preferenceChanged)
+        }
+    }
+    return coordinates
 }

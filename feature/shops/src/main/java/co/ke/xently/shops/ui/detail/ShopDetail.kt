@@ -1,6 +1,5 @@
 package co.ke.xently.shops.ui.detail
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -10,7 +9,6 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
@@ -19,17 +17,23 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import co.ke.xently.data.Shop
 import co.ke.xently.feature.MAP_HEIGHT
 import co.ke.xently.feature.theme.XentlyTheme
+import co.ke.xently.feature.ui.GoogleMapView
 import co.ke.xently.shops.R
 import kotlinx.coroutines.launch
 
 @Composable
-fun ShopDetail(
+internal fun ShopDetail(
     modifier: Modifier = Modifier,
     viewModel: ShopDetailViewModel = hiltViewModel(),
     onNavigationIconClicked: (() -> Unit) = {},
 ) {
     val shopResult by viewModel.shopResult.collectAsState()
-    ShopDetail(modifier, shopResult, onNavigationIconClicked) {
+    ShopDetail(
+        modifier,
+        shopResult,
+        onNavigationIconClicked,
+        viewModel::setLocationPermissionGranted,
+    ) {
         viewModel.addShop(it)
     }
 }
@@ -39,6 +43,7 @@ private fun ShopDetail(
     modifier: Modifier,
     result: Result<Shop?>,
     onNavigationIconClicked: (() -> Unit) = {},
+    onLocationPermissionChanged: ((Boolean) -> Unit) = {},
     onAddShopClicked: ((Shop) -> Unit) = {}
 ) {
     val (coroutineScope, scaffoldState) = Pair(rememberCoroutineScope(), rememberScaffoldState())
@@ -72,12 +77,11 @@ private fun ShopDetail(
                     .height(IntrinsicSize.Min)
                     .fillMaxWidth()
             ) {
-                Image(
-                    modifier = Modifier
+                GoogleMapView(
+                    Modifier
                         .height(MAP_HEIGHT)
                         .fillMaxWidth(),
-                    painter = painterResource(id = R.drawable.ic_launcher_background),
-                    contentDescription = null
+                    onLocationPermissionChanged = onLocationPermissionChanged,
                 )
                 Column(modifier = Modifier.fillMaxWidth()) {
                     TopAppBar(

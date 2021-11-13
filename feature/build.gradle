@@ -1,6 +1,9 @@
 plugins {
     id 'com.android.library'
+    id 'com.google.android.libraries.mapsplatform.secrets-gradle-plugin'
     id 'kotlin-android'
+    id 'kotlin-kapt'
+    id 'dagger.hilt.android.plugin' // apply below kotlin-kapt
 }
 
 android {
@@ -31,6 +34,7 @@ android {
         useIR = true
         freeCompilerArgs += [
                 "-Xopt-in=kotlin.time.ExperimentalTime",
+                "-Xopt-in=com.google.accompanist.permissions.ExperimentalPermissionsApi",
         ]
     }
     buildFeatures {
@@ -43,6 +47,28 @@ android {
 
 dependencies {
     implementation project(path: ":common")
+    implementation project(path: ':data:source:remote')
+    implementation project(path: ':data:source:local')
+
+    // DI
+    implementation "com.google.dagger:hilt-android:$hilt_version"
+    kapt "com.google.dagger:hilt-compiler:$hilt_version"
+
+    api "com.google.android.libraries.maps:maps:3.1.0-beta"
+    implementation 'com.google.maps.android:maps-v3-ktx:3.2.0'
+
+    constraints {
+        // Volley is a transitive dependency of maps
+        implementation("com.android.volley:volley:1.2.0") {
+            because("Only volley 1.2.0 or newer are available on maven.google.com")
+        }
+    }
+
+    implementation "com.google.android.gms:play-services-location:18.0.0"
+
+    // This is a transitive dependency to remote data source that's currently only needed by:
+    //  1. `sendRequest(...)` function declared in the remote data source module.
+    api "com.squareup.retrofit2:retrofit:$retrofit_version"
 
     // Navigation
     api "androidx.navigation:navigation-compose:$navigation_version"

@@ -1,4 +1,4 @@
-package co.ke.xently.shoppinglist
+package co.ke.xently.feature
 
 import android.Manifest.permission.ACCESS_COARSE_LOCATION
 import android.Manifest.permission.ACCESS_FINE_LOCATION
