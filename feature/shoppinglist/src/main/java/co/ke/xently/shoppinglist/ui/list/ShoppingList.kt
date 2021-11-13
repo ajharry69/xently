@@ -45,7 +45,7 @@ internal fun ShoppingListScreen(
                     IconButton(onClick = onNavigationIconClicked) {
                         Icon(
                             Icons.Default.ArrowBack,
-                            contentDescription = stringResource(R.string.fsl_menu_navigation_icon_content_desc_back),
+                            contentDescription = stringResource(R.string.fsl_navigation_icon_content_description),
                         )
                     }
                 },

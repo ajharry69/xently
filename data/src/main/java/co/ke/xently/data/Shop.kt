@@ -13,4 +13,7 @@ data class Shop(
     val taxPin: String = "",
     val productsCount: Int = 0,
     val addressesCount: Int = 0,
-)
+) {
+    val isDefaultID: Boolean
+        get() = id == -1L
+}

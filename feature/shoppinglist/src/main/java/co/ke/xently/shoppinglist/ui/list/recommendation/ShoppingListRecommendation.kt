@@ -15,6 +15,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import co.ke.xently.data.RecommendationReport
 import co.ke.xently.data.RecommendationReport.Recommendation
+import co.ke.xently.feature.MAP_HEIGHT
 import co.ke.xently.shoppinglist.R
 import co.ke.xently.shoppinglist.Recommend
 import co.ke.xently.shoppinglist.ui.GoogleMapView
@@ -39,12 +40,12 @@ internal fun ShoppingListRecommendationScreen(
         scaffoldState = scaffoldState,
         topBar = {
             TopAppBar(
-                title = { Text(text = "Recommendations") },
+                title = { Text(stringResource(R.string.fsl_recommendations_toolbar_title)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigationIconClicked) {
                         Icon(
                             Icons.Default.ArrowBack,
-                            contentDescription = stringResource(R.string.fsl_menu_navigation_icon_content_desc_back),
+                            contentDescription = stringResource(R.string.fsl_navigation_icon_content_description),
                         )
                     }
                 },
@@ -69,7 +70,7 @@ internal fun ShoppingListRecommendationScreen(
                     ) {
                         item {
                             GoogleMapView(
-                                Modifier.height(278.dp),
+                                Modifier.height(MAP_HEIGHT),
                                 LatLng(0.0, 0.0),
                                 report.recommendations.flatMap { recommendation ->
                                     recommendation.addresses.map { address ->
