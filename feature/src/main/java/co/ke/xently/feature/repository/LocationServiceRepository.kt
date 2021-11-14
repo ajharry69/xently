@@ -21,7 +21,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class LocationServiceRepository @Inject constructor(
+internal class LocationServiceRepository @Inject constructor(
     private val service: LocationUpdateService,
     @EncryptedSharedPreference
     private val sharedPreference: SharedPreferences,

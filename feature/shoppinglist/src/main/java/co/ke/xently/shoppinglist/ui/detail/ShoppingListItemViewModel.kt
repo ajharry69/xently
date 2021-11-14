@@ -13,7 +13,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class ShoppingListItemViewModel @Inject constructor(private val repository: IShoppingListRepository) :
+internal class ShoppingListItemViewModel @Inject constructor(private val repository: IShoppingListRepository) :
     ViewModel() {
     private val shoppingListItem = MutableStateFlow<ShoppingListItem?>(null)
     private val shoppingListItemId = MutableStateFlow<Long?>(null)

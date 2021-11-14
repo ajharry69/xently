@@ -14,7 +14,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class ShopsRepository @Inject constructor(
+internal class ShopsRepository @Inject constructor(
     private val dao: ShopsDao,
     private val service: ShopService,
     @IODispatcher

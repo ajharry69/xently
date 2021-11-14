@@ -19,7 +19,7 @@ import okhttp3.internal.http.toHttpDateOrNull
 
 
 @Composable
-fun ShoppingListItemScreen(
+internal fun ShoppingListItemScreen(
     itemId: Long?,
     modifier: Modifier = Modifier,
     viewModel: ShoppingListItemViewModel = hiltViewModel(),

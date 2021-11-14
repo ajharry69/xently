@@ -15,7 +15,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class ShopDetailViewModel @Inject constructor(
+internal class ShopDetailViewModel @Inject constructor(
     application: Application,
     savedStateHandle: SavedStateHandle,
     private val repository: IShopsRepository,
@@ -27,6 +27,16 @@ class ShopDetailViewModel @Inject constructor(
     fun addShop(shop: Shop) {
         viewModelScope.launch {
             repository.addShop(shop).catch {
+                Result.failure<Result<Shop?>>(it)
+            }.collectLatest {
+                _shopResult.value = it
+            }
+        }
+    }
+
+    fun getShop(id: Long) {
+        viewModelScope.launch {
+            repository.getShop(id).catch {
                 Result.failure<Result<Shop?>>(it)
             }.collectLatest {
                 _shopResult.value = it

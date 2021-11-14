@@ -14,10 +14,13 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import co.ke.xently.data.Shop
 import co.ke.xently.feature.theme.XentlyTheme
-import co.ke.xently.shops.ui.detail.ShopDetail
-import co.ke.xently.shops.ui.list.ShopList
+import co.ke.xently.shops.ui.detail.ShopDetailScreen
+import co.ke.xently.shops.ui.list.ShopListScreen
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class ShopsActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -25,7 +28,10 @@ class ShopsActivity : ComponentActivity() {
             XentlyTheme {
                 // A surface container using the 'background' color from the theme
                 Surface(color = MaterialTheme.colors.background) {
-                    ShopsNavHost()
+                    val navController = rememberNavController()
+                    ShopsNavHost(navController = navController) {
+                        if (!navController.navigateUp()) onBackPressed()
+                    }
                 }
             }
         }
@@ -35,14 +41,15 @@ class ShopsActivity : ComponentActivity() {
 @Composable
 internal fun ShopsNavHost(
     modifier: Modifier = Modifier,
-    navController: NavHostController = rememberNavController(),
+    navController: NavHostController,
+    onNavigationIconClicked: () -> Unit,
 ) {
-    NavHost(modifier = modifier, navController = navController, startDestination = "shop-list") {
-        composable("shop-list") {
-            ShopList(
+    NavHost(modifier = modifier, navController = navController, startDestination = "shops") {
+        composable("shops") {
+            ShopListScreen(
                 modifier = Modifier.fillMaxSize(),
                 onItemClicked = {
-                    navController.navigate("shop/$it")
+                    navController.navigate("shops/$it")
                 },
                 onProductsClicked = {
                     // TODO: Show shop's products screen
@@ -50,10 +57,14 @@ internal fun ShopsNavHost(
                 onAddressesClicked = {
                     // TODO: Show shop's addresses screen
                 },
+                onAddShopClicked = {
+                    navController.navigate("shops/${Shop.DEFAULT_ID}")
+                },
+                onNavigationIconClicked = onNavigationIconClicked,
             )
         }
         composable(
-            "shop/{id}",
+            "shops/{id}",
             arguments = listOf(
                 navArgument("id") {
                     nullable = false
@@ -61,7 +72,10 @@ internal fun ShopsNavHost(
                 },
             ),
         ) {
-            ShopDetail(modifier = Modifier.fillMaxSize())
+            ShopDetailScreen(
+                modifier = Modifier.fillMaxSize(),
+                shopId = it.arguments?.getLong("id")
+            )
         }
     }
 }

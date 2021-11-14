@@ -8,12 +8,16 @@ import co.ke.xently.common.Exclude
 data class Shop(
     @Exclude(Exclude.During.SERIALIZATION)
     @PrimaryKey(autoGenerate = false)
-    val id: Long = -1L,
+    val id: Long = DEFAULT_ID,
     val name: String = "",
     val taxPin: String = "",
     val productsCount: Int = 0,
     val addressesCount: Int = 0,
 ) {
     val isDefaultID: Boolean
-        get() = id == -1L
+        get() = id == DEFAULT_ID
+
+    companion object {
+        const val DEFAULT_ID = -1L
+    }
 }

@@ -22,13 +22,17 @@ import co.ke.xently.shops.R
 import kotlinx.coroutines.launch
 
 @Composable
-internal fun ShopDetail(
+internal fun ShopDetailScreen(
     modifier: Modifier = Modifier,
+    shopId: Long? = null,
     viewModel: ShopDetailViewModel = hiltViewModel(),
     onNavigationIconClicked: (() -> Unit) = {},
 ) {
+    shopId?.also {
+        if (it != Shop.DEFAULT_ID) viewModel.getShop(it)
+    }
     val shopResult by viewModel.shopResult.collectAsState()
-    ShopDetail(
+    ShopDetailScreen(
         modifier,
         shopResult,
         onNavigationIconClicked,
@@ -39,14 +43,13 @@ internal fun ShopDetail(
 }
 
 @Composable
-private fun ShopDetail(
+private fun ShopDetailScreen(
     modifier: Modifier,
     result: Result<Shop?>,
     onNavigationIconClicked: (() -> Unit) = {},
     onLocationPermissionChanged: ((Boolean) -> Unit) = {},
-    onAddShopClicked: ((Shop) -> Unit) = {}
+    onAddShopClicked: ((Shop) -> Unit) = {},
 ) {
-    val (coroutineScope, scaffoldState) = Pair(rememberCoroutineScope(), rememberScaffoldState())
     val shop = result.getOrNull() ?: Shop()
     var name by remember(shop.id, shop.name) {
         mutableStateOf(TextFieldValue(shop.name))
@@ -57,6 +60,7 @@ private fun ShopDetail(
     val toolbarTitlePrefix = stringResource(
         if (shop.isDefaultID) R.string.fs_add else R.string.fs_update
     )
+    val (coroutineScope, scaffoldState) = Pair(rememberCoroutineScope(), rememberScaffoldState())
 
     if (result.isFailure) {
         val errorMessage =
@@ -104,7 +108,7 @@ private fun ShopDetail(
                             )
                         },
                     )
-                    if (result.isSuccess && result.getOrThrow() == null) {
+                    if (result.isSuccess && result.getOrThrow() == null && !shop.isDefaultID) {
                         LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
                     }
                 }
@@ -116,26 +120,26 @@ private fun ShopDetail(
                     onValueChange = { name = it },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 8.dp)
-                        .padding(top = 8.dp),
+                        .padding(horizontal = 16.dp)
+                        .padding(top = 16.dp),
                     label = { Text(text = stringResource(R.string.fs_shop_item_detail_name_label)) },
                 )
-                Spacer(modifier = Modifier.padding(vertical = 4.dp))
+                Spacer(modifier = Modifier.padding(vertical = 8.dp))
                 TextField(
                     value = taxPin,
                     singleLine = true,
                     onValueChange = { taxPin = it },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 8.dp),
+                        .padding(horizontal = 16.dp),
                     label = { Text(text = stringResource(R.string.fs_shop_item_detail_tax_pin_label)) },
                 )
-                Spacer(modifier = Modifier.padding(vertical = 4.dp))
+                Spacer(modifier = Modifier.padding(vertical = 8.dp))
                 Button(
                     enabled = arrayOf(name, taxPin).all { it.text.isNotBlank() },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 8.dp),
+                        .padding(horizontal = 16.dp),
                     onClick = {
                         onAddShopClicked(shop.copy(name = name.text, taxPin = taxPin.text))
                     }
@@ -156,7 +160,7 @@ private fun ShopDetail(
 @Composable
 fun ShopDetailPreview() {
     XentlyTheme {
-        ShopDetail(
+        ShopDetailScreen(
             modifier = Modifier.fillMaxSize(),
             result = Result.success(Shop(name = "Shop #1000", taxPin = "P000111222B")),
         )
@@ -167,6 +171,6 @@ fun ShopDetailPreview() {
 @Composable
 fun ShopDetailOnNullPreview() {
     XentlyTheme {
-        ShopDetail(modifier = Modifier.fillMaxSize(), result = Result.success(null))
+        ShopDetailScreen(modifier = Modifier.fillMaxSize(), result = Result.success(null))
     }
 }

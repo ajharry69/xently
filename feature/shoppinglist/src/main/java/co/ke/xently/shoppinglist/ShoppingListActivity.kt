@@ -25,7 +25,7 @@ import co.ke.xently.feature.theme.XentlyTheme
 import co.ke.xently.shoppinglist.Recommend.From
 import co.ke.xently.shoppinglist.ui.detail.ShoppingListItemScreen
 import co.ke.xently.shoppinglist.ui.list.ShoppingListScreen
-import co.ke.xently.shoppinglist.ui.list.grouped.ShoppingListGroupedScreen
+import co.ke.xently.shoppinglist.ui.list.grouped.GroupedShoppingListScreen
 import co.ke.xently.shoppinglist.ui.list.recommendation.ShoppingListRecommendationScreen
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -54,7 +54,7 @@ class ShoppingListActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             XentlyTheme {
-                ShoppingListNavHost()
+                ShoppingListNavHost(this)
             }
         }
         viewModel.locationPermissionsGranted.observe(this) {
@@ -83,6 +83,7 @@ class ShoppingListActivity : ComponentActivity() {
 
 @Composable
 internal fun ShoppingListNavHost(
+    context: Context,
     modifier: Modifier = Modifier,
     navController: NavHostController = rememberNavController(),
 ) {
@@ -98,7 +99,7 @@ internal fun ShoppingListNavHost(
             navController.navigate("shopping-list/${it}")
         }
         composable("shopping-list-grouped") {
-            ShoppingListGroupedScreen(
+            GroupedShoppingListScreen(
                 modifier = Modifier
                     .fillMaxHeight()
                     .fillMaxWidth(),
@@ -108,6 +109,11 @@ internal fun ShoppingListNavHost(
                     navController.navigate("shopping-list/recommendations/${it}")
                 },
                 onSeeAllClicked = { navController.navigate("shopping-list") },
+                onShopMenuClicked = {
+                    Intent("co.ke.xently.action.SHOPS").also {
+                        context.startActivity(it)
+                    }
+                },
             )
         }
         composable("shopping-list") {

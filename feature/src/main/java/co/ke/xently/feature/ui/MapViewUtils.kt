@@ -19,7 +19,6 @@ package co.ke.xently.feature.ui
 import android.content.SharedPreferences
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener
 import android.os.Bundle
-import android.util.Log
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
@@ -86,7 +85,6 @@ fun rememberMyLocation(sharedPreference: SharedPreferences? = null): LatLng {
         val longitude =
             preferences.getString(MY_LOCATION_LONGITUDE_SHARED_PREFERENCE_KEY, null)?.toDouble()
                 ?: DEFAULT_LONGITUDE
-        Log.d("ShoppingListActivity", "myLocation: <$latitude,$longitude>")
         return LatLng(latitude, longitude)
     }
 

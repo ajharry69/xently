@@ -6,6 +6,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.runtime.*
@@ -22,32 +24,65 @@ import co.ke.xently.shops.R
 import kotlin.random.Random
 
 @Composable
-fun ShopList(
+internal fun ShopListScreen(
     modifier: Modifier = Modifier,
     viewModel: ShopListViewModel = hiltViewModel(),
     onItemClicked: ((id: Long) -> Unit) = {},
     onProductsClicked: ((id: Long) -> Unit) = {},
     onAddressesClicked: ((id: Long) -> Unit) = {},
+    onNavigationIconClicked: (() -> Unit) = {},
+    onAddShopClicked: (() -> Unit) = {},
 ) {
     val shopListResult by viewModel.shopListResult.collectAsState()
-    ShopList(
+    ShopListScreen(
         shopListResult,
         modifier = modifier,
         onItemClicked = onItemClicked,
         onProductsClicked = onProductsClicked,
         onAddressesClicked = onAddressesClicked,
+        onNavigationIconClicked = onNavigationIconClicked,
+        onAddShopClicked = onAddShopClicked,
     )
 }
 
 @Composable
-private fun ShopList(
+private fun ShopListScreen(
     shopListResult: Result<List<Shop>?>,
     modifier: Modifier = Modifier,
     onItemClicked: ((id: Long) -> Unit) = {},
     onProductsClicked: ((id: Long) -> Unit) = {},
     onAddressesClicked: ((id: Long) -> Unit) = {},
+    onNavigationIconClicked: (() -> Unit) = {},
+    onAddShopClicked: (() -> Unit) = {},
 ) {
-    Scaffold {
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(stringResource(R.string.title_activity_shops))
+                },
+                navigationIcon = {
+                    IconButton(onClick = onNavigationIconClicked) {
+                        Icon(
+                            Icons.Default.ArrowBack,
+                            stringResource(R.string.fs_navigation_icon_content_description),
+                        )
+                    }
+                }
+            )
+        },
+        floatingActionButton = {
+            FloatingActionButton(onClick = onAddShopClicked) {
+                Icon(
+                    Icons.Default.Add,
+                    stringResource(
+                        R.string.fs_add_shop_toolbar_title,
+                        stringResource(R.string.fs_add),
+                    )
+                )
+            }
+        }
+    ) {
         if (shopListResult.isSuccess) {
             val shopList = shopListResult.getOrThrow()
             when {
@@ -64,7 +99,7 @@ private fun ShopList(
                 else -> {
                     LazyColumn(
                         modifier = modifier,
-                        verticalArrangement = Arrangement.SpaceBetween,
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         items(shopList) {
                             ShopListItem(
@@ -213,7 +248,10 @@ fun ShopListItemPopupMenuShowingPreview() {
 @Composable
 fun ShopListEmptyPreview() {
     XentlyTheme {
-        ShopList(modifier = Modifier.fillMaxSize(), shopListResult = Result.success(emptyList()))
+        ShopListScreen(
+            modifier = Modifier.fillMaxSize(),
+            shopListResult = Result.success(emptyList())
+        )
     }
 }
 
@@ -221,7 +259,7 @@ fun ShopListEmptyPreview() {
 @Composable
 fun ShopListNullPreview() {
     XentlyTheme {
-        ShopList(modifier = Modifier.fillMaxSize(), shopListResult = Result.success(null))
+        ShopListScreen(modifier = Modifier.fillMaxSize(), shopListResult = Result.success(null))
     }
 }
 
@@ -229,7 +267,7 @@ fun ShopListNullPreview() {
 @Composable
 fun ShopListNonEmptyListPreview() {
     XentlyTheme {
-        ShopList(
+        ShopListScreen(
             modifier = Modifier.fillMaxSize(),
             shopListResult = Result.success(List(20) {
                 Shop(

@@ -43,6 +43,9 @@ android {
     composeOptions {
         kotlinCompilerExtensionVersion compose_version
     }
+    packagingOptions {
+        pickFirsts += ["build-data.properties"]
+    }
 }
 
 dependencies {

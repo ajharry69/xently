@@ -5,8 +5,13 @@
     <application>
         <activity
             android:name=".ShopsActivity"
-            android:exported="true"
-            android:label="@string/title_activity_shops" />
+            android:exported="false"
+            android:label="@string/title_activity_shops">
+            <intent-filter>
+                <action android:name="co.ke.xently.action.SHOPS" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
     </application>
 
 </manifest>
