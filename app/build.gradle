@@ -52,6 +52,7 @@ android {
 dependencies {
     implementation project(path: ':common')
     implementation project(path: ":feature:shops")
+    implementation project(path: ":feature:products")
     implementation project(path: ":feature:shoppinglist")
 
     // DI

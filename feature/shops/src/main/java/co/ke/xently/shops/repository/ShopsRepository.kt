@@ -68,8 +68,8 @@ internal class ShopsRepository @Inject constructor(
                     if (it == null) emitAll(getShopList(false))
                 }
         } else {
-            dao.getShopList().map { shoppingList ->
-                Result.success(shoppingList)
+            dao.getShopList().map { shops ->
+                Result.success(shops)
             }
         }
     }
