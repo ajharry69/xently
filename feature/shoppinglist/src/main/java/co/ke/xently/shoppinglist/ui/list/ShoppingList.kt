@@ -45,7 +45,7 @@ internal fun ShoppingListScreen(
                     IconButton(onClick = onNavigationIconClicked) {
                         Icon(
                             Icons.Default.ArrowBack,
-                            contentDescription = stringResource(R.string.fsl_menu_navigation_icon_content_desc_back),
+                            contentDescription = stringResource(R.string.fsl_navigation_icon_content_description),
                         )
                     }
                 },
@@ -122,7 +122,7 @@ internal fun ShoppingListItemCard(
         horizontalArrangement = Arrangement.SpaceBetween,
         modifier = modifier.clickable { onItemClicked(item.id) }) {
         Column {
-            Text(text = item.name, style = MaterialTheme.typography.body1)
+            Text(modifier = Modifier.wrapContentWidth(), text = item.name, style = MaterialTheme.typography.body1)
             Text(
                 text = "${item.unitQuantity} ${item.unit}",
                 style = MaterialTheme.typography.caption

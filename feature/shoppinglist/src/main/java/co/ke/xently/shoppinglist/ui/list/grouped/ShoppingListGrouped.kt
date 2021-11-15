@@ -1,5 +1,7 @@
 package co.ke.xently.shoppinglist.ui.list.grouped
 
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -12,7 +14,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -20,41 +24,97 @@ import co.ke.xently.data.GroupedShoppingList
 import co.ke.xently.data.ShoppingListItem
 import co.ke.xently.shoppinglist.R
 import co.ke.xently.shoppinglist.ui.list.ShoppingListItemCard
+import kotlinx.coroutines.launch
 import java.util.*
 
 @Composable
-internal fun ShoppingListGroupedScreen(
+internal fun GroupedShoppingListScreen(
     modifier: Modifier = Modifier,
     viewModel: ShoppingListGroupedViewModel = hiltViewModel(),
     onShoppingListItemClicked: (itemId: Long) -> Unit,
     onShoppingListItemRecommendClicked: (itemId: Long) -> Unit,
     onRecommendGroupClicked: (group: Any) -> Unit = {},
     onSeeAllClicked: (group: Any) -> Unit = {},
+    onShopMenuClicked: (() -> Unit) = {},
 ) {
-    val scaffoldState = rememberScaffoldState()
-
     val groupedShoppingListResult = viewModel.groupedShoppingListResult.collectAsState().value
     val groupedShoppingListCount = viewModel.groupedShoppingListCount.collectAsState().value
 
+    GroupedShoppingListScreen(
+        modifier,
+        groupedShoppingListCount,
+        groupedShoppingListResult,
+        onShoppingListItemClicked,
+        onShoppingListItemRecommendClicked,
+        onRecommendGroupClicked,
+        onSeeAllClicked,
+        onShopMenuClicked,
+    )
+}
+
+@Composable
+private fun GroupedShoppingListScreen(
+    modifier: Modifier,
+    groupedShoppingListCount: Map<Any, Int>,
+    groupedShoppingListResult: Result<List<GroupedShoppingList>?>,
+    onShoppingListItemClicked: (itemId: Long) -> Unit,
+    onShoppingListItemRecommendClicked: (itemId: Long) -> Unit,
+    onRecommendGroupClicked: (group: Any) -> Unit,
+    onSeeAllClicked: (group: Any) -> Unit,
+    onShopMenuClicked: () -> Unit,
+) {
+    val scaffoldState = rememberScaffoldState()
+    val coroutineScope = rememberCoroutineScope()
     Scaffold(
         scaffoldState = scaffoldState,
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(id = R.string.fsl_toolbar_title)) },
                 navigationIcon = {
-                    IconButton(onClick = { }) {
+                    IconButton(onClick = {
+                        coroutineScope.launch {
+                            scaffoldState.drawerState.apply {
+                                if (isClosed) open() else close()
+                            }
+                        }
+                    }) {
                         Icon(Icons.Default.Menu, contentDescription = null)
                     }
                 },
                 actions = {
                     IconButton(onClick = { }) {
-                        Icon(
-                            Icons.Default.Search,
-                            contentDescription = "Localized description"
-                        )
+                        Icon(Icons.Default.Search, contentDescription = null)
                     }
                 }
             )
+        },
+        drawerContent = {
+            Image(
+                painterResource(R.drawable.ic_launcher_background),
+                null,
+                modifier = Modifier
+                    .height(176.dp)
+                    .fillMaxWidth(),
+            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(IntrinsicSize.Min)
+                    .clickable(role = Role.Tab) {
+                        onShopMenuClicked()
+                        coroutineScope.launch {
+                            scaffoldState.drawerState.apply { if (isOpen) close() }
+                        }
+                    },
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(painterResource(R.drawable.ic_shop), null, modifier = Modifier.padding(16.dp))
+                Text(
+                    stringResource(R.string.drawer_menu_shops),
+                    style = MaterialTheme.typography.button,
+                    modifier = Modifier.weight(1f),
+                )
+            }
         },
     ) {
         if (groupedShoppingListResult.isSuccess) {

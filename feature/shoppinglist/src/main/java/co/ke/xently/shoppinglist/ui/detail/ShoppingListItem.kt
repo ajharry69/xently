@@ -19,7 +19,7 @@ import okhttp3.internal.http.toHttpDateOrNull
 
 
 @Composable
-fun ShoppingListItemScreen(
+internal fun ShoppingListItemScreen(
     itemId: Long?,
     modifier: Modifier = Modifier,
     viewModel: ShoppingListItemViewModel = hiltViewModel(),
@@ -62,7 +62,7 @@ fun ShoppingListItemScreen(
                     IconButton(onClick = onNavigationIconClicked) {
                         Icon(
                             Icons.Default.ArrowBack,
-                            contentDescription = stringResource(R.string.fsl_menu_navigation_icon_content_desc_back),
+                            contentDescription = stringResource(R.string.fsl_navigation_icon_content_description),
                         )
                     }
                 },

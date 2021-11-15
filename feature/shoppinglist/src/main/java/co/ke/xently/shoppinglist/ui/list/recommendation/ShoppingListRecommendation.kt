@@ -10,14 +10,17 @@ import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import co.ke.xently.data.RecommendationReport
 import co.ke.xently.data.RecommendationReport.Recommendation
+import co.ke.xently.feature.MAP_HEIGHT
+import co.ke.xently.feature.ui.GoogleMapView
 import co.ke.xently.shoppinglist.R
 import co.ke.xently.shoppinglist.Recommend
-import co.ke.xently.shoppinglist.ui.GoogleMapView
 import co.ke.xently.shoppinglist.ui.list.ShoppingListItemCard
 import com.google.android.libraries.maps.model.LatLng
 import com.google.android.libraries.maps.model.MarkerOptions
@@ -35,30 +38,18 @@ internal fun ShoppingListRecommendationScreen(
     viewModel.setRecommend(recommend)
     val recommendationReportResult by viewModel.recommendationReportResult.collectAsState()
 
-    Scaffold(
-        scaffoldState = scaffoldState,
-        topBar = {
-            TopAppBar(
-                title = { Text(text = "Recommendations") },
-                navigationIcon = {
-                    IconButton(onClick = onNavigationIconClicked) {
-                        Icon(
-                            Icons.Default.ArrowBack,
-                            contentDescription = stringResource(R.string.fsl_menu_navigation_icon_content_desc_back),
-                        )
-                    }
-                },
-            )
-        },
-    ) {
+    Scaffold(scaffoldState = scaffoldState) {
         if (recommendationReportResult.isSuccess) {
             when (val report = recommendationReportResult.getOrThrow()) {
                 null -> {
-                    Box(contentAlignment = Alignment.Center, modifier = modifier.padding(it)) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            CircularProgressIndicator()
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Text(text = stringResource(R.string.fsl_data_loading))
+                    Column(modifier = modifier.padding(it)) {
+                        ToolBar(onNavigationIconClicked = onNavigationIconClicked)
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                CircularProgressIndicator()
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Text(text = stringResource(R.string.fsl_data_loading))
+                            }
                         }
                     }
                 }
@@ -68,20 +59,37 @@ internal fun ShoppingListRecommendationScreen(
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         item {
-                            GoogleMapView(
-                                Modifier.height(278.dp),
-                                LatLng(0.0, 0.0),
-                                report.recommendations.flatMap { recommendation ->
-                                    recommendation.addresses.map { address ->
-                                        MarkerOptions().apply {
-                                            title("${recommendation.name}, ${recommendation.taxPin}")
-                                            snippet("${recommendation.hits.count} item(s), ${recommendation.printableTotalPrice}")
-                                            position(LatLng(address.latitude, address.longitude))
+                            Box(
+                                modifier = Modifier
+                                    .height(IntrinsicSize.Min)
+                                    .fillMaxWidth(),
+                            ) {
+                                GoogleMapView(
+                                    Modifier
+                                        .height(MAP_HEIGHT)
+                                        .fillMaxWidth(),
+                                    markerPositions = report.recommendations.flatMap { recommendation ->
+                                        recommendation.addresses.map { address ->
+                                            MarkerOptions().apply {
+                                                title("${recommendation.name}, ${recommendation.taxPin}")
+                                                snippet("${recommendation.hits.count} item(s), ${recommendation.printableTotalPrice}")
+                                                position(
+                                                    LatLng(
+                                                        address.latitude,
+                                                        address.longitude,
+                                                    )
+                                                )
+                                            }
                                         }
-                                    }
-                                }.toTypedArray(),
-                                onLocationPermissionChanged = viewModel::setLocationPermissionGranted,
-                            )
+                                    }.toTypedArray(),
+                                    onLocationPermissionChanged = viewModel::setLocationPermissionGranted,
+                                )
+                                ToolBar(
+                                    elevation = 0.dp,
+                                    backgroundColor = Color.Transparent,
+                                    onNavigationIconClicked = onNavigationIconClicked,
+                                )
+                            }
                         }
                         item {
                             RecommendationReportItemGroup(
@@ -137,14 +145,38 @@ internal fun ShoppingListRecommendationScreen(
                 }
             }
         } else {
-            Box(contentAlignment = Alignment.Center, modifier = modifier.padding(it)) {
-                Text(
-                    text = recommendationReportResult.exceptionOrNull()?.localizedMessage
-                        ?: stringResource(R.string.fsl_generic_error_message)
-                )
+            Column(modifier = modifier.padding(it)) {
+                ToolBar(onNavigationIconClicked = onNavigationIconClicked)
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text(
+                        text = recommendationReportResult.exceptionOrNull()?.localizedMessage
+                            ?: stringResource(R.string.fsl_generic_error_message)
+                    )
+                }
             }
         }
     }
+}
+
+@Composable
+private fun ToolBar(
+    backgroundColor: Color = MaterialTheme.colors.primarySurface,
+    elevation: Dp = AppBarDefaults.TopAppBarElevation,
+    onNavigationIconClicked: () -> Unit
+) {
+    TopAppBar(
+        elevation = elevation,
+        backgroundColor = backgroundColor,
+        title = { Text(stringResource(R.string.fsl_recommendations_toolbar_title)) },
+        navigationIcon = {
+            IconButton(onClick = onNavigationIconClicked) {
+                Icon(
+                    Icons.Default.ArrowBack,
+                    contentDescription = stringResource(R.string.fsl_navigation_icon_content_description),
+                )
+            }
+        },
+    )
 }
 
 @Composable

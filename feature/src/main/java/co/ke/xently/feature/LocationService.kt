@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package co.ke.xently.shoppinglist
+package co.ke.xently.feature
 
 import android.app.*
 import android.content.Context
@@ -25,9 +25,11 @@ import android.os.IBinder
 import android.os.Looper
 import android.util.Log
 import androidx.core.app.NotificationCompat
-import co.ke.xently.shoppinglist.repository.IShoppingListRepository
+import co.ke.xently.feature.repository.ILocationServiceRepository
 import com.google.android.gms.location.*
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.runBlocking
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
@@ -42,7 +44,7 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class LocationService : Service() {
     @Inject
-    lateinit var repository: IShoppingListRepository
+    lateinit var repository: ILocationServiceRepository
 
     /*
      * Checks whether the bound activity has really gone away (foreground service with notification
@@ -74,7 +76,9 @@ class LocationService : Service() {
                 super.onLocationResult(locationResult)
 
                 locationResult.lastLocation.run {
-                    repository.updateLocation(arrayOf(latitude, longitude))
+                    runBlocking {
+                        repository.updateLocation(arrayOf(latitude, longitude)).collect()
+                    }
                 }
 
                 if (serviceRunningInForeground) {
@@ -213,7 +217,7 @@ class LocationService : Service() {
             .bigText(mainNotificationText)
 
         // 3. Set up main Intent/Pending Intents for notification.
-        val launchActivityIntent = Intent(this, ShoppingListActivity::class.java)
+        val launchActivityIntent = Intent("co.ke.xently.action.MAIN")
 
         val cancelIntent = Intent(this, LocationService::class.java)
         cancelIntent.putExtra(EXTRA_CANCEL_LOCATION_TRACKING_FROM_NOTIFICATION, true)
@@ -234,7 +238,7 @@ class LocationService : Service() {
         return notificationCompatBuilder
             .setStyle(bigTextStyle)
             .setContentText(mainNotificationText)
-            .setSmallIcon(co.ke.xently.feature.R.mipmap.ic_launcher)
+            .setSmallIcon(R.mipmap.ic_launcher)
             .setDefaults(NotificationCompat.DEFAULT_ALL)
             .setOngoing(true)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
@@ -255,7 +259,7 @@ class LocationService : Service() {
      * clients, we don't need to deal with IPC.
      */
     inner class LocalBinder : Binder() {
-        internal val service: LocationService
+        val service: LocationService
             get() = this@LocationService
     }
 

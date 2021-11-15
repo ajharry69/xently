@@ -4,7 +4,7 @@ import android.app.Application
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import co.ke.xently.data.RecommendationReport
-import co.ke.xently.shoppinglist.LocationPermissionViewModel
+import co.ke.xently.feature.LocationPermissionViewModel
 import co.ke.xently.shoppinglist.Recommend
 import co.ke.xently.shoppinglist.repository.IShoppingListRepository
 import dagger.hilt.android.lifecycle.HiltViewModel

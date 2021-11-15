@@ -8,12 +8,6 @@ import co.ke.xently.shoppinglist.Recommend
 import kotlinx.coroutines.flow.Flow
 
 interface IShoppingListRepository {
-    fun getLocationTrackingPref(): Boolean
-
-    fun saveLocationTrackingPref(requestLocationUpdates: Boolean)
-
-    fun updateLocation(location: Array<Double>): Flow<Result<Unit>>
-
     fun addShoppingListItem(item: ShoppingListItem): Flow<Result<ShoppingListItem>>
 
     fun getShoppingList(remote: Boolean): Flow<Result<List<ShoppingListItem>>>

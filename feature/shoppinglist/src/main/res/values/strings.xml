@@ -12,13 +12,11 @@
     <string name="fsl_detail_screen_toolbar_title">%1$s item</string>
     <string name="fsl_update">Update</string>
     <string name="fsl_add">Add</string>
-    <string name="fsl_menu_navigation_icon_content_desc_back">Navigate back</string>
+    <string name="fsl_navigation_icon_content_description">Navigate back</string>
     <string name="fsl_text_field_label_name">Name</string>
     <string name="fsl_text_field_label_unit">Unit</string>
     <string name="fsl_text_field_label_unit_quantity">Unit quantity</string>
     <string name="fsl_text_field_label_date_added">Date added</string>
     <string name="fsl_text_field_label_purchase_quantity">Purchase quantity</string>
-    <string name="stop_location_tracking_button_text">Stop tracking</string>
-    <string name="show_screen_button_text">Show screen</string>
-    <string name="location_tracking_notification_text">Tracking your location for better shop recommendation…</string>
+    <string name="fsl_recommendations_toolbar_title">Recommendations</string>
 </resources>

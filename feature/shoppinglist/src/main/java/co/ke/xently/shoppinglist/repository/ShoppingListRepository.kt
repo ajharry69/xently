@@ -1,13 +1,6 @@
 package co.ke.xently.shoppinglist.repository
 
-import android.content.SharedPreferences
-import androidx.core.content.edit
-import co.ke.xently.common.ENABLE_LOCATION_TRACKING_PREFERENCE_KEY
-import co.ke.xently.common.LATITUDE_SHARED_PREFERENCE_KEY
-import co.ke.xently.common.LONGITUDE_SHARED_PREFERENCE_KEY
 import co.ke.xently.common.Retry
-import co.ke.xently.common.di.qualifiers.EncryptedSharedPreference
-import co.ke.xently.common.di.qualifiers.UnencryptedSharedPreference
 import co.ke.xently.common.di.qualifiers.coroutines.IODispatcher
 import co.ke.xently.data.GroupedShoppingList
 import co.ke.xently.data.RecommendationRequest
@@ -29,39 +22,15 @@ import javax.inject.Singleton
 internal class ShoppingListRepository @Inject constructor(
     private val dao: ShoppingListDao,
     private val service: ShoppingListService,
-    @EncryptedSharedPreference
-    private val sharedPreference: SharedPreferences,
-    @UnencryptedSharedPreference
-    private val unencryptedPreference: SharedPreferences,
     @IODispatcher
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : IShoppingListRepository {
     // TODO: Use memoization to retrieve all grouped shopping list items...
-    override fun saveLocationTrackingPref(requestLocationUpdates: Boolean) {
-        unencryptedPreference.edit {
-            putBoolean(ENABLE_LOCATION_TRACKING_PREFERENCE_KEY, requestLocationUpdates)
-        }
-    }
-
-    override fun getLocationTrackingPref() =
-        unencryptedPreference.getBoolean(ENABLE_LOCATION_TRACKING_PREFERENCE_KEY, false)
-
-    override fun updateLocation(location: Array<Double>) = Retry().run {
-        flow {
-            emit(sendRequest(401) { service.updateLocation(location = location) })
-        }.onEach {
-            sharedPreference.edit(commit = true) {
-                putString(LATITUDE_SHARED_PREFERENCE_KEY, location.component1().toString())
-                putString(LONGITUDE_SHARED_PREFERENCE_KEY, location.component2().toString())
-            }
-        }.retryCatchIfNecessary(this).flowOn(ioDispatcher)
-    }
-
     override fun addShoppingListItem(item: ShoppingListItem) = Retry().run {
         flow {
             emit(sendRequest(401) { service.addShoppingListItem(item) })
         }.onEach {
-            dao.addShoppingListItems(item)
+            dao.addShoppingListItems(it.getOrThrow())
         }.retryCatchIfNecessary(this).flowOn(ioDispatcher)
     }
 
