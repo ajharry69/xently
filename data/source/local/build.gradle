@@ -39,8 +39,8 @@ android {
 }
 
 dependencies {
-    implementation project(path: ":data:source")
-
+    implementation project(path: ':common')
+    implementation project(path: ':data')
     // Security
     implementation "androidx.security:security-crypto:1.1.0-alpha03"
 

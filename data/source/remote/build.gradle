@@ -36,8 +36,8 @@ android {
 }
 
 dependencies {
-    implementation project(path: ":data:source")
-
+    implementation project(path: ':common')
+    implementation project(path: ':data')
     // DI
     implementation "com.google.dagger:hilt-android:$hilt_version"
     kapt "com.google.dagger:hilt-compiler:$hilt_version"
