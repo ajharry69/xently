@@ -4,13 +4,14 @@ import android.app.Application
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import co.ke.xently.data.RecommendationReport
+import co.ke.xently.data.TaskResult
 import co.ke.xently.feature.LocationPermissionViewModel
+import co.ke.xently.feature.utils.flagLoadingOnStartCatchingErrors
 import co.ke.xently.shoppinglist.Recommend
 import co.ke.xently.shoppinglist.repository.IShoppingListRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -22,8 +23,8 @@ internal class ShoppingListRecommendationViewModel @Inject constructor(
     private val repository: IShoppingListRepository,
 ) : LocationPermissionViewModel(app, savedStateHandle) {
     private val _recommendationReportResult =
-        MutableStateFlow(Result.success<RecommendationReport?>(null))
-    val recommendationReportResult: StateFlow<Result<RecommendationReport?>>
+        MutableStateFlow<TaskResult<RecommendationReport>>(TaskResult.Loading)
+    val recommendationReportResult: StateFlow<TaskResult<RecommendationReport>>
         get() = _recommendationReportResult
     private val recommend = MutableStateFlow(Recommend())
 
@@ -31,7 +32,7 @@ internal class ShoppingListRecommendationViewModel @Inject constructor(
         viewModelScope.launch {
             recommend.collectLatest { r ->
                 repository.getRecommendations(r)
-                    .catch { emit(Result.failure(it)) }
+                    .flagLoadingOnStartCatchingErrors()
                     .collectLatest { _recommendationReportResult.value = it }
             }
         }

@@ -1,6 +1,7 @@
 package co.ke.xently.source.remote
 
 import co.ke.xently.common.Retry
+import co.ke.xently.data.TaskResult
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.retry
@@ -16,18 +17,18 @@ data class HttpException(
         get() = detail ?: super.message
 }
 
-fun <T> Flow<Result<T>>.retryCatchIfNecessary(retry: Retry) =
+fun <T> Flow<TaskResult<T>>.retryCatchIfNecessary(retry: Retry) =
     retry { cause -> cause is ConnectException && retry.canRetry() }.catch {
         // Let the collector handle other exceptions
         if (it is HttpException) throw it
-        if (it is ConnectException) emit(Result.failure(it))
+        if (it is ConnectException) emit(TaskResult.Error(it))
     }
 
 @Suppress("UNCHECKED_CAST", "BlockingMethodInNonBlockingContext")
 suspend fun <T> sendRequest(
     vararg throwOnStatusCode: Int,
     request: suspend () -> Response<T>,
-): Result<T> {
+): TaskResult<T> {
     return try {
         val response = request.invoke() // Initiate actual network request call
         val (statusCode, body, errorBody) = Triple(
@@ -37,7 +38,7 @@ suspend fun <T> sendRequest(
         )
         if (response.isSuccessful) {
             val alt = Any() as T
-            Result.success(if (statusCode == 204) alt else body ?: alt)
+            TaskResult.Success(if (statusCode == 204) alt else body ?: alt)
         } else {
             val error = try {
                 val exception = JSON_CONVERTER.fromJson(
@@ -53,13 +54,13 @@ suspend fun <T> sendRequest(
             if (statusCode in throwOnStatusCode) {
                 throw error
             }
-            Result.failure(error)
+            TaskResult.Error(error)
         }
     } catch (ex: ConnectException) {
         throw ex
     } catch (ex: HttpException) {
         throw ex
     } catch (ex: Exception) {
-        Result.failure(ex)
+        TaskResult.Error(ex)
     }
 }

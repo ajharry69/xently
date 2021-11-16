@@ -20,8 +20,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import co.ke.xently.data.GroupedShoppingList
-import co.ke.xently.data.ShoppingListItem
+import co.ke.xently.data.*
 import co.ke.xently.shoppinglist.R
 import co.ke.xently.shoppinglist.ui.list.ShoppingListItemCard
 import kotlinx.coroutines.launch
@@ -37,8 +36,8 @@ internal fun GroupedShoppingListScreen(
     onSeeAllClicked: (group: Any) -> Unit = {},
     onShopMenuClicked: (() -> Unit) = {},
 ) {
-    val groupedShoppingListResult = viewModel.groupedShoppingListResult.collectAsState().value
-    val groupedShoppingListCount = viewModel.groupedShoppingListCount.collectAsState().value
+    val groupedShoppingListResult by viewModel.groupedShoppingListResult.collectAsState()
+    val groupedShoppingListCount by viewModel.groupedShoppingListCount.collectAsState()
 
     GroupedShoppingListScreen(
         modifier,
@@ -56,7 +55,7 @@ internal fun GroupedShoppingListScreen(
 private fun GroupedShoppingListScreen(
     modifier: Modifier,
     groupedShoppingListCount: Map<Any, Int>,
-    groupedShoppingListResult: Result<List<GroupedShoppingList>?>,
+    groupedShoppingListResult: TaskResult<List<GroupedShoppingList>>,
     onShoppingListItemClicked: (itemId: Long) -> Unit,
     onShoppingListItemRecommendClicked: (itemId: Long) -> Unit,
     onRecommendGroupClicked: (group: Any) -> Unit,
@@ -117,20 +116,27 @@ private fun GroupedShoppingListScreen(
             }
         },
     ) {
-        if (groupedShoppingListResult.isSuccess) {
-            val groupedShoppingList = groupedShoppingListResult.getOrThrow()
-            when {
-                groupedShoppingList == null -> {
-                    Box(contentAlignment = Alignment.Center, modifier = modifier) {
-                        CircularProgressIndicator()
-                    }
+        when (groupedShoppingListResult) {
+            is TaskResult.Error -> {
+                Box(contentAlignment = Alignment.Center, modifier = modifier) {
+                    Text(
+                        groupedShoppingListResult.errorMessage
+                            ?: stringResource(R.string.fsl_generic_error_message)
+                    )
                 }
-                groupedShoppingList.isEmpty() -> {
+            }
+            TaskResult -> {
+                Box(contentAlignment = Alignment.Center, modifier = modifier) {
+                    CircularProgressIndicator()
+                }
+            }
+            is TaskResult.Success -> {
+                val groupedShoppingList = groupedShoppingListResult.getOrThrow()
+                if (groupedShoppingList.isEmpty()) {
                     Box(contentAlignment = Alignment.Center, modifier = modifier) {
                         Text(text = stringResource(R.string.fsl_empty_shopping_list))
                     }
-                }
-                else -> {
+                } else {
                     LazyColumn(modifier = modifier) {
                         items(groupedShoppingList) { groupList ->
                             GroupedShoppingListCard(
@@ -143,13 +149,6 @@ private fun GroupedShoppingListScreen(
                         }
                     }
                 }
-            }
-        } else {
-            Box(contentAlignment = Alignment.Center, modifier = modifier) {
-                Text(
-                    text = groupedShoppingListResult.exceptionOrNull()?.localizedMessage
-                        ?: stringResource(R.string.fsl_generic_error_message)
-                )
             }
         }
     }

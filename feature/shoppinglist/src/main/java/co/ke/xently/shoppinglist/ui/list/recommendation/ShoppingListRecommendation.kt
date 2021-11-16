@@ -17,6 +17,9 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import co.ke.xently.data.RecommendationReport
 import co.ke.xently.data.RecommendationReport.Recommendation
+import co.ke.xently.data.TaskResult
+import co.ke.xently.data.errorMessage
+import co.ke.xently.data.getOrThrow
 import co.ke.xently.feature.MAP_HEIGHT
 import co.ke.xently.feature.ui.GoogleMapView
 import co.ke.xently.shoppinglist.R
@@ -33,125 +36,139 @@ internal fun ShoppingListRecommendationScreen(
     viewModel: ShoppingListRecommendationViewModel = hiltViewModel(),
     onNavigationIconClicked: (() -> Unit) = {},
 ) {
-    val scaffoldState = rememberScaffoldState()
-
     viewModel.setRecommend(recommend)
     val recommendationReportResult by viewModel.recommendationReportResult.collectAsState()
 
+    ShoppingListRecommendationScreen(
+        modifier,
+        recommendationReportResult,
+        onNavigationIconClicked,
+        viewModel::setLocationPermissionGranted,
+    )
+}
+
+@Composable
+private fun ShoppingListRecommendationScreen(
+    modifier: Modifier,
+    result: TaskResult<RecommendationReport>,
+    onNavigationIconClicked: () -> Unit,
+    onLocationPermissionChanged: (Boolean) -> Unit,
+) {
+    val scaffoldState = rememberScaffoldState()
     Scaffold(scaffoldState = scaffoldState) {
-        if (recommendationReportResult.isSuccess) {
-            when (val report = recommendationReportResult.getOrThrow()) {
-                null -> {
-                    Column(modifier = modifier.padding(it)) {
-                        ToolBar(onNavigationIconClicked = onNavigationIconClicked)
-                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                CircularProgressIndicator()
-                                Spacer(modifier = Modifier.height(16.dp))
-                                Text(text = stringResource(R.string.fsl_data_loading))
-                            }
-                        }
+        when (result) {
+            is TaskResult.Error -> {
+                Column(modifier = modifier.padding(it)) {
+                    ToolBar(onNavigationIconClicked = onNavigationIconClicked)
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text(
+                            result.errorMessage
+                                ?: stringResource(R.string.fsl_generic_error_message)
+                        )
                     }
                 }
-                else -> {
-                    LazyColumn(
-                        modifier = modifier.padding(it),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        item {
-                            Box(
-                                modifier = Modifier
-                                    .height(IntrinsicSize.Min)
-                                    .fillMaxWidth(),
-                            ) {
-                                GoogleMapView(
-                                    Modifier
-                                        .height(MAP_HEIGHT)
-                                        .fillMaxWidth(),
-                                    markerPositions = report.recommendations.flatMap { recommendation ->
-                                        recommendation.addresses.map { address ->
-                                            MarkerOptions().apply {
-                                                title("${recommendation.name}, ${recommendation.taxPin}")
-                                                snippet("${recommendation.hits.count} item(s), ${recommendation.printableTotalPrice}")
-                                                position(
-                                                    LatLng(
-                                                        address.latitude,
-                                                        address.longitude,
-                                                    )
-                                                )
-                                            }
-                                        }
-                                    }.toTypedArray(),
-                                    onLocationPermissionChanged = viewModel::setLocationPermissionGranted,
-                                )
-                                ToolBar(
-                                    elevation = 0.dp,
-                                    backgroundColor = Color.Transparent,
-                                    onNavigationIconClicked = onNavigationIconClicked,
-                                )
-                            }
-                        }
-                        item {
-                            RecommendationReportItemGroup(
-                                modifier = Modifier.padding(start = 16.dp),
-                                title = "Synopsis",
-                            ) {
-                                RecommendationReportSynopsisCard(
-                                    report = report,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(end = 16.dp),
-                                )
-                            }
-                        }
-                        if (report.count.hitItems > 0) {
-                            item {
-                                RecommendationReportItemGroup(
-                                    modifier = Modifier.padding(start = 16.dp),
-                                    title = "Recommendations",
-                                ) {
-                                    Column {
-                                        report.recommendations.forEach { recommendation ->
-                                            RecommendationCardItem(
-                                                recommendation = recommendation,
-                                                modifier = Modifier.fillMaxWidth()
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        if (report.count.missedItems > 0) {
-                            item {
-                                RecommendationReportItemGroup(
-                                    modifier = Modifier.padding(start = 16.dp),
-                                    title = "Missed items",
-                                ) {
-                                    report.missedItems.forEach { item ->
-                                        ShoppingListItemCard(
-                                            item = item,
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .padding(vertical = 8.dp)
-                                                .fillMaxWidth(),
-                                        ) {
-                                            // TODO: Implement click listener...
-                                        }
-                                    }
-                                }
-                            }
+            }
+            TaskResult -> {
+                Column(modifier = modifier.padding(it)) {
+                    ToolBar(onNavigationIconClicked = onNavigationIconClicked)
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            CircularProgressIndicator()
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text(text = stringResource(R.string.fsl_data_loading))
                         }
                     }
                 }
             }
-        } else {
-            Column(modifier = modifier.padding(it)) {
-                ToolBar(onNavigationIconClicked = onNavigationIconClicked)
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(
-                        text = recommendationReportResult.exceptionOrNull()?.localizedMessage
-                            ?: stringResource(R.string.fsl_generic_error_message)
-                    )
+            is TaskResult.Success -> {
+                val report = result.getOrThrow()
+                LazyColumn(
+                    modifier.padding(it),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .height(IntrinsicSize.Min)
+                                .fillMaxWidth(),
+                        ) {
+                            GoogleMapView(
+                                Modifier
+                                    .height(MAP_HEIGHT)
+                                    .fillMaxWidth(),
+                                markerPositions = report.recommendations.flatMap { recommendation ->
+                                    recommendation.addresses.map { address ->
+                                        MarkerOptions().apply {
+                                            title("${recommendation.name}, ${recommendation.taxPin}")
+                                            snippet("${recommendation.hits.count} item(s), ${recommendation.printableTotalPrice}")
+                                            position(
+                                                LatLng(
+                                                    address.latitude,
+                                                    address.longitude,
+                                                )
+                                            )
+                                        }
+                                    }
+                                }.toTypedArray(),
+                                onLocationPermissionChanged = onLocationPermissionChanged,
+                            )
+                            ToolBar(
+                                elevation = 0.dp,
+                                backgroundColor = Color.Transparent,
+                                onNavigationIconClicked = onNavigationIconClicked,
+                            )
+                        }
+                    }
+                    item {
+                        RecommendationReportItemGroup(
+                            modifier = Modifier.padding(start = 16.dp),
+                            title = "Synopsis",
+                        ) {
+                            RecommendationReportSynopsisCard(
+                                report = report,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(end = 16.dp),
+                            )
+                        }
+                    }
+                    if (report.count.hitItems > 0) {
+                        item {
+                            RecommendationReportItemGroup(
+                                modifier = Modifier.padding(start = 16.dp),
+                                title = "Recommendations",
+                            ) {
+                                Column {
+                                    report.recommendations.forEach { recommendation ->
+                                        RecommendationCardItem(
+                                            recommendation = recommendation,
+                                            modifier = Modifier.fillMaxWidth()
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    if (report.count.missedItems > 0) {
+                        item {
+                            RecommendationReportItemGroup(
+                                modifier = Modifier.padding(start = 16.dp),
+                                title = "Missed items",
+                            ) {
+                                report.missedItems.forEach { item ->
+                                    ShoppingListItemCard(
+                                        item = item,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(vertical = 8.dp)
+                                            .fillMaxWidth(),
+                                    ) {
+                                        // TODO: Implement click listener...
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }

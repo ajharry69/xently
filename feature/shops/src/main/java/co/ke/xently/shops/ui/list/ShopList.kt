@@ -19,6 +19,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import co.ke.xently.data.Shop
+import co.ke.xently.data.TaskResult
+import co.ke.xently.data.TaskResult.Success
+import co.ke.xently.data.errorMessage
+import co.ke.xently.data.getOrThrow
 import co.ke.xently.feature.theme.XentlyTheme
 import co.ke.xently.shops.R
 import kotlin.random.Random
@@ -47,7 +51,7 @@ internal fun ShopListScreen(
 
 @Composable
 private fun ShopListScreen(
-    shopListResult: Result<List<Shop>?>,
+    shopListResult: TaskResult<List<Shop>>,
     modifier: Modifier = Modifier,
     onItemClicked: ((id: Long) -> Unit) = {},
     onProductsClicked: ((id: Long) -> Unit) = {},
@@ -83,20 +87,27 @@ private fun ShopListScreen(
             }
         }
     ) {
-        if (shopListResult.isSuccess) {
-            val shopList = shopListResult.getOrThrow()
-            when {
-                shopList == null -> {
-                    Box(modifier = modifier, contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator()
-                    }
+        when (shopListResult) {
+            is TaskResult.Error -> {
+                Box(contentAlignment = Alignment.Center, modifier = modifier) {
+                    Text(
+                        shopListResult.errorMessage
+                            ?: stringResource(R.string.fs_generic_error_message)
+                    )
                 }
-                shopList.isEmpty() -> {
+            }
+            TaskResult -> {
+                Box(modifier = modifier, contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
+            }
+            is Success -> {
+                val shopList = shopListResult.getOrThrow()
+                if (shopList.isEmpty()) {
                     Box(modifier = modifier, contentAlignment = Alignment.Center) {
                         Text(text = stringResource(id = R.string.fs_empty_shop_list))
                     }
-                }
-                else -> {
+                } else {
                     LazyColumn(
                         modifier = modifier,
                         verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -113,19 +124,12 @@ private fun ShopListScreen(
                     }
                 }
             }
-        } else {
-            Box(contentAlignment = Alignment.Center, modifier = modifier) {
-                Text(
-                    text = shopListResult.exceptionOrNull()?.localizedMessage
-                        ?: stringResource(R.string.fs_generic_error_message)
-                )
-            }
         }
     }
 }
 
 @Composable
-fun ShopListItem(
+private fun ShopListItem(
     shop: Shop,
     modifier: Modifier = Modifier,
     showPopupMenu: Boolean = false,
@@ -213,7 +217,7 @@ fun ShopListItem(
 
 @Preview("Shop item", showBackground = true)
 @Composable
-fun ShopListItemPreview() {
+private fun ShopListItemPreview() {
     XentlyTheme {
         ShopListItem(
             modifier = Modifier.fillMaxWidth(),
@@ -229,7 +233,7 @@ fun ShopListItemPreview() {
 
 @Preview("Shop item with popup menu showing", showBackground = true)
 @Composable
-fun ShopListItemPopupMenuShowingPreview() {
+private fun ShopListItemPopupMenuShowingPreview() {
     XentlyTheme {
         ShopListItem(
             modifier = Modifier.fillMaxWidth(),
@@ -246,30 +250,30 @@ fun ShopListItemPopupMenuShowingPreview() {
 
 @Preview(name = "Empty shop list")
 @Composable
-fun ShopListEmptyPreview() {
+private fun ShopListEmptyPreview() {
     XentlyTheme {
         ShopListScreen(
             modifier = Modifier.fillMaxSize(),
-            shopListResult = Result.success(emptyList())
+            shopListResult = Success(emptyList())
         )
     }
 }
 
-@Preview(name = "Null shop list")
+@Preview(name = "Loading shop list")
 @Composable
-fun ShopListNullPreview() {
+private fun ShopListNullPreview() {
     XentlyTheme {
-        ShopListScreen(modifier = Modifier.fillMaxSize(), shopListResult = Result.success(null))
+        ShopListScreen(modifier = Modifier.fillMaxSize(), shopListResult = TaskResult.Loading)
     }
 }
 
 @Preview(name = "Non empty shop list")
 @Composable
-fun ShopListNonEmptyListPreview() {
+private fun ShopListNonEmptyListPreview() {
     XentlyTheme {
         ShopListScreen(
             modifier = Modifier.fillMaxSize(),
-            shopListResult = Result.success(List(20) {
+            shopListResult = Success(List(20) {
                 Shop(
                     name = "Shop #${it + 1}",
                     taxPin = "P0001${it + 1}1222B",

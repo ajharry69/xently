@@ -16,7 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import co.ke.xently.data.ShoppingListItem
+import co.ke.xently.data.*
 import co.ke.xently.shoppinglist.R
 
 
@@ -30,12 +30,30 @@ internal fun ShoppingListScreen(
     onRecommendOptionsMenuClicked: (List<ShoppingListItem>?) -> Unit,
     onNavigationIconClicked: (() -> Unit) = {},
 ) {
+    viewModel.shouldLoadRemote(loadRemote)
+    val shoppingListResult by viewModel.shoppingListResult.collectAsState()
+
+    ShoppingListScreen(
+        modifier,
+        shoppingListResult,
+        onNavigationIconClicked,
+        onRecommendOptionsMenuClicked,
+        onShoppingListItemClicked,
+        onRecommendClicked,
+    )
+}
+
+@Composable
+private fun ShoppingListScreen(
+    modifier: Modifier,
+    shoppingListResult: TaskResult<List<ShoppingListItem>>,
+    onNavigationIconClicked: () -> Unit,
+    onRecommendOptionsMenuClicked: (List<ShoppingListItem>?) -> Unit,
+    onShoppingListItemClicked: (itemId: Long) -> Unit,
+    onRecommendClicked: (itemId: Long) -> Unit
+) {
     val scaffoldState = rememberScaffoldState()
     var showOptionsMenu by remember { mutableStateOf(false) }
-
-    viewModel.shouldLoadRemote(loadRemote)
-    val shoppingListResult = viewModel.shoppingListResult.collectAsState().value
-
     Scaffold(
         scaffoldState = scaffoldState,
         topBar = {
@@ -70,20 +88,27 @@ internal fun ShoppingListScreen(
             )
         },
     ) {
-        if (shoppingListResult.isSuccess) {
-            val shoppingList = shoppingListResult.getOrThrow()
-            when {
-                shoppingList == null -> {
-                    Box(contentAlignment = Alignment.Center, modifier = modifier) {
-                        CircularProgressIndicator()
-                    }
+        when (shoppingListResult) {
+            is TaskResult.Error -> {
+                Box(contentAlignment = Alignment.Center, modifier = modifier) {
+                    Text(
+                        shoppingListResult.errorMessage
+                            ?: stringResource(R.string.fsl_generic_error_message)
+                    )
                 }
-                shoppingList.isEmpty() -> {
+            }
+            TaskResult -> {
+                Box(contentAlignment = Alignment.Center, modifier = modifier) {
+                    CircularProgressIndicator()
+                }
+            }
+            is TaskResult.Success -> {
+                val shoppingList = shoppingListResult.getOrThrow()
+                if (shoppingList.isEmpty()) {
                     Box(contentAlignment = Alignment.Center, modifier = modifier) {
                         Text(text = stringResource(R.string.fsl_empty_shopping_list))
                     }
-                }
-                else -> {
+                } else {
                     LazyColumn(modifier = modifier) {
                         items(shoppingList) { item ->
                             ShoppingListItemCard(
@@ -98,13 +123,6 @@ internal fun ShoppingListScreen(
                         }
                     }
                 }
-            }
-        } else {
-            Box(contentAlignment = Alignment.Center, modifier = modifier) {
-                Text(
-                    text = shoppingListResult.exceptionOrNull()?.localizedMessage
-                        ?: stringResource(R.string.fsl_generic_error_message)
-                )
             }
         }
     }
@@ -122,7 +140,11 @@ internal fun ShoppingListItemCard(
         horizontalArrangement = Arrangement.SpaceBetween,
         modifier = modifier.clickable { onItemClicked(item.id) }) {
         Column {
-            Text(modifier = Modifier.wrapContentWidth(), text = item.name, style = MaterialTheme.typography.body1)
+            Text(
+                modifier = Modifier.wrapContentWidth(),
+                text = item.name,
+                style = MaterialTheme.typography.body1
+            )
             Text(
                 text = "${item.unitQuantity} ${item.unit}",
                 style = MaterialTheme.typography.caption

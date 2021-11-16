@@ -13,6 +13,9 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import co.ke.xently.data.ShoppingListItem
+import co.ke.xently.data.TaskResult
+import co.ke.xently.data.errorMessage
+import co.ke.xently.data.getOrNull
 import co.ke.xently.shoppinglist.R
 import kotlinx.coroutines.launch
 import okhttp3.internal.http.toHttpDateOrNull
@@ -25,13 +28,10 @@ internal fun ShoppingListItemScreen(
     viewModel: ShoppingListItemViewModel = hiltViewModel(),
     onNavigationIconClicked: (() -> Unit) = {},
 ) {
-    val scrollState = rememberScrollState()
-    val scaffoldState = rememberScaffoldState()
     val coroutineScope = rememberCoroutineScope()
 
     viewModel.getShoppingListItem(itemId)
     val itemResult by viewModel.shoppingItemResult.collectAsState(
-        Result.success(null),
         coroutineScope.coroutineContext,
     )
     val item = itemResult.getOrNull() ?: ShoppingListItem()
@@ -46,6 +46,17 @@ internal fun ShoppingListItemScreen(
     }
     var dateAdded by remember(itemId, itemResult, item) {
         mutableStateOf(TextFieldValue(item.dateAdded.toString()))
+    }
+
+    val scaffoldState = rememberScaffoldState()
+    if (itemResult is TaskResult.Error) {
+        val errorMessage =
+            itemResult.errorMessage ?: stringResource(R.string.fsl_generic_error_message)
+        LaunchedEffect(itemId, itemResult, errorMessage) {
+            coroutineScope.launch {
+                scaffoldState.snackbarHostState.showSnackbar(errorMessage)
+            }
+        }
     }
 
     val toolbarTitle = stringResource(
@@ -70,19 +81,11 @@ internal fun ShoppingListItemScreen(
         },
     ) { paddingValues ->
         Column(Modifier.padding(paddingValues)) {
-            if (itemResult.isFailure) {
-                val errorMessage =
-                    itemResult.exceptionOrNull()?.localizedMessage ?: stringResource(
-                        id = R.string.fsl_generic_error_message
-                    )
-                LaunchedEffect(itemId, itemResult, errorMessage) {
-                    coroutineScope.launch {
-                        scaffoldState.snackbarHostState.showSnackbar(errorMessage)
-                    }
-                }
-            } else if (itemResult.isSuccess && itemResult.getOrThrow() == null) {
+            if (itemResult is TaskResult.Loading) {
                 LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
             }
+
+            val scrollState = rememberScrollState()
             Column(
                 modifier = Modifier
                     .padding(16.dp)

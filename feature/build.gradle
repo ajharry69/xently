@@ -50,6 +50,8 @@ android {
 
 dependencies {
     implementation project(path: ":common")
+    // Only needed by `TaskResult` flow utility
+    implementation project(path: ':data')
     implementation project(path: ':data:source:remote')
     implementation project(path: ':data:source:local')
 

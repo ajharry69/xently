@@ -2,9 +2,7 @@ package co.ke.xently.shoppinglist.repository
 
 import co.ke.xently.common.Retry
 import co.ke.xently.common.di.qualifiers.coroutines.IODispatcher
-import co.ke.xently.data.GroupedShoppingList
-import co.ke.xently.data.RecommendationRequest
-import co.ke.xently.data.ShoppingListItem
+import co.ke.xently.data.*
 import co.ke.xently.shoppinglist.GroupBy
 import co.ke.xently.shoppinglist.GroupBy.DateAdded
 import co.ke.xently.shoppinglist.Recommend
@@ -34,7 +32,7 @@ internal class ShoppingListRepository @Inject constructor(
         }.retryCatchIfNecessary(this).flowOn(ioDispatcher)
     }
 
-    override fun getShoppingList(remote: Boolean): Flow<Result<List<ShoppingListItem>>> =
+    override fun getShoppingList(remote: Boolean): Flow<TaskResult<List<ShoppingListItem>>> =
         Retry().run {
             if (remote) {
                 flow { emit(sendRequest(401) { service.getShoppingList() }) }
@@ -54,7 +52,7 @@ internal class ShoppingListRepository @Inject constructor(
                     }
             } else {
                 dao.getShoppingList().map { shoppingList ->
-                    Result.success(shoppingList)
+                    TaskResult.Success(shoppingList)
                 }
             }
         }
@@ -91,7 +89,7 @@ internal class ShoppingListRepository @Inject constructor(
                     }
                 }
             } else {
-                Result.success(item)
+                TaskResult.Success(item)
             }
         }.retryCatchIfNecessary(this).flowOn(ioDispatcher)
     }

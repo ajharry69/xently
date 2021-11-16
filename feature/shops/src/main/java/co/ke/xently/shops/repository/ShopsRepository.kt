@@ -2,7 +2,7 @@ package co.ke.xently.shops.repository
 
 import co.ke.xently.common.Retry
 import co.ke.xently.common.di.qualifiers.coroutines.IODispatcher
-import co.ke.xently.data.Shop
+import co.ke.xently.data.*
 import co.ke.xently.source.local.daos.ShopsDao
 import co.ke.xently.source.remote.retryCatchIfNecessary
 import co.ke.xently.source.remote.sendRequest
@@ -45,12 +45,12 @@ internal class ShopsRepository @Inject constructor(
                     }
                 }
             } else {
-                Result.success(shop)
+                TaskResult.Success(shop)
             }
         }.retryCatchIfNecessary(this).flowOn(ioDispatcher)
     }
 
-    override fun getShopList(remote: Boolean): Flow<Result<List<Shop>>> = Retry().run {
+    override fun getShopList(remote: Boolean): Flow<TaskResult<List<Shop>>> = Retry().run {
         if (remote) {
             flow { emit(sendRequest(401) { service.getShopList() }) }
                 .map { result ->
@@ -69,7 +69,7 @@ internal class ShopsRepository @Inject constructor(
                 }
         } else {
             dao.getShopList().map { shops ->
-                Result.success(shops)
+                TaskResult.Success(shops)
             }
         }
     }

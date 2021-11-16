@@ -5,19 +5,19 @@ import androidx.lifecycle.viewModelScope
 import co.ke.xently.common.Retry
 import co.ke.xently.common.di.qualifiers.coroutines.ComputationDispatcher
 import co.ke.xently.data.ShoppingListItem
+import co.ke.xently.data.TaskResult
+import co.ke.xently.data.getOrNull
 import co.ke.xently.feature.IRetryViewModel
+import co.ke.xently.feature.utils.flagLoadingOnStartCatchingErrors
 import co.ke.xently.shoppinglist.repository.IShoppingListRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import java.net.ConnectException
 import javax.inject.Inject
-import kotlin.Result.Companion.failure
-import kotlin.Result.Companion.success
 
 @HiltViewModel
 internal class ShoppingListViewModel @Inject constructor(
@@ -25,9 +25,10 @@ internal class ShoppingListViewModel @Inject constructor(
     @ComputationDispatcher
     private val computationDispatcher: CoroutineDispatcher,
 ) : ViewModel(), IRetryViewModel {
-    // interpret `null` as loading...
-    private val _shoppingListResult = MutableStateFlow(success<List<ShoppingListItem>?>(null))
-    val shoppingListResult: StateFlow<Result<List<ShoppingListItem>?>>
+    private val _shoppingListResult = MutableStateFlow<TaskResult<List<ShoppingListItem>>>(
+        TaskResult.Loading
+    )
+    val shoppingListResult: StateFlow<TaskResult<List<ShoppingListItem>>>
         get() = _shoppingListResult
 
     init {
@@ -35,17 +36,17 @@ internal class ShoppingListViewModel @Inject constructor(
             var retry = Retry()
             remote.collectLatest { loadRemote ->
                 repository.getShoppingList(loadRemote)
-                    .catch { emit(failure(it)) }
+                    .flagLoadingOnStartCatchingErrors()
                     .collectLatest {
                         _shoppingListResult.value = it
-                        if (loadRemote && it.isFailure) {
+                        if (loadRemote && it is TaskResult.Error) {
                             // Fallback to cache if remote failed
-                            if (it.exceptionOrNull() !is ConnectException) {
+                            if (it.error !is ConnectException) {
                                 viewModelScope.launch(computationDispatcher) {
                                     retry = retry.signalLoadFromCache()
                                 }
                             }
-                        } else if (!loadRemote && (it.isFailure || it.getOrNull()
+                        } else if (!loadRemote && (it is TaskResult.Error || it.getOrNull()
                                 .isNullOrEmpty())
                         ) {
                             // Force refresh from remote if cache is empty

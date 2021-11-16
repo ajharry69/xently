@@ -44,11 +44,16 @@ internal class LocationServiceRepository @Inject constructor(
             emit(sendRequest(401) { service.updateLocation(location = location) })
         }.onEach {
             sharedPreference.edit(commit = true) {
-                putString(MY_LOCATION_LATITUDE_SHARED_PREFERENCE_KEY, location.component1().toString())
-                putString(MY_LOCATION_LONGITUDE_SHARED_PREFERENCE_KEY, location.component2().toString())
+                putString(
+                    MY_LOCATION_LATITUDE_SHARED_PREFERENCE_KEY,
+                    location.component1().toString()
+                )
+                putString(
+                    MY_LOCATION_LONGITUDE_SHARED_PREFERENCE_KEY,
+                    location.component2().toString()
+                )
             }
         }.retryCatchIfNecessary(this).flowOn(ioDispatcher)
     }
-
 
 }
