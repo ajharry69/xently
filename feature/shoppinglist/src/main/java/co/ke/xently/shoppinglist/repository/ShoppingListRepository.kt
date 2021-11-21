@@ -6,7 +6,7 @@ import co.ke.xently.data.*
 import co.ke.xently.shoppinglist.GroupBy
 import co.ke.xently.shoppinglist.GroupBy.DateAdded
 import co.ke.xently.shoppinglist.Recommend
-import co.ke.xently.source.local.daos.ShoppingListDao
+import co.ke.xently.source.local.Database
 import co.ke.xently.source.remote.retryCatchIfNecessary
 import co.ke.xently.source.remote.sendRequest
 import co.ke.xently.source.remote.services.ShoppingListService
@@ -18,7 +18,7 @@ import javax.inject.Singleton
 
 @Singleton
 internal class ShoppingListRepository @Inject constructor(
-    private val dao: ShoppingListDao,
+    private val database: Database,
     private val service: ShoppingListService,
     @IODispatcher
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
@@ -26,20 +26,20 @@ internal class ShoppingListRepository @Inject constructor(
     // TODO: Use memoization to retrieve all grouped shopping list items...
     override fun addShoppingListItem(item: ShoppingListItem) = Retry().run {
         flow {
-            emit(sendRequest(401) { service.addShoppingListItem(item) })
+            emit(sendRequest(401) { service.add(item) })
         }.onEach {
-            dao.addShoppingListItems(it.getOrThrow())
+            database.shoppingListDao.save(it.getOrThrow())
         }.retryCatchIfNecessary(this).flowOn(ioDispatcher)
     }
 
     override fun getShoppingList(remote: Boolean): Flow<TaskResult<List<ShoppingListItem>>> =
         Retry().run {
             if (remote) {
-                flow { emit(sendRequest(401) { service.getShoppingList() }) }
+                flow { emit(sendRequest(401) { service.get() }) }
                     .map { result ->
                         result.mapCatching {
                             it.results.apply {
-                                dao.addShoppingListItems(*toTypedArray())
+                                database.shoppingListDao.save(*toTypedArray())
                             }
                         }
                     }
@@ -51,7 +51,7 @@ internal class ShoppingListRepository @Inject constructor(
                         if (it == null) emitAll(getShoppingList(false))
                     }
             } else {
-                dao.getShoppingList().map { shoppingList ->
+                database.shoppingListDao.get().map { shoppingList ->
                     TaskResult.Success(shoppingList)
                 }
             }
@@ -59,12 +59,12 @@ internal class ShoppingListRepository @Inject constructor(
 
     override fun getGroupedShoppingList(groupBy: GroupBy) = Retry().run {
         flow {
-            emit(sendRequest(401) { service.getShoppingList(groupBy = groupBy.name.lowercase()) })
+            emit(sendRequest(401) { service.get(groupBy = groupBy.name.lowercase()) })
         }.map { result ->
             result.mapCatching {
                 it.map { entry ->
                     val shoppingList = entry.value.apply {
-                        dao.addShoppingListItems(*toTypedArray())
+                        database.shoppingListDao.save(*toTypedArray())
                     }
                     GroupedShoppingList(group = entry.key, shoppingList = shoppingList)
                 }
@@ -73,7 +73,7 @@ internal class ShoppingListRepository @Inject constructor(
     }
 
     override fun getGroupedShoppingListCount(groupBy: GroupBy) = when (groupBy) {
-        DateAdded -> dao.getGroupCountByDateAdded()
+        DateAdded -> database.shoppingListDao.getCountGroupedByDateAdded()
     }.mapLatest {
         mutableMapOf<Any, Int>().apply {
             for (item in it) put(item.group, item.numberOfItems)
@@ -81,11 +81,11 @@ internal class ShoppingListRepository @Inject constructor(
     }
 
     override fun getShoppingListItem(id: Long) = Retry().run {
-        dao.getShoppingListItem(id).map { item ->
+        database.shoppingListDao.get(id).map { item ->
             if (item == null) {
-                sendRequest(401) { service.getShoppingListItem(id) }.apply {
+                sendRequest(401) { service.get(id) }.apply {
                     getOrNull()?.also {
-                        dao.addShoppingListItems(it)
+                        database.shoppingListDao.save(it)
                     }
                 }
             } else {
@@ -101,7 +101,7 @@ internal class ShoppingListRepository @Inject constructor(
                 when (recommend.from) {
                     Recommend.From.Item -> {
                         val item = if (recommend.by !is ShoppingListItem)
-                            dao.getShoppingListItem(recommend.by.toString().toLong())
+                            database.shoppingListDao.get(recommend.by.toString().toLong())
                                 .first()!! else recommend.by
                         service.getRecommendations(
                             RecommendationRequest(listOf(item), recommend.saveBy)

@@ -10,11 +10,11 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface ShopsDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun addShops(vararg items: Shop)
+    suspend fun save(vararg shops: Shop)
 
-    @Query("SELECT * FROM shops;")
-    fun getShopList(): Flow<List<Shop>>
+    @Query("SELECT * FROM shops")
+    fun get(): Flow<List<Shop>>
 
-    @Query("SELECT * FROM shops WHERE id = :id;")
-    fun getShop(id: Long): Flow<Shop?>
+    @Query("SELECT * FROM shops WHERE id = :id")
+    fun get(id: Long): Flow<Shop?>
 }

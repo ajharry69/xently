@@ -1,47 +1,55 @@
 package co.ke.xently.products.repository
 
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
 import co.ke.xently.common.Retry
 import co.ke.xently.common.di.qualifiers.coroutines.IODispatcher
-import co.ke.xently.data.*
-import co.ke.xently.source.local.daos.ProductsDao
+import co.ke.xently.data.Product
+import co.ke.xently.data.TaskResult
+import co.ke.xently.data.getOrNull
+import co.ke.xently.data.getOrThrow
+import co.ke.xently.source.local.Database
 import co.ke.xently.source.remote.retryCatchIfNecessary
 import co.ke.xently.source.remote.sendRequest
 import co.ke.xently.source.remote.services.ProductService
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 internal class ProductsRepository @Inject constructor(
     private val service: ProductService,
-    private val dao: ProductsDao,
+    private val database: Database,
     @IODispatcher
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : IProductsRepository {
     override fun addProduct(product: Product) = Retry().run {
         flow {
-            emit(sendRequest(401) { service.addProduct(product) })
+            emit(sendRequest(401) { service.add(product) })
         }.onEach {
-            dao.addProducts(it.getOrThrow())
+            database.productsDao.save(it.getOrThrow())
         }.retryCatchIfNecessary(this).flowOn(ioDispatcher)
     }
 
     override fun updateProduct(product: Product) = Retry().run {
         flow {
-            emit(sendRequest(401) { service.updateProduct(product.id, product) })
+            emit(sendRequest(401) { service.update(product.id, product) })
         }.onEach {
-            dao.addProducts(it.getOrThrow())
+            database.productsDao.save(it.getOrThrow())
         }.retryCatchIfNecessary(this).flowOn(ioDispatcher)
     }
 
     override fun getProduct(id: Long) = Retry().run {
-        dao.getProduct(id).map { product ->
+        database.productsDao.get(id).map { product ->
             if (product == null) {
-                sendRequest(401) { service.getProduct(id) }.apply {
+                sendRequest(401) { service.get(id) }.apply {
                     getOrNull()?.also {
-                        dao.addProducts(it)
+                        database.productsDao.save(it)
                     }
                 }
             } else {
@@ -50,27 +58,8 @@ internal class ProductsRepository @Inject constructor(
         }.retryCatchIfNecessary(this).flowOn(ioDispatcher)
     }
 
-    override fun getProductList(remote: Boolean): Flow<TaskResult<List<Product>>> = Retry().run {
-        if (remote) {
-            flow { emit(sendRequest(401) { service.getProductList() }) }
-                .map { result ->
-                    result.mapCatching {
-                        it.results.apply {
-                            dao.addProducts(*toTypedArray())
-                        }
-                    }
-                }
-                .retryCatchIfNecessary(this)
-                .flowOn(ioDispatcher)
-                .onCompletion {
-                    // Return cached records. Caveats:
-                    //  1. No error propagation
-                    if (it == null) emitAll(getProductList(false))
-                }
-        } else {
-            dao.getProductList().map { products ->
-                TaskResult.Success(products)
-            }
-        }
-    }
+    override fun getProductListPager(config: PagingConfig) = Pager(
+        config = config,
+        remoteMediator = ProductsRemoteMediator(database, service),
+    ) { database.productsDao.pagingSource() }
 }

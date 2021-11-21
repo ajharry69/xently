@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.retry
 import retrofit2.Response
 import java.net.ConnectException
+import java.net.SocketTimeoutException
 
 data class HttpException(
     val detail: String?,
@@ -57,6 +58,8 @@ suspend fun <T> sendRequest(
             TaskResult.Error(error)
         }
     } catch (ex: ConnectException) {
+        throw ex
+    } catch (ex: SocketTimeoutException) {
         throw ex
     } catch (ex: HttpException) {
         throw ex

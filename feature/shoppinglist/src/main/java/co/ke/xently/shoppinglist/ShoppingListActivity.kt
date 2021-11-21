@@ -114,6 +114,11 @@ internal fun ShoppingListNavHost(
                         context.startActivity(it)
                     }
                 },
+                onProductMenuClicked = {
+                    Intent("co.ke.xently.action.PRODUCTS").also {
+                        context.startActivity(it)
+                    }
+                },
             )
         }
         composable("shopping-list") {

@@ -34,6 +34,9 @@ android {
     kotlinOptions {
         jvmTarget = '1.8'
         useIR = true
+        freeCompilerArgs += [
+                "-Xopt-in=androidx.paging.ExperimentalPagingApi",
+        ]
     }
     buildFeatures {
         compose true
@@ -43,6 +46,7 @@ android {
 //        kotlinCompilerVersion '1.5.21'
     }
     packagingOptions {
+        pickFirsts += ["build-data.properties"]
         resources {
             excludes += '/META-INF/{AL2.0,LGPL2.1}'
         }

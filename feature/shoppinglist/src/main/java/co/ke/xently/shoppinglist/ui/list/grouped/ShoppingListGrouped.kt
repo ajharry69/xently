@@ -35,6 +35,7 @@ internal fun GroupedShoppingListScreen(
     onRecommendGroupClicked: (group: Any) -> Unit = {},
     onSeeAllClicked: (group: Any) -> Unit = {},
     onShopMenuClicked: (() -> Unit) = {},
+    onProductMenuClicked: (() -> Unit) = {},
 ) {
     val groupedShoppingListResult by viewModel.groupedShoppingListResult.collectAsState()
     val groupedShoppingListCount by viewModel.groupedShoppingListCount.collectAsState()
@@ -48,6 +49,7 @@ internal fun GroupedShoppingListScreen(
         onRecommendGroupClicked,
         onSeeAllClicked,
         onShopMenuClicked,
+        onProductMenuClicked,
     )
 }
 
@@ -61,6 +63,7 @@ private fun GroupedShoppingListScreen(
     onRecommendGroupClicked: (group: Any) -> Unit,
     onSeeAllClicked: (group: Any) -> Unit,
     onShopMenuClicked: () -> Unit,
+    onProductMenuClicked: () -> Unit,
 ) {
     val scaffoldState = rememberScaffoldState()
     val coroutineScope = rememberCoroutineScope()
@@ -107,9 +110,28 @@ private fun GroupedShoppingListScreen(
                     },
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Icon(painterResource(R.drawable.ic_shop), null, modifier = Modifier.padding(16.dp))
+                Icon(painterResource(R.drawable.ic_shops), null, modifier = Modifier.padding(16.dp))
                 Text(
                     stringResource(R.string.drawer_menu_shops),
+                    style = MaterialTheme.typography.button,
+                    modifier = Modifier.weight(1f),
+                )
+            }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(IntrinsicSize.Min)
+                    .clickable(role = Role.Tab) {
+                        onProductMenuClicked()
+                        coroutineScope.launch {
+                            scaffoldState.drawerState.apply { if (isOpen) close() }
+                        }
+                    },
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(painterResource(R.drawable.ic_products), null, modifier = Modifier.padding(16.dp))
+                Text(
+                    stringResource(R.string.drawer_menu_products),
                     style = MaterialTheme.typography.button,
                     modifier = Modifier.weight(1f),
                 )

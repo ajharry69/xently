@@ -71,13 +71,10 @@ dependencies {
 
     implementation "com.google.android.gms:play-services-location:18.0.0"
 
-    // This is a transitive dependency to remote data source that's currently only needed by:
-    //  1. `sendRequest(...)` function declared in the remote data source module.
-    api "com.squareup.retrofit2:retrofit:$retrofit_version"
-
     // Navigation
     api "androidx.navigation:navigation-compose:$navigation_version"
 
+    api "androidx.paging:paging-compose:1.0.0-alpha14"
     api 'androidx.hilt:hilt-navigation-compose:1.0.0-alpha03'
     // https://developer.android.com/jetpack/compose/libraries#viewmodel
     api "androidx.lifecycle:lifecycle-viewmodel-compose:$lifecycle_viewmodel_version"

@@ -7,13 +7,13 @@ import retrofit2.http.*
 
 interface ShopService {
     @GET("shops/")
-    suspend fun getShopList(
+    suspend fun get(
         @Header("Cache-Control")
         cacheControl: String = "only-if-cached",
     ): Response<PagedData<Shop>>
 
     @GET("shops/{id}/")
-    suspend fun getShop(
+    suspend fun get(
         @Path("id")
         id: Long,
         @Header("Cache-Control")
@@ -21,8 +21,8 @@ interface ShopService {
     ): Response<Shop>
 
     @POST("shops/")
-    suspend fun addShop(@Body shop: Shop): Response<Shop>
+    suspend fun add(@Body shop: Shop): Response<Shop>
 
     @PUT("shops/{id}/")
-    suspend fun updateShop(@Path("id") id: Long, @Body shop: Shop): Response<Shop>
+    suspend fun update(@Path("id") id: Long, @Body shop: Shop): Response<Shop>
 }

@@ -9,21 +9,21 @@ import retrofit2.http.*
 
 interface ShoppingListService {
     @POST("shopping-list/")
-    suspend fun addShoppingListItem(@Body item: ShoppingListItem): Response<ShoppingListItem>
+    suspend fun add(@Body item: ShoppingListItem): Response<ShoppingListItem>
 
     @GET("shopping-list/{id}/")
-    suspend fun getShoppingListItem(
+    suspend fun get(
         @Path("id") id: Long,
         @Header("Cache-Control") cacheControl: String = "only-if-cached",
     ): Response<ShoppingListItem>
 
     @GET("shopping-list/")
-    suspend fun getShoppingList(
+    suspend fun get(
         @Header("Cache-Control") cacheControl: String = "only-if-cached",
     ): Response<PagedData<ShoppingListItem>>
 
     @GET("shopping-list/grouped/")
-    suspend fun getShoppingList(
+    suspend fun get(
         @Query("by") groupBy: String,
         @Header("Cache-Control") cacheControl: String = "only-if-cached",
     ): Response<Map<String, List<ShoppingListItem>>>

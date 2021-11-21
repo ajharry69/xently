@@ -7,13 +7,17 @@ import retrofit2.http.*
 
 interface ProductService {
     @GET("products/")
-    suspend fun getProductList(
+    suspend fun get(
+        @Query("page")
+        page: Int = 1,
+        @Query("size")
+        size: Int? = null,
         @Header("Cache-Control")
         cacheControl: String = "only-if-cached",
     ): Response<PagedData<Product>>
 
     @GET("products/{id}/")
-    suspend fun getProduct(
+    suspend fun get(
         @Path("id")
         id: Long,
         @Header("Cache-Control")
@@ -21,8 +25,8 @@ interface ProductService {
     ): Response<Product>
 
     @POST("products/")
-    suspend fun addProduct(@Body shop: Product): Response<Product>
+    suspend fun add(@Body shop: Product): Response<Product>
 
     @PUT("products/{id}/")
-    suspend fun updateProduct(@Path("id") id: Long, @Body shop: Product): Response<Product>
+    suspend fun update(@Path("id") id: Long, @Body shop: Product): Response<Product>
 }

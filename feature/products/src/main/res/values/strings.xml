@@ -1,3 +1,16 @@
 <resources>
-    <string name="title_activity_products">ProductsActivity</string>
+    <string name="title_activity_products">Products</string>
+    <string name="fp_generic_error_message">An unexpected error encountered</string>
+    <string name="fp_empty_product_list">No products added, yet!</string>
+    <string name="fp_product_item_menu_addresses">Addresses</string>
+    <string name="fp_product_item_menu_products">Products</string>
+    <string name="fp_product_item_menu_content_description">More (menu) options for %1$s</string>
+    <string name="fp_product_item_detail_town_label">Town</string>
+    <string name="fp_product_item_detail_name_label">Name</string>
+    <string name="fp_product_item_detail_tax_pin_label">Tax PIN</string>
+    <string name="fp_product_item_detail_button_label">%1$s product</string>
+    <string name="fp_add_product_toolbar_title">%1$s product</string>
+    <string name="fp_add">Add</string>
+    <string name="fp_update">Update</string>
+    <string name="fp_navigation_icon_content_description">Navigate back</string>
 </resources>

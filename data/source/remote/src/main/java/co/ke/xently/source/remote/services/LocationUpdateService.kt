@@ -7,7 +7,7 @@ import retrofit2.http.Path
 
 interface LocationUpdateService {
     @POST("accounts/{id}/update-location/")
-    suspend fun updateLocation(
+    suspend fun update(
         @Path("id") userId: Long = 1L,
         @Body location: Array<Double>,
     ): Response<Unit>
