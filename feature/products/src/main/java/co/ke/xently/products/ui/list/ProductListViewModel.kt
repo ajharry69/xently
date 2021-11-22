@@ -10,5 +10,5 @@ import javax.inject.Inject
 internal class ProductListViewModel @Inject constructor(
     private val repository: IProductsRepository,
 ) : ViewModel() {
-    fun getPagingData(config: PagingConfig) = repository.getProductListPager(config).flow
+    fun getPagingData(config: PagingConfig) = repository.get(config).flow
 }

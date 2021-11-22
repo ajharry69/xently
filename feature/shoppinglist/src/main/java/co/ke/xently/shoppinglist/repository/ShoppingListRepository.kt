@@ -1,5 +1,7 @@
 package co.ke.xently.shoppinglist.repository
 
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
 import co.ke.xently.common.Retry
 import co.ke.xently.common.di.qualifiers.coroutines.IODispatcher
 import co.ke.xently.data.*
@@ -24,7 +26,7 @@ internal class ShoppingListRepository @Inject constructor(
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : IShoppingListRepository {
     // TODO: Use memoization to retrieve all grouped shopping list items...
-    override fun addShoppingListItem(item: ShoppingListItem) = Retry().run {
+    override fun add(item: ShoppingListItem) = Retry().run {
         flow {
             emit(sendRequest(401) { service.add(item) })
         }.onEach {
@@ -32,32 +34,7 @@ internal class ShoppingListRepository @Inject constructor(
         }.retryCatchIfNecessary(this).flowOn(ioDispatcher)
     }
 
-    override fun getShoppingList(remote: Boolean): Flow<TaskResult<List<ShoppingListItem>>> =
-        Retry().run {
-            if (remote) {
-                flow { emit(sendRequest(401) { service.get() }) }
-                    .map { result ->
-                        result.mapCatching {
-                            it.results.apply {
-                                database.shoppingListDao.save(*toTypedArray())
-                            }
-                        }
-                    }
-                    .retryCatchIfNecessary(this)
-                    .flowOn(ioDispatcher)
-                    .onCompletion {
-                        // Return cached records. Caveats:
-                        //  1. No error propagation
-                        if (it == null) emitAll(getShoppingList(false))
-                    }
-            } else {
-                database.shoppingListDao.get().map { shoppingList ->
-                    TaskResult.Success(shoppingList)
-                }
-            }
-        }
-
-    override fun getGroupedShoppingList(groupBy: GroupBy) = Retry().run {
+    override fun get(groupBy: GroupBy) = Retry().run {
         flow {
             emit(sendRequest(401) { service.get(groupBy = groupBy.name.lowercase()) })
         }.map { result ->
@@ -72,7 +49,7 @@ internal class ShoppingListRepository @Inject constructor(
         }.retryCatchIfNecessary(this).flowOn(ioDispatcher)
     }
 
-    override fun getGroupedShoppingListCount(groupBy: GroupBy) = when (groupBy) {
+    override fun getCount(groupBy: GroupBy) = when (groupBy) {
         DateAdded -> database.shoppingListDao.getCountGroupedByDateAdded()
     }.mapLatest {
         mutableMapOf<Any, Int>().apply {
@@ -80,7 +57,7 @@ internal class ShoppingListRepository @Inject constructor(
         }.toMap()
     }
 
-    override fun getShoppingListItem(id: Long) = Retry().run {
+    override fun get(id: Long) = Retry().run {
         database.shoppingListDao.get(id).map { item ->
             if (item == null) {
                 sendRequest(401) { service.get(id) }.apply {
@@ -95,7 +72,7 @@ internal class ShoppingListRepository @Inject constructor(
     }
 
     @Suppress("UNCHECKED_CAST")
-    override fun getRecommendations(recommend: Recommend) = Retry().run {
+    override fun get(recommend: Recommend) = Retry().run {
         flow {
             emit(sendRequest(401) {
                 when (recommend.from) {
@@ -124,5 +101,11 @@ internal class ShoppingListRepository @Inject constructor(
                 }
             })
         }.retryCatchIfNecessary(this).flowOn(ioDispatcher)
+    }
+    override fun get(config: PagingConfig) = Pager(
+        config=config,
+        remoteMediator=ShoppingListRemoteMediator(database, service),
+    ){
+        database.shoppingListDao.get()
     }
 }

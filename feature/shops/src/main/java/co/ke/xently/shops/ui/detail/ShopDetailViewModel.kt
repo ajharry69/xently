@@ -26,9 +26,9 @@ internal class ShopDetailViewModel @Inject constructor(
     val shopResult: StateFlow<TaskResult<Shop?>>
         get() = _shopResult
 
-    fun addShop(shop: Shop) {
+    fun add(shop: Shop) {
         viewModelScope.launch {
-            repository.addShop(shop)
+            repository.add(shop)
                 .flagLoadingOnStartCatchingErrors()
                 .collectLatest {
                     _shopResult.value = it
@@ -36,9 +36,9 @@ internal class ShopDetailViewModel @Inject constructor(
         }
     }
 
-    fun getShop(id: Long) {
+    fun get(id: Long) {
         viewModelScope.launch {
-            repository.getShop(id)
+            repository.get(id)
                 .flagLoadingOnStartCatchingErrors()
                 .collectLatest {
                     _shopResult.value = it

@@ -74,7 +74,7 @@ internal fun ShopsNavHost(
         ) {
             ShopDetailScreen(
                 modifier = Modifier.fillMaxSize(),
-                shopId = it.arguments?.getLong("id")
+                id = it.arguments?.getLong("id")
             )
         }
     }

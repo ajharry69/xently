@@ -19,6 +19,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import co.ke.xently.data.ShoppingListItem
 import co.ke.xently.feature.LocationPermissionViewModel
 import co.ke.xently.feature.LocationService
 import co.ke.xently.feature.theme.XentlyTheme
@@ -54,7 +55,18 @@ class ShoppingListActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             XentlyTheme {
-                ShoppingListNavHost(this)
+                ShoppingListNavHost(
+                    onShopMenuClicked = {
+                        Intent("co.ke.xently.action.SHOPS").also {
+                            startActivity(it)
+                        }
+                    },
+                    onProductMenuClicked = {
+                        Intent("co.ke.xently.action.PRODUCTS").also {
+                            startActivity(it)
+                        }
+                    },
+                )
             }
         }
         viewModel.locationPermissionsGranted.observe(this) {
@@ -83,19 +95,20 @@ class ShoppingListActivity : ComponentActivity() {
 
 @Composable
 internal fun ShoppingListNavHost(
-    context: Context,
     modifier: Modifier = Modifier,
     navController: NavHostController = rememberNavController(),
+    onShopMenuClicked: () -> Unit = {},
+    onProductMenuClicked: () -> Unit = {},
 ) {
     NavHost(
         navController = navController,
         startDestination = "shopping-list-grouped",
         modifier = modifier,
     ) {
-        val onShoppingListItemRecommendClicked: (itemId: Long) -> Unit = {
+        val onShoppingListItemRecommendClicked: (id: Long) -> Unit = {
             navController.navigate("shopping-list/recommendations/${it}?from=${From.Item}")
         }
-        val onShoppingListItemClicked: (itemId: Long) -> Unit = {
+        val onShoppingListItemClicked: (id: Long) -> Unit = {
             navController.navigate("shopping-list/${it}")
         }
         composable("shopping-list-grouped") {
@@ -109,16 +122,8 @@ internal fun ShoppingListNavHost(
                     navController.navigate("shopping-list/recommendations/${it}")
                 },
                 onSeeAllClicked = { navController.navigate("shopping-list") },
-                onShopMenuClicked = {
-                    Intent("co.ke.xently.action.SHOPS").also {
-                        context.startActivity(it)
-                    }
-                },
-                onProductMenuClicked = {
-                    Intent("co.ke.xently.action.PRODUCTS").also {
-                        context.startActivity(it)
-                    }
-                },
+                onShopMenuClicked = onShopMenuClicked,
+                onProductMenuClicked = onProductMenuClicked,
             )
         }
         composable("shopping-list") {
@@ -129,7 +134,10 @@ internal fun ShoppingListNavHost(
                 onShoppingListItemClicked = onShoppingListItemClicked,
                 onRecommendClicked = onShoppingListItemRecommendClicked,
                 onRecommendOptionsMenuClicked = {},
-                onNavigationIconClicked = { navController.navigateUp() }
+                onAddShoppingListItemClicked = {
+                    navController.navigate("shopping-list/${ShoppingListItem.DEFAULT_ID}")
+                },
+                onNavigationIconClicked = { navController.navigateUp() },
             )
         }
         composable(
@@ -149,14 +157,14 @@ internal fun ShoppingListNavHost(
             ) { navController.navigateUp() }
         }
         composable(
-            "shopping-list/{itemId}",
+            "shopping-list/{id}",
             listOf(
-                navArgument("itemId") {
+                navArgument("id") {
                     type = NavType.LongType
                 },
             ),
         ) {
-            ShoppingListItemScreen(it.arguments?.getLong("itemId"), onNavigationIconClicked = {
+            ShoppingListItemScreen(it.arguments?.getLong("id"), onNavigationIconClicked = {
                 navController.navigateUp()
             })
         }

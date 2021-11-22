@@ -23,17 +23,36 @@ import okhttp3.internal.http.toHttpDateOrNull
 
 @Composable
 internal fun ShoppingListItemScreen(
-    itemId: Long?,
+    id: Long?,
     modifier: Modifier = Modifier,
     viewModel: ShoppingListItemViewModel = hiltViewModel(),
-    onNavigationIconClicked: (() -> Unit) = {},
+    onNavigationIconClicked: () -> Unit = {},
 ) {
+    id?.also {
+        if (it != ShoppingListItem.DEFAULT_ID) viewModel.get(it)
+    }
     val coroutineScope = rememberCoroutineScope()
-
-    viewModel.getShoppingListItem(itemId)
     val itemResult by viewModel.shoppingItemResult.collectAsState(
         coroutineScope.coroutineContext,
     )
+    ShoppingListItemScreen(
+        id,
+        itemResult,
+        modifier,
+        onNavigationIconClicked,
+    ) {
+        viewModel.add(it)
+    }
+}
+
+@Composable
+private fun ShoppingListItemScreen(
+    itemId: Long?,
+    itemResult: TaskResult<ShoppingListItem?>,
+    modifier: Modifier,
+    onNavigationIconClicked: () -> Unit,
+    onAddShoppingListItemClicked: (ShoppingListItem) -> Unit,
+) {
     val item = itemResult.getOrNull() ?: ShoppingListItem()
 
     var name by remember(itemId, itemResult, item) { mutableStateOf(TextFieldValue(item.name)) }
@@ -49,6 +68,7 @@ internal fun ShoppingListItemScreen(
     }
 
     val scaffoldState = rememberScaffoldState()
+    val coroutineScope = rememberCoroutineScope()
     if (itemResult is TaskResult.Error) {
         val errorMessage =
             itemResult.errorMessage ?: stringResource(R.string.fsl_generic_error_message)
@@ -134,19 +154,16 @@ internal fun ShoppingListItemScreen(
                 Button(
                     modifier = Modifier.fillMaxWidth(),
                     onClick = {
-                        viewModel.addShoppingListItem(
-                            ShoppingListItem(
-                                id = -1L,
-                                name = name.text,
-                                unit = unit.text,
-                                unitQuantity = unitQuantity.text.toFloatOrNull()
-                                    ?: TODO("Raise invalid error"),
-                                purchaseQuantity = purchaseQuantity.text.toFloatOrNull()
-                                    ?: TODO("Raise invalid error"),
-                                dateAdded = dateAdded.text.toHttpDateOrNull()
-                                    ?: TODO("Raise invalid error"),
-                            )
-                        )
+                        onAddShoppingListItemClicked(item.copy(
+                            name = name.text,
+                            unit = unit.text,
+                            unitQuantity = unitQuantity.text.toFloatOrNull()
+                                ?: TODO("Raise invalid error"),
+                            purchaseQuantity = purchaseQuantity.text.toFloatOrNull()
+                                ?: TODO("Raise invalid error"),
+                            dateAdded = dateAdded.text.toHttpDateOrNull()
+                                ?: TODO("Raise invalid error"),
+                        ))
                     },
                 ) { Text(text = toolbarTitle.uppercase()) }
             }

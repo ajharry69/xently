@@ -24,7 +24,7 @@ internal class ProductDetailViewModel @Inject constructor(
 
     fun addProduct(product: Product) {
         viewModelScope.launch {
-            repository.addProduct(product)
+            repository.add(product)
                 .flagLoadingOnStartCatchingErrors()
                 .collectLatest {
                     _productResult.value = it
@@ -34,7 +34,7 @@ internal class ProductDetailViewModel @Inject constructor(
 
     fun getProduct(id: Long) {
         viewModelScope.launch {
-            repository.getProduct(id)
+            repository.get(id)
                 .flagLoadingOnStartCatchingErrors()
                 .collectLatest {
                     _productResult.value = it

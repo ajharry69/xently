@@ -8,6 +8,10 @@ import retrofit2.http.*
 interface ShopService {
     @GET("shops/")
     suspend fun get(
+        @Query("page")
+        page: Int = 1,
+        @Query("size")
+        size: Int? = null,
         @Header("Cache-Control")
         cacheControl: String = "only-if-cached",
     ): Response<PagedData<Shop>>

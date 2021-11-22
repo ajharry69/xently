@@ -28,7 +28,7 @@ internal class ProductsRepository @Inject constructor(
     @IODispatcher
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : IProductsRepository {
-    override fun addProduct(product: Product) = Retry().run {
+    override fun add(product: Product) = Retry().run {
         flow {
             emit(sendRequest(401) { service.add(product) })
         }.onEach {
@@ -36,7 +36,7 @@ internal class ProductsRepository @Inject constructor(
         }.retryCatchIfNecessary(this).flowOn(ioDispatcher)
     }
 
-    override fun updateProduct(product: Product) = Retry().run {
+    override fun update(product: Product) = Retry().run {
         flow {
             emit(sendRequest(401) { service.update(product.id, product) })
         }.onEach {
@@ -44,7 +44,7 @@ internal class ProductsRepository @Inject constructor(
         }.retryCatchIfNecessary(this).flowOn(ioDispatcher)
     }
 
-    override fun getProduct(id: Long) = Retry().run {
+    override fun get(id: Long) = Retry().run {
         database.productsDao.get(id).map { product ->
             if (product == null) {
                 sendRequest(401) { service.get(id) }.apply {
@@ -58,8 +58,8 @@ internal class ProductsRepository @Inject constructor(
         }.retryCatchIfNecessary(this).flowOn(ioDispatcher)
     }
 
-    override fun getProductListPager(config: PagingConfig) = Pager(
+    override fun get(config: PagingConfig) = Pager(
         config = config,
         remoteMediator = ProductsRemoteMediator(database, service),
-    ) { database.productsDao.pagingSource() }
+    ) { database.productsDao.get() }
 }

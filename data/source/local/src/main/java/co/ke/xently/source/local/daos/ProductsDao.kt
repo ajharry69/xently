@@ -17,7 +17,7 @@ interface ProductsDao {
     suspend fun save(products: List<Product>)
 
     @Query("SELECT * FROM products ORDER BY dateAdded DESC")
-    fun pagingSource(): PagingSource<Int, Product>
+    fun get(): PagingSource<Int, Product>
 
     @Query("SELECT * FROM products WHERE id = :id")
     fun get(id: Long): Flow<Product?>

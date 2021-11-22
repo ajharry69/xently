@@ -18,44 +18,27 @@ import javax.inject.Inject
 internal class ShoppingListItemViewModel @Inject constructor(
     private val repository: IShoppingListRepository,
 ) : ViewModel() {
-    private val shoppingListItem = MutableStateFlow<ShoppingListItem?>(null)
-    private val shoppingListItemId = MutableStateFlow<Long?>(null)
     private val _shoppingItemResult = MutableStateFlow<TaskResult<ShoppingListItem?>>(Success(null))
     val shoppingItemResult: StateFlow<TaskResult<ShoppingListItem?>>
         get() = _shoppingItemResult
 
-    init {
+    fun add(item: ShoppingListItem) {
         viewModelScope.launch {
-            launch {
-                shoppingListItem.collectLatest { item ->
-                    if (item != null) {
-                        repository.addShoppingListItem(item)
-                            .flagLoadingOnStartCatchingErrors()
-                            .collectLatest {
-                                _shoppingItemResult.value = it
-                            }
-                    }
+            repository.add(item)
+                .flagLoadingOnStartCatchingErrors()
+                .collectLatest {
+                    _shoppingItemResult.value = it
                 }
-            }
-            launch {
-                shoppingListItemId.collectLatest { itemId ->
-                    if (itemId != null) {
-                        repository.getShoppingListItem(itemId)
-                            .flagLoadingOnStartCatchingErrors()
-                            .collectLatest {
-                                _shoppingItemResult.value = it
-                            }
-                    }
-                }
-            }
         }
     }
 
-    fun addShoppingListItem(item: ShoppingListItem) {
-        this.shoppingListItem.value = item
-    }
-
-    fun getShoppingListItem(itemId: Long?) {
-        shoppingListItemId.value = itemId
+    fun get(id: Long) {
+        viewModelScope.launch {
+            repository.get(id)
+                .flagLoadingOnStartCatchingErrors()
+                .collectLatest {
+                    _shoppingItemResult.value = it
+                }
+        }
     }
 }

@@ -2,6 +2,7 @@ package co.ke.xently.shops.ui.list
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.paging.PagingConfig
 import co.ke.xently.data.Shop
 import co.ke.xently.data.TaskResult
 import co.ke.xently.feature.utils.flagLoadingOnStartCatchingErrors
@@ -17,18 +18,5 @@ import javax.inject.Inject
 internal class ShopListViewModel @Inject constructor(
     private val repository: IShopsRepository,
 ) : ViewModel() {
-    private val _shopListResult =
-        MutableStateFlow<TaskResult<List<Shop>>>(TaskResult.Loading)
-    val shopListResult: StateFlow<TaskResult<List<Shop>>>
-        get() = _shopListResult
-
-    init {
-        viewModelScope.launch {
-            repository.getShopList(true)
-                .flagLoadingOnStartCatchingErrors()
-                .collectLatest {
-                    _shopListResult.value = it
-                }
-        }
-    }
+    fun getPagingData(config: PagingConfig) = repository.get(config).flow
 }

@@ -27,13 +27,13 @@ import kotlinx.coroutines.launch
 
 @Composable
 internal fun ShopDetailScreen(
+    id: Long?,
     modifier: Modifier = Modifier,
-    shopId: Long? = null,
     viewModel: ShopDetailViewModel = hiltViewModel(),
-    onNavigationIconClicked: (() -> Unit) = {},
+    onNavigationIconClicked: () -> Unit = {},
 ) {
-    shopId?.also {
-        if (it != Shop.DEFAULT_ID) viewModel.getShop(it)
+    id?.also {
+        if (it != Shop.DEFAULT_ID) viewModel.get(it)
     }
     val shopResult by viewModel.shopResult.collectAsState()
     ShopDetailScreen(
@@ -42,7 +42,7 @@ internal fun ShopDetailScreen(
         onNavigationIconClicked,
         viewModel::setLocationPermissionGranted,
     ) {
-        viewModel.addShop(it)
+        viewModel.add(it)
     }
 }
 
@@ -50,9 +50,9 @@ internal fun ShopDetailScreen(
 private fun ShopDetailScreen(
     modifier: Modifier,
     result: TaskResult<Shop?>,
-    onNavigationIconClicked: (() -> Unit) = {},
-    onLocationPermissionChanged: ((Boolean) -> Unit) = {},
-    onAddShopClicked: ((Shop) -> Unit) = {},
+    onNavigationIconClicked: () -> Unit = {},
+    onLocationPermissionChanged: (Boolean) -> Unit = {},
+    onAddShopClicked: (Shop) -> Unit = {},
 ) {
     val shop = result.getOrNull() ?: Shop()
     var name by remember(shop.id, shop.name) {

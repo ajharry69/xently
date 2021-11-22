@@ -32,7 +32,7 @@ internal class ShoppingListGroupedViewModel @Inject constructor(
         viewModelScope.launch {
             launch {
                 groupBy.collectLatest { group ->
-                    repository.getGroupedShoppingList(group)
+                    repository.get(group)
                         .flagLoadingOnStartCatchingErrors()
                         .collectLatest {
                             _groupedShoppingListResult.value = it
@@ -41,7 +41,7 @@ internal class ShoppingListGroupedViewModel @Inject constructor(
             }
             launch {
                 groupBy.collectLatest { group ->
-                    repository.getGroupedShoppingListCount(group).collectLatest {
+                    repository.getCount(group).collectLatest {
                         _groupedShoppingListCount.value = it
                     }
                 }

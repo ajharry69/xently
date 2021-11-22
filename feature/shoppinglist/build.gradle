@@ -32,6 +32,7 @@ android {
         jvmTarget = '1.8'
         freeCompilerArgs += [
                 "-Xopt-in=kotlin.time.ExperimentalTime",
+                "-Xopt-in=androidx.paging.ExperimentalPagingApi",
                 "-Xopt-in=kotlinx.coroutines.ExperimentalCoroutinesApi",
                 "-Xopt-in=androidx.compose.material.ExperimentalMaterialApi",
         ]

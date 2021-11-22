@@ -31,7 +31,7 @@ internal class ShoppingListRecommendationViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             recommend.collectLatest { r ->
-                repository.getRecommendations(r)
+                repository.get(r)
                     .flagLoadingOnStartCatchingErrors()
                     .collectLatest { _recommendationReportResult.value = it }
             }
