@@ -1,4 +1,4 @@
-package co.ke.xently.feature
+package co.ke.xently.feature.utils
 
 import androidx.compose.ui.unit.dp
 

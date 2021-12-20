@@ -1,5 +1,6 @@
 <resources>
     <string name="app_name">Xently</string>
+    <string name="default_currency" translatable="false">KES</string>
     <string name="drawer_menu_shops">Shops</string>
     <string name="drawer_menu_products">Products</string>
     <string name="stop_location_tracking_button_text">Stop tracking</string>

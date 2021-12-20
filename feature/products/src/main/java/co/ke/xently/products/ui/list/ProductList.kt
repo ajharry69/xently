@@ -1,5 +1,6 @@
 package co.ke.xently.products.ui.list
 
+import android.text.format.DateFormat
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -12,8 +13,13 @@ import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.ExperimentalUnitApi
+import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.paging.LoadState
@@ -23,6 +29,7 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.items
 import co.ke.xently.data.Product
 import co.ke.xently.feature.theme.XentlyTheme
+import co.ke.xently.feature.utils.descriptive
 import co.ke.xently.products.R
 import kotlinx.coroutines.launch
 
@@ -111,7 +118,7 @@ private fun ProductListScreen(
             }
         }
 
-        LazyColumn(modifier = modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        LazyColumn(modifier = modifier, verticalArrangement = Arrangement.spacedBy(16.dp)) {
             items(pagingItems) {
                 if (it != null) {
                     ProductListItem(
@@ -141,6 +148,7 @@ private fun ProductListScreen(
     }
 }
 
+@OptIn(ExperimentalUnitApi::class)
 @Composable
 private fun ProductListItem(
     product: Product,
@@ -163,33 +171,45 @@ private fun ProductListItem(
                 modifier = Modifier
                     .wrapContentWidth()
                     .fillMaxWidth(),
-                text = product.name,
-                style = MaterialTheme.typography.h5,
+                text = "${product.name}, ${product.unitQuantity} ${product.unit}",
+                style = MaterialTheme.typography.body1,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                DateFormat.getMediumDateFormat(LocalContext.current).format(product.datePurchased),
+                style = MaterialTheme.typography.caption,
             )
         }
-        Box(modifier = Modifier.width(IntrinsicSize.Min)) {
-            IconButton(onClick = { showDropMenu = true }) {
-                Icon(
-                    if (showDropMenu) Icons.Default.KeyboardArrowDown else Icons.Default.KeyboardArrowRight,
-                    contentDescription = stringResource(
-                        R.string.fp_product_item_menu_content_description,
-                        product.name,
-                    ),
-                )
-            }
-            DropdownMenu(expanded = showDropMenu, onDismissRequest = { showDropMenu = false }) {
-                DropdownMenuItem(
-                    onClick = {
-                        onProductsClicked(product.id)
-                        showDropMenu = false
-                    },
-                ) { Text(text = stringResource(id = R.string.fp_product_item_menu_products)) }
-                DropdownMenuItem(
-                    onClick = {
-                        onAddressesClicked(product.id)
-                        showDropMenu = false
-                    },
-                ) { Text(text = stringResource(id = R.string.fp_product_item_menu_addresses)) }
+        Row(
+            modifier = Modifier.width(IntrinsicSize.Min).padding(start = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text("${stringResource(co.ke.xently.feature.R.string.default_currency)}${product.unitPrice.descriptive()}", style = MaterialTheme.typography.subtitle2.copy(fontSize = TextUnit(18f, TextUnitType.Sp)))
+            Box {
+                IconButton(onClick = { showDropMenu = true }) {
+                    Icon(
+                        if (showDropMenu) Icons.Default.KeyboardArrowDown else Icons.Default.KeyboardArrowRight,
+                        contentDescription = stringResource(
+                            R.string.fp_product_item_menu_content_description,
+                            product.name,
+                        ),
+                    )
+                }
+                DropdownMenu(expanded = showDropMenu, onDismissRequest = { showDropMenu = false }) {
+                    DropdownMenuItem(
+                        onClick = {
+                            onProductsClicked(product.id)
+                            showDropMenu = false
+                        },
+                    ) { Text(text = stringResource(id = R.string.fp_product_item_menu_products)) }
+                    DropdownMenuItem(
+                        onClick = {
+                            onAddressesClicked(product.id)
+                            showDropMenu = false
+                        },
+                    ) { Text(text = stringResource(id = R.string.fp_product_item_menu_addresses)) }
+                }
             }
         }
     }
@@ -202,56 +222,11 @@ private fun ProductListItemPreview() {
         ProductListItem(
             modifier = Modifier.fillMaxWidth(),
             product = Product(
-                name = "Product #1000",
+                name = "Bread",
+                unit = "grams",
+                unitQuantity = 400f,
+                unitPrice = 1_000.53f,
             ),
-        )
-    }
-}
-
-@Preview("Product item with popup menu showing", showBackground = true)
-@Composable
-private fun ProductListItemPopupMenuShowingPreview() {
-    XentlyTheme {
-        ProductListItem(
-            modifier = Modifier.fillMaxWidth(),
-            showPopupMenu = true,
-            product = Product(
-                name = "Product #1000",
-            ),
-        )
-    }
-}
-
-@Preview(name = "Empty product list")
-@Composable
-private fun ProductListEmptyPreview() {
-    XentlyTheme {
-        ProductListScreen(
-            modifier = Modifier.fillMaxSize(),
-            /*productListResult = Success(emptyList())*/
-        )
-    }
-}
-
-@Preview(name = "Loading product list")
-@Composable
-private fun ProductListNullPreview() {
-    XentlyTheme {
-        ProductListScreen(modifier = Modifier.fillMaxSize() /*productListResult = TaskResult.Loading*/)
-    }
-}
-
-@Preview(name = "Non empty product list")
-@Composable
-private fun ProductListNonEmptyListPreview() {
-    XentlyTheme {
-        ProductListScreen(
-            modifier = Modifier.fillMaxSize(),
-            /*productListResult = Success(List(20) {
-                Product(
-                    name = "Product #${it + 1}",
-                )
-            }),*/
         )
     }
 }

@@ -2,11 +2,12 @@ package co.ke.xently.common
 
 import kotlinx.coroutines.delay
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 data class Retry(
     private val number: Int = 3,
     private val backoffMultiplier: Int = 1,
-    private val timeout: Duration = Duration.seconds(3),
+    private val timeout: Duration = 3.seconds,
 ) {
     var currentAttemptCount = 1
         private set
@@ -18,7 +19,7 @@ data class Retry(
 
     suspend fun canRetry() = (currentAttemptCount <= number).also {
         if (!it) return@also // Avoid unnecessary thread-blocking
-        delay(Duration.seconds(currentWaitTimeSeconds))
+        delay(currentWaitTimeSeconds.seconds)
         currentWaitTimeSeconds += (currentWaitTimeSeconds * backoffMultiplier)
         currentAttemptCount++
     }

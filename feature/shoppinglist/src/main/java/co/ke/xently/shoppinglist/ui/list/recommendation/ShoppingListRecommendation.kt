@@ -20,7 +20,7 @@ import co.ke.xently.data.RecommendationReport.Recommendation
 import co.ke.xently.data.TaskResult
 import co.ke.xently.data.errorMessage
 import co.ke.xently.data.getOrThrow
-import co.ke.xently.feature.MAP_HEIGHT
+import co.ke.xently.feature.utils.MAP_HEIGHT
 import co.ke.xently.feature.ui.GoogleMapView
 import co.ke.xently.shoppinglist.R
 import co.ke.xently.shoppinglist.Recommend

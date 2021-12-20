@@ -6,19 +6,30 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
+import androidx.fragment.app.FragmentActivity
 import androidx.hilt.navigation.compose.hiltViewModel
+import co.ke.xently.common.DEFAULT_LOCAL_DATE_FORMAT
+import co.ke.xently.common.KENYA
+import co.ke.xently.common.localDefaultDateFormatToServerDate
 import co.ke.xently.data.ShoppingListItem
 import co.ke.xently.data.TaskResult
 import co.ke.xently.data.errorMessage
 import co.ke.xently.data.getOrNull
 import co.ke.xently.shoppinglist.R
+import com.google.android.material.datepicker.CalendarConstraints
+import com.google.android.material.datepicker.DateValidatorPointForward
+import com.google.android.material.datepicker.MaterialDatePicker
 import kotlinx.coroutines.launch
-import okhttp3.internal.http.toHttpDateOrNull
+import java.util.*
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.DurationUnit
 
 
 @Composable
@@ -28,14 +39,17 @@ internal fun ShoppingListItemScreen(
     viewModel: ShoppingListItemViewModel = hiltViewModel(),
     onNavigationIconClicked: () -> Unit = {},
 ) {
+    var isUpdate = false
     id?.also {
-        if (it != ShoppingListItem.DEFAULT_ID) viewModel.get(it)
+        isUpdate = it != ShoppingListItem.DEFAULT_ID
+        if (isUpdate) viewModel.get(it)
     }
     val coroutineScope = rememberCoroutineScope()
     val itemResult by viewModel.shoppingItemResult.collectAsState(
         coroutineScope.coroutineContext,
     )
     ShoppingListItemScreen(
+        isUpdate,
         id,
         itemResult,
         modifier,
@@ -47,6 +61,7 @@ internal fun ShoppingListItemScreen(
 
 @Composable
 private fun ShoppingListItemScreen(
+    isUpdate: Boolean,
     itemId: Long?,
     itemResult: TaskResult<ShoppingListItem?>,
     modifier: Modifier,
@@ -64,7 +79,7 @@ private fun ShoppingListItemScreen(
         mutableStateOf(TextFieldValue(item.purchaseQuantity.toString()))
     }
     var dateAdded by remember(itemId, itemResult, item) {
-        mutableStateOf(TextFieldValue(item.dateAdded.toString()))
+        mutableStateOf(TextFieldValue(DEFAULT_LOCAL_DATE_FORMAT.format(item.dateAdded)))
     }
 
     val scaffoldState = rememberScaffoldState()
@@ -81,7 +96,7 @@ private fun ShoppingListItemScreen(
 
     val toolbarTitle = stringResource(
         R.string.fsl_detail_screen_toolbar_title,
-        stringResource(if (itemId == null) R.string.fsl_add else R.string.fsl_update),
+        stringResource(if (isUpdate) R.string.fsl_update else R.string.fsl_add),
     )
     Scaffold(
         modifier = modifier,
@@ -132,7 +147,8 @@ private fun ShoppingListItemScreen(
                         label = { Text(stringResource(R.string.fsl_text_field_label_unit_quantity)) },
                         singleLine = true,
                         value = unitQuantity,
-                        onValueChange = { unitQuantity = it })
+                        onValueChange = { unitQuantity = it },
+                    )
                 }
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -143,16 +159,39 @@ private fun ShoppingListItemScreen(
                         label = { Text(stringResource(R.string.fsl_text_field_label_purchase_quantity)) },
                         singleLine = true,
                         value = purchaseQuantity,
-                        onValueChange = { purchaseQuantity = it })
+                        onValueChange = { purchaseQuantity = it },
+                    )
+
+                    val datePicker = MaterialDatePicker.Builder.datePicker()
+                        .setSelection((DEFAULT_LOCAL_DATE_FORMAT.parse(dateAdded.text)?.time ?: Date().time) + 24.hours.toLong(DurationUnit.MILLISECONDS))
+                        .setCalendarConstraints(CalendarConstraints.Builder()
+                            .setValidator(DateValidatorPointForward.now()).build())
+                        .setTitleText(R.string.fsl_text_field_label_date_added)
+                        .build()
+                    datePicker.addOnPositiveButtonClickListener {
+                        dateAdded = TextFieldValue(DEFAULT_LOCAL_DATE_FORMAT.format(Date(it)))
+                    }
+                    val context = LocalContext.current
                     TextField(
                         modifier = Modifier.weight(1f),
                         label = { Text(stringResource(R.string.fsl_text_field_label_date_added)) },
                         singleLine = true,
                         value = dateAdded,
-                        onValueChange = { dateAdded = it })
+                        onValueChange = { dateAdded = it },
+                        readOnly = true,
+                        trailingIcon = {
+                            IconButton(onClick = {
+                                datePicker.show((context as FragmentActivity).supportFragmentManager,
+                                    "ShoppingListDateAdded")
+                            }) {
+                                Icon(Icons.Default.DateRange, contentDescription = null)
+                            }
+                        },
+                    )
                 }
                 Button(
                     modifier = Modifier.fillMaxWidth(),
+                    enabled= arrayOf(name, unit, unitQuantity, purchaseQuantity).all { it.text.isNotBlank() },
                     onClick = {
                         onAddShoppingListItemClicked(item.copy(
                             name = name.text,
@@ -161,11 +200,10 @@ private fun ShoppingListItemScreen(
                                 ?: TODO("Raise invalid error"),
                             purchaseQuantity = purchaseQuantity.text.toFloatOrNull()
                                 ?: TODO("Raise invalid error"),
-                            dateAdded = dateAdded.text.toHttpDateOrNull()
-                                ?: TODO("Raise invalid error"),
+                            dateAdded = localDefaultDateFormatToServerDate(dateAdded.text)!!,
                         ))
                     },
-                ) { Text(text = toolbarTitle.uppercase()) }
+                ) { Text(text = toolbarTitle.uppercase(KENYA)) }
             }
         }
     }

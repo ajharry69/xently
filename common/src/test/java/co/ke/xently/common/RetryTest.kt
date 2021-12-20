@@ -3,6 +3,7 @@ package co.ke.xently.common
 import junit.framework.TestCase
 import kotlinx.coroutines.test.runBlockingTest
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 class RetryTest : TestCase() {
 
@@ -39,25 +40,25 @@ class RetryTest : TestCase() {
         val retry = Retry()
 
         assertEquals(retry.currentAttemptCount, 1)
-        assertEquals(Duration.seconds(retry.currentWaitTimeSeconds), Duration.seconds(3))
+        assertEquals(retry.currentWaitTimeSeconds.seconds, 3.seconds)
         assertTrue(retry.canRetry())
 
         assertEquals(retry.currentAttemptCount, 2)
-        assertEquals(Duration.seconds(retry.currentWaitTimeSeconds), Duration.seconds(6))
+        assertEquals(retry.currentWaitTimeSeconds.seconds, 6.seconds)
         assertTrue(retry.canRetry())
 
         assertEquals(retry.currentAttemptCount, 3)
-        assertEquals(Duration.seconds(retry.currentWaitTimeSeconds), Duration.seconds(12))
+        assertEquals(retry.currentWaitTimeSeconds.seconds, 12.seconds)
         assertTrue(retry.canRetry())
 
         // Configured number of retries exceeded
         assertEquals(retry.currentAttemptCount, 4)
-        assertEquals(Duration.seconds(retry.currentWaitTimeSeconds), Duration.seconds(24))
+        assertEquals(retry.currentWaitTimeSeconds.seconds, 24.seconds)
         assertFalse(retry.canRetry())
 
         // Neither wait time nor attempt count is not increased once number of retries is reached
         assertEquals(retry.currentAttemptCount, 4)
-        assertEquals(Duration.seconds(retry.currentWaitTimeSeconds), Duration.seconds(24))
+        assertEquals(retry.currentWaitTimeSeconds.seconds, 24.seconds)
     }
 
     fun `test can retry called more than number of retry times with non-default backoff multiplier`() =
@@ -65,25 +66,25 @@ class RetryTest : TestCase() {
             val retry = Retry(backoffMultiplier = 2)
 
             assertEquals(retry.currentAttemptCount, 1)
-            assertEquals(Duration.seconds(retry.currentWaitTimeSeconds), Duration.seconds(3))
+            assertEquals(retry.currentWaitTimeSeconds.seconds, 3.seconds)
             assertTrue(retry.canRetry())
 
             assertEquals(retry.currentAttemptCount, 2)
-            assertEquals(Duration.seconds(retry.currentWaitTimeSeconds), Duration.seconds(9))
+            assertEquals(retry.currentWaitTimeSeconds.seconds, 9.seconds)
             assertTrue(retry.canRetry())
 
             assertEquals(retry.currentAttemptCount, 3)
-            assertEquals(Duration.seconds(retry.currentWaitTimeSeconds), Duration.seconds(27))
+            assertEquals(retry.currentWaitTimeSeconds.seconds, 27.seconds)
             assertTrue(retry.canRetry())
 
             // Configured number of retries exceeded
             assertEquals(retry.currentAttemptCount, 4)
-            assertEquals(Duration.seconds(retry.currentWaitTimeSeconds), Duration.seconds(81))
+            assertEquals(retry.currentWaitTimeSeconds.seconds, 81.seconds)
             assertFalse(retry.canRetry())
 
             // Neither wait time nor attempt count is not increased once number of retries is reached
             assertEquals(retry.currentAttemptCount, 4)
-            assertEquals(Duration.seconds(retry.currentWaitTimeSeconds), Duration.seconds(81))
+            assertEquals(retry.currentWaitTimeSeconds.seconds, 81.seconds)
         }
 
     fun `test can retry is independent of retry class instance`() = runBlockingTest {

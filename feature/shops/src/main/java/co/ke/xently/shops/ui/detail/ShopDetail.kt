@@ -19,7 +19,7 @@ import co.ke.xently.data.TaskResult
 import co.ke.xently.data.TaskResult.Success
 import co.ke.xently.data.errorMessage
 import co.ke.xently.data.getOrNull
-import co.ke.xently.feature.MAP_HEIGHT
+import co.ke.xently.feature.utils.MAP_HEIGHT
 import co.ke.xently.feature.theme.XentlyTheme
 import co.ke.xently.feature.ui.GoogleMapView
 import co.ke.xently.shops.R

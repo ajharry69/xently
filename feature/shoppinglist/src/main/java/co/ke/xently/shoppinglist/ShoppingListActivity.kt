@@ -6,9 +6,9 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.os.Bundle
 import android.os.IBinder
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
@@ -31,7 +31,7 @@ import co.ke.xently.shoppinglist.ui.list.recommendation.ShoppingListRecommendati
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
-class ShoppingListActivity : ComponentActivity() {
+class ShoppingListActivity : AppCompatActivity() {
     private val viewModel: LocationPermissionViewModel by viewModels()
 
     private var locationService: LocationService? = null

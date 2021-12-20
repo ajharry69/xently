@@ -101,6 +101,7 @@ private fun GroupedShoppingListScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
                     .height(IntrinsicSize.Min)
                     .clickable(role = Role.Tab) {
                         onShopMenuClicked()
@@ -109,17 +110,20 @@ private fun GroupedShoppingListScreen(
                         }
                     },
                 verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Icon(painterResource(R.drawable.ic_shops), null, modifier = Modifier.padding(16.dp))
+                Icon(painterResource(R.drawable.ic_shops), null)
                 Text(
                     stringResource(R.string.drawer_menu_shops),
-                    style = MaterialTheme.typography.button,
+                    style = MaterialTheme.typography.h6,
                     modifier = Modifier.weight(1f),
                 )
             }
+            Spacer(modifier = Modifier.height(16.dp))
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
                     .height(IntrinsicSize.Min)
                     .clickable(role = Role.Tab) {
                         onProductMenuClicked()
@@ -128,11 +132,12 @@ private fun GroupedShoppingListScreen(
                         }
                     },
                 verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Icon(painterResource(R.drawable.ic_products), null, modifier = Modifier.padding(16.dp))
+                Icon(painterResource(R.drawable.ic_products), null)
                 Text(
                     stringResource(R.string.drawer_menu_products),
-                    style = MaterialTheme.typography.button,
+                    style = MaterialTheme.typography.h6,
                     modifier = Modifier.weight(1f),
                 )
             }

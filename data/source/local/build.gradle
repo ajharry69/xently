@@ -51,6 +51,7 @@ dependencies {
     // `api` necessitated by calls to `Database.withTransaction`
     api "androidx.room:room-ktx:$room_version"
     kapt "androidx.room:room-compiler:$room_version"
+    implementation "androidx.room:room-paging:$room_version"
 
     // DI
     implementation "com.google.dagger:hilt-android:$hilt_version"
