@@ -39,15 +39,19 @@ android {
 }
 
 dependencies {
-    implementation project(path: ":data:source")
-
+    implementation project(path: ':common')
+    implementation project(path: ':data')
     // Security
     implementation "androidx.security:security-crypto:1.1.0-alpha03"
 
+    api "androidx.paging:paging-runtime-ktx:$paging_version"
     // Room
-    implementation "androidx.room:room-runtime:$room_version"
-    implementation "androidx.room:room-ktx:$room_version"
+    // `api` necessitated by dependence on super class of `Database`
+    api "androidx.room:room-runtime:$room_version"
+    // `api` necessitated by calls to `Database.withTransaction`
+    api "androidx.room:room-ktx:$room_version"
     kapt "androidx.room:room-compiler:$room_version"
+    implementation "androidx.room:room-paging:$room_version"
 
     // DI
     implementation "com.google.dagger:hilt-android:$hilt_version"

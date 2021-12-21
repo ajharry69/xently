@@ -1,22 +1,23 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 buildscript {
     ext {
-        compose_version = '1.1.0-beta01'
+        compose_version = '1.1.0-rc01'
         // For compatibility with the above version of jetpack compose
-        kotlin_version = '1.5.31'
+        kotlin_version = '1.6.0'
         coroutine_version = '1.5.2'
 
         // Jetpack
+        paging_version = '3.1.0'
         dagger_version = '2.29.1'
-        hilt_version = '2.39.1'
-        room_version = "2.3.0"
-        navigation_version = '2.4.0-beta01'
+        hilt_version = '2.40.5'
+        room_version = "2.4.0"
+        navigation_version = '2.4.0-rc01'
         lifecycle_version = '2.4.0-beta01'
         lifecycle_viewmodel_version = '2.4.0'
 
         // Retrofit
         retrofit_version = '2.9.0'
-        logging_interceptor_version = '5.0.0-alpha.2'
+        logging_interceptor_version = '5.0.0-alpha.3'
         okio_version = '3.0.0'
 
         Properties properties = new Properties()
@@ -36,7 +37,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath "com.android.tools.build:gradle:7.0.3"
+        classpath "com.android.tools.build:gradle:7.0.4"
         classpath "com.google.dagger:hilt-android-gradle-plugin:$hilt_version"
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         classpath "com.google.android.libraries.mapsplatform.secrets-gradle-plugin:secrets-gradle-plugin:2.0.0"

@@ -41,14 +41,19 @@ internal class LocationServiceRepository @Inject constructor(
 
     override fun updateLocation(location: Array<Double>) = Retry().run {
         flow {
-            emit(sendRequest(401) { service.updateLocation(location = location) })
+            emit(sendRequest(401) { service.update(location = location) })
         }.onEach {
             sharedPreference.edit(commit = true) {
-                putString(MY_LOCATION_LATITUDE_SHARED_PREFERENCE_KEY, location.component1().toString())
-                putString(MY_LOCATION_LONGITUDE_SHARED_PREFERENCE_KEY, location.component2().toString())
+                putString(
+                    MY_LOCATION_LATITUDE_SHARED_PREFERENCE_KEY,
+                    location.component1().toString()
+                )
+                putString(
+                    MY_LOCATION_LONGITUDE_SHARED_PREFERENCE_KEY,
+                    location.component2().toString()
+                )
             }
         }.retryCatchIfNecessary(this).flowOn(ioDispatcher)
     }
-
 
 }

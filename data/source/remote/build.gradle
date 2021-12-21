@@ -36,14 +36,16 @@ android {
 }
 
 dependencies {
-    implementation project(path: ":data:source")
-
+    implementation project(path: ':common')
+    implementation project(path: ':data')
     // DI
     implementation "com.google.dagger:hilt-android:$hilt_version"
     kapt "com.google.dagger:hilt-compiler:$hilt_version"
 
     // Square and Retrofit
-    implementation "com.squareup.retrofit2:retrofit:$retrofit_version"
+    // This is a transitive dependency to remote data source that's currently only needed by:
+    //  1. `sendRequest(...)` function declared in the remote data source module.
+    api "com.squareup.retrofit2:retrofit:$retrofit_version"
     implementation "com.squareup.retrofit2:converter-gson:$retrofit_version"
     implementation "com.squareup.okhttp3:logging-interceptor:$logging_interceptor_version"
     implementation "com.squareup.okio:okio:$okio_version"

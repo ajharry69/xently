@@ -1,7 +1,8 @@
 package co.ke.xently.source.remote
 
 import co.ke.xently.common.Exclude
-import com.google.gson.reflect.TypeToken
+import co.ke.xently.data.RemoteKey
+import java.net.URI
 
 data class PagedData<T>(
     val count: Int = 0,
@@ -9,26 +10,26 @@ data class PagedData<T>(
     val previous: String? = null,
     @Exclude(during = Exclude.During.SERIALIZATION)
     val results: List<T> = emptyList(),
-    val isRefresh: Boolean = false,
-    val initialPageMultiplier: Int = 3,
 ) {
-    val isDataLoadFinished: Boolean
-        get() = next.isNullOrBlank()
+    fun toRemoteKey(defaultEndpoint: String = ""): RemoteKey {
+        fun getLatestPage(query: String?): Int? {
+            val map: MutableMap<String, Set<String?>> = HashMap()
+            for (q in (query ?: "").split("&")) {
+                val queryWithValue = q.split("=")
+                map[queryWithValue[0]] =
+                    map.getOrElse(queryWithValue[0]) { setOf() } + setOf(if (queryWithValue.size > 1) queryWithValue[1] else null)
+            }
 
-    val nextPage: Int
-        get() = if (isRefresh) 1 * initialPageMultiplier else next?.run {
-            Regex(".+(?<page>[Pp][Aa][Gg][Ee]=\\d+).*").find(next)?.destructured?.component1()
-                ?.let {
-                    Regex("\\d+").find(it)?.value
-                }?.toIntOrNull() ?: 1
-        } ?: 1
-
-    override fun toString(): String = JSON_CONVERTER.toJson(this)
-
-    companion object {
-        const val DEFAULT_PAGE_SIZE = 30
-        fun <T> fromJson(json: String?) = if (json.isNullOrBlank()) PagedData<T>() else {
-            JSON_CONVERTER.fromJson(json, object : TypeToken<PagedData<T>>() {}.type)
+            return map.toMap()["page"]?.maxByOrNull { it ?: "" }?.toIntOrNull()
         }
+
+        val nUri = URI.create(next ?: "")
+        val pUri = URI.create(previous ?: "")
+        val endpoint = when {
+            nUri.path.isNotBlank() -> nUri.path
+            pUri.path.isNotBlank() -> pUri.path
+            else -> defaultEndpoint
+        }
+        return RemoteKey(endpoint, getLatestPage(pUri.query), getLatestPage(nUri.query), count)
     }
 }

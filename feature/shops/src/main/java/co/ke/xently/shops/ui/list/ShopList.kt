@@ -3,7 +3,6 @@ package co.ke.xently.shops.ui.list
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -18,9 +17,15 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.paging.LoadState
+import androidx.paging.PagingConfig
+import androidx.paging.compose.LazyPagingItems
+import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.items
 import co.ke.xently.data.Shop
 import co.ke.xently.feature.theme.XentlyTheme
 import co.ke.xently.shops.R
+import kotlinx.coroutines.launch
 import kotlin.random.Random
 
 @Composable
@@ -33,9 +38,10 @@ internal fun ShopListScreen(
     onNavigationIconClicked: (() -> Unit) = {},
     onAddShopClicked: (() -> Unit) = {},
 ) {
-    val shopListResult by viewModel.shopListResult.collectAsState()
+    val config = PagingConfig(20, enablePlaceholders = false)
+    val items = viewModel.getPagingData(config).collectAsLazyPagingItems()
     ShopListScreen(
-        shopListResult,
+        items,
         modifier = modifier,
         onItemClicked = onItemClicked,
         onProductsClicked = onProductsClicked,
@@ -47,7 +53,7 @@ internal fun ShopListScreen(
 
 @Composable
 private fun ShopListScreen(
-    shopListResult: Result<List<Shop>?>,
+    pagingItems: LazyPagingItems<Shop>,
     modifier: Modifier = Modifier,
     onItemClicked: ((id: Long) -> Unit) = {},
     onProductsClicked: ((id: Long) -> Unit) = {},
@@ -55,6 +61,9 @@ private fun ShopListScreen(
     onNavigationIconClicked: (() -> Unit) = {},
     onAddShopClicked: (() -> Unit) = {},
 ) {
+    val scaffoldState = rememberScaffoldState()
+    val coroutineScope = rememberCoroutineScope()
+    val genericErrorMessage = stringResource(R.string.fs_generic_error_message)
     Scaffold(
         topBar = {
             TopAppBar(
@@ -81,51 +90,60 @@ private fun ShopListScreen(
                     )
                 )
             }
-        }
+        },
     ) {
-        if (shopListResult.isSuccess) {
-            val shopList = shopListResult.getOrThrow()
-            when {
-                shopList == null -> {
-                    Box(modifier = modifier, contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator()
-                    }
+        when (val refresh = pagingItems.loadState.refresh) {
+            is LoadState.Loading -> {
+                return@Scaffold Box(modifier = modifier, contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
                 }
-                shopList.isEmpty() -> {
-                    Box(modifier = modifier, contentAlignment = Alignment.Center) {
+            }
+            is LoadState.Error -> {
+                return@Scaffold Box(modifier = modifier, contentAlignment = Alignment.Center) {
+                    Text(refresh.error.localizedMessage ?: genericErrorMessage)
+                }
+            }
+            is LoadState.NotLoading -> {
+                if (pagingItems.itemCount == 0) {
+                    return@Scaffold Box(modifier = modifier, contentAlignment = Alignment.Center) {
                         Text(text = stringResource(id = R.string.fs_empty_shop_list))
                     }
                 }
-                else -> {
-                    LazyColumn(
-                        modifier = modifier,
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        items(shopList) {
-                            ShopListItem(
-                                it,
-                                modifier = Modifier.fillMaxWidth(),
-                                onItemClicked = onItemClicked,
-                                onProductsClicked = onProductsClicked,
-                                onAddressesClicked = onAddressesClicked,
-                            )
-                        }
-                    }
-                }
             }
-        } else {
-            Box(contentAlignment = Alignment.Center, modifier = modifier) {
-                Text(
-                    text = shopListResult.exceptionOrNull()?.localizedMessage
-                        ?: stringResource(R.string.fs_generic_error_message)
-                )
+        }
+
+        LazyColumn(modifier = modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            items(pagingItems) {
+                if (it != null) {
+                    ShopListItem(
+                        it,
+                        modifier = Modifier.fillMaxWidth(),
+                        onItemClicked = onItemClicked,
+                        onProductsClicked = onProductsClicked,
+                        onAddressesClicked = onAddressesClicked,
+                    )
+                } // TODO: Show placeholders on null products...
+            }
+            when (val result = pagingItems.loadState.append) {
+                is LoadState.Loading -> item {
+                    CircularProgressIndicator(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .wrapContentWidth(Alignment.CenterHorizontally)
+                    )
+                }
+                is LoadState.Error -> coroutineScope.launch {
+                    scaffoldState.snackbarHostState.showSnackbar(result.error.localizedMessage
+                        ?: genericErrorMessage)
+                }
+                is LoadState.NotLoading -> Unit
             }
         }
     }
 }
 
 @Composable
-fun ShopListItem(
+private fun ShopListItem(
     shop: Shop,
     modifier: Modifier = Modifier,
     showPopupMenu: Boolean = false,
@@ -213,7 +231,7 @@ fun ShopListItem(
 
 @Preview("Shop item", showBackground = true)
 @Composable
-fun ShopListItemPreview() {
+private fun ShopListItemPreview() {
     XentlyTheme {
         ShopListItem(
             modifier = Modifier.fillMaxWidth(),
@@ -229,7 +247,7 @@ fun ShopListItemPreview() {
 
 @Preview("Shop item with popup menu showing", showBackground = true)
 @Composable
-fun ShopListItemPopupMenuShowingPreview() {
+private fun ShopListItemPopupMenuShowingPreview() {
     XentlyTheme {
         ShopListItem(
             modifier = Modifier.fillMaxWidth(),
@@ -240,43 +258,6 @@ fun ShopListItemPopupMenuShowingPreview() {
                 productsCount = Random.nextInt(0, 500),
                 addressesCount = Random.nextInt(0, 50),
             ),
-        )
-    }
-}
-
-@Preview(name = "Empty shop list")
-@Composable
-fun ShopListEmptyPreview() {
-    XentlyTheme {
-        ShopListScreen(
-            modifier = Modifier.fillMaxSize(),
-            shopListResult = Result.success(emptyList())
-        )
-    }
-}
-
-@Preview(name = "Null shop list")
-@Composable
-fun ShopListNullPreview() {
-    XentlyTheme {
-        ShopListScreen(modifier = Modifier.fillMaxSize(), shopListResult = Result.success(null))
-    }
-}
-
-@Preview(name = "Non empty shop list")
-@Composable
-fun ShopListNonEmptyListPreview() {
-    XentlyTheme {
-        ShopListScreen(
-            modifier = Modifier.fillMaxSize(),
-            shopListResult = Result.success(List(20) {
-                Shop(
-                    name = "Shop #${it + 1}",
-                    taxPin = "P0001${it + 1}1222B",
-                    productsCount = Random.nextInt(0, 500),
-                    addressesCount = Random.nextInt(0, 50),
-                )
-            }),
         )
     }
 }

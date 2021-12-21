@@ -50,15 +50,19 @@ android {
 
 dependencies {
     implementation project(path: ":common")
+    // Only needed by `TaskResult` flow utility
+    implementation project(path: ':data')
     implementation project(path: ':data:source:remote')
     implementation project(path: ':data:source:local')
+
+    api "com.google.android.material:material:1.4.0"
 
     // DI
     implementation "com.google.dagger:hilt-android:$hilt_version"
     kapt "com.google.dagger:hilt-compiler:$hilt_version"
 
     api "com.google.android.libraries.maps:maps:3.1.0-beta"
-    implementation 'com.google.maps.android:maps-v3-ktx:3.2.0'
+    implementation 'com.google.maps.android:maps-v3-ktx:3.3.0'
 
     constraints {
         // Volley is a transitive dependency of maps
@@ -67,20 +71,18 @@ dependencies {
         }
     }
 
-    implementation "com.google.android.gms:play-services-location:18.0.0"
-
-    // This is a transitive dependency to remote data source that's currently only needed by:
-    //  1. `sendRequest(...)` function declared in the remote data source module.
-    api "com.squareup.retrofit2:retrofit:$retrofit_version"
+    implementation 'com.google.android.gms:play-services-location:19.0.0'
 
     // Navigation
     api "androidx.navigation:navigation-compose:$navigation_version"
 
-    api 'androidx.hilt:hilt-navigation-compose:1.0.0-alpha03'
+    api "androidx.paging:paging-compose:1.0.0-alpha14"
+    api 'androidx.hilt:hilt-navigation-compose:1.0.0-rc01'
     // https://developer.android.com/jetpack/compose/libraries#viewmodel
     api "androidx.lifecycle:lifecycle-viewmodel-compose:$lifecycle_viewmodel_version"
     api "com.google.accompanist:accompanist-permissions:0.20.0"
     api "androidx.compose.material:material:$compose_version"
     api "androidx.compose.ui:ui-tooling-preview:$compose_version"
     debugApi "androidx.compose.ui:ui-tooling:$compose_version"
+    testImplementation 'junit:junit:4.13.2'
 }

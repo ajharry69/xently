@@ -9,7 +9,7 @@ import co.ke.xently.common.di.qualifiers.EncryptedSharedPreference
 import co.ke.xently.common.di.qualifiers.UnencryptedSharedPreference
 import co.ke.xently.common.ENCRYPTED_SHARED_PREFERENCE_KEY
 import co.ke.xently.common.UNENCRYPTED_SHARED_PREFERENCE_KEY
-import co.ke.xently.source.local.AssistantDatabase
+import co.ke.xently.source.local.Database
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -22,10 +22,10 @@ import javax.inject.Singleton
 object StorageModule {
     @Provides
     @Singleton
-    fun provideDatabase(@ApplicationContext context: Context): AssistantDatabase {
+    fun provideDatabase(@ApplicationContext context: Context): Database {
         return Room.databaseBuilder(
             context.applicationContext,
-            AssistantDatabase::class.java,
+            Database::class.java,
             "xently.db",
         ).fallbackToDestructiveMigration().build()
     }

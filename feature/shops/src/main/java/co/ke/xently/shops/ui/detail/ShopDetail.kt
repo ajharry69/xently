@@ -15,7 +15,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import co.ke.xently.data.Shop
-import co.ke.xently.feature.MAP_HEIGHT
+import co.ke.xently.data.TaskResult
+import co.ke.xently.data.TaskResult.Success
+import co.ke.xently.data.errorMessage
+import co.ke.xently.data.getOrNull
+import co.ke.xently.feature.utils.MAP_HEIGHT
 import co.ke.xently.feature.theme.XentlyTheme
 import co.ke.xently.feature.ui.GoogleMapView
 import co.ke.xently.shops.R
@@ -23,13 +27,13 @@ import kotlinx.coroutines.launch
 
 @Composable
 internal fun ShopDetailScreen(
+    id: Long?,
     modifier: Modifier = Modifier,
-    shopId: Long? = null,
     viewModel: ShopDetailViewModel = hiltViewModel(),
-    onNavigationIconClicked: (() -> Unit) = {},
+    onNavigationIconClicked: () -> Unit = {},
 ) {
-    shopId?.also {
-        if (it != Shop.DEFAULT_ID) viewModel.getShop(it)
+    id?.also {
+        if (it != Shop.DEFAULT_ID) viewModel.get(it)
     }
     val shopResult by viewModel.shopResult.collectAsState()
     ShopDetailScreen(
@@ -38,17 +42,17 @@ internal fun ShopDetailScreen(
         onNavigationIconClicked,
         viewModel::setLocationPermissionGranted,
     ) {
-        viewModel.addShop(it)
+        viewModel.add(it)
     }
 }
 
 @Composable
 private fun ShopDetailScreen(
     modifier: Modifier,
-    result: Result<Shop?>,
-    onNavigationIconClicked: (() -> Unit) = {},
-    onLocationPermissionChanged: ((Boolean) -> Unit) = {},
-    onAddShopClicked: ((Shop) -> Unit) = {},
+    result: TaskResult<Shop?>,
+    onNavigationIconClicked: () -> Unit = {},
+    onLocationPermissionChanged: (Boolean) -> Unit = {},
+    onAddShopClicked: (Shop) -> Unit = {},
 ) {
     val shop = result.getOrNull() ?: Shop()
     var name by remember(shop.id, shop.name) {
@@ -62,11 +66,8 @@ private fun ShopDetailScreen(
     )
     val (coroutineScope, scaffoldState) = Pair(rememberCoroutineScope(), rememberScaffoldState())
 
-    if (result.isFailure) {
-        val errorMessage =
-            result.exceptionOrNull()?.localizedMessage ?: stringResource(
-                id = R.string.fs_generic_error_message
-            )
+    if (result is TaskResult.Error) {
+        val errorMessage = result.errorMessage ?: stringResource(R.string.fs_generic_error_message)
         LaunchedEffect(shop.id, result, errorMessage) {
             coroutineScope.launch {
                 scaffoldState.snackbarHostState.showSnackbar(errorMessage)
@@ -108,7 +109,7 @@ private fun ShopDetailScreen(
                             )
                         },
                     )
-                    if (result.isSuccess && result.getOrThrow() == null && !shop.isDefaultID) {
+                    if (result is TaskResult.Loading) {
                         LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
                     }
                 }
@@ -162,7 +163,7 @@ fun ShopDetailPreview() {
     XentlyTheme {
         ShopDetailScreen(
             modifier = Modifier.fillMaxSize(),
-            result = Result.success(Shop(name = "Shop #1000", taxPin = "P000111222B")),
+            result = Success(Shop(name = "Shop #1000", taxPin = "P000111222B")),
         )
     }
 }
@@ -171,6 +172,6 @@ fun ShopDetailPreview() {
 @Composable
 fun ShopDetailOnNullPreview() {
     XentlyTheme {
-        ShopDetailScreen(modifier = Modifier.fillMaxSize(), result = Result.success(null))
+        ShopDetailScreen(modifier = Modifier.fillMaxSize(), result = Success(null))
     }
 }

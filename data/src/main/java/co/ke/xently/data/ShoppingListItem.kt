@@ -10,7 +10,7 @@ import java.util.*
 data class ShoppingListItem(
     @Exclude(SERIALIZATION)
     @PrimaryKey(autoGenerate = false)
-    val id: Long = -1,
+    val id: Long = DEFAULT_ID,
     val name: String = "",
     val unit: String = "piece",
     val unitQuantity: Float = 1f,
@@ -20,7 +20,14 @@ data class ShoppingListItem(
     @Exclude(SERIALIZATION)
     val naturalInput: String = "",
 ) {
+    val isDefaultID: Boolean
+        get() = id == DEFAULT_ID
+
     override fun toString() = if (naturalInput.isNotBlank()) naturalInput else {
         "${name.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.ROOT) else it.toString() }}, ${unitQuantity}${unit} - $purchaseQuantity"
+    }
+
+    companion object {
+        const val DEFAULT_ID = -1L
     }
 }

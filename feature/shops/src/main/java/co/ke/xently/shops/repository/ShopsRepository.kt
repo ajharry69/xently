@@ -1,76 +1,65 @@
 package co.ke.xently.shops.repository
 
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
 import co.ke.xently.common.Retry
 import co.ke.xently.common.di.qualifiers.coroutines.IODispatcher
 import co.ke.xently.data.Shop
-import co.ke.xently.source.local.daos.ShopsDao
+import co.ke.xently.data.TaskResult
+import co.ke.xently.data.getOrNull
+import co.ke.xently.data.getOrThrow
+import co.ke.xently.source.local.Database
 import co.ke.xently.source.remote.retryCatchIfNecessary
 import co.ke.xently.source.remote.sendRequest
 import co.ke.xently.source.remote.services.ShopService
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 internal class ShopsRepository @Inject constructor(
-    private val dao: ShopsDao,
+    private val database: Database,
     private val service: ShopService,
     @IODispatcher
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : IShopsRepository {
-    override fun addShop(shop: Shop) = Retry().run {
+    override fun add(shop: Shop) = Retry().run {
         flow {
-            emit(sendRequest(401) { service.addShop(shop) })
+            emit(sendRequest(401) { service.add(shop) })
         }.onEach {
-            dao.addShops(it.getOrThrow())
+            database.shopsDao.add(it.getOrThrow())
         }.retryCatchIfNecessary(this).flowOn(ioDispatcher)
     }
 
-    override fun updateShop(shop: Shop) = Retry().run {
+    override fun update(shop: Shop) = Retry().run {
         flow {
-            emit(sendRequest(401) { service.updateShop(shop.id, shop) })
+            emit(sendRequest(401) { service.update(shop.id, shop) })
         }.onEach {
-            dao.addShops(it.getOrThrow())
+            database.shopsDao.add(it.getOrThrow())
         }.retryCatchIfNecessary(this).flowOn(ioDispatcher)
     }
 
-    override fun getShop(id: Long) = Retry().run {
-        dao.getShop(id).map { shop ->
+    override fun get(id: Long) = Retry().run {
+        database.shopsDao.get(id).map { shop ->
             if (shop == null) {
-                sendRequest(401) { service.getShop(id) }.apply {
+                sendRequest(401) { service.get(id) }.apply {
                     getOrNull()?.also {
-                        dao.addShops(it)
+                        database.shopsDao.add(it)
                     }
                 }
             } else {
-                Result.success(shop)
+                TaskResult.Success(shop)
             }
         }.retryCatchIfNecessary(this).flowOn(ioDispatcher)
     }
 
-    override fun getShopList(remote: Boolean): Flow<Result<List<Shop>>> = Retry().run {
-        if (remote) {
-            flow { emit(sendRequest(401) { service.getShopList() }) }
-                .map { result ->
-                    result.mapCatching {
-                        it.results.apply {
-                            dao.addShops(*toTypedArray())
-                        }
-                    }
-                }
-                .retryCatchIfNecessary(this)
-                .flowOn(ioDispatcher)
-                .onCompletion {
-                    // Return cached records. Caveats:
-                    //  1. No error propagation
-                    if (it == null) emitAll(getShopList(false))
-                }
-        } else {
-            dao.getShopList().map { shoppingList ->
-                Result.success(shoppingList)
-            }
-        }
-    }
+    override fun get(config: PagingConfig) = Pager(
+        config = config,
+        remoteMediator = ShopsRemoteMediator(database, service),
+    ) { database.shopsDao.get() }
 }
