@@ -1,0 +1,13 @@
+<resources>
+    <string name="fa_signin_button_label">Sign In</string>
+    <string name="fa_signin_password_label">Password</string>
+    <string name="fa_signin_username_label">Email</string>
+    <string name="fa_signin_toolbar_title">@string/fa_signin_button_label</string>
+    <string name="fa_navigation_icon_content_description">Navigate back</string>
+    <string name="fs_generic_error_message">Sorry, an error was encountered</string>
+    <string name="fa_signup_username_label">Email</string>
+    <string name="fa_signup_password_label">Password</string>
+    <string name="fa_signup_toolbar_title">Sign up</string>
+    <string name="fa_signup_button_label">Sign up</string>
+    <string name="fa_toggle_password_visibility">Toggle password visibility</string>
+</resources>

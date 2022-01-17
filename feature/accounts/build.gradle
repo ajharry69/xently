@@ -1,5 +1,5 @@
 plugins {
-    id 'com.android.application'
+    id 'com.android.library'
     id 'kotlin-android'
     id 'kotlin-kapt'
     id 'dagger.hilt.android.plugin' // apply below kotlin-kapt
@@ -9,13 +9,13 @@ android {
     compileSdk 31
 
     defaultConfig {
-        applicationId "co.ke.xently"
         minSdk 21
         targetSdk 31
         versionCode 1
         versionName "1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        consumerProguardFiles "consumer-rules.pro"
         vectorDrawables {
             useSupportLibrary true
         }
@@ -34,37 +34,35 @@ android {
     kotlinOptions {
         jvmTarget = '1.8'
         useIR = true
+        freeCompilerArgs += [
+                "-Xopt-in=kotlin.RequiresOptIn",
+        ]
+    }
+    buildFeatures {
+        compose true
+    }
+    composeOptions {
+        kotlinCompilerExtensionVersion compose_version
     }
     packagingOptions {
+        pickFirsts += ["build-data.properties"]
         resources {
             excludes += '/META-INF/{AL2.0,LGPL2.1}'
-            pickFirsts += "build-data.properties"
         }
     }
 }
 
 dependencies {
-    implementation project(path: ':common')
-    implementation project(path: ":feature:shops")
-    implementation project(path: ":feature:accounts")
-    implementation project(path: ":feature:products")
-    implementation project(path: ":feature:shoppinglist")
-
+    implementation project(path: ":common")
+    implementation project(path: ":data")
+    implementation project(path: ":data:source:local")
+    implementation project(path: ":data:source:remote")
+    implementation project(path: ":feature")
     // DI
     implementation "com.google.dagger:hilt-android:$hilt_version"
     kapt "com.google.dagger:hilt-compiler:$hilt_version"
 
     testImplementation 'junit:junit:4.13.2'
-
     androidTestImplementation 'androidx.test.ext:junit:1.1.3'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
-    androidTestImplementation "androidx.compose.ui:ui-test-junit4:$compose_version"
-}
-
-kapt {
-    correctErrorTypes = true
-}
-
-hilt {
-    enableExperimentalClasspathAggregation = true
 }

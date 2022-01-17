@@ -66,6 +66,11 @@ class ShoppingListActivity : AppCompatActivity() {
                             startActivity(it)
                         }
                     },
+                    onSignoutMenuClicked = {
+                        Intent("co.ke.xently.action.ACCOUNTS").also {
+                            startActivity(it)
+                        }
+                    },
                 )
             }
         }
@@ -99,6 +104,7 @@ internal fun ShoppingListNavHost(
     navController: NavHostController = rememberNavController(),
     onShopMenuClicked: () -> Unit = {},
     onProductMenuClicked: () -> Unit = {},
+    onSignoutMenuClicked: () -> Unit = {},
 ) {
     NavHost(
         navController = navController,
@@ -124,6 +130,7 @@ internal fun ShoppingListNavHost(
                 onSeeAllClicked = { navController.navigate("shopping-list") },
                 onShopMenuClicked = onShopMenuClicked,
                 onProductMenuClicked = onProductMenuClicked,
+                onSignoutMenuClicked = onSignoutMenuClicked,
             )
         }
         composable("shopping-list") {
