@@ -8,10 +8,12 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import co.ke.xently.accounts.ui.signin.SignInScreen
 import co.ke.xently.accounts.ui.signup.SignUpScreen
 import co.ke.xently.feature.theme.XentlyTheme
@@ -42,24 +44,64 @@ internal fun ProductsNavHost(
     onNavigationIconClicked: () -> Unit,
 ) {
     NavHost(modifier = modifier, navController = navController, startDestination = "signin") {
-        composable("signin") {
+        val signInScreen: @Composable (NavBackStackEntry) -> Unit = {
             SignInScreen(
                 modifier = Modifier.fillMaxSize(),
+                username = it.arguments?.getString("username") ?: "",
+                password = it.arguments?.getString("password") ?: "",
                 onNavigationIconClicked = onNavigationIconClicked,
                 onSuccessfulSignIn = {
                     // TODO: Check if user is verified then navigate to verification screen if need be
                     onNavigationIconClicked()
                 },
+                onCreateAccountButtonClicked = { username, password ->
+                    navController.navigate("signup?username=${username}&password=${password}") {
+                        launchSingleTop = true
+                    }
+                },
+                onForgotPasswordButtonClicked = {
+                    // TODO: Navigate to request password reset screen...
+                },
             )
         }
-        composable("signup") {
+        composable("signin", content = signInScreen)
+        composable(
+            "signin?username={username}&password={password}",
+            listOf(
+                navArgument("username") {
+                    defaultValue = ""
+                },
+                navArgument("password") {
+                    defaultValue = ""
+                },
+            ),
+            content = signInScreen,
+        )
+        composable(
+            "signup?username={username}&password={password}",
+            listOf(
+                navArgument("username") {
+                    defaultValue = ""
+                },
+                navArgument("password") {
+                    defaultValue = ""
+                },
+            ),
+        ) {
             SignUpScreen(
                 modifier = Modifier.fillMaxSize(),
+                username = it.arguments?.getString("username") ?: "",
+                password = it.arguments?.getString("password") ?: "",
                 onNavigationIconClicked = onNavigationIconClicked,
                 onSuccessfulSignUp = {
                     // TODO: Check if user is verified then navigate to verification screen if need be
                     onNavigationIconClicked()
                 },
+                onSignInButtonClicked = { username, password ->
+                    navController.navigate("signin?username=${username}&password=${password}") {
+                        launchSingleTop = true
+                    }
+                }
             )
         }
     }

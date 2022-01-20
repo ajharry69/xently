@@ -10,4 +10,7 @@
     <string name="fa_signup_toolbar_title">Sign up</string>
     <string name="fa_signup_button_label">Sign up</string>
     <string name="fa_toggle_password_visibility">Toggle password visibility</string>
+    <string name="fa_signin_signup_button_label">CREATE AN ACCOUNT</string>
+    <string name="fa_signin_forgot_password_button_label">Forgot password?</string>
+    <string name="fa_signup_signin_button_label">SIGN IN</string>
 </resources>

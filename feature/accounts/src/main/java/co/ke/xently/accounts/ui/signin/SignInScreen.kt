@@ -1,10 +1,7 @@
 package co.ke.xently.accounts.ui.signin
 
-import android.util.Log
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -17,6 +14,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.*
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import co.ke.xently.accounts.R
@@ -28,18 +26,26 @@ import kotlinx.coroutines.launch
 @Composable
 internal fun SignInScreen(
     modifier: Modifier = Modifier,
+    username: String = "",
+    password: String = "",
     viewModel: SignInViewModel = hiltViewModel(),
     onNavigationIconClicked: () -> Unit = {},
+    onForgotPasswordButtonClicked: () -> Unit = {},
+    onCreateAccountButtonClicked: (String, String) -> Unit = { _, _ -> },
     onSuccessfulSignIn: (User) -> Unit = {},
 ) {
     val result by viewModel.signInResult.collectAsState()
     SignInScreen(
         modifier,
         result,
+        username,
+        password,
         onNavigationIconClicked,
         onSuccessfulSignIn,
-    ) { username, password ->
-        viewModel.signIn(username, password)
+        onForgotPasswordButtonClicked,
+        onCreateAccountButtonClicked,
+    ) { uname, pword ->
+        viewModel.signIn(uname, pword)
     }
 }
 
@@ -47,12 +53,16 @@ internal fun SignInScreen(
 private fun SignInScreen(
     modifier: Modifier,
     result: TaskResult<User>,
-    onNavigationIconClicked: () -> Unit,
-    onSuccessfulSignIn: (User) -> Unit,
-    onSignInClicked: (String, String) -> Unit,
+    username: String = "",
+    password: String = "",
+    onNavigationIconClicked: () -> Unit = {},
+    onSuccessfulSignIn: (User) -> Unit = {},
+    onForgotPasswordButtonClicked: () -> Unit = {},
+    onCreateAccountButtonClicked: (String, String) -> Unit = { _, _ -> },
+    onSignInClicked: (String, String) -> Unit = { _, _ -> },
 ) {
-    var username by remember { mutableStateOf(TextFieldValue("")) }
-    var password by remember { mutableStateOf(TextFieldValue("")) }
+    var uname by remember { mutableStateOf(TextFieldValue(username)) }
+    var pword by remember { mutableStateOf(TextFieldValue(password)) }
     var isPasswordVisible by remember { mutableStateOf(false) }
 
     val (coroutineScope, scaffoldState) = Pair(rememberCoroutineScope(), rememberScaffoldState())
@@ -90,48 +100,88 @@ private fun SignInScreen(
                     LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
                 }
             }
-            Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
-                TextField(
-                    value = username,
-                    singleLine = true,
-                    onValueChange = { username = it },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp)
-                        .padding(top = 16.dp),
-                    label = { Text(text = stringResource(R.string.fa_signin_username_label)) },
-                    keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Email,
-                        imeAction = ImeAction.Next),
-                )
-                Spacer(modifier = Modifier.padding(vertical = 8.dp))
-                TextField(
-                    value = password,
-                    singleLine = true,
-                    onValueChange = { password = it },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                    label = { Text(text = stringResource(R.string.fa_signin_password_label)) },
-                    keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Password),
-                    visualTransformation = if (isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                    trailingIcon = {
-                        IconButton(onClick = { isPasswordVisible = !isPasswordVisible }) {
-                            Icon(painterResource(if (isPasswordVisible) R.drawable.ic_password_visible else R.drawable.ic_password_invisible),
-                                contentDescription = stringResource(R.string.fa_toggle_password_visibility))
+            Column {
+                Column(modifier = Modifier
+                    .verticalScroll(rememberScrollState())
+                    .weight(1f)) {
+                    TextField(
+                        value = uname,
+                        singleLine = true,
+                        onValueChange = { uname = it },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp)
+                            .padding(top = 16.dp),
+                        label = { Text(text = stringResource(R.string.fa_signin_username_label)) },
+                        keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Email,
+                            imeAction = ImeAction.Next),
+                    )
+                    Spacer(modifier = Modifier.padding(vertical = 8.dp))
+                    TextField(
+                        value = pword,
+                        singleLine = true,
+                        onValueChange = { pword = it },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp),
+                        label = { Text(text = stringResource(R.string.fa_signin_password_label)) },
+                        keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Password),
+                        visualTransformation = if (isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                        trailingIcon = {
+                            IconButton(onClick = { isPasswordVisible = !isPasswordVisible }) {
+                                Icon(painterResource(if (isPasswordVisible) R.drawable.ic_password_visible else R.drawable.ic_password_invisible),
+                                    contentDescription = stringResource(R.string.fa_toggle_password_visibility))
+                            }
+                        }
+                    )
+                    Spacer(modifier = Modifier.padding(vertical = 8.dp))
+                    Row(modifier = Modifier.padding(horizontal = 16.dp)) {
+                        Box(modifier = Modifier.weight(1f))
+                        TextButton(onForgotPasswordButtonClicked) {
+                            Text(stringResource(R.string.fa_signin_forgot_password_button_label))
                         }
                     }
-                )
-                Spacer(modifier = Modifier.padding(vertical = 8.dp))
-                Button(
-                    enabled = arrayOf(username, password).all { it.text.isNotBlank() },
+                    Spacer(modifier = Modifier.padding(vertical = 4.dp))
+                    Button(
+                        enabled = arrayOf(uname, pword).all { it.text.isNotBlank() },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp),
+                        onClick = { onSignInClicked(uname.text, pword.text) }
+                    ) {
+                        Text(stringResource(R.string.fa_signin_button_label).uppercase())
+                    }
+                }
+                TextButton(
+                    { onCreateAccountButtonClicked(uname.text, pword.text) },
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                    onClick = { onSignInClicked(username.text, password.text) }
+                        .padding(16.dp)
+                        .fillMaxWidth(),
+                    border = BorderStroke(1.dp,
+                        MaterialTheme.colors.onBackground.copy(alpha = 0.2f)),
                 ) {
-                    Text(stringResource(R.string.fa_signin_button_label).uppercase())
+                    Text(text = stringResource(R.string.fa_signin_signup_button_label))
                 }
             }
         }
     }
+}
+
+@Preview
+@Composable
+private fun SignInScreenLoadingPreview() {
+    SignInScreen(Modifier.fillMaxSize(), TaskResult.Loading)
+}
+
+@Preview
+@Composable
+private fun SignInScreenErrorPreview() {
+    SignInScreen(Modifier.fillMaxSize(),
+        TaskResult.Error("Incorrect username or password"))
+}
+
+@Preview
+@Composable
+private fun SignInScreenSuccessPreview() {
+    SignInScreen(Modifier.fillMaxSize(), TaskResult.Success(User.default()))
 }
