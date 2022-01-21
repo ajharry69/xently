@@ -5,6 +5,6 @@ import co.ke.xently.data.User
 import kotlinx.coroutines.flow.Flow
 
 interface IAccountRepository {
-    fun signIn(basicAuthData: String): Flow<TaskResult<User>>
+    fun signIn(authHeaderData: String): Flow<TaskResult<User>>
     fun signUp(user: User): Flow<TaskResult<User>>
 }

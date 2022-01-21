@@ -3,6 +3,7 @@ package co.ke.xently.accounts.ui.signin
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
@@ -11,6 +12,7 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.*
@@ -52,7 +54,7 @@ internal fun SignInScreen(
 @Composable
 private fun SignInScreen(
     modifier: Modifier,
-    result: TaskResult<User>,
+    result: TaskResult<User?>,
     username: String = "",
     password: String = "",
     onNavigationIconClicked: () -> Unit = {},
@@ -74,11 +76,13 @@ private fun SignInScreen(
                 scaffoldState.snackbarHostState.showSnackbar(errorMessage)
             }
         }
-    } else if (result is TaskResult.Success) {
+    } else if (result is TaskResult.Success && result.data != null) {
         SideEffect {
-            onSuccessfulSignIn(result.data)
+            onSuccessfulSignIn(result.data!!)
         }
     }
+
+    val focusManager = LocalFocusManager.current
 
     Scaffold(scaffoldState = scaffoldState) {
         Column(modifier = modifier) {
@@ -126,6 +130,9 @@ private fun SignInScreen(
                             .padding(horizontal = 16.dp),
                         label = { Text(text = stringResource(R.string.fa_signin_password_label)) },
                         keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Password),
+                        keyboardActions = KeyboardActions(onDone = {
+                            focusManager.clearFocus()
+                        }),
                         visualTransformation = if (isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                         trailingIcon = {
                             IconButton(onClick = { isPasswordVisible = !isPasswordVisible }) {
@@ -147,7 +154,10 @@ private fun SignInScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 16.dp),
-                        onClick = { onSignInClicked(uname.text, pword.text) }
+                        onClick = {
+                            focusManager.clearFocus()
+                            onSignInClicked(uname.text, pword.text)
+                        }
                     ) {
                         Text(stringResource(R.string.fa_signin_button_label).uppercase())
                     }

@@ -1,8 +1,12 @@
 package co.ke.xently.accounts.repository
 
-import android.util.Log
+import android.content.SharedPreferences
+import androidx.core.content.edit
 import co.ke.xently.common.Retry
+import co.ke.xently.common.TOKEN_VALUE_SHARED_PREFERENCE_KEY
+import co.ke.xently.common.di.qualifiers.EncryptedSharedPreference
 import co.ke.xently.common.di.qualifiers.coroutines.IODispatcher
+import co.ke.xently.data.TaskResult
 import co.ke.xently.data.User
 import co.ke.xently.data.getOrThrow
 import co.ke.xently.source.local.Database
@@ -21,15 +25,24 @@ import javax.inject.Singleton
 class AccountRepository @Inject constructor(
     private val service: AccountService,
     private val database: Database,
+    @EncryptedSharedPreference
+    private val preferences: SharedPreferences,
     @IODispatcher
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : IAccountRepository {
-    override fun signIn(basicAuthData: String) = Retry().run {
-        Log.d("okhttp.OkHttpClient", "SignInScreen: <$basicAuthData>")
+    private suspend fun saveLocally(it: TaskResult<User>) {
+        val user = it.getOrThrow()
+        database.accountsDao.save(user)
+        preferences.edit(commit = true) {
+            putString(TOKEN_VALUE_SHARED_PREFERENCE_KEY, user.token)
+        }
+    }
+
+    override fun signIn(authHeaderData: String) = Retry().run {
         flow {
-            emit(sendRequest(401) { service.signIn(basicAuthData) })
+            emit(sendRequest(401) { service.signIn(authHeaderData) })
         }.onEach {
-            database.accountsDao.save(it.getOrThrow())
+            if (it is TaskResult.Success) saveLocally(it)
         }.retryCatchIfNecessary(this).flowOn(ioDispatcher)
     }
 
@@ -37,7 +50,7 @@ class AccountRepository @Inject constructor(
         flow {
             emit(sendRequest(401) { service.signUp(user) })
         }.onEach {
-            database.accountsDao.save(it.getOrThrow())
+            if (it is TaskResult.Success) saveLocally(it)
         }.retryCatchIfNecessary(this).flowOn(ioDispatcher)
     }
 }

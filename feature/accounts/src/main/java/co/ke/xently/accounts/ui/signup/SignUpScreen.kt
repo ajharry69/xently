@@ -3,6 +3,7 @@ package co.ke.xently.accounts.ui.signup
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
@@ -11,6 +12,7 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.*
@@ -51,7 +53,7 @@ internal fun SignUpScreen(
 @Composable
 private fun SignUpScreen(
     modifier: Modifier,
-    result: TaskResult<User>,
+    result: TaskResult<User?>,
     username: String = "",
     password: String = "",
     onNavigationIconClicked: () -> Unit = {},
@@ -77,11 +79,14 @@ private fun SignUpScreen(
                 scaffoldState.snackbarHostState.showSnackbar(errorMessage)
             }
         }
-    } else if (result is TaskResult.Success) {
+    } else if (result is TaskResult.Success && result.data != null) {
         SideEffect {
-            onSuccessfulSignUp(result.data)
+            uname = uname.copy(text = "")
+            pword = pword.copy(text = "")
+            onSuccessfulSignUp(result.data!!)
         }
     }
+    val focusManager = LocalFocusManager.current
 
     Scaffold(scaffoldState = scaffoldState) {
         Column(modifier = modifier) {
@@ -128,7 +133,9 @@ private fun SignUpScreen(
                             .fillMaxWidth()
                             .padding(horizontal = 16.dp),
                         label = { Text(text = stringResource(R.string.fa_signup_password_label)) },
-                        keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Password),
+                        keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Password,
+                            imeAction = ImeAction.Done),
+                        keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
                         visualTransformation = if (isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                         trailingIcon = {
                             IconButton(onClick = { isPasswordVisible = !isPasswordVisible }) {
@@ -144,6 +151,7 @@ private fun SignUpScreen(
                             .fillMaxWidth()
                             .padding(horizontal = 16.dp),
                         onClick = {
+                            focusManager.clearFocus()
                             onSignUpClicked(user.copy(email = uname.text, password = pword.text))
                         }
                     ) {

@@ -17,9 +17,9 @@ import javax.inject.Inject
 internal class SignUpViewModel @Inject constructor(
     private val repository: IAccountRepository,
 ) : ViewModel() {
-    private val _signUpResult: MutableStateFlow<TaskResult<User>> =
-        MutableStateFlow(TaskResult.Loading)
-    val signUpResult: StateFlow<TaskResult<User>>
+    private val _signUpResult: MutableStateFlow<TaskResult<User?>> =
+        MutableStateFlow(TaskResult.Success(null))
+    val signUpResult: StateFlow<TaskResult<User?>>
         get() = _signUpResult
 
     fun signUp(user: User) {

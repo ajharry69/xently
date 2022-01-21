@@ -4,6 +4,7 @@ import java.text.DateFormat
 import java.text.SimpleDateFormat
 import java.util.*
 
+const val TAG = "Xently"
 const val ENCRYPTED_SHARED_PREFERENCE_KEY = "co.ke.xently.ENCRYPTED_SHARED_PREFERENCE_KEY"
 const val UNENCRYPTED_SHARED_PREFERENCE_KEY = "co.ke.xently.UNENCRYPTED_SHARED_PREFERENCE_KEY"
 const val TOKEN_VALUE_SHARED_PREFERENCE_KEY = "co.ke.xently.TOKEN_VALUE_SHARED_PREFERENCE_KEY"
