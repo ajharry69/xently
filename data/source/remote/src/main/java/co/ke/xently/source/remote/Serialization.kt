@@ -1,8 +1,11 @@
 package co.ke.xently.source.remote
 
+import android.net.Uri
 import co.ke.xently.common.Exclude
 import co.ke.xently.common.Exclude.During.*
 import com.google.gson.*
+import com.google.gson.stream.JsonReader
+import com.google.gson.stream.JsonWriter
 import java.text.DateFormat
 
 private fun getExclusionStrategy(during: Exclude.During = BOTH): ExclusionStrategy {
@@ -30,7 +33,17 @@ val JSON_CONVERTER: Gson = GsonBuilder()
     .serializeNulls()
     .setDateFormat(DateFormat.LONG)
     .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
-    /*.registerTypeAdapter(Id::class.java, IdTypeAdapter())
-    .setPrettyPrinting()
+    // https://www.javadoc.io/doc/com.google.code.gson/gson/2.8.0/com/google/gson/TypeAdapter.html
+    .registerTypeAdapter(Uri::class.java, object : TypeAdapter<Uri>() {
+        override fun write(out: JsonWriter?, value: Uri?) {
+            out?.value(value?.toString())
+        }
+
+        override fun read(`in`: JsonReader?): Uri? {
+            val uri = `in`?.nextString() ?: return null
+            return Uri.parse(uri)
+        }
+    }.nullSafe())
+    /*.setPrettyPrinting()
     .setVersion(1.0)*/
     .create()
