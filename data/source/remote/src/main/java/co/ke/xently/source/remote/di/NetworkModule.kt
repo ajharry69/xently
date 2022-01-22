@@ -48,7 +48,7 @@ object NetworkModule {
                         addHeader("Accept", "application/json${version}")
                     }
 
-                    if (request.header("Authorization") == null) {
+                    if (!isReleaseBuild() && request.header("Authorization") == null) {
                         preferences.getString(
                             TOKEN_VALUE_SHARED_PREFERENCE_KEY,
                             BuildConfig.API_DEFAULT_AUTH_TOKEN,
