@@ -10,10 +10,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import co.ke.xently.accounts.ui.password_reset.PasswordResetScreen
+import co.ke.xently.accounts.ui.password_reset.request.PasswordResetRequestScreen
 import co.ke.xently.accounts.ui.signin.SignInScreen
 import co.ke.xently.accounts.ui.signup.SignUpScreen
 import co.ke.xently.feature.theme.XentlyTheme
@@ -60,7 +63,7 @@ internal fun ProductsNavHost(
                     }
                 },
                 onForgotPasswordButtonClicked = {
-                    // TODO: Navigate to request password reset screen...
+                    navController.navigate("request-password-reset")
                 },
             )
         }
@@ -102,6 +105,38 @@ internal fun ProductsNavHost(
                         launchSingleTop = true
                     }
                 }
+            )
+        }
+        composable(
+            "request-password-reset?email={email}",
+            listOf(navArgument("email") { defaultValue = "" }),
+        ) {
+            PasswordResetRequestScreen(
+                modifier = Modifier.fillMaxSize(),
+                email = it.arguments?.getString("email") ?: "",
+                onNavigationIconClicked = onNavigationIconClicked,
+                onSuccessfulRequest = {
+                    navController.navigate("reset-password")
+                },
+            )
+        }
+        composable(
+            "reset-password?isChange={isChange}",
+            listOf(
+                navArgument("isChange") {
+                    defaultValue = false
+                    type = NavType.BoolType
+                },
+            ),
+        ) {
+            PasswordResetScreen(
+                modifier = Modifier.fillMaxSize(),
+                isChange = it.arguments?.getBoolean("isChange") ?: false,
+                onNavigationIconClicked = onNavigationIconClicked,
+                onSuccessfulReset = {
+                    navController.popBackStack("reset-password", true)
+                    // TODO: Navigate to home page... Above code may not be necessary if the `this` activity is finished when starting a new activity
+                },
             )
         }
     }

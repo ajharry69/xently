@@ -88,7 +88,7 @@ private fun SignUpScreen(
                 isPasswordError = it.isNotBlank()
             }
 
-        if (setOf(usernameError, passwordError).all { it.isBlank() }) {
+        if (setOf(isUsernameError, isPasswordError).all { false }) {
             val errorMessage =
                 result.errorMessage ?: stringResource(R.string.fs_generic_error_message)
             LaunchedEffect(result, errorMessage) {

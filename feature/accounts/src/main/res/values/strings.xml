@@ -13,4 +13,13 @@
     <string name="fa_signin_signup_button_label">CREATE AN ACCOUNT</string>
     <string name="fa_signin_forgot_password_button_label">Forgot password?</string>
     <string name="fa_signup_signin_button_label">SIGN IN</string>
+    <string name="fa_request_password_reset_email_label">Email*</string>
+    <string name="fa_request_password_reset_toolbar_title">Request password reset</string>
+    <string name="fa_request_password_reset_button_label">Request password reset</string>
+    <string name="fa_reset_password_old_password_label">Old password*</string>
+    <string name="fa_reset_password_toolbar_title">%1$s password</string>
+    <string name="fa_reset">Reset</string>
+    <string name="fa_change">Change</string>
+    <string name="fa_reset_password_new_password_label">New password*</string>
+    <string name="fa_reset_password_button_label">Reset password</string>
 </resources>

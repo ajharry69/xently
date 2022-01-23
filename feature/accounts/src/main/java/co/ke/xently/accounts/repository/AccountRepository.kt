@@ -2,6 +2,8 @@ package co.ke.xently.accounts.repository
 
 import android.content.SharedPreferences
 import androidx.core.content.edit
+import co.ke.xently.accounts.ui.password_reset.PasswordResetHttpException
+import co.ke.xently.accounts.ui.password_reset.request.PasswordResetRequestHttpException
 import co.ke.xently.accounts.ui.signin.SignUpHttpException
 import co.ke.xently.common.Retry
 import co.ke.xently.common.TOKEN_VALUE_SHARED_PREFERENCE_KEY
@@ -60,7 +62,7 @@ internal class AccountRepository @Inject constructor(
 
     override fun resetPassword(resetPassword: User.ResetPassword) = Retry().run {
         flow {
-            emit(sendRequest(401) {
+            emit(sendRequest(401, errorClass = PasswordResetHttpException::class.java) {
                 service.resetPassword(
                     database.accountsDao.getHistoricallyFirstUserId(),
                     resetPassword,
@@ -73,7 +75,7 @@ internal class AccountRepository @Inject constructor(
 
     override fun requestTemporaryPassword(email: String) = Retry().run {
         flow {
-            emit(sendRequest(401) {
+            emit(sendRequest(401, errorClass = PasswordResetRequestHttpException::class.java) {
                 service.requestTemporaryPassword(
                     database.accountsDao.getHistoricallyFirstUserId(),
                     "email" to email,
