@@ -78,6 +78,8 @@ private fun SignInScreen(
         }
     } else if (result is TaskResult.Success && result.data != null) {
         SideEffect {
+            uname = uname.copy(text = "")
+            pword = pword.copy(text = "")
             onSuccessfulSignIn(result.data!!)
         }
     }

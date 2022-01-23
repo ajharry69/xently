@@ -2,6 +2,7 @@ package co.ke.xently.accounts.repository
 
 import android.content.SharedPreferences
 import androidx.core.content.edit
+import co.ke.xently.accounts.ui.signin.SignUpHttpException
 import co.ke.xently.common.Retry
 import co.ke.xently.common.TOKEN_VALUE_SHARED_PREFERENCE_KEY
 import co.ke.xently.common.di.qualifiers.EncryptedSharedPreference
@@ -17,12 +18,13 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class AccountRepository @Inject constructor(
+internal class AccountRepository @Inject constructor(
     private val service: AccountService,
     private val database: Database,
     @EncryptedSharedPreference
@@ -48,9 +50,71 @@ class AccountRepository @Inject constructor(
 
     override fun signUp(user: User) = Retry().run {
         flow {
-            emit(sendRequest(401) { service.signUp(user) })
+            emit(sendRequest(401, errorClass = SignUpHttpException::class.java) {
+                service.signUp(user)
+            })
         }.onEach {
             if (it is TaskResult.Success) saveLocally(it)
+        }.retryCatchIfNecessary(this).flowOn(ioDispatcher)
+    }
+
+    override fun resetPassword(resetPassword: User.ResetPassword) = Retry().run {
+        flow {
+            emit(sendRequest(401) {
+                service.resetPassword(
+                    database.accountsDao.getHistoricallyFirstUserId(),
+                    resetPassword,
+                )
+            })
+        }.onEach {
+            if (it is TaskResult.Success) saveLocally(it)
+        }.retryCatchIfNecessary(this).flowOn(ioDispatcher)
+    }
+
+    override fun requestTemporaryPassword(email: String) = Retry().run {
+        flow {
+            emit(sendRequest(401) {
+                service.requestTemporaryPassword(
+                    database.accountsDao.getHistoricallyFirstUserId(),
+                    "email" to email,
+                )
+            })
+        }.onEach {
+            if (it is TaskResult.Success) saveLocally(it)
+        }.retryCatchIfNecessary(this).flowOn(ioDispatcher)
+    }
+
+    override fun requestVerificationCode() = Retry().run {
+        flow {
+            emit(sendRequest(401) {
+                service.requestVerificationCode(database.accountsDao.getHistoricallyFirstUserId())
+            })
+        }.onEach {
+            if (it is TaskResult.Success) saveLocally(it)
+        }.retryCatchIfNecessary(this).flowOn(ioDispatcher)
+    }
+
+    override fun verifyAccount(code: String) = Retry().run {
+        flow {
+            emit(sendRequest(401) {
+                service.verify(
+                    database.accountsDao.getHistoricallyFirstUserId(),
+                    "code" to code,
+                )
+            })
+        }.onEach {
+            if (it is TaskResult.Success) saveLocally(it)
+        }.retryCatchIfNecessary(this).flowOn(ioDispatcher)
+    }
+
+    override fun signout() = Retry().run {
+        flow {
+            emit(database.accountsDao.getHistoricallyFirstUserId())
+        }.map {
+            database.accountsDao.delete(it)
+            sendRequest(401) {
+                service.signout(it)
+            }
         }.retryCatchIfNecessary(this).flowOn(ioDispatcher)
     }
 }

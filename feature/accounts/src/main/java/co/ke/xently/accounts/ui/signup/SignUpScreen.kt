@@ -20,10 +20,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import co.ke.xently.accounts.R
+import co.ke.xently.accounts.ui.signin.SignUpHttpException
 import co.ke.xently.data.TaskResult
 import co.ke.xently.data.User
 import co.ke.xently.data.errorMessage
 import co.ke.xently.data.getOrNull
+import co.ke.xently.feature.ui.TextFieldErrorText
 import kotlinx.coroutines.launch
 
 @Composable
@@ -62,21 +64,37 @@ private fun SignUpScreen(
     onSignUpClicked: (User) -> Unit = {},
 ) {
     val user = result.getOrNull() ?: User.default()
-    var uname by remember(user.id,
-        user.email,
-        username) { mutableStateOf(TextFieldValue(user.email.ifBlank { username })) }
+    var uname by remember(user.id, user.email, username) {
+        mutableStateOf(TextFieldValue(user.email.ifBlank { username }))
+    }
     var pword by remember(user.id, user.password, password) {
         mutableStateOf(TextFieldValue(user.password ?: password))
     }
+    var usernameError by remember { mutableStateOf("") }
+    var isUsernameError by remember { mutableStateOf(false) }
+    var passwordError by remember { mutableStateOf("") }
+    var isPasswordError by remember { mutableStateOf(false) }
     var isPasswordVisible by remember { mutableStateOf(false) }
 
     val (coroutineScope, scaffoldState) = Pair(rememberCoroutineScope(), rememberScaffoldState())
 
     if (result is TaskResult.Error) {
-        val errorMessage = result.errorMessage ?: stringResource(R.string.fs_generic_error_message)
-        LaunchedEffect(result, errorMessage) {
-            coroutineScope.launch {
-                scaffoldState.snackbarHostState.showSnackbar(errorMessage)
+        usernameError =
+            ((result.error as? SignUpHttpException)?.email?.joinToString("\n") ?: "").also {
+                isUsernameError = it.isNotBlank()
+            }
+        passwordError =
+            ((result.error as? SignUpHttpException)?.password?.joinToString("\n") ?: "").also {
+                isPasswordError = it.isNotBlank()
+            }
+
+        if (setOf(usernameError, passwordError).all { it.isBlank() }) {
+            val errorMessage =
+                result.errorMessage ?: stringResource(R.string.fs_generic_error_message)
+            LaunchedEffect(result, errorMessage) {
+                coroutineScope.launch {
+                    scaffoldState.snackbarHostState.showSnackbar(errorMessage)
+                }
             }
         }
     } else if (result is TaskResult.Success && result.data != null) {
@@ -112,38 +130,58 @@ private fun SignUpScreen(
                 Column(modifier = Modifier
                     .verticalScroll(rememberScrollState())
                     .weight(1f)) {
-                    TextField(
-                        value = uname,
-                        singleLine = true,
-                        onValueChange = { uname = it },
+                    Column(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 16.dp)
-                            .padding(top = 16.dp),
-                        label = { Text(text = stringResource(R.string.fa_signup_username_label)) },
-                        keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Email,
-                            imeAction = ImeAction.Next),
-                    )
+                            .padding(top = 16.dp)) {
+                        TextField(
+                            value = uname,
+                            singleLine = true,
+                            isError = isUsernameError,
+                            modifier = Modifier.fillMaxWidth(),
+                            onValueChange = {
+                                uname = it
+                                isUsernameError = false
+                            },
+                            label = { Text(text = stringResource(R.string.fa_signup_username_label)) },
+                            keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Email,
+                                imeAction = ImeAction.Next),
+                        )
+                        if (isUsernameError) {
+                            TextFieldErrorText(usernameError, Modifier.fillMaxWidth())
+                        }
+                    }
                     Spacer(modifier = Modifier.padding(vertical = 8.dp))
-                    TextField(
-                        value = pword,
-                        singleLine = true,
-                        onValueChange = { pword = it },
+                    Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 16.dp),
-                        label = { Text(text = stringResource(R.string.fa_signup_password_label)) },
-                        keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Password,
-                            imeAction = ImeAction.Done),
-                        keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
-                        visualTransformation = if (isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                        trailingIcon = {
-                            IconButton(onClick = { isPasswordVisible = !isPasswordVisible }) {
-                                Icon(painterResource(if (isPasswordVisible) R.drawable.ic_password_visible else R.drawable.ic_password_invisible),
-                                    contentDescription = stringResource(R.string.fa_toggle_password_visibility))
+                            .padding(horizontal = 16.dp)) {
+                        TextField(
+                            value = pword,
+                            singleLine = true,
+                            isError = isPasswordError,
+                            onValueChange = {
+                                pword = it
+                                isPasswordError = false
+                                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            label = { Text(text = stringResource(R.string.fa_signup_password_label)) },
+                            keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Password,
+                                imeAction = ImeAction.Done),
+                            keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
+                            visualTransformation = if (isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                            trailingIcon = {
+                                IconButton(onClick = { isPasswordVisible = !isPasswordVisible }) {
+                                    Icon(painterResource(if (isPasswordVisible) R.drawable.ic_password_visible else R.drawable.ic_password_invisible),
+                                        contentDescription = stringResource(R.string.fa_toggle_password_visibility))
+                                }
                             }
+                        )
+                        if (isPasswordError) {
+                            TextFieldErrorText(passwordError, Modifier.fillMaxWidth())
                         }
-                    )
+                    }
                     Spacer(modifier = Modifier.padding(vertical = 8.dp))
                     Button(
                         enabled = arrayOf(uname, pword).all { it.text.isNotBlank() },

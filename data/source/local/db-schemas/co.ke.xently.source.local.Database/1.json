@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "31891c9224bd8f264093d66874a9ecf0",
+    "identityHash": "e799eef731018c4c47ad35cd7c969415",
     "entities": [
       {
         "tableName": "remote_keys",
@@ -88,7 +88,7 @@
       },
       {
         "tableName": "accounts",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `email` TEXT NOT NULL, `isVerified` INTEGER NOT NULL, `photo` TEXT, `token` TEXT, PRIMARY KEY(`id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `email` TEXT NOT NULL, `isVerified` INTEGER NOT NULL, `photo` TEXT, `token` TEXT, `timeRecorded` INTEGER NOT NULL, PRIMARY KEY(`id`))",
         "fields": [
           {
             "fieldPath": "id",
@@ -119,6 +119,12 @@
             "columnName": "token",
             "affinity": "TEXT",
             "notNull": false
+          },
+          {
+            "fieldPath": "timeRecorded",
+            "columnName": "timeRecorded",
+            "affinity": "INTEGER",
+            "notNull": true
           }
         ],
         "primaryKey": {
@@ -256,7 +262,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '31891c9224bd8f264093d66874a9ecf0')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'e799eef731018c4c47ad35cd7c969415')"
     ]
   }
 }

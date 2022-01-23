@@ -12,9 +12,9 @@ import java.net.ConnectException
 import java.net.SocketTimeoutException
 
 open class HttpException(
-    val detail: String? = null,
-    val errorCode: String? = null,
-    val errors: Map<String, HttpException> = mapOf(),
+    open val detail: String? = null,
+    open val errorCode: String? = null,
+    open val errors: Map<String, HttpException> = mapOf(),
 ) : RuntimeException() {
     override val message: String?
         get() = detail ?: super.message
@@ -51,7 +51,8 @@ suspend fun <T, E : HttpException> sendRequest(
                     errorBody!!.string(),
                     errorClass
                 )
-                if (exception.detail.isNullOrBlank()) HttpException(detail = response.message()) else exception
+                // if (exception.detail.isNullOrBlank()) HttpException(detail = response.message()) else exception
+                exception
             } catch (ex: IllegalStateException) {
                 HttpException(response.message())
             }

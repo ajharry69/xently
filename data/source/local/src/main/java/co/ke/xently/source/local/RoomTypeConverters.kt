@@ -15,9 +15,9 @@ object RoomTypeConverters {
 
     class UriConverter {
         @TypeConverter
-        fun uriToString(uri: Uri): String = uri.toString()
+        fun uriToString(uri: Uri?): String? = uri?.toString()
 
         @TypeConverter
-        fun stringToUri(uri: String): Uri = Uri.parse(uri)
+        fun stringToUri(uri: String?): Uri? = uri?.run { Uri.parse(this) }
     }
 }

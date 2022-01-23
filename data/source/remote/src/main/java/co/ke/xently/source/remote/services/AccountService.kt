@@ -15,7 +15,13 @@ interface AccountService {
     suspend fun signUp(@Body user: User): Response<User>
 
     @POST("accounts/{id}/verify-account/")
-    suspend fun verify(@Path("id") userId: Long, @Body codeValue: Pair<String, String>): Response<User>
+    suspend fun verify(
+        @Path("id") userId: Long,
+        @Body codeValue: Pair<String, String>,
+    ): Response<User>
+
+    @POST("accounts/{id}/request-verification-code/")
+    suspend fun requestVerificationCode(@Path("id") userId: Long): Response<User>
 
     @POST("accounts/{id}/request-temporary-password/")
     suspend fun requestTemporaryPassword(
@@ -24,7 +30,7 @@ interface AccountService {
     ): Response<User>
 
     @POST("accounts/{id}/reset-password/")
-    suspend fun requestPassword(
+    suspend fun resetPassword(
         @Path("id") userId: Long,
         @Body resetPassword: User.ResetPassword,
     ): Response<User>
