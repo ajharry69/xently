@@ -111,6 +111,9 @@ internal class AccountRepository @Inject constructor(
             emit(database.accountsDao.getHistoricallyFirstUserId())
         }.map {
             database.accountsDao.delete(it)
+            preferences.edit {
+                remove(TOKEN_VALUE_SHARED_PREFERENCE_KEY)
+            }
             sendRequest(401) {
                 service.signout(it)
             }
