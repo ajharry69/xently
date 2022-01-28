@@ -17,17 +17,14 @@ interface AccountService {
     @POST("accounts/{id}/verify-account/")
     suspend fun verify(
         @Path("id") userId: Long,
-        @Body codeValue: Pair<String, String>,
+        @Body codeValue: Map<String, String>,
     ): Response<User>
 
     @POST("accounts/{id}/request-verification-code/")
     suspend fun requestVerificationCode(@Path("id") userId: Long): Response<User>
 
-    @POST("accounts/{id}/request-temporary-password/")  // TODO: Fix need for path it's not making sense when requesting password reset
-    suspend fun requestTemporaryPassword(
-        @Path("id") userId: Long,
-        @Body emailValue: Pair<String, String>,
-    ): Response<User>
+    @POST("accounts/request-temporary-password/")
+    suspend fun requestTemporaryPassword(@Body emailValue: Map<String, String>): Response<User>
 
     @POST("accounts/{id}/reset-password/")
     suspend fun resetPassword(

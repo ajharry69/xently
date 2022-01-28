@@ -76,10 +76,7 @@ internal class AccountRepository @Inject constructor(
     override fun requestTemporaryPassword(email: String) = Retry().run {
         flow {
             emit(sendRequest(401, errorClass = PasswordResetRequestHttpException::class.java) {
-                service.requestTemporaryPassword(
-                    database.accountsDao.getHistoricallyFirstUserId(),
-                    "email" to email,
-                )
+                service.requestTemporaryPassword(mapOf("email" to email))
             })
         }.onEach {
             if (it is TaskResult.Success) saveLocally(it)
@@ -101,7 +98,7 @@ internal class AccountRepository @Inject constructor(
             emit(sendRequest(401) {
                 service.verify(
                     database.accountsDao.getHistoricallyFirstUserId(),
-                    "code" to code,
+                    mapOf("code" to code),
                 )
             })
         }.onEach {
