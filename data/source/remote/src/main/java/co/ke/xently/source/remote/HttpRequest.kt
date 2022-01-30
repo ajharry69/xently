@@ -12,12 +12,24 @@ import java.net.ConnectException
 import java.net.SocketTimeoutException
 
 open class HttpException(
-    open val detail: String? = null,
-    open val errorCode: String? = null,
-    open val errors: Map<String, HttpException> = mapOf(),
+    val detail: Any? = null,
+    val errorCode: String? = null,
 ) : RuntimeException() {
     override val message: String?
-        get() = detail ?: super.message
+        get() = when (detail) {
+            null -> {
+                super.message
+            }
+            is String -> {
+                detail
+            }
+            is List<*> -> {
+                detail.joinToString("\n")
+            }
+            else -> {
+                throw IllegalStateException("'detail' can only be a (nullable) String or List")
+            }
+        }
 }
 
 fun <T> Flow<TaskResult<T>>.retryCatchIfNecessary(retry: Retry) =
