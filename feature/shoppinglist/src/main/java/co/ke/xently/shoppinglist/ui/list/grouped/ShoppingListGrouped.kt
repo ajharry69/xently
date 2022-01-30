@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
@@ -36,6 +37,7 @@ internal fun GroupedShoppingListScreen(
     onSeeAllClicked: (group: Any) -> Unit = {},
     onShopMenuClicked: (() -> Unit) = {},
     onProductMenuClicked: (() -> Unit) = {},
+    onSignoutMenuClicked: (() -> Unit) = {},
 ) {
     val groupedShoppingListResult by viewModel.groupedShoppingListResult.collectAsState()
     val groupedShoppingListCount by viewModel.groupedShoppingListCount.collectAsState()
@@ -50,6 +52,7 @@ internal fun GroupedShoppingListScreen(
         onSeeAllClicked,
         onShopMenuClicked,
         onProductMenuClicked,
+        onSignoutMenuClicked,
     )
 }
 
@@ -64,6 +67,7 @@ private fun GroupedShoppingListScreen(
     onSeeAllClicked: (group: Any) -> Unit,
     onShopMenuClicked: () -> Unit,
     onProductMenuClicked: () -> Unit,
+    onSignoutMenuClicked: () -> Unit,
 ) {
     val scaffoldState = rememberScaffoldState()
     val coroutineScope = rememberCoroutineScope()
@@ -137,6 +141,28 @@ private fun GroupedShoppingListScreen(
                 Icon(painterResource(R.drawable.ic_products), null)
                 Text(
                     stringResource(R.string.drawer_menu_products),
+                    style = MaterialTheme.typography.h6,
+                    modifier = Modifier.weight(1f),
+                )
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+                    .height(IntrinsicSize.Min)
+                    .clickable(role = Role.Tab) {
+                        onSignoutMenuClicked()
+                        coroutineScope.launch {
+                            scaffoldState.drawerState.apply { if (isOpen) close() }
+                        }
+                    },
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Icon(Icons.Default.ExitToApp, null)
+                Text(
+                    stringResource(R.string.drawer_menu_signout),
                     style = MaterialTheme.typography.h6,
                     modifier = Modifier.weight(1f),
                 )

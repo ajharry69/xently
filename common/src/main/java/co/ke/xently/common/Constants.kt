@@ -4,6 +4,7 @@ import java.text.DateFormat
 import java.text.SimpleDateFormat
 import java.util.*
 
+const val TAG = "Xently"
 const val ENCRYPTED_SHARED_PREFERENCE_KEY = "co.ke.xently.ENCRYPTED_SHARED_PREFERENCE_KEY"
 const val UNENCRYPTED_SHARED_PREFERENCE_KEY = "co.ke.xently.UNENCRYPTED_SHARED_PREFERENCE_KEY"
 const val TOKEN_VALUE_SHARED_PREFERENCE_KEY = "co.ke.xently.TOKEN_VALUE_SHARED_PREFERENCE_KEY"
@@ -25,6 +26,11 @@ val DEFAULT_LOCAL_DATE_FORMAT: DateFormat = DateFormat.getDateInstance(DateForma
 fun localDefaultDateFormatToServerDate(date: String): Date? {
     return DEFAULT_SERVER_DATE_FORMAT.parse(DEFAULT_LOCAL_DATE_FORMAT.format(date))
 }
+
+fun String.replaceAt(index: Int, replacement: CharSequence): String {
+    return replaceRange(index, index + 1, replacement)
+}
+
 /*
 fun <T: Service> isServiceRunning(context: Context, clazz: Class<T>): Boolean {
     val manager = context.getSystemService(ACTIVITY_SERVICE) as ActivityManager

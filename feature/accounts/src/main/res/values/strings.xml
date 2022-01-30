@@ -1,0 +1,28 @@
+<resources>
+    <string name="fa_signin_button_label">Sign In</string>
+    <string name="fa_signin_password_label">Password</string>
+    <string name="fa_signin_username_label">Email</string>
+    <string name="fa_signin_toolbar_title">@string/fa_signin_button_label</string>
+    <string name="fa_navigation_icon_content_description">Navigate back</string>
+    <string name="fs_generic_error_message">Sorry, an error was encountered</string>
+    <string name="fa_signup_username_label">Email</string>
+    <string name="fa_signup_password_label">Password</string>
+    <string name="fa_signup_toolbar_title">Sign up</string>
+    <string name="fa_signup_button_label">Sign up</string>
+    <string name="fa_toggle_password_visibility">Toggle password visibility</string>
+    <string name="fa_signin_signup_button_label">CREATE AN ACCOUNT</string>
+    <string name="fa_signin_forgot_password_button_label">Forgot password?</string>
+    <string name="fa_signup_signin_button_label">SIGN IN</string>
+    <string name="fa_request_password_reset_email_label">Email*</string>
+    <string name="fa_request_password_reset_toolbar_title">Request password reset</string>
+    <string name="fa_request_password_reset_button_label">Request password reset</string>
+    <string name="fa_reset_password_old_password_label">Old password*</string>
+    <string name="fa_reset_password_toolbar_title">%1$s password</string>
+    <string name="fa_reset">Reset</string>
+    <string name="fa_change">Change</string>
+    <string name="fa_reset_password_new_password_label">New password*</string>
+    <string name="fa_reset_password_button_label">Reset password</string>
+    <string name="fa_verify_account_toolbar_title">Verify account</string>
+    <string name="fa_verify_account_resend_code_label">Resend code</string>
+    <string name="fa_verify_account_resend_code_count_down_label">Resend in %1$ds</string>
+</resources>

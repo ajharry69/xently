@@ -1,0 +1,19 @@
+package co.ke.xently.source.local.daos
+
+import androidx.room.Dao
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy.REPLACE
+import androidx.room.Query
+import co.ke.xently.data.User
+
+@Dao
+interface AccountsDao {
+    @Insert(onConflict = REPLACE)
+    suspend fun save(user: User)
+
+    @Query("SELECT id FROM accounts ORDER BY timeRecorded LIMIT 1")
+    suspend fun getHistoricallyFirstUserId(): Long
+
+    @Query("DELETE FROM accounts WHERE id = :id")
+    suspend fun delete(id: Long)
+}

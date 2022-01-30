@@ -102,10 +102,11 @@ internal class ShoppingListRepository @Inject constructor(
             })
         }.retryCatchIfNecessary(this).flowOn(ioDispatcher)
     }
+
     override fun get(config: PagingConfig) = Pager(
-        config=config,
-        remoteMediator=ShoppingListRemoteMediator(database, service),
-    ){
+        config = config,
+        remoteMediator = ShoppingListRemoteMediator(database, service),
+    ) {
         database.shoppingListDao.get()
     }
 }

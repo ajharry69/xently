@@ -1,6 +1,8 @@
 package co.ke.xently.source.remote
 
+import android.util.Log
 import co.ke.xently.common.Retry
+import co.ke.xently.common.TAG
 import co.ke.xently.data.TaskResult
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
@@ -9,13 +11,25 @@ import retrofit2.Response
 import java.net.ConnectException
 import java.net.SocketTimeoutException
 
-data class HttpException(
-    val detail: String?,
+open class HttpException(
+    val detail: Any? = null,
     val errorCode: String? = null,
-    val errors: Map<String, HttpException> = mapOf(),
 ) : RuntimeException() {
     override val message: String?
-        get() = detail ?: super.message
+        get() = when (detail) {
+            null -> {
+                super.message
+            }
+            is String -> {
+                detail
+            }
+            is List<*> -> {
+                detail.joinToString("\n")
+            }
+            else -> {
+                throw IllegalStateException("'detail' can only be a (nullable) String or List")
+            }
+        }
 }
 
 fun <T> Flow<TaskResult<T>>.retryCatchIfNecessary(retry: Retry) =
@@ -26,8 +40,9 @@ fun <T> Flow<TaskResult<T>>.retryCatchIfNecessary(retry: Retry) =
     }
 
 @Suppress("UNCHECKED_CAST", "BlockingMethodInNonBlockingContext")
-suspend fun <T> sendRequest(
+suspend fun <T, E : HttpException> sendRequest(
     vararg throwOnStatusCode: Int,
+    errorClass: Class<E>,
     request: suspend () -> Response<T>,
 ): TaskResult<T> {
     return try {
@@ -46,9 +61,10 @@ suspend fun <T> sendRequest(
                     // The following is potentially blocking! Assume the consumer will call the
                     // suspend function from IO dispatcher.
                     errorBody!!.string(),
-                    HttpException::class.java
+                    errorClass
                 )
-                if (exception.detail.isNullOrBlank()) exception.copy(detail = response.message()) else exception
+                // if (exception.detail.isNullOrBlank()) HttpException(detail = response.message()) else exception
+                exception
             } catch (ex: IllegalStateException) {
                 HttpException(response.message())
             }
@@ -64,6 +80,10 @@ suspend fun <T> sendRequest(
     } catch (ex: HttpException) {
         throw ex
     } catch (ex: Exception) {
+        Log.e(TAG, "sendRequest: ${ex.message}", ex)
         TaskResult.Error(ex)
     }
 }
+
+suspend fun <T> sendRequest(vararg throwOnStatusCode: Int, request: suspend () -> Response<T>) =
+    sendRequest(*throwOnStatusCode, errorClass = HttpException::class.java, request = request)
