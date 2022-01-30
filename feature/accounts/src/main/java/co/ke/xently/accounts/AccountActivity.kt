@@ -19,6 +19,7 @@ import co.ke.xently.accounts.ui.password_reset.PasswordResetScreen
 import co.ke.xently.accounts.ui.password_reset.request.PasswordResetRequestScreen
 import co.ke.xently.accounts.ui.signin.SignInScreen
 import co.ke.xently.accounts.ui.signup.SignUpScreen
+import co.ke.xently.accounts.ui.verification.VerificationScreen
 import co.ke.xently.feature.theme.XentlyTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -53,9 +54,13 @@ internal fun ProductsNavHost(
                 username = it.arguments?.getString("username") ?: "",
                 password = it.arguments?.getString("password") ?: "",
                 onNavigationIconClicked = onNavigationIconClicked,
-                onSuccessfulSignIn = {
-                    // TODO: Check if user is verified then navigate to verification screen if need be
-                    onNavigationIconClicked()
+                onSuccessfulSignIn = { user ->
+                    if (user.isVerified) {
+                        // TODO: Navigate to home screen...
+                        onNavigationIconClicked()
+                    } else {
+                        navController.navigate("verify-account")
+                    }
                 },
                 onCreateAccountButtonClicked = { username, password ->
                     navController.navigate("signup?username=${username}&password=${password}") {
@@ -96,15 +101,33 @@ internal fun ProductsNavHost(
                 username = it.arguments?.getString("username") ?: "",
                 password = it.arguments?.getString("password") ?: "",
                 onNavigationIconClicked = onNavigationIconClicked,
-                onSuccessfulSignUp = {
-                    // TODO: Check if user is verified then navigate to verification screen if need be
-                    onNavigationIconClicked()
+                onSuccessfulSignUp = { user ->
+                    if (user.isVerified) {
+                        // TODO: Navigate to home screen...
+                        onNavigationIconClicked()
+                    } else {
+                        navController.navigate("verify-account")
+                    }
                 },
                 onSignInButtonClicked = { username, password ->
                     navController.navigate("signin?username=${username}&password=${password}") {
                         launchSingleTop = true
                     }
                 }
+            )
+        }
+        composable(
+            "verify-account?code={code}",
+            listOf(navArgument("code") { defaultValue = "" }),
+        ) {
+            VerificationScreen(
+                modifier = Modifier.fillMaxSize(),
+                verificationCode = it.arguments?.getString("code") ?: "",
+                onNavigationIconClicked = onNavigationIconClicked,
+                onSuccessfulVerification = {
+//                    navController.navigate("reset-password")
+                    // TODO: Navigate to home page... Above code may not be necessary if the `this` activity is finished when starting a new activity
+                },
             )
         }
         composable(

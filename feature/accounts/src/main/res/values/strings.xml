@@ -22,4 +22,7 @@
     <string name="fa_change">Change</string>
     <string name="fa_reset_password_new_password_label">New password*</string>
     <string name="fa_reset_password_button_label">Reset password</string>
+    <string name="fa_verify_account_toolbar_title">Verify account</string>
+    <string name="fa_verify_account_resend_code_label">Resend code</string>
+    <string name="fa_verify_account_resend_code_count_down_label">Resend in %1$ds</string>
 </resources>

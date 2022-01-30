@@ -11,8 +11,6 @@ android {
     defaultConfig {
         minSdk 21
         targetSdk 31
-        versionCode 1
-        versionName "1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
@@ -36,6 +34,7 @@ android {
         useIR = true
         freeCompilerArgs += [
                 "-Xopt-in=kotlin.RequiresOptIn",
+                "-Xopt-in=kotlin.time.ExperimentalTime",
         ]
     }
     buildFeatures {
@@ -45,9 +44,9 @@ android {
         kotlinCompilerExtensionVersion compose_version
     }
     packagingOptions {
-        pickFirsts += ["build-data.properties"]
         resources {
             excludes += '/META-INF/{AL2.0,LGPL2.1}'
+            pickFirsts += ['build-data.properties']
         }
     }
 }

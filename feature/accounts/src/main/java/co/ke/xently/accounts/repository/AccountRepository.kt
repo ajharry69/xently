@@ -5,6 +5,7 @@ import androidx.core.content.edit
 import co.ke.xently.accounts.ui.password_reset.PasswordResetHttpException
 import co.ke.xently.accounts.ui.password_reset.request.PasswordResetRequestHttpException
 import co.ke.xently.accounts.ui.signin.SignUpHttpException
+import co.ke.xently.accounts.ui.verification.VerificationHttpException
 import co.ke.xently.common.Retry
 import co.ke.xently.common.TOKEN_VALUE_SHARED_PREFERENCE_KEY
 import co.ke.xently.common.di.qualifiers.EncryptedSharedPreference
@@ -95,7 +96,7 @@ internal class AccountRepository @Inject constructor(
 
     override fun verifyAccount(code: String) = Retry().run {
         flow {
-            emit(sendRequest(401) {
+            emit(sendRequest(401, errorClass = VerificationHttpException::class.java) {
                 service.verify(
                     database.accountsDao.getHistoricallyFirstUserId(),
                     mapOf("code" to code),

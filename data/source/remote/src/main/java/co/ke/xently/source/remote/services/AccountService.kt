@@ -2,10 +2,7 @@ package co.ke.xently.source.remote.services
 
 import co.ke.xently.data.User
 import retrofit2.Response
-import retrofit2.http.Body
-import retrofit2.http.Header
-import retrofit2.http.POST
-import retrofit2.http.Path
+import retrofit2.http.*
 
 interface AccountService {
     @POST("accounts/signin/")
@@ -20,7 +17,7 @@ interface AccountService {
         @Body codeValue: Map<String, String>,
     ): Response<User>
 
-    @POST("accounts/{id}/request-verification-code/")
+    @GET("accounts/{id}/request-verification-code/")
     suspend fun requestVerificationCode(@Path("id") userId: Long): Response<User>
 
     @POST("accounts/request-temporary-password/")
