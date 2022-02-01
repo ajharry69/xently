@@ -10,8 +10,13 @@ data class Product(
     val name: String = "",
     val unit: String = "",
     val unitQuantity: Float = 0f,
-//    val shop: Long,
+    val shop: Long = -1L,
     val unitPrice: Float = 0f,
     val datePurchased: Date = Date(),
     val dateAdded: Date = Date(),
-)
+    val isDefault: Boolean = false,
+) {
+    companion object {
+        fun default(): Product = Product(isDefault = true)
+    }
+}
