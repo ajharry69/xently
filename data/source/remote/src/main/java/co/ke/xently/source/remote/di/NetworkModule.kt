@@ -9,12 +9,16 @@ import co.ke.xently.source.remote.BuildConfig
 import co.ke.xently.source.remote.JSON_CONVERTER
 import co.ke.xently.source.remote.di.qualifiers.CacheInterceptor
 import co.ke.xently.source.remote.di.qualifiers.RequestHeadersInterceptor
+import co.ke.xently.source.remote.di.qualifiers.RequestQueriesInterceptor
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import okhttp3.*
+import okhttp3.Cache
+import okhttp3.CacheControl
+import okhttp3.Interceptor
+import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -25,6 +29,27 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
+    @Provides
+    @Singleton
+    @RequestQueriesInterceptor
+    fun provideRequestQueriesInterceptors(): Interceptor {
+        return Interceptor { chain ->
+            val request = chain.request()
+
+            return@Interceptor chain.proceed(
+                request.newBuilder().apply {
+                    val url = build().url
+                    if (url.queryParameter("relatedAsId") == null) {
+                        // Return IDs of related objects instead of returning a browsable link. This
+                        // helps reduce the size of response payload and also makes it easier to
+                        // cache object relationships.
+                        url(url.newBuilder().addQueryParameter("relatedAsId", "true").build())
+                    }
+                }.build(),
+            )
+        }
+    }
+
     @Provides
     @Singleton
     @RequestHeadersInterceptor
@@ -98,10 +123,12 @@ object NetworkModule {
         loggingInterceptor: HttpLoggingInterceptor,
         @CacheInterceptor cacheInterceptor: Interceptor,
         @RequestHeadersInterceptor headerInterceptor: Interceptor,
+        @RequestQueriesInterceptor queriesInterceptor: Interceptor,
     ): OkHttpClient {
         return OkHttpClient.Builder()
             .cache(Cache(context.cacheDir, (5 * 1024 * 1024).toLong()))
             .addInterceptor(headerInterceptor)
+            .addInterceptor(queriesInterceptor)
             .addInterceptor(cacheInterceptor) // maintain order - cache may depend on the headers
             .addInterceptor(loggingInterceptor)
             .connectTimeout(60L, TimeUnit.SECONDS)
