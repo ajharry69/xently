@@ -35,7 +35,7 @@ internal fun ProductListScreen(
     onAddProductClicked: () -> Unit = {},
 ) {
     val config = PagingConfig(20, enablePlaceholders = false)
-    val items = viewModel.getPagingData(config).collectAsLazyPagingItems()
+    val items = viewModel.get(config).collectAsLazyPagingItems()
     ProductListScreen(
         pagingItems = items,
         modifier = modifier,

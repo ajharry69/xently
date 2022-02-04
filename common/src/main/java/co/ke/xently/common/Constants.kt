@@ -35,6 +35,8 @@ val DEFAULT_LOCAL_TIME_FORMAT = SimpleDateFormat("h:mm a", KENYA)
  */
 val DEFAULT_LOCAL_DATE_TIME_FORMAT = SimpleDateFormat("dd/MM/yyyy h:mm a", KENYA)
 
+const val DEFAULT_SERVER_DATE_TIME_PATTERN = "yyyy-MM-dd'T'HH:mmZ"
+
 fun localDefaultDateFormatToServerDate(date: String): Date? {
     return DEFAULT_SERVER_DATE_FORMAT.parse(DEFAULT_LOCAL_DATE_FORMAT.format(date))
 }

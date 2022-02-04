@@ -1,6 +1,7 @@
 package co.ke.xently.source.remote
 
 import android.net.Uri
+import co.ke.xently.common.DEFAULT_SERVER_DATE_TIME_PATTERN
 import co.ke.xently.common.Exclude
 import co.ke.xently.common.Exclude.During.*
 import com.google.gson.*
@@ -31,7 +32,7 @@ val JSON_CONVERTER: Gson = GsonBuilder()
     .addDeserializationExclusionStrategy(getExclusionStrategy(DESERIALIZATION))
     .setExclusionStrategies(getExclusionStrategy())
     .serializeNulls()
-    .setDateFormat(DateFormat.LONG)
+    .setDateFormat(DEFAULT_SERVER_DATE_TIME_PATTERN)
     .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
     // https://www.javadoc.io/doc/com.google.code.gson/gson/2.8.0/com/google/gson/TypeAdapter.html
     .registerTypeAdapter(Uri::class.java, object : TypeAdapter<Uri>() {

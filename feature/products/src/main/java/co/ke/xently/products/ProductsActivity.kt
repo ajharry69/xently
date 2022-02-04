@@ -9,10 +9,14 @@ import androidx.compose.material.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
+import co.ke.xently.data.Product
 import co.ke.xently.feature.theme.XentlyTheme
+import co.ke.xently.products.ui.detail.ProductDetailScreen
 import co.ke.xently.products.ui.list.ProductListScreen
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -45,8 +49,29 @@ internal fun ProductsNavHost(
             ProductListScreen(
                 modifier = Modifier.fillMaxSize(),
                 onItemClicked = {
-                    navController.navigate("products/$it")
+                    navController.navigate("products/$it") {
+                        launchSingleTop = true
+                    }
                 },
+                onNavigationIconClicked = onNavigationIconClicked,
+                onAddProductClicked = {
+                    navController.navigate("products/${Product.default().id}") {
+                        launchSingleTop = true
+                    }
+                },
+            )
+        }
+        composable(
+            "products/{id}",
+            listOf(
+                navArgument("id") {
+                    type = NavType.LongType
+                },
+            ),
+        ) {
+            ProductDetailScreen(
+                id = it.arguments?.getLong("id"),
+                modifier = Modifier.fillMaxSize(),
                 onNavigationIconClicked = onNavigationIconClicked,
             )
         }

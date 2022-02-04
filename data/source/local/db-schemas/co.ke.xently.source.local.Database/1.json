@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "ed9d45e7d057b3fd3a200dcbc85bc8b2",
+    "identityHash": "58b8bb325d612181b30748249ef3ff9b",
     "entities": [
       {
         "tableName": "remote_keys",
@@ -44,7 +44,7 @@
       },
       {
         "tableName": "shops",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `name` TEXT NOT NULL, `taxPin` TEXT NOT NULL, `productsCount` INTEGER NOT NULL, `addressesCount` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `name` TEXT NOT NULL, `taxPin` TEXT NOT NULL, `productsCount` INTEGER NOT NULL, `addressesCount` INTEGER NOT NULL, `isDefault` INTEGER NOT NULL, PRIMARY KEY(`id`))",
         "fields": [
           {
             "fieldPath": "id",
@@ -73,6 +73,12 @@
           {
             "fieldPath": "addressesCount",
             "columnName": "addressesCount",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isDefault",
+            "columnName": "isDefault",
             "affinity": "INTEGER",
             "notNull": true
           }
@@ -269,12 +275,70 @@
         },
         "indices": [],
         "foreignKeys": []
+      },
+      {
+        "tableName": "measurement_units",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `name` TEXT NOT NULL, `synonym` INTEGER, `isDefault` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "synonym",
+            "columnName": "synonym",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "isDefault",
+            "columnName": "isDefault",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "columnNames": [
+            "id"
+          ],
+          "autoGenerate": false
+        },
+        "indices": [
+          {
+            "name": "index_measurement_units_name",
+            "unique": true,
+            "columnNames": [
+              "name"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_measurement_units_name` ON `${TABLE_NAME}` (`name`)"
+          },
+          {
+            "name": "index_measurement_units_name_synonym",
+            "unique": true,
+            "columnNames": [
+              "name",
+              "synonym"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_measurement_units_name_synonym` ON `${TABLE_NAME}` (`name`, `synonym`)"
+          }
+        ],
+        "foreignKeys": []
       }
     ],
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'ed9d45e7d057b3fd3a200dcbc85bc8b2')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '58b8bb325d612181b30748249ef3ff9b')"
     ]
   }
 }
