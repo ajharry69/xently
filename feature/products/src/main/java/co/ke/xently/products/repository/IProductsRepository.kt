@@ -14,5 +14,5 @@ interface IProductsRepository {
     fun get(id: Long): Flow<TaskResult<Product>>
     fun get(config: PagingConfig): Pager<Int, Product>
     fun getMeasurementUnits(query: String): Flow<TaskResult<List<MeasurementUnit>>>
-    fun getShops(config: PagingConfig, query: String): Pager<Int, Shop>
+    fun getShops(query: String): Flow<TaskResult<List<Shop>>>
 }

@@ -4,11 +4,7 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import co.ke.xently.common.Retry
 import co.ke.xently.common.di.qualifiers.coroutines.IODispatcher
-import co.ke.xently.data.Product
-import co.ke.xently.data.TaskResult
-import co.ke.xently.data.getOrNull
-import co.ke.xently.data.getOrThrow
-import co.ke.xently.feature.ShopsRemoteMediator
+import co.ke.xently.data.*
 import co.ke.xently.products.ui.detail.ProductHttpException
 import co.ke.xently.source.local.Database
 import co.ke.xently.source.remote.retryCatchIfNecessary
@@ -86,24 +82,37 @@ internal class ProductsRepository @Inject constructor(
                     delay(100.milliseconds)
                     emit(
                         sendRequest(401) { service.getMeasurementUnits(query) }
-                            .also {
-                                if (it is TaskResult.Success) {
-                                    database.measurementUnitDao.save(it.data)
-                                }
+                            .mapCatching { data ->
+                                data.also {
+                                    database.measurementUnitDao.save(it)
+                                }.take(5)
                             },
                     )
                 }.cancellable()
             } else {
-                flowOf(TaskResult.Success(units))
+                flowOf(TaskResult.Success(units.take(5)))
             }
         }.cancellable().retryCatchIfNecessary(this).flowOn(ioDispatcher)
     }
 
-    @OptIn(ExperimentalTime::class)
-    override fun getShops(config: PagingConfig, query: String) = Pager(
-        config = config,
-        remoteMediator = ShopsRemoteMediator(database, shopService, query) {
-            delay(100.milliseconds)
-        },
-    ) { database.shopsDao.run { if (query.isBlank()) get() else get("%${query}%") } }
+    @OptIn(FlowPreview::class, ExperimentalTime::class)
+    override fun getShops(query: String): Flow<TaskResult<List<Shop>>> = Retry().run {
+        database.shopsDao.getShops("%${query}%").flatMapConcat { shops ->
+            if (shops.isEmpty()) {
+                flow {
+                    delay(100.milliseconds)
+                    emit(
+                        sendRequest(401) { shopService.get(query, size = 30) }
+                            .mapCatching { data ->
+                                data.results.also {
+                                    database.shopsDao.add(it)
+                                }.take(5)
+                            },
+                    )
+                }.cancellable()
+            } else {
+                flowOf(TaskResult.Success(shops.take(5)))
+            }
+        }.cancellable().retryCatchIfNecessary(this).flowOn(ioDispatcher)
+    }
 }

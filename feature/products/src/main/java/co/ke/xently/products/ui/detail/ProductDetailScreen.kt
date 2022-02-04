@@ -22,8 +22,6 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.paging.PagingConfig
-import androidx.paging.compose.collectAsLazyPagingItems
 import co.ke.xently.common.DEFAULT_LOCAL_DATE_FORMAT
 import co.ke.xently.common.DEFAULT_LOCAL_DATE_TIME_FORMAT
 import co.ke.xently.common.DEFAULT_LOCAL_TIME_FORMAT
@@ -34,10 +32,7 @@ import co.ke.xently.feature.ui.AutoCompleteTextField
 import co.ke.xently.feature.ui.TextFieldErrorText
 import co.ke.xently.products.R
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
-import kotlin.time.ExperimentalTime
 
-@OptIn(ExperimentalTime::class)
 @Composable
 internal fun ProductDetailScreen(
     id: Long?,
@@ -45,33 +40,47 @@ internal fun ProductDetailScreen(
     viewModel: ProductDetailViewModel = hiltViewModel(),
     onNavigationIconClicked: () -> Unit = {},
 ) {
-    id?.also {
-        if (!Product.default().isDefault) viewModel.get(it)
+    val isDefaultProduct by remember(id) {
+        mutableStateOf(id == null || id == Product.default().id)
     }
+
+    val fetch by rememberUpdatedState { viewModel.get(id!!) }
+    LaunchedEffect(true) {
+        if (!isDefaultProduct) fetch()
+    }
+
+    val shops by viewModel.shopsResult.collectAsState()
     val productResult by viewModel.productResult.collectAsState()
+    // TODO: Fix case where searching on either measurement units or shops clears fields
     val measurementUnits by viewModel.measurementUnitsResult.collectAsState()
-    val shops = viewModel.shopsResult.collectAsLazyPagingItems().itemSnapshotList.items
+
+    // Allow addition of more items if the screen was initially for adding.
+    val permitReAddition = isDefaultProduct && productResult.getOrNull() != null
 
     var unitsJob: Job? = null
     var shopsJob: Job? = null
 
-    val config = PagingConfig(20, enablePlaceholders = false)
     ProductDetailScreen(
         modifier,
-        productResult,
+        if (permitReAddition) {
+            Success(null)
+        } else {
+            productResult
+        },
+        permitReAddition,
         shops,
         measurementUnits,
         onNavigationIconClicked,
         {
             shopsJob?.cancel()
-            shopsJob = viewModel.getShops(config, it)
+            shopsJob = viewModel.getShops(it)
         },
         {
             unitsJob?.cancel()
             unitsJob = viewModel.getMeasurementUnits(it)
         },
     ) {
-        viewModel.add(it)
+        viewModel.addOrUpdate(it)
     }
 }
 
@@ -79,6 +88,7 @@ internal fun ProductDetailScreen(
 private fun ProductDetailScreen(
     modifier: Modifier,
     result: TaskResult<Product?>,
+    permitReAddition: Boolean = false,
     shops: List<Shop> = emptyList(),
     measurementUnits: List<MeasurementUnit> = emptyList(),
     onNavigationIconClicked: () -> Unit = {},
@@ -89,9 +99,9 @@ private fun ProductDetailScreen(
     val product = result.getOrNull() ?: Product.default()
 
     var shop by remember(product.id, product.shop) {
-        mutableStateOf(if (!product.isDefault) product.shop.toString() else "")
+        mutableStateOf(if (product.isDefault) "" else product.shop.toString())
     }
-    var savableShop by remember { mutableStateOf(product.shop) }
+    var savableShop by remember(product.id, product.shop) { mutableStateOf(product.shop) }
     var shopError by remember { mutableStateOf("") }
     var isShopError by remember { mutableStateOf(false) }
 
@@ -108,13 +118,13 @@ private fun ProductDetailScreen(
     var isUnitError by remember { mutableStateOf(false) }
 
     var unitQuantity by remember(product.id, product.unitQuantity) {
-        mutableStateOf(TextFieldValue(product.unitQuantity.toString()))
+        mutableStateOf(TextFieldValue(if (product.isDefault) "" else product.unitQuantity.toString()))
     }
     var unitQuantityError by remember { mutableStateOf("") }
     var isUnitQuantityError by remember { mutableStateOf(false) }
 
     var unitPrice by remember(product.id, product.unitPrice) {
-        mutableStateOf(TextFieldValue(product.unitPrice.toString()))
+        mutableStateOf(TextFieldValue(if (product.isDefault) "" else product.unitPrice.toString()))
     }
     var unitPriceError by remember { mutableStateOf("") }
     var isUnitPriceError by remember { mutableStateOf(false) }
@@ -133,7 +143,7 @@ private fun ProductDetailScreen(
         stringResource(if (product.isDefault) R.string.fp_add else R.string.fp_update),
     )
 
-    val (coroutineScope, scaffoldState) = Pair(rememberCoroutineScope(), rememberScaffoldState())
+    val (scrollState, scaffoldState) = Pair(rememberScrollState(), rememberScaffoldState())
 
     if (result is TaskResult.Error) {
         val productHttpException = result.error as? ProductHttpException
@@ -160,11 +170,18 @@ private fun ProductDetailScreen(
             val errorMessage =
                 result.errorMessage ?: stringResource(R.string.fp_generic_error_message)
             LaunchedEffect(product.id, result, errorMessage) {
-                coroutineScope.launch {
-                    scaffoldState.snackbarHostState.showSnackbar(errorMessage)
-                }
+                scaffoldState.snackbarHostState.showSnackbar(errorMessage)
             }
         }
+    } else if (permitReAddition) {
+        val message = stringResource(R.string.fp_success_adding_product)
+        LaunchedEffect(message) {
+            scaffoldState.snackbarHostState.showSnackbar(message)
+        }
+        unit = ""
+        name = TextFieldValue("")
+        unitPrice = TextFieldValue("")
+        unitQuantity = TextFieldValue("")
     }
     val focusManager = LocalFocusManager.current
 
@@ -188,7 +205,11 @@ private fun ProductDetailScreen(
                     LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
                 }
             }
-            Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(scrollState),
+            ) {
                 AutoCompleteTextField(
                     value = shop,
                     isError = isShopError,
@@ -374,7 +395,7 @@ private fun ProductDetailScreen(
                         unitPrice,
                         dateOfPurchase,
                         timeOfPurchase,
-                    ).all { it.text.isNotBlank() } && unit.isNotBlank(),
+                    ).all { it.text.isNotBlank() } && unit.isNotBlank() && savableShop != Product.default().shop,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp),

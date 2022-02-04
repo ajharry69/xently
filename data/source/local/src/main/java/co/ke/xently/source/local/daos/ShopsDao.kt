@@ -22,6 +22,9 @@ interface ShopsDao {
     @Query("SELECT * FROM shops WHERE name LIKE :query OR taxPin LIKE :query ORDER BY name")
     fun get(query: String): PagingSource<Int, Shop>
 
+    @Query("SELECT * FROM shops WHERE name LIKE :query OR taxPin LIKE :query ORDER BY name")
+    fun getShops(query: String): Flow<List<Shop>>
+
     @Query("SELECT * FROM shops WHERE id = :id")
     fun get(id: Long): Flow<Shop?>
 

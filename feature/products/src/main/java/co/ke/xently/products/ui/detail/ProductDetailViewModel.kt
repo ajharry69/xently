@@ -2,8 +2,6 @@ package co.ke.xently.products.ui.detail
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.paging.PagingConfig
-import androidx.paging.PagingData
 import co.ke.xently.data.*
 import co.ke.xently.data.TaskResult.Success
 import co.ke.xently.feature.utils.flagLoadingOnStartCatchingErrors
@@ -25,14 +23,19 @@ internal class ProductDetailViewModel @Inject constructor(
     val measurementUnitsResult: StateFlow<List<MeasurementUnit>>
         get() = _measurementUnitsResult
 
-    private val _shopsResult = MutableStateFlow<PagingData<Shop>>(PagingData.empty())
-    val shopsResult: StateFlow<PagingData<Shop>>
+    private val _shopsResult = MutableStateFlow<List<Shop>>(emptyList())
+    val shopsResult: StateFlow<List<Shop>>
         get() = _shopsResult
 
-    fun add(product: Product) {
+    fun addOrUpdate(product: Product) {
         viewModelScope.launch {
-            repository.add(product)
-                .flagLoadingOnStartCatchingErrors()
+            combineTransform(flowOf(product)) {
+                if (it[0].isDefault) {
+                    emitAll(repository.add(product))
+                } else {
+                    emitAll(repository.update(product))
+                }
+            }.flagLoadingOnStartCatchingErrors()
                 .collectLatest {
                     _productResult.value = it
                 }
@@ -41,21 +44,22 @@ internal class ProductDetailViewModel @Inject constructor(
 
     fun get(id: Long) {
         viewModelScope.launch {
-            repository.get(id)
-                .flagLoadingOnStartCatchingErrors()
+            combineTransform(flowOf(id)) {
+                emitAll(repository.get(it[0]))
+            }.flagLoadingOnStartCatchingErrors()
                 .collectLatest {
                     _productResult.value = it
                 }
         }
     }
 
-    fun getShops(config: PagingConfig, query: String) = viewModelScope.launch {
-        combineTransform(flowOf(config), flowOf(query.trim())) { c, q ->
-            if (q.isNotEmpty()) {
-                emitAll(repository.getShops(c, q).flow)
+    fun getShops(query: String) = viewModelScope.launch {
+        combineTransform(flowOf(query.trim())) {
+            if (it[0].isNotEmpty()) {
+                emitAll(repository.getShops(it[0]))
             }
-        }.collectLatest {
-            _shopsResult.value = it
+        }.flagLoadingOnStartCatchingErrors().collectLatest {
+            _shopsResult.value = it.getOrNull() ?: emptyList()
         }
     }
 
@@ -64,9 +68,8 @@ internal class ProductDetailViewModel @Inject constructor(
             if (it[0].isNotEmpty()) {
                 emitAll(repository.getMeasurementUnits(it[0]))
             }
-        }.flagLoadingOnStartCatchingErrors()
-            .collectLatest {
-                _measurementUnitsResult.value = it.getOrNull() ?: emptyList()
-            }
+        }.flagLoadingOnStartCatchingErrors().collectLatest {
+            _measurementUnitsResult.value = it.getOrNull() ?: emptyList()
+        }
     }
 }

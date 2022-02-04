@@ -16,4 +16,5 @@
     <string name="fp_product_detail_date_of_purchase_content_desc">Select date of purchase</string>
     <string name="fp_product_detail_time_of_purchase_content_desc">Select time of purchase</string>
     <string name="fp_product_detail_shop_label">Shop</string>
+    <string name="fp_success_adding_product">Product successfully added</string>
 </resources>
