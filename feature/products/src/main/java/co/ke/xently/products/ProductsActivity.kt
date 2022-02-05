@@ -48,7 +48,7 @@ internal fun ProductsNavHost(
         composable("products") {
             ProductListScreen(
                 modifier = Modifier.fillMaxSize(),
-                onItemClicked = {
+                onUpdateRequested = {
                     navController.navigate("products/$it") {
                         launchSingleTop = true
                     }

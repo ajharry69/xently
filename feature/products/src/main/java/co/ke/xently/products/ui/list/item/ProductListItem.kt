@@ -1,12 +1,8 @@
 package co.ke.xently.products.ui.list.item
 
 import android.text.format.DateFormat
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
+import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowRight
@@ -22,9 +18,9 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
 import co.ke.xently.data.Product
-import co.ke.xently.feature.R
 import co.ke.xently.feature.theme.XentlyTheme
 import co.ke.xently.feature.utils.descriptive
+import co.ke.xently.products.R
 
 
 @OptIn(ExperimentalUnitApi::class)
@@ -33,22 +29,21 @@ internal fun ProductListItem(
     product: Product,
     modifier: Modifier = Modifier,
     showPopupMenu: Boolean = false,
-    onItemClicked: (id: Long) -> Unit = {},
+    onUpdateRequested: (id: Long) -> Unit = {},
+    onDeleteRequested: (id: Long) -> Unit = {},
 ) {
-    var showDropMenu by remember { mutableStateOf(showPopupMenu) }
+    var showDropMenu by remember(showPopupMenu) { mutableStateOf(showPopupMenu) }
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
-        modifier = modifier
-            .padding(start = 8.dp)
-            .clickable { onItemClicked(product.id) },
+        modifier = modifier.padding(start = 8.dp),
     ) {
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 modifier = Modifier
                     .wrapContentWidth()
                     .fillMaxWidth(),
-                text = "${product.name}, ${product.unitQuantity} ${product.unit}",
+                text = product.toString(),
                 style = MaterialTheme.typography.body1,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -64,18 +59,39 @@ internal fun ProductListItem(
                 .padding(start = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text("${stringResource(R.string.default_currency)}${product.unitPrice.descriptive()}",
+            Text("${stringResource(co.ke.xently.feature.R.string.default_currency)}${product.unitPrice.descriptive()}",
                 style = MaterialTheme.typography.subtitle2.copy(fontSize = TextUnit(18f,
                     TextUnitType.Sp)))
             Box {
-                IconButton(onClick = { showDropMenu = true }) {
+                IconButton(onClick = { showDropMenu = !showDropMenu }) {
                     Icon(
-                        if (showDropMenu) Icons.Default.KeyboardArrowDown else Icons.Default.KeyboardArrowRight,
+                        if (showDropMenu) {
+                            Icons.Default.KeyboardArrowDown
+                        } else {
+                            Icons.Default.KeyboardArrowRight
+                        },
                         contentDescription = stringResource(
-                            co.ke.xently.products.R.string.fp_product_item_menu_content_description,
+                            R.string.fp_product_item_menu_content_description,
                             product.name,
                         ),
                     )
+                }
+                DropdownMenu(
+                    expanded = showDropMenu,
+                    onDismissRequest = { showDropMenu = false },
+                ) {
+                    DropdownMenuItem(
+                        onClick = {
+                            onUpdateRequested(product.id)
+                            showDropMenu = false
+                        },
+                    ) { Text(text = stringResource(R.string.fp_list_item_menu_update)) }
+                    DropdownMenuItem(
+                        onClick = {
+                            onDeleteRequested(product.id)
+                            showDropMenu = false
+                        },
+                    ) { Text(text = stringResource(R.string.fp_list_item_menu_delete)) }
                 }
             }
         }

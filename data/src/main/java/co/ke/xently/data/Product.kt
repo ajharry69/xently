@@ -33,6 +33,10 @@ data class Product(
         val shop: Shop?,
     )
 
+    override fun toString(): String {
+        return "${name}, $unitQuantity $unit"
+    }
+
     companion object {
         fun default(): Product = Product(isDefault = true)
     }

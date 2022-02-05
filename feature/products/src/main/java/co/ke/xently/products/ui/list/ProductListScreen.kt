@@ -1,9 +1,6 @@
 package co.ke.xently.products.ui.list
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
@@ -30,7 +27,7 @@ import kotlinx.coroutines.launch
 internal fun ProductListScreen(
     modifier: Modifier = Modifier,
     viewModel: ProductListViewModel = hiltViewModel(),
-    onItemClicked: (id: Long) -> Unit = {},
+    onUpdateRequested: (id: Long) -> Unit = {},
     onNavigationIconClicked: () -> Unit = {},
     onAddProductClicked: () -> Unit = {},
 ) {
@@ -39,7 +36,8 @@ internal fun ProductListScreen(
     ProductListScreen(
         pagingItems = items,
         modifier = modifier,
-        onItemClicked = onItemClicked,
+        onUpdateRequested = onUpdateRequested,
+        onDeleteRequested = { /* TODO: Delete should only be permitted to superusers */ },
         onNavigationIconClicked = onNavigationIconClicked,
         onAddProductClicked = onAddProductClicked,
     )
@@ -49,7 +47,8 @@ internal fun ProductListScreen(
 private fun ProductListScreen(
     pagingItems: LazyPagingItems<Product>,
     modifier: Modifier = Modifier,
-    onItemClicked: (id: Long) -> Unit = {},
+    onUpdateRequested: (id: Long) -> Unit = {},
+    onDeleteRequested: (id: Long) -> Unit = {},
     onNavigationIconClicked: () -> Unit = {},
     onAddProductClicked: () -> Unit = {},
 ) {
@@ -93,13 +92,25 @@ private fun ProductListScreen(
             }
             is LoadState.Error -> {
                 return@Scaffold Box(modifier = modifier, contentAlignment = Alignment.Center) {
-                    Text(refresh.error.localizedMessage ?: genericErrorMessage)
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .wrapContentHeight()
+                            .padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                    ) {
+                        Text(refresh.error.localizedMessage ?: genericErrorMessage)
+                        Button(onClick = { /*TODO*/ }) {
+                            Text(stringResource(co.ke.xently.feature.R.string.retry).uppercase())
+                        }
+                    }
                 }
             }
             is LoadState.NotLoading -> {
                 if (pagingItems.itemCount == 0) {
                     return@Scaffold Box(modifier = modifier, contentAlignment = Alignment.Center) {
-                        Text(text = stringResource(id = R.string.fp_empty_product_list))
+                        Text(stringResource(R.string.fp_empty_product_list))
                     }
                 }
             }
@@ -111,7 +122,8 @@ private fun ProductListScreen(
                     ProductListItem(
                         it,
                         modifier = Modifier.fillMaxWidth(),
-                        onItemClicked = onItemClicked,
+                        onUpdateRequested = onUpdateRequested,
+                        onDeleteRequested = onDeleteRequested,
                     )
                 } // TODO: Show placeholders on null products...
             }
