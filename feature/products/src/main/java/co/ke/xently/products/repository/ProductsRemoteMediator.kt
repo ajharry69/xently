@@ -13,10 +13,10 @@ import co.ke.xently.source.remote.services.ProductService
 internal class ProductsRemoteMediator(
     private val database: Database,
     private val service: ProductService,
-) : RemoteMediator<Int, Product>() {
+) : RemoteMediator<Int, Product.WithShop>() {
     override suspend fun load(
         loadType: LoadType,
-        state: PagingState<Int, Product>,
+        state: PagingState<Int, Product.WithShop>,
     ): MediatorResult {
         val page: Int = when (loadType) {
             LoadType.REFRESH -> 1
@@ -33,13 +33,13 @@ internal class ProductsRemoteMediator(
             database.withTransaction {
                 if (loadType == LoadType.REFRESH) {
                     database.remoteKeyDao.delete(REMOTE_KEY_ENDPOINT)
-                    database.productsDao.deleteAll()
+                    database.productDao.deleteAll()
                 }
 
                 response.getOrThrow().run {
                     database.remoteKeyDao.save(toRemoteKey(REMOTE_KEY_ENDPOINT))
                     results.run {
-                        database.productsDao.save(this)
+                        database.productDao.save(this)
                         MediatorResult.Success(endOfPaginationReached = isEmpty())
                     }
                 }

@@ -30,6 +30,7 @@ import co.ke.xently.data.TaskResult.Success
 import co.ke.xently.feature.theme.XentlyTheme
 import co.ke.xently.feature.ui.AutoCompleteTextField
 import co.ke.xently.feature.ui.TextFieldErrorText
+import co.ke.xently.feature.ui.XentlyTextField
 import co.ke.xently.products.R
 import kotlinx.coroutines.Job
 
@@ -101,7 +102,7 @@ private fun ProductDetailScreen(
     var shop by remember(product.id, product.shop) {
         mutableStateOf(if (product.isDefault) "" else product.shop.toString())
     }
-    var savableShop by remember(product.id, product.shop) { mutableStateOf(product.shop) }
+    var savableShop by remember(product.id, product.shopId) { mutableStateOf(product.shopId) }
     var shopError by remember { mutableStateOf("") }
     var isShopError by remember { mutableStateOf(false) }
 
@@ -238,35 +239,27 @@ private fun ProductDetailScreen(
                     }
                 }
                 Spacer(modifier = Modifier.padding(vertical = 8.dp))
-                Column(
+                XentlyTextField(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp),
-                ) {
-                    TextField(
-                        value = name,
-                        singleLine = true,
-                        isError = isNameError,
-                        onValueChange = {
-                            name = it
-                            isNameError = false
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        label = { Text(text = stringResource(R.string.fp_product_detail_name_label)) },
-                        keyboardOptions = KeyboardOptions.Default.copy(capitalization = KeyboardCapitalization.Sentences,
-                            imeAction = ImeAction.Next),
-                    )
-                    if (isNameError) {
-                        TextFieldErrorText(nameError, Modifier.fillMaxWidth())
-                    }
-                }
+                    value = name,
+                    isError = isNameError,
+                    error = nameError,
+                    keyboardOptions = KeyboardOptions.Default.copy(capitalization = KeyboardCapitalization.Sentences,
+                        imeAction = ImeAction.Next),
+                    onValueChange = {
+                        name = it
+                        isNameError = false
+                    },
+                    label = { Text(stringResource(R.string.fp_product_detail_name_label)) },
+                )
                 Spacer(modifier = Modifier.padding(vertical = 8.dp))
                 AutoCompleteTextField(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp),
                     value = unit,
-                    singleLine = true,
                     isError = isUnitError,
                     error = unitError,
                     label = { Text(text = stringResource(R.string.fp_product_detail_unit_label)) },
@@ -284,51 +277,37 @@ private fun ProductDetailScreen(
                     Text(it.name, style = MaterialTheme.typography.body1)
                 }
                 Spacer(modifier = Modifier.padding(vertical = 8.dp))
-                Column(
+                XentlyTextField(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp),
-                ) {
-                    TextField(
-                        value = unitQuantity,
-                        singleLine = true,
-                        isError = isUnitQuantityError,
-                        onValueChange = {
-                            unitQuantity = it
-                            isUnitQuantityError = false
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        label = { Text(text = stringResource(R.string.fp_product_detail_unit_quantity_label)) },
-                        keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next,
-                            keyboardType = KeyboardType.Number),
-                    )
-                    if (isUnitQuantityError) {
-                        TextFieldErrorText(unitQuantityError, Modifier.fillMaxWidth())
-                    }
-                }
+                    value = unitQuantity,
+                    isError = isUnitQuantityError,
+                    error = unitQuantityError,
+                    onValueChange = {
+                        unitQuantity = it
+                        isUnitQuantityError = false
+                    },
+                    label = { Text(text = stringResource(R.string.fp_product_detail_unit_quantity_label)) },
+                    keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next,
+                        keyboardType = KeyboardType.Number),
+                )
                 Spacer(modifier = Modifier.padding(vertical = 8.dp))
-                Column(
+                XentlyTextField(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp),
-                ) {
-                    TextField(
-                        value = unitPrice,
-                        singleLine = true,
-                        isError = isUnitPriceError,
-                        onValueChange = {
-                            unitPrice = it
-                            isUnitPriceError = false
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        label = { Text(text = stringResource(R.string.fp_product_detail_unit_price_label)) },
-                        keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next,
-                            keyboardType = KeyboardType.Number),
-                    )
-                    if (isUnitPriceError) {
-                        TextFieldErrorText(unitPriceError, Modifier.fillMaxWidth())
-                    }
-                }
+                    value = unitPrice,
+                    isError = isUnitPriceError,
+                    error = unitPriceError,
+                    onValueChange = {
+                        unitPrice = it
+                        isUnitPriceError = false
+                    },
+                    label = { Text(text = stringResource(R.string.fp_product_detail_unit_price_label)) },
+                    keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next,
+                        keyboardType = KeyboardType.Number),
+                )
                 Spacer(modifier = Modifier.padding(vertical = 8.dp))
                 Column(
                     modifier = Modifier
@@ -395,14 +374,14 @@ private fun ProductDetailScreen(
                         unitPrice,
                         dateOfPurchase,
                         timeOfPurchase,
-                    ).all { it.text.isNotBlank() } && unit.isNotBlank() && savableShop != Product.default().shop,
+                    ).all { it.text.isNotBlank() } && unit.isNotBlank() && savableShop != Product.default().shopId,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp),
                     onClick = {
                         focusManager.clearFocus()
                         onProductDetailsSubmitted(product.copy(
-                            shop = savableShop,
+                            shopId = savableShop,
                             name = name.text,
                             unit = unit,
                             unitQuantity = unitQuantity.text.toFloat(),

@@ -46,7 +46,6 @@ dependencies {
     // This is a transitive dependency to remote data source that's currently only needed by:
     //  1. `sendRequest(...)` function declared in the remote data source module.
     api "com.squareup.retrofit2:retrofit:$retrofit_version"
-    implementation "com.squareup.retrofit2:converter-gson:$retrofit_version"
     implementation "com.squareup.okhttp3:logging-interceptor:$logging_interceptor_version"
     implementation "com.squareup.okio:okio:$okio_version"
 

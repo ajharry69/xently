@@ -10,6 +10,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.PopupProperties
 
@@ -25,12 +27,52 @@ fun TextFieldErrorText(error: String, modifier: Modifier = Modifier) {
 }
 
 @Composable
+fun XentlyTextField(
+    modifier: Modifier,
+    value: TextFieldValue,
+    singleLine: Boolean = true,
+    isError: Boolean = false,
+    error: String = "",
+    helpText: String? = null,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
+    keyboardActions: KeyboardActions = KeyboardActions(),
+    onValueChange: (TextFieldValue) -> Unit,
+    trailingIcon: @Composable (() -> Unit)? = null,
+    label: @Composable (() -> Unit)? = null,
+) {
+    Column(modifier = modifier) {
+        TextField(
+            value = value,
+            singleLine = singleLine,
+            isError = isError,
+            onValueChange = onValueChange,
+            modifier = Modifier.fillMaxWidth(),
+            label = label,
+            trailingIcon = trailingIcon,
+            keyboardOptions = keyboardOptions,
+            keyboardActions = keyboardActions,
+        )
+        if (isError) {
+            TextFieldErrorText(error, Modifier.fillMaxWidth())
+        } else if (!helpText.isNullOrBlank()) {
+            Text(
+                helpText,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 16.dp, end = 12.dp),
+                color = MaterialTheme.colors.onSurface.copy(alpha = .6f),
+                style = MaterialTheme.typography.caption,
+            )
+        }
+    }
+}
+
+@Composable
 fun <T> AutoCompleteTextField(
     value: String,
     onValueChange: (String) -> Unit,
     onOptionSelected: (T) -> Unit,
     modifier: Modifier = Modifier,
-    singleLine: Boolean = true,
     isError: Boolean = false,
     error: String = "",
     suggestions: List<T> = emptyList(),
@@ -46,7 +88,7 @@ fun <T> AutoCompleteTextField(
         Column(modifier = Modifier.fillMaxWidth()) {
             TextField(
                 value = query,
-                singleLine = singleLine,
+                singleLine = true,
                 isError = isError,
                 onValueChange = {
                     onValueChange(it)

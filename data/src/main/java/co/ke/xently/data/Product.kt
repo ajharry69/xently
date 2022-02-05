@@ -1,21 +1,38 @@
 package co.ke.xently.data
 
-import androidx.room.Entity
-import androidx.room.PrimaryKey
+import androidx.room.*
+import co.ke.xently.common.Exclude
+import com.google.gson.annotations.SerializedName
 import java.util.*
 
-@Entity(tableName = "products")
+@Entity(
+    tableName = "products",
+    indices = [
+        Index("shopId"),
+    ],
+)
 data class Product(
-    @PrimaryKey(autoGenerate = false) val id: Long = -1L,
-    val name: String = "",
-    val unit: String = "",
-    val unitQuantity: Float = 0f,
-    val shop: Long = -1L,
-    val unitPrice: Float = 0f,
-    val datePurchased: Date = Date(),
-    val dateAdded: Date = Date(),
-    val isDefault: Boolean = false,
+    @PrimaryKey(autoGenerate = false) var id: Long = -1L,
+    var name: String = "",
+    var unit: String = "",
+    var unitQuantity: Float = 0f,
+    @Exclude
+    @Ignore
+    var shop: Shop = Shop.default(),
+    @SerializedName("shop")
+    var shopId: Long = -1L,
+    var unitPrice: Float = 0f,
+    var datePurchased: Date = Date(),
+    var dateAdded: Date = Date(),
+    var isDefault: Boolean = false,
 ) {
+    data class WithShop(
+        @Embedded
+        val product: Product,
+        @Relation(parentColumn = "shopId", entityColumn = "id")
+        val shop: Shop?,
+    )
+
     companion object {
         fun default(): Product = Product(isDefault = true)
     }

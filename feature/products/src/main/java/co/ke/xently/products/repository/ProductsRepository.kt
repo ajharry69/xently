@@ -36,7 +36,7 @@ internal class ProductsRepository @Inject constructor(
             })
         }.onEach {
             if (it is TaskResult.Success) {
-                database.productsDao.save(it.getOrThrow())
+                database.productDao.save(it.getOrThrow())
             }
         }.retryCatchIfNecessary(this).flowOn(ioDispatcher)
     }
@@ -48,23 +48,24 @@ internal class ProductsRepository @Inject constructor(
             })
         }.onEach {
             if (it is TaskResult.Success) {
-                database.productsDao.save(it.getOrThrow())
+                database.productDao.save(it.getOrThrow())
             }
         }.retryCatchIfNecessary(this).flowOn(ioDispatcher)
     }
 
     override fun get(id: Long) = Retry().run {
-        database.productsDao.get(id).map { product ->
-            if (product == null) {
+        database.productDao.get(id).map { productWithShop ->
+            if (productWithShop == null) {
                 sendRequest(401) {
                     service.get(id)
                 }.also { result ->
                     result.getOrNull()?.also {
-                        database.productsDao.save(it)
+                        database.productDao.save(it)
                     }
                 }
             } else {
-                TaskResult.Success(product)
+                TaskResult.Success(productWithShop.product.copy(shop = productWithShop.shop
+                    ?: Shop.default()))
             }
         }.retryCatchIfNecessary(this).flowOn(ioDispatcher)
     }
@@ -72,7 +73,7 @@ internal class ProductsRepository @Inject constructor(
     override fun get(config: PagingConfig) = Pager(
         config = config,
         remoteMediator = ProductsRemoteMediator(database, service),
-    ) { database.productsDao.get() }
+    ) { database.productDao.get() }
 
     @OptIn(FlowPreview::class, ExperimentalTime::class)
     override fun getMeasurementUnits(query: String) = Retry().run {

@@ -23,7 +23,7 @@ abstract class Database : RoomDatabase() {
     abstract val remoteKeyDao: RemoteKeyDao
     abstract val accountsDao: AccountsDao
     abstract val shopsDao: ShopsDao
-    abstract val productsDao: ProductsDao
+    abstract val productDao: ProductDao
     abstract val shoppingListDao: ShoppingListDao
     abstract val measurementUnitDao: MeasurementUnitDao
 }
