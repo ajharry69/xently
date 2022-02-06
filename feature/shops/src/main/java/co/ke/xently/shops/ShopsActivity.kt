@@ -58,7 +58,7 @@ internal fun ShopsNavHost(
                     // TODO: Show shop's addresses screen
                 },
                 onAddShopClicked = {
-                    navController.navigate("shops/${Shop.DEFAULT_ID}")
+                    navController.navigate("shops/${Shop.default().id}")
                 },
                 onNavigationIconClicked = onNavigationIconClicked,
             )

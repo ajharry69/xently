@@ -8,6 +8,7 @@ import co.ke.xently.data.Shop
 import co.ke.xently.data.TaskResult
 import co.ke.xently.data.getOrNull
 import co.ke.xently.data.getOrThrow
+import co.ke.xently.feature.ShopsRemoteMediator
 import co.ke.xently.source.local.Database
 import co.ke.xently.source.remote.retryCatchIfNecessary
 import co.ke.xently.source.remote.sendRequest
@@ -58,8 +59,8 @@ internal class ShopsRepository @Inject constructor(
         }.retryCatchIfNecessary(this).flowOn(ioDispatcher)
     }
 
-    override fun get(config: PagingConfig) = Pager(
+    override fun get(config: PagingConfig, query: String) = Pager(
         config = config,
-        remoteMediator = ShopsRemoteMediator(database, service),
-    ) { database.shopsDao.get() }
+        remoteMediator = ShopsRemoteMediator(database, service, query),
+    ) { database.shopsDao.run { if (query.isBlank()) get() else get("%${query}%") } }
 }

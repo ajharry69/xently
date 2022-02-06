@@ -13,8 +13,14 @@ import java.net.SocketTimeoutException
 
 open class HttpException(
     val detail: Any? = null,
-    val errorCode: String? = null,
+    @Suppress("unused") val errorCode: String? = null,
+    @Suppress("unused") val statusCode: Int? = null,
 ) : RuntimeException() {
+    // TODO: Override this class in every parent class...
+    open fun hasFieldErrors(): Boolean {
+        return false
+    }
+
     override val message: String?
         get() = when (detail) {
             null -> {
@@ -57,27 +63,30 @@ suspend fun <T, E : HttpException> sendRequest(
             TaskResult.Success(if (statusCode == 204) alt else body ?: alt)
         } else {
             val error = try {
-                val exception = JSON_CONVERTER.fromJson(
+                JSON_CONVERTER.fromJson(
                     // The following is potentially blocking! Assume the consumer will call the
                     // suspend function from IO dispatcher.
                     errorBody!!.string(),
                     errorClass
                 )
-                // if (exception.detail.isNullOrBlank()) HttpException(detail = response.message()) else exception
-                exception
             } catch (ex: IllegalStateException) {
+                Log.e(TAG, "sendRequest: ${ex.message}", ex)
                 HttpException(response.message())
             }
             if (statusCode in throwOnStatusCode) {
                 throw error
             }
+            // TODO: Consider throwing exception instead and let the caller do the handling
             TaskResult.Error(error)
         }
     } catch (ex: ConnectException) {
+        Log.e(TAG, "sendRequest: ${ex.message}", ex)
         throw ex
     } catch (ex: SocketTimeoutException) {
+        Log.e(TAG, "sendRequest: ${ex.message}", ex)
         throw ex
     } catch (ex: HttpException) {
+        Log.e(TAG, "sendRequest: ${ex.message}", ex)
         throw ex
     } catch (ex: Exception) {
         Log.e(TAG, "sendRequest: ${ex.message}", ex)

@@ -34,6 +34,9 @@ dependencies {
     implementation project(path: ":common")
     // Only needed for room's annotation on data classes
     implementation "androidx.room:room-runtime:$room_version"
+    // Only needed for @SerializedName annotation
+    // `api` because @SerializedName needs it at runtime
+    api "com.squareup.retrofit2:converter-gson:$retrofit_version"
 
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.3'

@@ -13,6 +13,7 @@ import co.ke.xently.source.local.daos.*
         User::class,
         Product::class,
         ShoppingListItem::class,
+        MeasurementUnit::class,
     ],
     version = 1,
     exportSchema = true
@@ -22,6 +23,7 @@ abstract class Database : RoomDatabase() {
     abstract val remoteKeyDao: RemoteKeyDao
     abstract val accountsDao: AccountsDao
     abstract val shopsDao: ShopsDao
-    abstract val productsDao: ProductsDao
+    abstract val productDao: ProductDao
     abstract val shoppingListDao: ShoppingListDao
+    abstract val measurementUnitDao: MeasurementUnitDao
 }

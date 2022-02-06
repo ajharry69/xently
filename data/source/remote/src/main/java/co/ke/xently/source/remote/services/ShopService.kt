@@ -8,6 +8,8 @@ import retrofit2.http.*
 interface ShopService {
     @GET("shops/")
     suspend fun get(
+        @Query("q")
+        query: String = "",
         @Query("page")
         page: Int = 1,
         @Query("size")

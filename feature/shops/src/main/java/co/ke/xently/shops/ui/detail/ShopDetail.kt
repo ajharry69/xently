@@ -19,9 +19,9 @@ import co.ke.xently.data.TaskResult
 import co.ke.xently.data.TaskResult.Success
 import co.ke.xently.data.errorMessage
 import co.ke.xently.data.getOrNull
-import co.ke.xently.feature.utils.MAP_HEIGHT
 import co.ke.xently.feature.theme.XentlyTheme
 import co.ke.xently.feature.ui.GoogleMapView
+import co.ke.xently.feature.utils.MAP_HEIGHT
 import co.ke.xently.shops.R
 import kotlinx.coroutines.launch
 
@@ -33,7 +33,7 @@ internal fun ShopDetailScreen(
     onNavigationIconClicked: () -> Unit = {},
 ) {
     id?.also {
-        if (it != Shop.DEFAULT_ID) viewModel.get(it)
+        if (it != Shop.default().id) viewModel.get(it)
     }
     val shopResult by viewModel.shopResult.collectAsState()
     ShopDetailScreen(
@@ -54,15 +54,16 @@ private fun ShopDetailScreen(
     onLocationPermissionChanged: (Boolean) -> Unit = {},
     onAddShopClicked: (Shop) -> Unit = {},
 ) {
-    val shop = result.getOrNull() ?: Shop()
+    val shop = result.getOrNull() ?: Shop.default()
     var name by remember(shop.id, shop.name) {
         mutableStateOf(TextFieldValue(shop.name))
     }
     var taxPin by remember(shop.id, shop.taxPin) {
         mutableStateOf(TextFieldValue(shop.taxPin))
     }
-    val toolbarTitlePrefix = stringResource(
-        if (shop.isDefaultID) R.string.fs_add else R.string.fs_update
+    val toolbarTitle = stringResource(
+        R.string.fs_add_shop_toolbar_title,
+        stringResource(if (shop.isDefault) R.string.fs_add else R.string.fs_update),
     )
     val (coroutineScope, scaffoldState) = Pair(rememberCoroutineScope(), rememberScaffoldState())
 
@@ -100,14 +101,7 @@ private fun ShopDetailScreen(
                                 )
                             }
                         },
-                        title = {
-                            Text(
-                                stringResource(
-                                    R.string.fs_add_shop_toolbar_title,
-                                    toolbarTitlePrefix
-                                )
-                            )
-                        },
+                        title = { Text(toolbarTitle) },
                     )
                     if (result is TaskResult.Loading) {
                         LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
@@ -145,12 +139,7 @@ private fun ShopDetailScreen(
                         onAddShopClicked(shop.copy(name = name.text, taxPin = taxPin.text))
                     }
                 ) {
-                    Text(
-                        stringResource(
-                            R.string.fs_shop_item_detail_button_label,
-                            toolbarTitlePrefix
-                        ).uppercase()
-                    )
+                    Text(toolbarTitle.uppercase())
                 }
             }
         }
