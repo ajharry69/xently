@@ -1,27 +1,26 @@
 package co.ke.xently.products.ui.list
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.paging.LoadState
 import androidx.paging.PagingConfig
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.items
 import co.ke.xently.data.Product
+import co.ke.xently.feature.ui.AppendOnPagedData
+import co.ke.xently.feature.ui.prependOnPagedData
 import co.ke.xently.products.R
 import co.ke.xently.products.ui.list.item.ProductListItem
-import kotlinx.coroutines.launch
 
 @Composable
 internal fun ProductListScreen(
@@ -52,16 +51,12 @@ private fun ProductListScreen(
     onNavigationIconClicked: () -> Unit = {},
     onAddProductClicked: () -> Unit = {},
 ) {
-    val genericErrorMessage = stringResource(R.string.fp_generic_error_message)
     val scaffoldState = rememberScaffoldState()
-    val coroutineScope = rememberCoroutineScope()
     Scaffold(
         scaffoldState = scaffoldState,
         topBar = {
             TopAppBar(
-                title = {
-                    Text(stringResource(R.string.title_activity_products))
-                },
+                title = { Text(stringResource(R.string.title_activity_products)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigationIconClicked) {
                         Icon(
@@ -84,36 +79,8 @@ private fun ProductListScreen(
             }
         }
     ) {
-        when (val refresh = pagingItems.loadState.refresh) {
-            is LoadState.Loading -> {
-                return@Scaffold Box(modifier = modifier, contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
-                }
-            }
-            is LoadState.Error -> {
-                return@Scaffold Box(modifier = modifier, contentAlignment = Alignment.Center) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .wrapContentHeight()
-                            .padding(16.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(16.dp),
-                    ) {
-                        Text(refresh.error.localizedMessage ?: genericErrorMessage)
-                        Button(onClick = { /*TODO*/ }) {
-                            Text(stringResource(co.ke.xently.feature.R.string.retry).uppercase())
-                        }
-                    }
-                }
-            }
-            is LoadState.NotLoading -> {
-                if (pagingItems.itemCount == 0) {
-                    return@Scaffold Box(modifier = modifier, contentAlignment = Alignment.Center) {
-                        Text(stringResource(R.string.fp_empty_product_list))
-                    }
-                }
-            }
+        prependOnPagedData(modifier, pagingItems, R.string.fp_empty_product_list)?.also {
+            return@Scaffold
         }
 
         LazyColumn(modifier = modifier, verticalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -127,19 +94,8 @@ private fun ProductListScreen(
                     )
                 } // TODO: Show placeholders on null products...
             }
-            when (val result = pagingItems.loadState.append) {
-                is LoadState.Loading -> item {
-                    CircularProgressIndicator(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .wrapContentWidth(Alignment.CenterHorizontally)
-                    )
-                }
-                is LoadState.Error -> coroutineScope.launch {
-                    scaffoldState.snackbarHostState.showSnackbar(result.error.localizedMessage
-                        ?: genericErrorMessage)
-                }
-                is LoadState.NotLoading -> Unit
+            item {
+                AppendOnPagedData(pagingItems.loadState.append, scaffoldState)
             }
         }
     }

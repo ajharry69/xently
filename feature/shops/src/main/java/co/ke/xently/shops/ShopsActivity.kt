@@ -48,7 +48,7 @@ internal fun ShopsNavHost(
         composable("shops") {
             ShopListScreen(
                 modifier = Modifier.fillMaxSize(),
-                onItemClicked = {
+                onUpdateRequested = {
                     navController.navigate("shops/$it")
                 },
                 onProductsClicked = {

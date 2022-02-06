@@ -1,11 +1,12 @@
 package co.ke.xently.shoppinglist.ui.list
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -17,8 +18,9 @@ import androidx.paging.PagingConfig
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.items
-import co.ke.xently.data.*
+import co.ke.xently.data.ShoppingListItem
 import co.ke.xently.shoppinglist.R
+import co.ke.xently.shoppinglist.ui.list.item.ShoppingListItemCard
 import kotlinx.coroutines.launch
 
 
@@ -28,7 +30,6 @@ internal fun ShoppingListScreen(
     viewModel: ShoppingListViewModel = hiltViewModel(),
     onShoppingListItemClicked: (itemId: Long) -> Unit,
     onRecommendClicked: (itemId: Long) -> Unit,
-    onRecommendOptionsMenuClicked: (List<ShoppingListItem>?) -> Unit,
     onNavigationIconClicked: () -> Unit = {},
     onAddShoppingListItemClicked: () -> Unit = {},
 ) {
@@ -38,7 +39,6 @@ internal fun ShoppingListScreen(
         modifier,
         items,
         onNavigationIconClicked,
-        onRecommendOptionsMenuClicked,
         onShoppingListItemClicked,
         onRecommendClicked,
         onAddShoppingListItemClicked,
@@ -50,7 +50,6 @@ private fun ShoppingListScreen(
     modifier: Modifier,
     pagingItems: LazyPagingItems<ShoppingListItem>,
     onNavigationIconClicked: () -> Unit,
-    onRecommendOptionsMenuClicked: (List<ShoppingListItem>?) -> Unit,
     onShoppingListItemClicked: (itemId: Long) -> Unit,
     onRecommendClicked: (itemId: Long) -> Unit,
     onAddShoppingListItemClicked: () -> Unit,
@@ -134,7 +133,7 @@ private fun ShoppingListScreen(
                             .padding(start = 16.dp)
                             .padding(vertical = 8.dp)
                             .fillMaxWidth(),
-                        onItemClicked = onShoppingListItemClicked,
+                        onUpdateRequested = onShoppingListItemClicked,
                         onRecommendClicked = onRecommendClicked,
                     )
                 } // TODO: Show placeholders on null products...
@@ -152,56 +151,6 @@ private fun ShoppingListScreen(
                         ?: genericErrorMessage)
                 }
                 is LoadState.NotLoading -> Unit
-            }
-        }
-    }
-}
-
-@Composable
-internal fun ShoppingListItemCard(
-    item: ShoppingListItem, modifier: Modifier = Modifier,
-    onItemClicked: ((id: Long) -> Unit) = {},
-    onRecommendClicked: ((id: Long) -> Unit) = {},
-    onDeleteClicked: ((id: Long) -> Unit) = {},
-) {
-    var showDropMenu by remember { mutableStateOf(false) }
-    Row(
-        horizontalArrangement = Arrangement.SpaceBetween,
-        modifier = modifier.clickable { onItemClicked(item.id) }) {
-        Column {
-            Text(
-                modifier = Modifier.wrapContentWidth(),
-                text = item.name,
-                style = MaterialTheme.typography.body1
-            )
-            Text(
-                text = "${item.unitQuantity} ${item.unit}",
-                style = MaterialTheme.typography.caption
-            )
-        }
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(text = "${item.purchaseQuantity}", style = MaterialTheme.typography.h6)
-            Box {
-                IconButton(onClick = { showDropMenu = true }) {
-                    Icon(
-                        if (showDropMenu) Icons.Default.KeyboardArrowDown else Icons.Default.KeyboardArrowRight,
-                        contentDescription = "${item.name} shopping list item options"
-                    )
-                }
-                DropdownMenu(expanded = showDropMenu, onDismissRequest = { showDropMenu = false }) {
-                    DropdownMenuItem(
-                        onClick = {
-                            onRecommendClicked(item.id)
-                            showDropMenu = false
-                        },
-                    ) { Text(text = stringResource(id = R.string.fsl_group_menu_recommend)) }
-                    DropdownMenuItem(
-                        onClick = {
-                            onDeleteClicked(item.id)
-                            showDropMenu = false
-                        },
-                    ) { Text(text = stringResource(id = R.string.fsl_group_menu_delete)) }
-                }
             }
         }
     }

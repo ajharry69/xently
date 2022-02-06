@@ -13,4 +13,5 @@
     <string name="fs_add">Add</string>
     <string name="fs_update">Update</string>
     <string name="fs_navigation_icon_content_description">Navigate back</string>
+    <string name="fs_shop_item_menu_update">Update</string>
 </resources>

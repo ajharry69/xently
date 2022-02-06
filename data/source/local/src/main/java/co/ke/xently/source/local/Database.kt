@@ -21,8 +21,8 @@ import co.ke.xently.source.local.daos.*
 @TypeConverters(RoomTypeConverters.DateConverter::class, RoomTypeConverters.UriConverter::class)
 abstract class Database : RoomDatabase() {
     abstract val remoteKeyDao: RemoteKeyDao
-    abstract val accountsDao: AccountsDao
-    abstract val shopsDao: ShopsDao
+    abstract val accountDao: AccountDao
+    abstract val shopDao: ShopDao
     abstract val productDao: ProductDao
     abstract val shoppingListDao: ShoppingListDao
     abstract val measurementUnitDao: MeasurementUnitDao

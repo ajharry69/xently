@@ -9,7 +9,7 @@ import co.ke.xently.data.Shop
 import kotlinx.coroutines.flow.Flow
 
 @Dao
-interface ShopsDao {
+interface ShopDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun add(vararg shops: Shop)
 

@@ -140,12 +140,10 @@ internal fun ShoppingListNavHost(
                     .fillMaxWidth(),
                 onShoppingListItemClicked = onShoppingListItemClicked,
                 onRecommendClicked = onShoppingListItemRecommendClicked,
-                onRecommendOptionsMenuClicked = {},
-                onAddShoppingListItemClicked = {
-                    navController.navigate("shopping-list/${ShoppingListItem.DEFAULT_ID}")
-                },
                 onNavigationIconClicked = { navController.navigateUp() },
-            )
+            ) {
+                navController.navigate("shopping-list/${ShoppingListItem.DEFAULT_ID}")
+            }
         }
         composable(
             "shopping-list/recommendations/{recommendBy}?from={from}",

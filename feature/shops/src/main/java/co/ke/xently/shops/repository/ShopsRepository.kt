@@ -8,7 +8,6 @@ import co.ke.xently.data.Shop
 import co.ke.xently.data.TaskResult
 import co.ke.xently.data.getOrNull
 import co.ke.xently.data.getOrThrow
-import co.ke.xently.feature.ShopsRemoteMediator
 import co.ke.xently.source.local.Database
 import co.ke.xently.source.remote.retryCatchIfNecessary
 import co.ke.xently.source.remote.sendRequest
@@ -33,7 +32,7 @@ internal class ShopsRepository @Inject constructor(
         flow {
             emit(sendRequest(401) { service.add(shop) })
         }.onEach {
-            database.shopsDao.add(it.getOrThrow())
+            database.shopDao.add(it.getOrThrow())
         }.retryCatchIfNecessary(this).flowOn(ioDispatcher)
     }
 
@@ -41,16 +40,16 @@ internal class ShopsRepository @Inject constructor(
         flow {
             emit(sendRequest(401) { service.update(shop.id, shop) })
         }.onEach {
-            database.shopsDao.add(it.getOrThrow())
+            database.shopDao.add(it.getOrThrow())
         }.retryCatchIfNecessary(this).flowOn(ioDispatcher)
     }
 
     override fun get(id: Long) = Retry().run {
-        database.shopsDao.get(id).map { shop ->
+        database.shopDao.get(id).map { shop ->
             if (shop == null) {
                 sendRequest(401) { service.get(id) }.apply {
                     getOrNull()?.also {
-                        database.shopsDao.add(it)
+                        database.shopDao.add(it)
                     }
                 }
             } else {
@@ -62,5 +61,5 @@ internal class ShopsRepository @Inject constructor(
     override fun get(config: PagingConfig, query: String) = Pager(
         config = config,
         remoteMediator = ShopsRemoteMediator(database, service, query),
-    ) { database.shopsDao.run { if (query.isBlank()) get() else get("%${query}%") } }
+    ) { database.shopDao.run { if (query.isBlank()) get() else get("%${query}%") } }
 }

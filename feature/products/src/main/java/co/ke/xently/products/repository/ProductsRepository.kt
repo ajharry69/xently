@@ -98,7 +98,7 @@ internal class ProductsRepository @Inject constructor(
 
     @OptIn(FlowPreview::class, ExperimentalTime::class)
     override fun getShops(query: String): Flow<TaskResult<List<Shop>>> = Retry().run {
-        database.shopsDao.getShops("%${query}%").flatMapConcat { shops ->
+        database.shopDao.getShops("%${query}%").flatMapConcat { shops ->
             if (shops.isEmpty()) {
                 flow {
                     delay(100.milliseconds)
@@ -106,7 +106,7 @@ internal class ProductsRepository @Inject constructor(
                         sendRequest(401) { shopService.get(query, size = 30) }
                             .mapCatching { data ->
                                 data.results.also {
-                                    database.shopsDao.add(it)
+                                    database.shopDao.add(it)
                                 }.take(5)
                             },
                     )

@@ -179,7 +179,7 @@ private fun ShoppingListRecommendationScreen(
 private fun ToolBar(
     backgroundColor: Color = MaterialTheme.colors.primarySurface,
     elevation: Dp = AppBarDefaults.TopAppBarElevation,
-    onNavigationIconClicked: () -> Unit
+    onNavigationIconClicked: () -> Unit,
 ) {
     TopAppBar(
         elevation = elevation,
