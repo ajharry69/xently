@@ -7,13 +7,9 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.*
 import androidx.compose.ui.tooling.preview.Preview
@@ -23,7 +19,9 @@ import co.ke.xently.accounts.R
 import co.ke.xently.data.TaskResult
 import co.ke.xently.data.User
 import co.ke.xently.data.errorMessage
-import kotlinx.coroutines.launch
+import co.ke.xently.feature.ui.PasswordVisibilityToggle
+import co.ke.xently.feature.ui.ToolbarWithProgressbar
+import co.ke.xently.feature.ui.XentlyTextField
 
 @Composable
 internal fun SignInScreen(
@@ -46,9 +44,8 @@ internal fun SignInScreen(
         onSuccessfulSignIn,
         onForgotPasswordButtonClicked,
         onCreateAccountButtonClicked,
-    ) { uname, pword ->
-        viewModel.signIn(uname, pword)
-    }
+        viewModel::signIn,
+    )
 }
 
 @Composable
@@ -67,113 +64,102 @@ private fun SignInScreen(
     var pword by remember { mutableStateOf(TextFieldValue(password)) }
     var isPasswordVisible by remember { mutableStateOf(false) }
 
-    val (coroutineScope, scaffoldState) = Pair(rememberCoroutineScope(), rememberScaffoldState())
+    val scaffoldState = rememberScaffoldState()
 
     if (result is TaskResult.Error) {
-        val errorMessage = result.errorMessage ?: stringResource(R.string.fs_generic_error_message)
+        val errorMessage = result.errorMessage ?: stringResource(R.string.generic_error_message)
         LaunchedEffect(result, errorMessage) {
-            coroutineScope.launch {
-                scaffoldState.snackbarHostState.showSnackbar(errorMessage)
-            }
+            scaffoldState.snackbarHostState.showSnackbar(errorMessage)
         }
     } else if (result is TaskResult.Success && result.data != null) {
         SideEffect {
-            uname = uname.copy(text = "")
-            pword = pword.copy(text = "")
+            uname = TextFieldValue()
+            pword = TextFieldValue()
             onSuccessfulSignIn(result.data!!)
         }
     }
 
     val focusManager = LocalFocusManager.current
+    val toolbarTitle = stringResource(R.string.fa_signin_toolbar_title)
 
-    Scaffold(scaffoldState = scaffoldState) {
-        Column(modifier = modifier) {
-            Column(modifier = Modifier.fillMaxWidth()) {
-                TopAppBar(
-                    backgroundColor = Color.Transparent,
-                    elevation = 0.dp,
-                    navigationIcon = {
-                        IconButton(onClick = onNavigationIconClicked) {
-                            Icon(
-                                Icons.Default.ArrowBack,
-                                contentDescription = stringResource(R.string.fa_navigation_icon_content_description),
-                            )
-                        }
-                    },
-                    title = { Text(stringResource(R.string.fa_signin_toolbar_title)) },
+    Scaffold(
+        scaffoldState = scaffoldState,
+        topBar = {
+            ToolbarWithProgressbar(
+                toolbarTitle,
+                onNavigationIconClicked,
+                result is TaskResult.Loading,
+            )
+        },
+    ) { paddingValues ->
+        Column(modifier = modifier.padding(paddingValues)) {
+            Column(modifier = Modifier
+                .verticalScroll(rememberScrollState())
+                .weight(1f)) {
+                XentlyTextField(
+                    value = uname,
+                    onValueChange = { uname = it },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                        .padding(top = 16.dp),
+                    label = stringResource(R.string.fa_signin_username_label),
+                    keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Email,
+                        imeAction = ImeAction.Next),
                 )
-                if (result is TaskResult.Loading) {
-                    LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                Spacer(modifier = Modifier.padding(vertical = 8.dp))
+                XentlyTextField(
+                    value = pword,
+                    onValueChange = { pword = it },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    label = stringResource(R.string.fa_signin_password_label),
+                    keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Password),
+                    keyboardActions = KeyboardActions(onDone = {
+                        focusManager.clearFocus()
+                    }),
+                    visualTransformation = if (isPasswordVisible) {
+                        VisualTransformation.None
+                    } else {
+                        PasswordVisualTransformation()
+                    },
+                    trailingIcon = {
+                        PasswordVisibilityToggle(isVisible = isPasswordVisible) {
+                            isPasswordVisible = !isPasswordVisible
+                        }
+                    }
+                )
+                Spacer(modifier = Modifier.padding(vertical = 8.dp))
+                Row(modifier = Modifier.padding(horizontal = 16.dp)) {
+                    Spacer(modifier = Modifier.weight(1f))
+                    TextButton(onForgotPasswordButtonClicked) {
+                        Text(stringResource(R.string.fa_signin_forgot_password_button_label))
+                    }
+                }
+                Spacer(modifier = Modifier.padding(vertical = 4.dp))
+                Button(
+                    enabled = arrayOf(uname, pword).all { it.text.isNotBlank() },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    onClick = {
+                        focusManager.clearFocus()
+                        onSignInClicked(uname.text, pword.text)
+                    }
+                ) {
+                    Text(toolbarTitle.uppercase())
                 }
             }
-            Column {
-                Column(modifier = Modifier
-                    .verticalScroll(rememberScrollState())
-                    .weight(1f)) {
-                    TextField(
-                        value = uname,
-                        singleLine = true,
-                        onValueChange = { uname = it },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp)
-                            .padding(top = 16.dp),
-                        label = { Text(text = stringResource(R.string.fa_signin_username_label)) },
-                        keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Email,
-                            imeAction = ImeAction.Next),
-                    )
-                    Spacer(modifier = Modifier.padding(vertical = 8.dp))
-                    TextField(
-                        value = pword,
-                        singleLine = true,
-                        onValueChange = { pword = it },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp),
-                        label = { Text(text = stringResource(R.string.fa_signin_password_label)) },
-                        keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Password),
-                        keyboardActions = KeyboardActions(onDone = {
-                            focusManager.clearFocus()
-                        }),
-                        visualTransformation = if (isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                        trailingIcon = {
-                            IconButton(onClick = { isPasswordVisible = !isPasswordVisible }) {
-                                Icon(painterResource(if (isPasswordVisible) R.drawable.ic_password_visible else R.drawable.ic_password_invisible),
-                                    contentDescription = stringResource(R.string.fa_toggle_password_visibility))
-                            }
-                        }
-                    )
-                    Spacer(modifier = Modifier.padding(vertical = 8.dp))
-                    Row(modifier = Modifier.padding(horizontal = 16.dp)) {
-                        Box(modifier = Modifier.weight(1f))
-                        TextButton(onForgotPasswordButtonClicked) {
-                            Text(stringResource(R.string.fa_signin_forgot_password_button_label))
-                        }
-                    }
-                    Spacer(modifier = Modifier.padding(vertical = 4.dp))
-                    Button(
-                        enabled = arrayOf(uname, pword).all { it.text.isNotBlank() },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp),
-                        onClick = {
-                            focusManager.clearFocus()
-                            onSignInClicked(uname.text, pword.text)
-                        }
-                    ) {
-                        Text(stringResource(R.string.fa_signin_button_label).uppercase())
-                    }
-                }
-                TextButton(
-                    { onCreateAccountButtonClicked(uname.text, pword.text) },
-                    modifier = Modifier
-                        .padding(16.dp)
-                        .fillMaxWidth(),
-                    border = BorderStroke(1.dp,
-                        MaterialTheme.colors.onBackground.copy(alpha = 0.2f)),
-                ) {
-                    Text(text = stringResource(R.string.fa_signin_signup_button_label))
-                }
+            TextButton(
+                { onCreateAccountButtonClicked(uname.text, pword.text) },
+                modifier = Modifier
+                    .padding(16.dp)
+                    .fillMaxWidth(),
+                border = BorderStroke(1.dp,
+                    MaterialTheme.colors.onBackground.copy(alpha = 0.2f)),
+            ) {
+                Text(stringResource(R.string.fa_signin_signup_button_label))
             }
         }
     }

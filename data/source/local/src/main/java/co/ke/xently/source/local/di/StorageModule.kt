@@ -5,10 +5,10 @@ import android.content.SharedPreferences
 import androidx.room.Room
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
-import co.ke.xently.common.di.qualifiers.EncryptedSharedPreference
-import co.ke.xently.common.di.qualifiers.UnencryptedSharedPreference
 import co.ke.xently.common.ENCRYPTED_SHARED_PREFERENCE_KEY
 import co.ke.xently.common.UNENCRYPTED_SHARED_PREFERENCE_KEY
+import co.ke.xently.common.di.qualifiers.EncryptedSharedPreference
+import co.ke.xently.common.di.qualifiers.UnencryptedSharedPreference
 import co.ke.xently.source.local.Database
 import dagger.Module
 import dagger.Provides
@@ -34,7 +34,7 @@ object StorageModule {
     @EncryptedSharedPreference
     @Singleton
     fun provideEncryptedSharedPreference(
-        @ApplicationContext context: Context
+        @ApplicationContext context: Context,
     ): SharedPreferences = EncryptedSharedPreferences.create(
         context,
         ENCRYPTED_SHARED_PREFERENCE_KEY,
@@ -47,7 +47,7 @@ object StorageModule {
     @UnencryptedSharedPreference
     @Singleton
     fun provideUnencryptedSharedPreference(
-        @ApplicationContext context: Context
+        @ApplicationContext context: Context,
     ): SharedPreferences =
         context.getSharedPreferences(UNENCRYPTED_SHARED_PREFERENCE_KEY, Context.MODE_PRIVATE)
 }

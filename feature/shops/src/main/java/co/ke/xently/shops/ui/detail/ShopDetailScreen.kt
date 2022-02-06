@@ -3,9 +3,10 @@ package co.ke.xently.shops.ui.detail
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.Button
+import androidx.compose.material.Scaffold
+import androidx.compose.material.Text
+import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -21,9 +22,11 @@ import co.ke.xently.data.errorMessage
 import co.ke.xently.data.getOrNull
 import co.ke.xently.feature.theme.XentlyTheme
 import co.ke.xently.feature.ui.GoogleMapView
+import co.ke.xently.feature.ui.ToolbarWithProgressbar
+import co.ke.xently.feature.ui.XentlyTextField
+import co.ke.xently.feature.ui.stringRes
 import co.ke.xently.feature.utils.MAP_HEIGHT
 import co.ke.xently.shops.R
-import kotlinx.coroutines.launch
 
 @Composable
 internal fun ShopDetailScreen(
@@ -41,9 +44,8 @@ internal fun ShopDetailScreen(
         shopResult,
         onNavigationIconClicked,
         viewModel::setLocationPermissionGranted,
-    ) {
-        viewModel.add(it)
-    }
+        viewModel::add,
+    )
 }
 
 @Composable
@@ -61,27 +63,26 @@ private fun ShopDetailScreen(
     var taxPin by remember(shop.id, shop.taxPin) {
         mutableStateOf(TextFieldValue(shop.taxPin))
     }
-    val toolbarTitle = stringResource(
+    val toolbarTitle = stringRes(
         R.string.fs_add_shop_toolbar_title,
-        stringResource(if (shop.isDefault) R.string.fs_add else R.string.fs_update),
+        if (shop.isDefault) R.string.add else R.string.update,
     )
-    val (coroutineScope, scaffoldState) = Pair(rememberCoroutineScope(), rememberScaffoldState())
+    val scaffoldState = rememberScaffoldState()
 
     if (result is TaskResult.Error) {
-        val errorMessage = result.errorMessage ?: stringResource(R.string.fs_generic_error_message)
+        val errorMessage = result.errorMessage ?: stringResource(R.string.generic_error_message)
         LaunchedEffect(shop.id, result, errorMessage) {
-            coroutineScope.launch {
-                scaffoldState.snackbarHostState.showSnackbar(errorMessage)
-            }
+            scaffoldState.snackbarHostState.showSnackbar(errorMessage)
         }
     }
 
-    Scaffold(scaffoldState = scaffoldState) {
-        Column(modifier = modifier) {
+    Scaffold(
+        scaffoldState = scaffoldState,
+        topBar = {
             Box(
                 modifier = Modifier
-                    .height(IntrinsicSize.Min)
                     .fillMaxWidth()
+                    .height(IntrinsicSize.Min),
             ) {
                 GoogleMapView(
                     Modifier
@@ -89,58 +90,50 @@ private fun ShopDetailScreen(
                         .fillMaxWidth(),
                     onLocationPermissionChanged = onLocationPermissionChanged,
                 )
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    TopAppBar(
-                        backgroundColor = Color.Transparent,
-                        elevation = 0.dp,
-                        navigationIcon = {
-                            IconButton(onClick = onNavigationIconClicked) {
-                                Icon(
-                                    Icons.Default.ArrowBack,
-                                    contentDescription = stringResource(R.string.fs_navigation_icon_content_description),
-                                )
-                            }
-                        },
-                        title = { Text(toolbarTitle) },
-                    )
-                    if (result is TaskResult.Loading) {
-                        LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
-                    }
-                }
+                ToolbarWithProgressbar(
+                    toolbarTitle,
+                    onNavigationIconClicked,
+                    result is TaskResult.Loading,
+                    elevation = 0.dp,
+                    backgroundColor = Color.Transparent,
+                )
             }
-            Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
-                TextField(
-                    value = name,
-                    singleLine = true,
-                    onValueChange = { name = it },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp)
-                        .padding(top = 16.dp),
-                    label = { Text(text = stringResource(R.string.fs_shop_item_detail_name_label)) },
-                )
-                Spacer(modifier = Modifier.padding(vertical = 8.dp))
-                TextField(
-                    value = taxPin,
-                    singleLine = true,
-                    onValueChange = { taxPin = it },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                    label = { Text(text = stringResource(R.string.fs_shop_item_detail_tax_pin_label)) },
-                )
-                Spacer(modifier = Modifier.padding(vertical = 8.dp))
-                Button(
-                    enabled = arrayOf(name, taxPin).all { it.text.isNotBlank() },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                    onClick = {
-                        onAddShopClicked(shop.copy(name = name.text, taxPin = taxPin.text))
-                    }
-                ) {
-                    Text(toolbarTitle.uppercase())
+        }
+    ) { paddingValues ->
+        Column(
+            modifier = modifier
+                .padding(paddingValues)
+                .verticalScroll(rememberScrollState()),
+        ) {
+            XentlyTextField(
+                value = name,
+                onValueChange = { name = it },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+                    .padding(top = 16.dp),
+                label = stringResource(R.string.fs_shop_item_detail_name_label),
+            )
+            Spacer(modifier = Modifier.padding(vertical = 8.dp))
+            XentlyTextField(
+                value = taxPin,
+                onValueChange = { taxPin = it },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                label = stringResource(R.string.fs_shop_item_detail_tax_pin_label),
+            )
+            Spacer(modifier = Modifier.padding(vertical = 8.dp))
+            Button(
+                enabled = arrayOf(name, taxPin).all { it.text.isNotBlank() },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                onClick = {
+                    onAddShopClicked(shop.copy(name = name.text, taxPin = taxPin.text))
                 }
+            ) {
+                Text(toolbarTitle.uppercase())
             }
         }
     }

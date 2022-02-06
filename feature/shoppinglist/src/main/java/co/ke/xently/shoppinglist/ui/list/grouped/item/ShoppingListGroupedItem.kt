@@ -14,7 +14,7 @@ import androidx.compose.ui.unit.dp
 import co.ke.xently.data.GroupedShoppingList
 import co.ke.xently.data.ShoppingListItem
 import co.ke.xently.shoppinglist.R
-import co.ke.xently.shoppinglist.ui.list.ShoppingListItemCard
+import co.ke.xently.shoppinglist.ui.list.item.ShoppingListItemCard
 import java.util.*
 
 
@@ -84,7 +84,7 @@ internal fun GroupedShoppingListCard(
                                 onDeleteGroupClicked(groupList.group)
                                 showDropDownMenu = false
                             },
-                        ) { Text(text = stringResource(R.string.fsl_group_menu_delete)) }
+                        ) { Text(stringResource(R.string.delete)) }
                     }
                 }
             }
@@ -113,7 +113,7 @@ internal fun GroupedShoppingListCard(
                         .padding(end = 16.dp, bottom = 8.dp)
                 ) {
                     Text(
-                        text = stringResource(R.string.fsl_group_button_see_all),
+                        stringResource(R.string.fsl_group_button_see_all),
                         style = MaterialTheme.typography.button
                     )
                 }

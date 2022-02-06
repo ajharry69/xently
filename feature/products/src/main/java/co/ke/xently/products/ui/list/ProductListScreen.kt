@@ -1,16 +1,15 @@
 package co.ke.xently.products.ui.list
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material.*
+import androidx.compose.material.FloatingActionButton
+import androidx.compose.material.Icon
+import androidx.compose.material.Scaffold
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.paging.PagingConfig
 import androidx.paging.compose.LazyPagingItems
@@ -18,7 +17,9 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.items
 import co.ke.xently.data.Product
 import co.ke.xently.feature.ui.AppendOnPagedData
-import co.ke.xently.feature.ui.prependOnPagedData
+import co.ke.xently.feature.ui.PagedDataScreen
+import co.ke.xently.feature.ui.ToolbarWithProgressbar
+import co.ke.xently.feature.ui.stringRes
 import co.ke.xently.products.R
 import co.ke.xently.products.ui.list.item.ProductListItem
 
@@ -55,35 +56,19 @@ private fun ProductListScreen(
     Scaffold(
         scaffoldState = scaffoldState,
         topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.title_activity_products)) },
-                navigationIcon = {
-                    IconButton(onClick = onNavigationIconClicked) {
-                        Icon(
-                            Icons.Default.ArrowBack,
-                            stringResource(R.string.fp_navigation_icon_content_description),
-                        )
-                    }
-                }
+            ToolbarWithProgressbar(
+                stringResource(R.string.title_activity_products),
+                onNavigationIconClicked,
             )
         },
         floatingActionButton = {
             FloatingActionButton(onClick = onAddProductClicked) {
-                Icon(
-                    Icons.Default.Add,
-                    stringResource(
-                        R.string.fp_add_product_toolbar_title,
-                        stringResource(R.string.fp_add),
-                    )
-                )
+                Icon(Icons.Default.Add,
+                    stringRes(R.string.fp_add_product_toolbar_title, R.string.add))
             }
         }
     ) {
-        prependOnPagedData(modifier, pagingItems, R.string.fp_empty_product_list)?.also {
-            return@Scaffold
-        }
-
-        LazyColumn(modifier = modifier, verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        PagedDataScreen(modifier, pagingItems) {
             items(pagingItems) {
                 if (it != null) {
                     ProductListItem(

@@ -1,5 +1,7 @@
 package co.ke.xently.feature.ui
 
+import androidx.annotation.StringRes
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -10,11 +12,19 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.PopupProperties
 
+@Composable
+fun stringRes(@StringRes string: Int, @StringRes vararg strings: Int): String {
+    return stringResource(string, *strings.map {
+        stringResource(it)
+    }.toTypedArray())
+}
 
 @Composable
 fun TextFieldErrorText(error: String, modifier: Modifier = Modifier) {
@@ -38,7 +48,8 @@ fun XentlyTextField(
     keyboardActions: KeyboardActions = KeyboardActions(),
     onValueChange: (TextFieldValue) -> Unit,
     trailingIcon: @Composable (() -> Unit)? = null,
-    label: @Composable (() -> Unit)? = null,
+    label: String? = null,
+    visualTransformation: VisualTransformation = VisualTransformation.None,
 ) {
     Column(modifier = modifier) {
         TextField(
@@ -47,10 +58,11 @@ fun XentlyTextField(
             isError = isError,
             onValueChange = onValueChange,
             modifier = Modifier.fillMaxWidth(),
-            label = label,
+            label = label?.let { { Text(it) } },
             trailingIcon = trailingIcon,
             keyboardOptions = keyboardOptions,
             keyboardActions = keyboardActions,
+            visualTransformation = visualTransformation,
         )
         if (isError) {
             TextFieldErrorText(error, Modifier.fillMaxWidth())
@@ -69,8 +81,8 @@ fun XentlyTextField(
 
 @Composable
 fun <T> AutoCompleteTextField(
-    value: String,
-    onValueChange: (String) -> Unit,
+    value: TextFieldValue,
+    onValueChange: (TextFieldValue) -> Unit,
     onOptionSelected: (T) -> Unit,
     modifier: Modifier = Modifier,
     isError: Boolean = false,
@@ -78,37 +90,32 @@ fun <T> AutoCompleteTextField(
     suggestions: List<T> = emptyList(),
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions(),
-    label: @Composable (() -> Unit)? = null,
+    label: String? = null,
     suggestionItemContent: @Composable ((T) -> Unit),
 ) {
     var query by remember(value) { mutableStateOf(value) }
     var showDropdownMenu by remember { mutableStateOf(false) }
 
-    Column(modifier = modifier) {
-        Column(modifier = Modifier.fillMaxWidth()) {
-            TextField(
-                value = query,
-                singleLine = true,
-                isError = isError,
-                onValueChange = {
-                    onValueChange(it)
-                    query = it
-                    showDropdownMenu = query.isNotBlank()
-                },
-                modifier = Modifier.fillMaxWidth(),
-                label = label,
-                keyboardOptions = keyboardOptions,
-                keyboardActions = keyboardActions,
-                trailingIcon = {
-                    IconButton(onClick = { showDropdownMenu = true }) {
-                        Icon(Icons.Default.ArrowDropDown, contentDescription = null)
-                    }
-                },
-            )
-            if (isError) {
-                TextFieldErrorText(error = error, modifier = Modifier.fillMaxWidth())
-            }
-        }
+    Box(modifier = modifier) {
+        XentlyTextField(
+            value = query,
+            label = label,
+            error = error,
+            isError = isError,
+            keyboardOptions = keyboardOptions,
+            keyboardActions = keyboardActions,
+            modifier = Modifier.fillMaxWidth(),
+            onValueChange = {
+                onValueChange(it)
+                query = it
+                showDropdownMenu = query.text.isNotBlank()
+            },
+            trailingIcon = {
+                IconButton(onClick = { showDropdownMenu = true }) {
+                    Icon(Icons.Default.ArrowDropDown, contentDescription = null)
+                }
+            },
+        )
         DropdownMenu(
             expanded = showDropdownMenu && suggestions.isNotEmpty(),
             onDismissRequest = {

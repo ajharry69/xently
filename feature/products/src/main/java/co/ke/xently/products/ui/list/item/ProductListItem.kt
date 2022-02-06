@@ -85,13 +85,13 @@ internal fun ProductListItem(
                             onUpdateRequested(product.id)
                             showDropMenu = false
                         },
-                    ) { Text(text = stringResource(R.string.fp_list_item_menu_update)) }
+                    ) { Text(stringResource(R.string.update)) }
                     DropdownMenuItem(
                         onClick = {
                             onDeleteRequested(product.id)
                             showDropMenu = false
                         },
-                    ) { Text(text = stringResource(R.string.fp_list_item_menu_delete)) }
+                    ) { Text(stringResource(R.string.delete)) }
                 }
             }
         }

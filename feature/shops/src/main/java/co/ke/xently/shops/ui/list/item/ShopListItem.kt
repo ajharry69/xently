@@ -55,7 +55,7 @@ internal fun ShopListItem(
                         .width(1.dp),
                 )
                 Text(
-                    text = resources.getQuantityString(
+                    resources.getQuantityString(
                         R.plurals.fs_shop_item_locations,
                         shop.addressesCount,
                         shop.addressesCount
@@ -67,18 +67,23 @@ internal fun ShopListItem(
                         .width(1.dp),
                 )
                 Text(
-                    text = resources.getQuantityString(
+                    resources.getQuantityString(
                         R.plurals.fs_shop_item_products,
                         shop.productsCount,
                         shop.productsCount
-                    ), style = MaterialTheme.typography.caption
+                    ),
+                    style = MaterialTheme.typography.caption,
                 )
             }
         }
         Box(modifier = Modifier.width(IntrinsicSize.Min)) {
             IconButton(onClick = { showDropMenu = true }) {
                 Icon(
-                    if (showDropMenu) Icons.Default.KeyboardArrowDown else Icons.Default.KeyboardArrowRight,
+                    if (showDropMenu) {
+                        Icons.Default.KeyboardArrowDown
+                    } else {
+                        Icons.Default.KeyboardArrowRight
+                    },
                     contentDescription = stringResource(
                         R.string.fs_shop_item_menu_content_description,
                         shop.name,
@@ -91,19 +96,19 @@ internal fun ShopListItem(
                         onUpdateRequested(shop.id)
                         showDropMenu = false
                     },
-                ) { Text(text = stringResource(id = R.string.fs_shop_item_menu_update)) }
+                ) { Text(stringResource(R.string.update)) }
                 DropdownMenuItem(
                     onClick = {
                         onProductsClicked(shop.id)
                         showDropMenu = false
                     },
-                ) { Text(text = stringResource(id = R.string.fs_shop_item_menu_products)) }
+                ) { Text(stringResource(R.string.fs_shop_item_menu_products)) }
                 DropdownMenuItem(
                     onClick = {
                         onAddressesClicked(shop.id)
                         showDropMenu = false
                     },
-                ) { Text(text = stringResource(id = R.string.fs_shop_item_menu_addresses)) }
+                ) { Text(stringResource(R.string.fs_shop_item_menu_addresses)) }
             }
         }
     }

@@ -53,7 +53,7 @@ internal fun ShoppingListItemCard(
                             onUpdateRequested(item.id)
                             showDropMenu = false
                         },
-                    ) { Text(stringResource(R.string.fsl_group_menu_update)) }
+                    ) { Text(stringResource(R.string.update)) }
                     DropdownMenuItem(
                         onClick = {
                             onRecommendClicked(item.id)
@@ -65,7 +65,7 @@ internal fun ShoppingListItemCard(
                             onDeleteClicked(item.id)
                             showDropMenu = false
                         },
-                    ) { Text(stringResource(R.string.fsl_group_menu_delete)) }
+                    ) { Text(stringResource(R.string.delete)) }
                 }
             }
         }

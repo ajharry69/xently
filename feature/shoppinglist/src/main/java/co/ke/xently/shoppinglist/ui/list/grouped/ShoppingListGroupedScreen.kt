@@ -25,6 +25,8 @@ import co.ke.xently.data.GroupedShoppingList
 import co.ke.xently.data.TaskResult
 import co.ke.xently.data.errorMessage
 import co.ke.xently.data.getOrThrow
+import co.ke.xently.feature.ui.FullscreenError
+import co.ke.xently.feature.ui.FullscreenLoading
 import co.ke.xently.shoppinglist.R
 import co.ke.xently.shoppinglist.ui.list.grouped.item.GroupedShoppingListCard
 import kotlinx.coroutines.launch
@@ -173,23 +175,14 @@ private fun GroupedShoppingListScreen(
     ) {
         when (groupedShoppingListResult) {
             is TaskResult.Error -> {
-                Box(contentAlignment = Alignment.Center, modifier = modifier) {
-                    Text(
-                        groupedShoppingListResult.errorMessage
-                            ?: stringResource(R.string.fsl_generic_error_message)
-                    )
-                }
+                FullscreenError(modifier, groupedShoppingListResult.errorMessage)
             }
-            TaskResult -> {
-                Box(contentAlignment = Alignment.Center, modifier = modifier) {
-                    CircularProgressIndicator()
-                }
-            }
+            TaskResult -> FullscreenLoading(modifier)
             is TaskResult.Success -> {
                 val groupedShoppingList = groupedShoppingListResult.getOrThrow()
                 if (groupedShoppingList.isEmpty()) {
                     Box(contentAlignment = Alignment.Center, modifier = modifier) {
-                        Text(text = stringResource(R.string.fsl_empty_shopping_list))
+                        Text(stringResource(R.string.fsl_empty_shopping_list))
                     }
                 } else {
                     LazyColumn(modifier = modifier) {

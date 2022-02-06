@@ -1,30 +1,28 @@
 package co.ke.xently.shops.ui.list
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.wrapContentWidth
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material.*
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.FloatingActionButton
+import androidx.compose.material.Icon
+import androidx.compose.material.Scaffold
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.paging.LoadState
 import androidx.paging.PagingConfig
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.items
 import co.ke.xently.data.Shop
+import co.ke.xently.feature.ui.AppendOnPagedData
+import co.ke.xently.feature.ui.PagedDataScreen
+import co.ke.xently.feature.ui.ToolbarWithProgressbar
+import co.ke.xently.feature.ui.stringRes
 import co.ke.xently.shops.R
 import co.ke.xently.shops.ui.list.item.ShopListItem
-import kotlinx.coroutines.launch
 
 @Composable
 internal fun ShopListScreen(
@@ -60,57 +58,20 @@ private fun ShopListScreen(
     onAddShopClicked: (() -> Unit) = {},
 ) {
     val scaffoldState = rememberScaffoldState()
-    val coroutineScope = rememberCoroutineScope()
-    val genericErrorMessage = stringResource(R.string.fs_generic_error_message)
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(stringResource(R.string.title_activity_shops))
-                },
-                navigationIcon = {
-                    IconButton(onClick = onNavigationIconClicked) {
-                        Icon(
-                            Icons.Default.ArrowBack,
-                            stringResource(R.string.fs_navigation_icon_content_description),
-                        )
-                    }
-                }
+            ToolbarWithProgressbar(
+                stringResource(R.string.title_activity_shops),
+                onNavigationIconClicked,
             )
         },
         floatingActionButton = {
             FloatingActionButton(onClick = onAddShopClicked) {
-                Icon(
-                    Icons.Default.Add,
-                    stringResource(
-                        R.string.fs_add_shop_toolbar_title,
-                        stringResource(R.string.fs_add),
-                    )
-                )
+                Icon(Icons.Default.Add, stringRes(R.string.fs_add_shop_toolbar_title, R.string.add))
             }
         },
-    ) {
-        when (val refresh = pagingItems.loadState.refresh) {
-            is LoadState.Loading -> {
-                return@Scaffold Box(modifier = modifier, contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
-                }
-            }
-            is LoadState.Error -> {
-                return@Scaffold Box(modifier = modifier, contentAlignment = Alignment.Center) {
-                    Text(refresh.error.localizedMessage ?: genericErrorMessage)
-                }
-            }
-            is LoadState.NotLoading -> {
-                if (pagingItems.itemCount == 0) {
-                    return@Scaffold Box(modifier = modifier, contentAlignment = Alignment.Center) {
-                        Text(text = stringResource(id = R.string.fs_empty_shop_list))
-                    }
-                }
-            }
-        }
-
-        LazyColumn(modifier = modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    ) { paddingValues ->
+        PagedDataScreen(modifier.padding(paddingValues), pagingItems) {
             items(pagingItems) {
                 if (it != null) {
                     ShopListItem(
@@ -122,19 +83,8 @@ private fun ShopListScreen(
                     )
                 } // TODO: Show placeholders on null products...
             }
-            when (val result = pagingItems.loadState.append) {
-                is LoadState.Loading -> item {
-                    CircularProgressIndicator(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .wrapContentWidth(Alignment.CenterHorizontally)
-                    )
-                }
-                is LoadState.Error -> coroutineScope.launch {
-                    scaffoldState.snackbarHostState.showSnackbar(result.error.localizedMessage
-                        ?: genericErrorMessage)
-                }
-                is LoadState.NotLoading -> Unit
+            item {
+                AppendOnPagedData(pagingItems.loadState.append, scaffoldState)
             }
         }
     }

@@ -6,6 +6,9 @@ import org.junit.Assert
 class NumbersTest : TestCase() {
 
     fun `test descriptive for numbers less than 1000`() {
+        Assert.assertEquals("shopping list",
+            "ShoppingList".mapIndexed { i, c -> if (i != 0 && c.isUpperCase()) " $c" else "$c" }
+                .joinToString("") { it }.lowercase())
         Assert.assertEquals("888", 888.descriptive())
         Assert.assertEquals("998", 998.descriptive())
         Assert.assertEquals("1.0k", 999.descriptive())

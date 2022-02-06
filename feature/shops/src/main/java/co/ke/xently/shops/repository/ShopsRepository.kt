@@ -61,5 +61,13 @@ internal class ShopsRepository @Inject constructor(
     override fun get(config: PagingConfig, query: String) = Pager(
         config = config,
         remoteMediator = ShopsRemoteMediator(database, service, query),
-    ) { database.shopDao.run { if (query.isBlank()) get() else get("%${query}%") } }
+    ) {
+        database.shopDao.run {
+            if (query.isBlank()) {
+                get()
+            } else {
+                get("%${query}%")
+            }
+        }
+    }.flow
 }

@@ -8,8 +8,10 @@ import androidx.compose.material.TextButton
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.viewinterop.NoOpUpdate
+import co.ke.xently.feature.R
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.google.android.libraries.maps.CameraUpdateFactory
 import com.google.android.libraries.maps.MapView
@@ -80,20 +82,23 @@ fun GoogleMapViewContainer(
                         permissionState.launchMultiplePermissionRequest()
                         showRationale = false
                     },
-                ) { Text("REQUEST PERMISSION") }
+                ) { Text(stringResource(R.string.request_permission_button_label)) }
             },
             dismissButton = {
                 TextButton(onClick = { showRationale = false }) {
-                    Text("DON'T SHOW AGAIN")
+                    Text(stringResource(R.string.never_show_again_button_label))
                 }
             },
-            text = { Text("Location service is important for effective shop recommendation by this app. Please grant the permission.") },
+            text = { Text(stringResource(R.string.location_permission_rationale)) },
         )
     }
     val cameraPositions = remember(*markerPositions) { markerPositions }
 
-    LaunchedEffect(map, permissionState.allPermissionsGranted) {
+    SideEffect {
         onLocationPermissionChanged(permissionState.allPermissionsGranted)
+    }
+
+    LaunchedEffect(map, permissionState.allPermissionsGranted) {
         val googleMap = map.awaitMap().apply {
             uiSettings.apply {
                 isZoomControlsEnabled = true

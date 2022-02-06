@@ -8,13 +8,12 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
@@ -26,10 +25,12 @@ import co.ke.xently.common.DEFAULT_LOCAL_DATE_FORMAT
 import co.ke.xently.common.DEFAULT_LOCAL_DATE_TIME_FORMAT
 import co.ke.xently.common.DEFAULT_LOCAL_TIME_FORMAT
 import co.ke.xently.data.*
+import co.ke.xently.data.TaskResult.Loading
 import co.ke.xently.data.TaskResult.Success
 import co.ke.xently.feature.theme.XentlyTheme
 import co.ke.xently.feature.ui.AutoCompleteTextField
 import co.ke.xently.feature.ui.TextFieldErrorText
+import co.ke.xently.feature.ui.ToolbarWithProgressbar
 import co.ke.xently.feature.ui.XentlyTextField
 import co.ke.xently.products.R
 import kotlinx.coroutines.Job
@@ -80,9 +81,8 @@ internal fun ProductDetailScreen(
             unitsJob?.cancel()
             unitsJob = viewModel.getMeasurementUnits(it)
         },
-    ) {
-        viewModel.addOrUpdate(it)
-    }
+        viewModel::addOrUpdate,
+    )
 }
 
 @Composable
@@ -100,7 +100,12 @@ private fun ProductDetailScreen(
     val product = result.getOrNull() ?: Product.default()
 
     var shop by remember(product.id, product.shop) {
-        mutableStateOf(if (product.isDefault) "" else product.shop.toString())
+        val value = if (product.isDefault) {
+            ""
+        } else {
+            product.shop.toString()
+        }
+        mutableStateOf(TextFieldValue(value))
     }
     var savableShop by remember(product.id, product.shopId) { mutableStateOf(product.shopId) }
     var shopError by remember { mutableStateOf("") }
@@ -113,7 +118,7 @@ private fun ProductDetailScreen(
     var isNameError by remember { mutableStateOf(false) }
 
     var unit by remember(product.id, product.unit) {
-        mutableStateOf(product.unit)
+        mutableStateOf(TextFieldValue(product.unit))
     }
     var unitError by remember { mutableStateOf("") }
     var isUnitError by remember { mutableStateOf(false) }
@@ -141,7 +146,7 @@ private fun ProductDetailScreen(
 
     val toolbarTitle = stringResource(
         R.string.fp_add_product_toolbar_title,
-        stringResource(if (product.isDefault) R.string.fp_add else R.string.fp_update),
+        stringResource(if (product.isDefault) R.string.add else R.string.update),
     )
 
     val (scrollState, scaffoldState) = Pair(rememberScrollState(), rememberScaffoldState())
@@ -168,8 +173,7 @@ private fun ProductDetailScreen(
         }
 
         if (productHttpException?.hasFieldErrors() != true) {
-            val errorMessage =
-                result.errorMessage ?: stringResource(R.string.fp_generic_error_message)
+            val errorMessage = result.errorMessage ?: stringResource(R.string.generic_error_message)
             LaunchedEffect(product.id, result, errorMessage) {
                 scaffoldState.snackbarHostState.showSnackbar(errorMessage)
             }
@@ -179,219 +183,207 @@ private fun ProductDetailScreen(
         LaunchedEffect(message) {
             scaffoldState.snackbarHostState.showSnackbar(message)
         }
-        unit = ""
-        name = TextFieldValue("")
-        unitPrice = TextFieldValue("")
-        unitQuantity = TextFieldValue("")
+        unit = TextFieldValue()
+        name = TextFieldValue()
+        unitPrice = TextFieldValue()
+        unitQuantity = TextFieldValue()
     }
     val focusManager = LocalFocusManager.current
 
-    Scaffold(scaffoldState = scaffoldState) {
-        Column(modifier = modifier) {
-            Column(modifier = Modifier.fillMaxWidth()) {
-                TopAppBar(
-                    backgroundColor = Color.Transparent,
-                    elevation = 0.dp,
-                    navigationIcon = {
-                        IconButton(onClick = onNavigationIconClicked) {
-                            Icon(
-                                Icons.Default.ArrowBack,
-                                contentDescription = stringResource(R.string.fp_navigation_icon_content_description),
-                            )
-                        }
-                    },
-                    title = { Text(toolbarTitle) },
-                )
-                if (result is TaskResult.Loading) {
-                    LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+    Scaffold(
+        scaffoldState = scaffoldState,
+        topBar = {
+            ToolbarWithProgressbar(toolbarTitle, onNavigationIconClicked, result is Loading)
+        },
+    ) { paddingValues ->
+        Column(
+            modifier = modifier
+                .padding(paddingValues)
+                .verticalScroll(scrollState),
+        ) {
+            AutoCompleteTextField(
+                value = shop,
+                isError = isShopError,
+                error = shopError,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+                    .padding(top = 16.dp),
+                label = stringResource(R.string.fp_product_detail_shop_label),
+                keyboardOptions = KeyboardOptions.Default.copy(capitalization = KeyboardCapitalization.Sentences,
+                    imeAction = ImeAction.Next),
+                onValueChange = {
+                    shop = it
+                    isShopError = false
+                    onShopQueryChanged(it.text)
+                },
+                onOptionSelected = { s ->
+                    shop = s.toString().let {
+                        TextFieldValue(it, TextRange(0, it.length))
+                    }
+                    savableShop = s.id
+                },
+                suggestions = shops,
+            ) {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Text(it.name, style = MaterialTheme.typography.body1)
+                    Text(it.taxPin, style = MaterialTheme.typography.subtitle1)
                 }
             }
+            Spacer(modifier = Modifier.padding(vertical = 8.dp))
+            XentlyTextField(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                value = name,
+                isError = isNameError,
+                error = nameError,
+                keyboardOptions = KeyboardOptions.Default.copy(capitalization = KeyboardCapitalization.Sentences,
+                    imeAction = ImeAction.Next),
+                onValueChange = {
+                    name = it
+                    isNameError = false
+                },
+                label = stringResource(R.string.fp_product_detail_name_label),
+            )
+            Spacer(modifier = Modifier.padding(vertical = 8.dp))
+            AutoCompleteTextField(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                value = unit,
+                isError = isUnitError,
+                error = unitError,
+                label = stringResource(R.string.fp_product_detail_unit_label),
+                keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
+                onValueChange = {
+                    unit = it
+                    isUnitError = false
+                    onMeasurementUnitQueryChanged(it.text)
+                },
+                onOptionSelected = {
+                    unit = TextFieldValue(it.name, TextRange(0, it.name.length))
+                },
+                suggestions = measurementUnits,
+            ) {
+                Text(it.name, style = MaterialTheme.typography.body1)
+            }
+            Spacer(modifier = Modifier.padding(vertical = 8.dp))
+            XentlyTextField(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                value = unitQuantity,
+                isError = isUnitQuantityError,
+                error = unitQuantityError,
+                keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next,
+                    keyboardType = KeyboardType.Number),
+                onValueChange = {
+                    unitQuantity = it
+                    isUnitQuantityError = false
+                },
+                label = stringResource(R.string.fp_product_detail_unit_quantity_label),
+            )
+            Spacer(modifier = Modifier.padding(vertical = 8.dp))
+            XentlyTextField(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                value = unitPrice,
+                isError = isUnitPriceError,
+                error = unitPriceError,
+                keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next,
+                    keyboardType = KeyboardType.Number),
+                onValueChange = {
+                    unitPrice = it
+                    isUnitPriceError = false
+                },
+                label = stringResource(R.string.fp_product_detail_unit_price_label),
+            )
+            Spacer(modifier = Modifier.padding(vertical = 8.dp))
             Column(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(scrollState),
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
             ) {
-                AutoCompleteTextField(
-                    value = shop,
-                    isError = isShopError,
-                    error = shopError,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp)
-                        .padding(top = 16.dp),
-                    label = { Text(stringResource(R.string.fp_product_detail_shop_label)) },
-                    keyboardOptions = KeyboardOptions.Default.copy(capitalization = KeyboardCapitalization.Sentences,
-                        imeAction = ImeAction.Next),
-                    onValueChange = {
-                        shop = it
-                        isShopError = false
-                        onShopQueryChanged(it)
-                    },
-                    onOptionSelected = {
-                        shop = it.toString()
-                        savableShop = it.id
-                    },
-                    suggestions = shops,
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    Column(modifier = Modifier.fillMaxWidth()) {
-                        Text(it.name, style = MaterialTheme.typography.body1)
-                        Text(it.taxPin, style = MaterialTheme.typography.subtitle1)
-                    }
+                    TextField(
+                        value = dateOfPurchase,
+                        singleLine = true,
+                        isError = isDatePurchasedError,
+                        onValueChange = {
+                            dateOfPurchase = it
+                            isDatePurchasedError = false
+                        },
+                        trailingIcon = {
+                            IconButton(onClick = { /*TODO*/ }) {
+                                Icon(
+                                    Icons.Default.DateRange,
+                                    contentDescription = stringResource(
+                                        R.string.fp_product_detail_date_of_purchase_content_desc),
+                                )
+                            }
+                        },
+                        modifier = Modifier.weight(1f),
+                        label = { Text(stringResource(R.string.fp_product_detail_date_of_purchased_label)) },
+                        keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
+                    )
+                    TextField(
+                        value = timeOfPurchase,
+                        singleLine = true,
+                        isError = isDatePurchasedError,
+                        onValueChange = {
+                            timeOfPurchase = it
+                            isDatePurchasedError = false
+                        },
+                        trailingIcon = {
+                            IconButton(onClick = { /*TODO*/ }) {
+                                Icon(
+                                    Icons.Default.DateRange,
+                                    stringResource(
+                                        R.string.fp_product_detail_time_of_purchase_content_desc),
+                                )
+                            }
+                        },
+                        modifier = Modifier.weight(1f),
+                        label = { Text(stringResource(R.string.fp_product_detail_time_of_purchased_label)) },
+                        keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
+                        keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
+                    )
                 }
-                Spacer(modifier = Modifier.padding(vertical = 8.dp))
-                XentlyTextField(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                    value = name,
-                    isError = isNameError,
-                    error = nameError,
-                    keyboardOptions = KeyboardOptions.Default.copy(capitalization = KeyboardCapitalization.Sentences,
-                        imeAction = ImeAction.Next),
-                    onValueChange = {
-                        name = it
-                        isNameError = false
-                    },
-                    label = { Text(stringResource(R.string.fp_product_detail_name_label)) },
-                )
-                Spacer(modifier = Modifier.padding(vertical = 8.dp))
-                AutoCompleteTextField(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                    value = unit,
-                    isError = isUnitError,
-                    error = unitError,
-                    label = { Text(text = stringResource(R.string.fp_product_detail_unit_label)) },
-                    keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
-                    onValueChange = {
-                        unit = it
-                        isUnitError = false
-                        onMeasurementUnitQueryChanged(it)
-                    },
-                    onOptionSelected = {
-                        unit = it.name
-                    },
-                    suggestions = measurementUnits,
-                ) {
-                    Text(it.name, style = MaterialTheme.typography.body1)
+                if (isDatePurchasedError) {
+                    TextFieldErrorText(datePurchasedError, Modifier.fillMaxWidth())
                 }
-                Spacer(modifier = Modifier.padding(vertical = 8.dp))
-                XentlyTextField(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                    value = unitQuantity,
-                    isError = isUnitQuantityError,
-                    error = unitQuantityError,
-                    onValueChange = {
-                        unitQuantity = it
-                        isUnitQuantityError = false
-                    },
-                    label = { Text(text = stringResource(R.string.fp_product_detail_unit_quantity_label)) },
-                    keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next,
-                        keyboardType = KeyboardType.Number),
-                )
-                Spacer(modifier = Modifier.padding(vertical = 8.dp))
-                XentlyTextField(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                    value = unitPrice,
-                    isError = isUnitPriceError,
-                    error = unitPriceError,
-                    onValueChange = {
-                        unitPrice = it
-                        isUnitPriceError = false
-                    },
-                    label = { Text(text = stringResource(R.string.fp_product_detail_unit_price_label)) },
-                    keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next,
-                        keyboardType = KeyboardType.Number),
-                )
-                Spacer(modifier = Modifier.padding(vertical = 8.dp))
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        TextField(
-                            value = dateOfPurchase,
-                            singleLine = true,
-                            isError = isDatePurchasedError,
-                            onValueChange = {
-                                dateOfPurchase = it
-                                isDatePurchasedError = false
-                            },
-                            trailingIcon = {
-                                IconButton(onClick = { /*TODO*/ }) {
-                                    Icon(
-                                        Icons.Default.DateRange,
-                                        contentDescription = stringResource(
-                                            R.string.fp_product_detail_date_of_purchase_content_desc),
-                                    )
-                                }
-                            },
-                            modifier = Modifier.weight(1f),
-                            label = { Text(text = stringResource(R.string.fp_product_detail_date_of_purchased_label)) },
-                            keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
-                        )
-                        TextField(
-                            value = timeOfPurchase,
-                            singleLine = true,
-                            isError = isDatePurchasedError,
-                            onValueChange = {
-                                timeOfPurchase = it
-                                isDatePurchasedError = false
-                            },
-                            trailingIcon = {
-                                IconButton(onClick = { /*TODO*/ }) {
-                                    Icon(
-                                        Icons.Default.DateRange,
-                                        contentDescription = stringResource(
-                                            R.string.fp_product_detail_time_of_purchase_content_desc),
-                                    )
-                                }
-                            },
-                            modifier = Modifier.weight(1f),
-                            label = { Text(text = stringResource(R.string.fp_product_detail_time_of_purchased_label)) },
-                            keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
-                            keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
-                        )
-                    }
-                    if (isDatePurchasedError) {
-                        TextFieldErrorText(datePurchasedError, Modifier.fillMaxWidth())
-                    }
-                }
-                Spacer(modifier = Modifier.padding(vertical = 8.dp))
-                Button(
-                    enabled = arrayOf(
-                        name,
-                        unitQuantity,
-                        unitPrice,
-                        dateOfPurchase,
-                        timeOfPurchase,
-                    ).all { it.text.isNotBlank() } && unit.isNotBlank() && savableShop != Product.default().shopId,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                    onClick = {
-                        focusManager.clearFocus()
-                        onProductDetailsSubmitted(product.copy(
-                            shopId = savableShop,
-                            name = name.text,
-                            unit = unit,
-                            unitQuantity = unitQuantity.text.toFloat(),
-                            unitPrice = unitPrice.text.toFloat(),
-                            datePurchased = DEFAULT_LOCAL_DATE_TIME_FORMAT.parse("${dateOfPurchase.text} ${timeOfPurchase.text}")
-                                ?: error("Invalid date and/or time format"),
-                        ))
-                    }
-                ) { Text(toolbarTitle.uppercase()) }
             }
+            Spacer(modifier = Modifier.padding(vertical = 8.dp))
+            Button(
+                enabled = arrayOf(
+                    unit,
+                    name,
+                    unitQuantity,
+                    unitPrice,
+                    dateOfPurchase,
+                    timeOfPurchase,
+                ).all { it.text.isNotBlank() } && savableShop != Product.default().shopId,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                onClick = {
+                    focusManager.clearFocus()
+                    onProductDetailsSubmitted(product.copy(
+                        shopId = savableShop,
+                        name = name.text,
+                        unit = unit.text,
+                        unitQuantity = unitQuantity.text.toFloat(),
+                        unitPrice = unitPrice.text.toFloat(),
+                        datePurchased = DEFAULT_LOCAL_DATE_TIME_FORMAT.parse("${dateOfPurchase.text} ${timeOfPurchase.text}")
+                            ?: error("Invalid date and/or time format"),
+                    ))
+                }
+            ) { Text(toolbarTitle.uppercase()) }
         }
     }
 }

@@ -5,7 +5,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -20,8 +19,11 @@ import co.ke.xently.common.KENYA
 import co.ke.xently.common.localDefaultDateFormatToServerDate
 import co.ke.xently.data.ShoppingListItem
 import co.ke.xently.data.TaskResult
+import co.ke.xently.data.TaskResult.Loading
 import co.ke.xently.data.errorMessage
 import co.ke.xently.data.getOrNull
+import co.ke.xently.feature.ui.ToolbarWithProgressbar
+import co.ke.xently.feature.ui.stringRes
 import co.ke.xently.shoppinglist.R
 import com.google.android.material.datepicker.CalendarConstraints
 import com.google.android.material.datepicker.DateValidatorPointForward
@@ -54,72 +56,57 @@ internal fun ShoppingListItemScreen(
         itemResult,
         modifier,
         onNavigationIconClicked,
-    ) {
-        viewModel.add(it)
-    }
+        viewModel::add,
+    )
 }
 
 @Composable
 private fun ShoppingListItemScreen(
     isUpdate: Boolean,
     itemId: Long?,
-    itemResult: TaskResult<ShoppingListItem?>,
+    result: TaskResult<ShoppingListItem?>,
     modifier: Modifier,
     onNavigationIconClicked: () -> Unit,
     onAddShoppingListItemClicked: (ShoppingListItem) -> Unit,
 ) {
-    val item = itemResult.getOrNull() ?: ShoppingListItem()
+    val item = result.getOrNull() ?: ShoppingListItem()
 
-    var name by remember(itemId, itemResult, item) { mutableStateOf(TextFieldValue(item.name)) }
-    var unit by remember(itemId, itemResult, item) { mutableStateOf(TextFieldValue(item.unit)) }
-    var unitQuantity by remember(itemId, itemResult, item) {
+    var name by remember(itemId, result, item) { mutableStateOf(TextFieldValue(item.name)) }
+    var unit by remember(itemId, result, item) { mutableStateOf(TextFieldValue(item.unit)) }
+    var unitQuantity by remember(itemId, result, item) {
         mutableStateOf(TextFieldValue(item.unitQuantity.toString()))
     }
-    var purchaseQuantity by remember(itemId, itemResult, item) {
+    var purchaseQuantity by remember(itemId, result, item) {
         mutableStateOf(TextFieldValue(item.purchaseQuantity.toString()))
     }
-    var dateAdded by remember(itemId, itemResult, item) {
+    var dateAdded by remember(itemId, result, item) {
         mutableStateOf(TextFieldValue(DEFAULT_LOCAL_DATE_FORMAT.format(item.dateAdded)))
     }
 
     val scaffoldState = rememberScaffoldState()
     val coroutineScope = rememberCoroutineScope()
-    if (itemResult is TaskResult.Error) {
+    if (result is TaskResult.Error) {
         val errorMessage =
-            itemResult.errorMessage ?: stringResource(R.string.fsl_generic_error_message)
-        LaunchedEffect(itemId, itemResult, errorMessage) {
+            result.errorMessage ?: stringResource(R.string.generic_error_message)
+        LaunchedEffect(itemId, result, errorMessage) {
             coroutineScope.launch {
                 scaffoldState.snackbarHostState.showSnackbar(errorMessage)
             }
         }
     }
 
-    val toolbarTitle = stringResource(
+    val toolbarTitle = stringRes(
         R.string.fsl_detail_screen_toolbar_title,
-        stringResource(if (isUpdate) R.string.fsl_update else R.string.fsl_add),
+        if (isUpdate) R.string.update else R.string.add,
     )
     Scaffold(
         modifier = modifier,
         scaffoldState = scaffoldState,
         topBar = {
-            TopAppBar(
-                title = { Text(text = toolbarTitle) },
-                navigationIcon = {
-                    IconButton(onClick = onNavigationIconClicked) {
-                        Icon(
-                            Icons.Default.ArrowBack,
-                            contentDescription = stringResource(R.string.fsl_navigation_icon_content_description),
-                        )
-                    }
-                },
-            )
+            ToolbarWithProgressbar(toolbarTitle, onNavigationIconClicked, result is Loading)
         },
     ) { paddingValues ->
         Column(Modifier.padding(paddingValues)) {
-            if (itemResult is TaskResult.Loading) {
-                LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
-            }
-
             val scrollState = rememberScrollState()
             Column(
                 modifier = Modifier
@@ -163,7 +150,8 @@ private fun ShoppingListItemScreen(
                     )
 
                     val datePicker = MaterialDatePicker.Builder.datePicker()
-                        .setSelection((DEFAULT_LOCAL_DATE_FORMAT.parse(dateAdded.text)?.time ?: Date().time) + 24.hours.toLong(DurationUnit.MILLISECONDS))
+                        .setSelection((DEFAULT_LOCAL_DATE_FORMAT.parse(dateAdded.text)?.time
+                            ?: Date().time) + 24.hours.toLong(DurationUnit.MILLISECONDS))
                         .setCalendarConstraints(CalendarConstraints.Builder()
                             .setValidator(DateValidatorPointForward.now()).build())
                         .setTitleText(R.string.fsl_text_field_label_date_added)
@@ -191,7 +179,10 @@ private fun ShoppingListItemScreen(
                 }
                 Button(
                     modifier = Modifier.fillMaxWidth(),
-                    enabled= arrayOf(name, unit, unitQuantity, purchaseQuantity).all { it.text.isNotBlank() },
+                    enabled = arrayOf(name,
+                        unit,
+                        unitQuantity,
+                        purchaseQuantity).all { it.text.isNotBlank() },
                     onClick = {
                         onAddShoppingListItemClicked(item.copy(
                             name = name.text,
@@ -203,7 +194,7 @@ private fun ShoppingListItemScreen(
                             dateAdded = localDefaultDateFormatToServerDate(dateAdded.text)!!,
                         ))
                     },
-                ) { Text(text = toolbarTitle.uppercase(KENYA)) }
+                ) { Text(toolbarTitle.uppercase(KENYA)) }
             }
         }
     }

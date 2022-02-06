@@ -2,27 +2,28 @@ package co.ke.xently.feature
 
 import android.Manifest.permission.ACCESS_COARSE_LOCATION
 import android.Manifest.permission.ACCESS_FINE_LOCATION
-import android.app.Application
+import android.content.Context
 import android.content.pm.PackageManager.PERMISSION_GRANTED
 import androidx.core.content.ContextCompat.checkSelfPermission
-import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.Transformations
+import androidx.lifecycle.ViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 
 @HiltViewModel
 open class LocationPermissionViewModel @Inject constructor(
-    app: Application,
+    @ApplicationContext context: Context,
     private val savedStateHandle: SavedStateHandle,
-) : AndroidViewModel(app) {
+) : ViewModel() {
     val locationPermissionsGranted: LiveData<Boolean> =
         Transformations.map(
             savedStateHandle.getLiveData(
                 KEY,
                 if (arrayOf(ACCESS_FINE_LOCATION, ACCESS_COARSE_LOCATION).all {
-                        checkSelfPermission(app.applicationContext, it) == PERMISSION_GRANTED
+                        checkSelfPermission(context, it) == PERMISSION_GRANTED
                     }) 1 else 0
             )
         ) { it == 1 }
