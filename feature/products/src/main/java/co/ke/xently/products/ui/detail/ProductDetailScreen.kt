@@ -27,11 +27,10 @@ import co.ke.xently.data.*
 import co.ke.xently.data.TaskResult.Loading
 import co.ke.xently.data.TaskResult.Success
 import co.ke.xently.feature.theme.XentlyTheme
-import co.ke.xently.feature.ui.AutoCompleteTextField
-import co.ke.xently.feature.ui.TextFieldErrorText
-import co.ke.xently.feature.ui.ToolbarWithProgressbar
-import co.ke.xently.feature.ui.XentlyTextField
+import co.ke.xently.feature.ui.*
 import co.ke.xently.products.R
+import com.google.android.material.datepicker.CalendarConstraints
+import com.google.android.material.datepicker.DateValidatorPointBackward
 
 @Composable
 internal fun ProductDetailScreen(
@@ -178,6 +177,14 @@ private fun ProductDetailScreen(
         unitQuantity = TextFieldValue()
     }
     val focusManager = LocalFocusManager.current
+    val fragmentManager = rememberFragmentManager()
+
+    val dateOfPurchasePicker = rememberDatePickerDialog(
+        select = DEFAULT_LOCAL_DATE_FORMAT.parse(dateOfPurchase.text),
+        title = R.string.fp_product_detail_date_of_purchased_label,
+        bounds = CalendarConstraints.Builder()
+            .setValidator(DateValidatorPointBackward.now()).build(),
+    ) { dateOfPurchase = TextFieldValue(DEFAULT_LOCAL_DATE_FORMAT.format(it)) }
 
     Scaffold(
         scaffoldState = scaffoldState,
@@ -306,7 +313,10 @@ private fun ProductDetailScreen(
                             isDatePurchasedError = false
                         },
                         trailingIcon = {
-                            IconButton(onClick = { /*TODO*/ }) {
+                            IconButton({
+                                dateOfPurchasePicker.show(fragmentManager,
+                                    "ProductDetailDateOfPurchase")
+                            }) {
                                 Icon(
                                     Icons.Default.DateRange,
                                     contentDescription = stringResource(

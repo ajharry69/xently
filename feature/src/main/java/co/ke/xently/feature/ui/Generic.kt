@@ -9,18 +9,30 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.fragment.app.FragmentActivity
+import androidx.fragment.app.FragmentManager
 import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
 import co.ke.xently.feature.R
 import co.ke.xently.feature.theme.XentlyTheme
+
+@Composable
+fun rememberFragmentManager(): FragmentManager {
+    val context = LocalContext.current
+    return remember(context) {
+        (context as FragmentActivity).supportFragmentManager
+    }
+}
 
 @Composable
 fun PasswordVisibilityToggle(isVisible: Boolean, onClick: () -> Unit) {

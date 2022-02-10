@@ -8,11 +8,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
-import androidx.fragment.app.FragmentActivity
 import androidx.hilt.navigation.compose.hiltViewModel
 import co.ke.xently.common.DEFAULT_LOCAL_DATE_FORMAT
 import co.ke.xently.common.KENYA
@@ -23,15 +21,13 @@ import co.ke.xently.data.TaskResult.Loading
 import co.ke.xently.data.errorMessage
 import co.ke.xently.data.getOrNull
 import co.ke.xently.feature.ui.ToolbarWithProgressbar
+import co.ke.xently.feature.ui.rememberDatePickerDialog
+import co.ke.xently.feature.ui.rememberFragmentManager
 import co.ke.xently.feature.ui.stringRes
 import co.ke.xently.shoppinglist.R
 import com.google.android.material.datepicker.CalendarConstraints
 import com.google.android.material.datepicker.DateValidatorPointForward
-import com.google.android.material.datepicker.MaterialDatePicker
 import kotlinx.coroutines.launch
-import java.util.*
-import kotlin.time.Duration.Companion.hours
-import kotlin.time.DurationUnit
 
 
 @Composable
@@ -149,17 +145,14 @@ private fun ShoppingListItemScreen(
                         onValueChange = { purchaseQuantity = it },
                     )
 
-                    val datePicker = MaterialDatePicker.Builder.datePicker()
-                        .setSelection((DEFAULT_LOCAL_DATE_FORMAT.parse(dateAdded.text)?.time
-                            ?: Date().time) + 24.hours.toLong(DurationUnit.MILLISECONDS))
-                        .setCalendarConstraints(CalendarConstraints.Builder()
-                            .setValidator(DateValidatorPointForward.now()).build())
-                        .setTitleText(R.string.fsl_text_field_label_date_added)
-                        .build()
-                    datePicker.addOnPositiveButtonClickListener {
-                        dateAdded = TextFieldValue(DEFAULT_LOCAL_DATE_FORMAT.format(Date(it)))
-                    }
-                    val context = LocalContext.current
+                    val fragmentManager = rememberFragmentManager()
+                    val datePicker = rememberDatePickerDialog(
+                        R.string.fsl_text_field_label_date_added,
+                        DEFAULT_LOCAL_DATE_FORMAT.parse(dateAdded.text),
+                        CalendarConstraints.Builder()
+                            .setValidator(DateValidatorPointForward.now()).build(),
+                    ) { dateAdded = TextFieldValue(DEFAULT_LOCAL_DATE_FORMAT.format(it)) }
+
                     TextField(
                         modifier = Modifier.weight(1f),
                         label = { Text(stringResource(R.string.fsl_text_field_label_date_added)) },
@@ -169,8 +162,7 @@ private fun ShoppingListItemScreen(
                         readOnly = true,
                         trailingIcon = {
                             IconButton(onClick = {
-                                datePicker.show((context as FragmentActivity).supportFragmentManager,
-                                    "ShoppingListDateAdded")
+                                datePicker.show(fragmentManager, "ShoppingListDateAdded")
                             }) {
                                 Icon(Icons.Default.DateRange, contentDescription = null)
                             }
