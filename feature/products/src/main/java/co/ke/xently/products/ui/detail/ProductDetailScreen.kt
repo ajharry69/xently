@@ -13,7 +13,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
@@ -33,7 +32,6 @@ import co.ke.xently.feature.ui.TextFieldErrorText
 import co.ke.xently.feature.ui.ToolbarWithProgressbar
 import co.ke.xently.feature.ui.XentlyTextField
 import co.ke.xently.products.R
-import kotlinx.coroutines.Job
 
 @Composable
 internal fun ProductDetailScreen(
@@ -59,9 +57,6 @@ internal fun ProductDetailScreen(
     // Allow addition of more items if the screen was initially for adding.
     val permitReAddition = isDefaultProduct && productResult.getOrNull() != null
 
-    var unitsJob: Job? = null
-    var shopsJob: Job? = null
-
     ProductDetailScreen(
         modifier,
         if (permitReAddition) {
@@ -73,14 +68,8 @@ internal fun ProductDetailScreen(
         shops,
         measurementUnits,
         onNavigationIconClicked,
-        {
-            shopsJob?.cancel()
-            shopsJob = viewModel.getShops(it)
-        },
-        {
-            unitsJob?.cancel()
-            unitsJob = viewModel.getMeasurementUnits(it)
-        },
+        viewModel::setShopQuery,
+        viewModel::setMeasurementUnitQuery,
         viewModel::addOrUpdate,
     )
 }
@@ -218,9 +207,7 @@ private fun ProductDetailScreen(
                     onShopQueryChanged(it.text)
                 },
                 onOptionSelected = { s ->
-                    shop = s.toString().let {
-                        TextFieldValue(it, TextRange(0, it.length))
-                    }
+                    shop = TextFieldValue(s.toString())
                     savableShop = s.id
                 },
                 suggestions = shops,
@@ -262,7 +249,7 @@ private fun ProductDetailScreen(
                     onMeasurementUnitQueryChanged(it.text)
                 },
                 onOptionSelected = {
-                    unit = TextFieldValue(it.name, TextRange(0, it.name.length))
+                    unit = TextFieldValue(it.name)
                 },
                 suggestions = measurementUnits,
             ) {
