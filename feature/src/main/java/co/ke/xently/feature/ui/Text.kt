@@ -12,6 +12,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusEvent
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.TextFieldValue
@@ -93,22 +94,26 @@ fun <T> AutoCompleteTextField(
     label: String? = null,
     suggestionItemContent: @Composable ((T) -> Unit),
 ) {
-    var query by remember(value) { mutableStateOf(value) }
     var showDropdownMenu by remember { mutableStateOf(false) }
 
     Box(modifier = modifier) {
         XentlyTextField(
-            value = query,
+            value = value,
             label = label,
             error = error,
             isError = isError,
             keyboardOptions = keyboardOptions,
             keyboardActions = keyboardActions,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .onFocusEvent {
+                    if (!it.isFocused) {
+                        showDropdownMenu = false
+                    }
+                },
             onValueChange = {
                 onValueChange(it)
-                query = it
-                showDropdownMenu = query.text.isNotBlank()
+                showDropdownMenu = it.text.isNotBlank()
             },
             trailingIcon = {
                 IconButton(onClick = { showDropdownMenu = true }) {
