@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "c012d9af50e66e2fadd363130bbe9665",
+    "identityHash": "f48ac8fd543a81ad6eaee5a3c921a1ac",
     "entities": [
       {
         "tableName": "remote_keys",
@@ -153,8 +153,66 @@
         "foreignKeys": []
       },
       {
+        "tableName": "brands",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `name` TEXT NOT NULL, `productId` INTEGER NOT NULL, `isDefault` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "productId",
+            "columnName": "productId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isDefault",
+            "columnName": "isDefault",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "columnNames": [
+            "id"
+          ],
+          "autoGenerate": false
+        },
+        "indices": [
+          {
+            "name": "index_brands_name",
+            "unique": false,
+            "columnNames": [
+              "name"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_brands_name` ON `${TABLE_NAME}` (`name`)"
+          },
+          {
+            "name": "index_brands_name_productId",
+            "unique": true,
+            "columnNames": [
+              "name",
+              "productId"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_brands_name_productId` ON `${TABLE_NAME}` (`name`, `productId`)"
+          }
+        ],
+        "foreignKeys": []
+      },
+      {
         "tableName": "products",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `name` TEXT NOT NULL, `unit` TEXT NOT NULL, `unitQuantity` REAL NOT NULL, `shopId` INTEGER NOT NULL, `unitPrice` REAL NOT NULL, `datePurchased` INTEGER NOT NULL, `dateAdded` INTEGER NOT NULL, `isDefault` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `name` TEXT NOT NULL, `unit` TEXT NOT NULL, `unitQuantity` REAL NOT NULL, `purchasedQuantity` REAL NOT NULL, `shopId` INTEGER NOT NULL, `unitPrice` REAL NOT NULL, `datePurchased` INTEGER NOT NULL, `dateAdded` INTEGER NOT NULL, `isDefault` INTEGER NOT NULL, PRIMARY KEY(`id`))",
         "fields": [
           {
             "fieldPath": "id",
@@ -177,6 +235,12 @@
           {
             "fieldPath": "unitQuantity",
             "columnName": "unitQuantity",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "purchasedQuantity",
+            "columnName": "purchasedQuantity",
             "affinity": "REAL",
             "notNull": true
           },
@@ -226,6 +290,75 @@
             ],
             "orders": [],
             "createSql": "CREATE INDEX IF NOT EXISTS `index_products_shopId` ON `${TABLE_NAME}` (`shopId`)"
+          }
+        ],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "attributes",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`name` TEXT NOT NULL, `value` TEXT NOT NULL, `productId` INTEGER NOT NULL, `isDefault` INTEGER NOT NULL, PRIMARY KEY(`name`, `value`))",
+        "fields": [
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "value",
+            "columnName": "value",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "productId",
+            "columnName": "productId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isDefault",
+            "columnName": "isDefault",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "columnNames": [
+            "name",
+            "value"
+          ],
+          "autoGenerate": false
+        },
+        "indices": [
+          {
+            "name": "index_attributes_name",
+            "unique": false,
+            "columnNames": [
+              "name"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_attributes_name` ON `${TABLE_NAME}` (`name`)"
+          },
+          {
+            "name": "index_attributes_value",
+            "unique": false,
+            "columnNames": [
+              "value"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_attributes_value` ON `${TABLE_NAME}` (`value`)"
+          },
+          {
+            "name": "index_attributes_name_value_productId",
+            "unique": true,
+            "columnNames": [
+              "name",
+              "value",
+              "productId"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_attributes_name_value_productId` ON `${TABLE_NAME}` (`name`, `value`, `productId`)"
           }
         ],
         "foreignKeys": []
@@ -348,7 +481,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'c012d9af50e66e2fadd363130bbe9665')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'f48ac8fd543a81ad6eaee5a3c921a1ac')"
     ]
   }
 }

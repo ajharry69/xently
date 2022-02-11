@@ -13,10 +13,10 @@ import co.ke.xently.source.remote.services.ProductService
 internal class ProductsRemoteMediator(
     private val database: Database,
     private val service: ProductService,
-) : RemoteMediator<Int, Product.WithShop>() {
+) : RemoteMediator<Int, Product.WithRelated>() {
     override suspend fun load(
         loadType: LoadType,
-        state: PagingState<Int, Product.WithShop>,
+        state: PagingState<Int, Product.WithRelated>,
     ): MediatorResult {
         val page: Int = when (loadType) {
             LoadType.REFRESH -> 1

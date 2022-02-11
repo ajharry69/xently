@@ -23,6 +23,16 @@ object ServicesModule {
 
     @Provides
     @Singleton
+    fun provideAttributeService(retrofit: Retrofit): AttributeService =
+        retrofit.create(AttributeService::class.java)
+
+    @Provides
+    @Singleton
+    fun provideBrandService(retrofit: Retrofit): BrandService =
+        retrofit.create(BrandService::class.java)
+
+    @Provides
+    @Singleton
     fun provideAccountService(retrofit: Retrofit): AccountService =
         retrofit.create(AccountService::class.java)
 

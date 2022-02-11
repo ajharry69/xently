@@ -16,21 +16,30 @@ data class Product(
     var name: String = "",
     var unit: String = "",
     var unitQuantity: Float = 0f,
+    var purchasedQuantity: Float = 0f,
     @Exclude
     @Ignore
-    var shop: Shop = Shop.default(),
+    val shop: Shop = Shop.default(),
     @SerializedName("shop")
     var shopId: Long = -1L,
     var unitPrice: Float = 0f,
     var datePurchased: Date = Date(),
     var dateAdded: Date = Date(),
     var isDefault: Boolean = false,
+    @Ignore
+    val brands: List<Brand> = emptyList(),
+    @Ignore
+    val attributes: List<Attribute> = emptyList(),
 ) {
-    data class WithShop(
+    data class WithRelated(
         @Embedded
         val product: Product,
         @Relation(parentColumn = "shopId", entityColumn = "id")
         val shop: Shop?,
+        @Relation(parentColumn = "id", entityColumn = "productId")
+        val brands: List<Brand>,
+        @Relation(parentColumn = "id", entityColumn = "productId")
+        val attributes: List<Attribute>,
     )
 
     override fun toString(): String {
