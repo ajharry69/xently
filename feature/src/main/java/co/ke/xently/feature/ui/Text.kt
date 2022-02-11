@@ -41,6 +41,7 @@ fun TextFieldErrorText(error: String, modifier: Modifier = Modifier) {
 fun XentlyTextField(
     modifier: Modifier,
     value: TextFieldValue,
+    readOnly: Boolean = false,
     singleLine: Boolean = true,
     isError: Boolean = false,
     error: String = "",
@@ -55,6 +56,7 @@ fun XentlyTextField(
     Column(modifier = modifier) {
         TextField(
             value = value,
+            readOnly = readOnly,
             singleLine = singleLine,
             isError = isError,
             onValueChange = onValueChange,

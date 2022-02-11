@@ -8,6 +8,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -123,10 +124,10 @@ private fun ProductDetailScreen(
     var unitPriceError by remember { mutableStateOf("") }
     var isUnitPriceError by remember { mutableStateOf(false) }
 
-    var dateOfPurchase by remember(product.id, product.datePurchased) {
+    var dateOfPurchase by remember {
         mutableStateOf(TextFieldValue(DEFAULT_LOCAL_DATE_FORMAT.format(product.datePurchased)))
     }
-    var timeOfPurchase by remember(product.id, product.datePurchased) {
+    var timeOfPurchase by remember {
         mutableStateOf(TextFieldValue(DEFAULT_LOCAL_TIME_FORMAT.format(product.datePurchased)))
     }
     var datePurchasedError by remember { mutableStateOf("") }
@@ -177,14 +178,6 @@ private fun ProductDetailScreen(
         unitQuantity = TextFieldValue()
     }
     val focusManager = LocalFocusManager.current
-    val fragmentManager = rememberFragmentManager()
-
-    val dateOfPurchasePicker = rememberDatePickerDialog(
-        select = DEFAULT_LOCAL_DATE_FORMAT.parse(dateOfPurchase.text),
-        title = R.string.fp_product_detail_date_of_purchased_label,
-        bounds = CalendarConstraints.Builder()
-            .setValidator(DateValidatorPointBackward.now()).build(),
-    ) { dateOfPurchase = TextFieldValue(DEFAULT_LOCAL_DATE_FORMAT.format(it)) }
 
     Scaffold(
         scaffoldState = scaffoldState,
@@ -304,19 +297,32 @@ private fun ProductDetailScreen(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    TextField(
+                    val fragmentManager = rememberFragmentManager()
+
+                    val dateOfPurchasePicker = rememberDatePickerDialog(
+                        select = DEFAULT_LOCAL_DATE_FORMAT.parse(dateOfPurchase.text),
+                        title = R.string.fp_product_detail_date_of_purchased_label,
+                        bounds = CalendarConstraints.Builder()
+                            .setValidator(DateValidatorPointBackward.now()).build(),
+                    ) { dateOfPurchase = TextFieldValue(DEFAULT_LOCAL_DATE_FORMAT.format(it)) }
+
+                    XentlyTextField(
+                        readOnly = true,
                         value = dateOfPurchase,
-                        singleLine = true,
                         isError = isDatePurchasedError,
+                        modifier = Modifier.weight(1f),
+                        label = stringRes(R.string.fp_product_detail_date_of_purchased_label),
                         onValueChange = {
                             dateOfPurchase = it
                             isDatePurchasedError = false
                         },
                         trailingIcon = {
-                            IconButton({
-                                dateOfPurchasePicker.show(fragmentManager,
-                                    "ProductDetailDateOfPurchase")
-                            }) {
+                            IconButton(
+                                onClick = {
+                                    dateOfPurchasePicker.show(fragmentManager,
+                                        "ProductDetailDateOfPurchase")
+                                },
+                            ) {
                                 Icon(
                                     Icons.Default.DateRange,
                                     contentDescription = stringResource(
@@ -324,31 +330,37 @@ private fun ProductDetailScreen(
                                 )
                             }
                         },
-                        modifier = Modifier.weight(1f),
-                        label = { Text(stringResource(R.string.fp_product_detail_date_of_purchased_label)) },
-                        keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
                     )
-                    TextField(
+
+                    val timeOfPurchasePicker = rememberTimePickerDialog(
+                        select = DEFAULT_LOCAL_TIME_FORMAT.parse(timeOfPurchase.text),
+                        title = R.string.fp_product_detail_time_of_purchased_label,
+                    ) { timeOfPurchase = TextFieldValue(DEFAULT_LOCAL_TIME_FORMAT.format(it)) }
+
+                    XentlyTextField(
+                        readOnly = true,
                         value = timeOfPurchase,
-                        singleLine = true,
                         isError = isDatePurchasedError,
+                        modifier = Modifier.weight(1f),
+                        label = stringRes(R.string.fp_product_detail_time_of_purchased_label),
+                        keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
+                        keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
                         onValueChange = {
                             timeOfPurchase = it
                             isDatePurchasedError = false
                         },
                         trailingIcon = {
-                            IconButton(onClick = { /*TODO*/ }) {
+                            IconButton({
+                                timeOfPurchasePicker.show(fragmentManager,
+                                    "ProductDetailTimeOfPurchase")
+                            }) {
                                 Icon(
-                                    Icons.Default.DateRange,
+                                    Icons.Default.AccessTime,
                                     stringResource(
                                         R.string.fp_product_detail_time_of_purchase_content_desc),
                                 )
                             }
                         },
-                        modifier = Modifier.weight(1f),
-                        label = { Text(stringResource(R.string.fp_product_detail_time_of_purchased_label)) },
-                        keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
-                        keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
                     )
                 }
                 if (isDatePurchasedError) {
