@@ -7,7 +7,7 @@ import androidx.room.Query
 import co.ke.xently.data.User
 
 @Dao
-interface AccountsDao {
+interface AccountDao {
     @Insert(onConflict = REPLACE)
     suspend fun save(user: User)
 

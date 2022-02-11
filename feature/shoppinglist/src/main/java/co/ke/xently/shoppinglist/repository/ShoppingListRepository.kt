@@ -106,7 +106,6 @@ internal class ShoppingListRepository @Inject constructor(
     override fun get(config: PagingConfig) = Pager(
         config = config,
         remoteMediator = ShoppingListRemoteMediator(database, service),
-    ) {
-        database.shoppingListDao.get()
-    }
+        pagingSourceFactory = database.shoppingListDao::get,
+    ).flow
 }

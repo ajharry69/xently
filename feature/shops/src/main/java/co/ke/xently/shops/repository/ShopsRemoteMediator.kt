@@ -1,6 +1,5 @@
-package co.ke.xently.feature
+package co.ke.xently.shops.repository
 
-import androidx.paging.ExperimentalPagingApi
 import androidx.paging.LoadType
 import androidx.paging.PagingState
 import androidx.paging.RemoteMediator
@@ -11,11 +10,10 @@ import co.ke.xently.source.local.Database
 import co.ke.xently.source.remote.sendRequest
 import co.ke.xently.source.remote.services.ShopService
 
-@OptIn(ExperimentalPagingApi::class)
 class ShopsRemoteMediator(
     private val database: Database,
     private val service: ShopService,
-    private val query: String = "",
+    private val query: String? = null,
     private val preLoad: (suspend () -> Unit)? = null,
 ) : RemoteMediator<Int, Shop>() {
     override suspend fun load(loadType: LoadType, state: PagingState<Int, Shop>): MediatorResult {
@@ -30,18 +28,18 @@ class ShopsRemoteMediator(
 
         return try {
             val response = sendRequest(401) {
-                service.get(query, page, state.config.initialLoadSize)
+                service.get(query ?: "", page, state.config.initialLoadSize)
             }
             database.withTransaction {
                 if (loadType == LoadType.REFRESH) {
                     database.remoteKeyDao.delete(REMOTE_KEY_ENDPOINT)
-                    database.shopsDao.deleteAll()
+                    database.shopDao.deleteAll()
                 }
 
                 response.getOrThrow().run {
                     database.remoteKeyDao.save(toRemoteKey(REMOTE_KEY_ENDPOINT))
                     results.run {
-                        database.shopsDao.add(this)
+                        database.shopDao.add(this)
                         MediatorResult.Success(endOfPaginationReached = isEmpty())
                     }
                 }

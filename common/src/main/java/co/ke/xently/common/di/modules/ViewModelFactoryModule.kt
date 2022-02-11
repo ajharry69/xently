@@ -13,5 +13,5 @@ import dagger.hilt.migration.DisableInstallInCheck
 @DisableInstallInCheck
 abstract class ViewModelFactoryModule {
     @Binds
-    abstract fun bindViewModelFactory(factory: XentlyViewModelFactory) : ViewModelProvider.Factory
+    abstract fun bindViewModelFactory(factory: XentlyViewModelFactory): ViewModelProvider.Factory
 }

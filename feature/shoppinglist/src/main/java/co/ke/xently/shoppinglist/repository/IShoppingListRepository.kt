@@ -1,7 +1,7 @@
 package co.ke.xently.shoppinglist.repository
 
-import androidx.paging.Pager
 import androidx.paging.PagingConfig
+import androidx.paging.PagingData
 import co.ke.xently.data.GroupedShoppingList
 import co.ke.xently.data.RecommendationReport
 import co.ke.xently.data.ShoppingListItem
@@ -21,5 +21,5 @@ interface IShoppingListRepository {
 
     fun get(recommend: Recommend): Flow<TaskResult<RecommendationReport>>
 
-    fun get(config: PagingConfig): Pager<Int, ShoppingListItem>
+    fun get(config: PagingConfig): Flow<PagingData<ShoppingListItem>>
 }

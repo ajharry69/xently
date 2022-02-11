@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.runtime.*
@@ -12,7 +11,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import co.ke.xently.data.RecommendationReport
@@ -20,11 +18,14 @@ import co.ke.xently.data.RecommendationReport.Recommendation
 import co.ke.xently.data.TaskResult
 import co.ke.xently.data.errorMessage
 import co.ke.xently.data.getOrThrow
-import co.ke.xently.feature.utils.MAP_HEIGHT
+import co.ke.xently.feature.ui.FullscreenError
+import co.ke.xently.feature.ui.FullscreenLoading
 import co.ke.xently.feature.ui.GoogleMapView
+import co.ke.xently.feature.ui.ToolbarWithProgressbar
+import co.ke.xently.feature.utils.MAP_HEIGHT
 import co.ke.xently.shoppinglist.R
 import co.ke.xently.shoppinglist.Recommend
-import co.ke.xently.shoppinglist.ui.list.ShoppingListItemCard
+import co.ke.xently.shoppinglist.ui.list.item.ShoppingListItemCard
 import com.google.android.libraries.maps.model.LatLng
 import com.google.android.libraries.maps.model.MarkerOptions
 import java.text.DecimalFormat
@@ -55,30 +56,23 @@ private fun ShoppingListRecommendationScreen(
     onLocationPermissionChanged: (Boolean) -> Unit,
 ) {
     val scaffoldState = rememberScaffoldState()
-    Scaffold(scaffoldState = scaffoldState) {
+    Scaffold(
+        scaffoldState = scaffoldState,
+        topBar = {
+            if (result !is TaskResult.Success) {
+                ToolbarWithProgressbar(
+                    stringResource(R.string.fsl_recommendations_toolbar_title),
+                    onNavigationIconClicked = onNavigationIconClicked,
+                )
+            }
+        }
+    ) {
         when (result) {
             is TaskResult.Error -> {
-                Column(modifier = modifier.padding(it)) {
-                    ToolBar(onNavigationIconClicked = onNavigationIconClicked)
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text(
-                            result.errorMessage
-                                ?: stringResource(R.string.fsl_generic_error_message)
-                        )
-                    }
-                }
+                FullscreenError(modifier.padding(it), result.errorMessage)
             }
             TaskResult -> {
-                Column(modifier = modifier.padding(it)) {
-                    ToolBar(onNavigationIconClicked = onNavigationIconClicked)
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            CircularProgressIndicator()
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Text(text = stringResource(R.string.fsl_data_loading))
-                        }
-                    }
-                }
+                FullscreenLoading(modifier.padding(it))
             }
             is TaskResult.Success -> {
                 val report = result.getOrThrow()
@@ -90,7 +84,7 @@ private fun ShoppingListRecommendationScreen(
                         Box(
                             modifier = Modifier
                                 .height(IntrinsicSize.Min)
-                                .fillMaxWidth(),
+                                .fillMaxWidth()
                         ) {
                             GoogleMapView(
                                 Modifier
@@ -112,10 +106,11 @@ private fun ShoppingListRecommendationScreen(
                                 }.toTypedArray(),
                                 onLocationPermissionChanged = onLocationPermissionChanged,
                             )
-                            ToolBar(
+                            ToolbarWithProgressbar(
+                                stringResource(R.string.fsl_recommendations_toolbar_title),
                                 elevation = 0.dp,
                                 backgroundColor = Color.Transparent,
-                                onNavigationIconClicked = onNavigationIconClicked,
+                                onNavigationIconClicked = onNavigationIconClicked
                             )
                         }
                     }
@@ -176,27 +171,6 @@ private fun ShoppingListRecommendationScreen(
 }
 
 @Composable
-private fun ToolBar(
-    backgroundColor: Color = MaterialTheme.colors.primarySurface,
-    elevation: Dp = AppBarDefaults.TopAppBarElevation,
-    onNavigationIconClicked: () -> Unit
-) {
-    TopAppBar(
-        elevation = elevation,
-        backgroundColor = backgroundColor,
-        title = { Text(stringResource(R.string.fsl_recommendations_toolbar_title)) },
-        navigationIcon = {
-            IconButton(onClick = onNavigationIconClicked) {
-                Icon(
-                    Icons.Default.ArrowBack,
-                    contentDescription = stringResource(R.string.fsl_navigation_icon_content_description),
-                )
-            }
-        },
-    )
-}
-
-@Composable
 private fun RecommendationReportItemGroup(
     modifier: Modifier = Modifier,
     title: String,
@@ -211,7 +185,7 @@ private fun RecommendationReportItemGroup(
 @Composable
 private fun RecommendationReportSynopsisCard(
     modifier: Modifier = Modifier,
-    report: RecommendationReport
+    report: RecommendationReport,
 ) {
     Card(modifier = modifier) {
         Column(

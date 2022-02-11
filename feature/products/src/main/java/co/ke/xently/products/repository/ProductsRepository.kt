@@ -2,6 +2,7 @@ package co.ke.xently.products.repository
 
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
+import androidx.paging.map
 import co.ke.xently.common.Retry
 import co.ke.xently.common.di.qualifiers.coroutines.IODispatcher
 import co.ke.xently.data.*
@@ -73,7 +74,12 @@ internal class ProductsRepository @Inject constructor(
     override fun get(config: PagingConfig) = Pager(
         config = config,
         remoteMediator = ProductsRemoteMediator(database, service),
-    ) { database.productDao.get() }
+        pagingSourceFactory = database.productDao::get,
+    ).flow.map { data ->
+        data.map {
+            it.product.copy(shop = it.shop ?: Shop.default())
+        }
+    }
 
     @OptIn(FlowPreview::class, ExperimentalTime::class)
     override fun getMeasurementUnits(query: String) = Retry().run {
@@ -98,7 +104,7 @@ internal class ProductsRepository @Inject constructor(
 
     @OptIn(FlowPreview::class, ExperimentalTime::class)
     override fun getShops(query: String): Flow<TaskResult<List<Shop>>> = Retry().run {
-        database.shopsDao.getShops("%${query}%").flatMapConcat { shops ->
+        database.shopDao.getShops("%${query}%").flatMapConcat { shops ->
             if (shops.isEmpty()) {
                 flow {
                     delay(100.milliseconds)
@@ -106,7 +112,7 @@ internal class ProductsRepository @Inject constructor(
                         sendRequest(401) { shopService.get(query, size = 30) }
                             .mapCatching { data ->
                                 data.results.also {
-                                    database.shopsDao.add(it)
+                                    database.shopDao.add(it)
                                 }.take(5)
                             },
                     )

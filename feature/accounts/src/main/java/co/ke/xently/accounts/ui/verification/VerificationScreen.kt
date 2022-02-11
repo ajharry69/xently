@@ -7,8 +7,6 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -34,8 +32,8 @@ import co.ke.xently.data.TaskResult
 import co.ke.xently.data.User
 import co.ke.xently.data.errorMessage
 import co.ke.xently.feature.ui.TextFieldErrorText
+import co.ke.xently.feature.ui.ToolbarWithProgressbar
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import kotlin.time.Duration.Companion.seconds
 
 
@@ -54,8 +52,9 @@ internal fun VerificationScreen(
         verificationCode,
         onSuccessfulVerification,
         onNavigationIconClicked,
-        { viewModel.resendVerificationCode() },
-    ) { viewModel.verifyAccount(it) }
+        viewModel::resendVerificationCode,
+        viewModel::verifyAccount,
+    )
 }
 
 @OptIn(ExperimentalComposeUiApi::class)
@@ -90,7 +89,7 @@ private fun VerificationScreen(
         }
     }
 
-    val (coroutineScope, scaffoldState) = Pair(rememberCoroutineScope(), rememberScaffoldState())
+    val scaffoldState = rememberScaffoldState()
 
     if (result is TaskResult.Loading) {
         resendLastSavedCountDownSecond = resendCountDownSecond
@@ -102,11 +101,9 @@ private fun VerificationScreen(
 
         if (!isCodeError) {
             val errorMessage =
-                result.errorMessage ?: stringResource(R.string.fs_generic_error_message)
+                result.errorMessage ?: stringResource(R.string.generic_error_message)
             LaunchedEffect(result, errorMessage) {
-                coroutineScope.launch {
-                    scaffoldState.snackbarHostState.showSnackbar(errorMessage)
-                }
+                scaffoldState.snackbarHostState.showSnackbar(errorMessage)
             }
         }
         code = ""  // Reset code...
@@ -120,143 +117,134 @@ private fun VerificationScreen(
 
     val toolbarTitle = stringResource(R.string.fa_verify_account_toolbar_title)
 
-    Scaffold(scaffoldState = scaffoldState) {
-        Column(modifier = modifier) {
-            Column(modifier = Modifier.fillMaxWidth()) {
-                TopAppBar(
-                    backgroundColor = Color.Transparent,
-                    elevation = 0.dp,
-                    navigationIcon = {
-                        IconButton(onClick = onNavigationIconClicked) {
-                            Icon(
-                                Icons.Default.ArrowBack,
-                                contentDescription = stringResource(R.string.fa_navigation_icon_content_description),
-                            )
-                        }
-                    },
-                    title = {
-                        Text(toolbarTitle)
-                    },
-                )
-                if (result is TaskResult.Loading) {
-                    LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
-                }
+    Scaffold(
+        scaffoldState = scaffoldState,
+        topBar = {
+            ToolbarWithProgressbar(
+                toolbarTitle,
+                onNavigationIconClicked,
+                result is TaskResult.Loading,
+            )
+        },
+    ) { paddingValues ->
+        Column(
+            modifier = modifier
+                .padding(paddingValues)
+                .verticalScroll(rememberScrollState()),
+        ) {
+            val onCodeEntryFinished = {
+                focusManager.clearFocus()
+                onVerifyClicked(code)
             }
             Column(
                 modifier = Modifier
-                    .verticalScroll(rememberScrollState())
-                    .weight(1f),
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+                    .padding(top = 16.dp),
             ) {
-                val onCodeEntryFinished = {
-                    focusManager.clearFocus()
-                    onVerifyClicked(code)
-                }
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp)
-                        .padding(top = 16.dp),
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(4.dp),
-                    ) {
-                        for (i in 0..5) {
-                            TextField(
-                                colors = TextFieldDefaults.textFieldColors(cursorColor = Color.Transparent),
-                                enabled = result !is TaskResult.Loading,
-                                value = code.getOrNull(i)?.toString() ?: "",
-                                singleLine = true,
-                                isError = isCodeError,
-                                textStyle = MaterialTheme.typography.h5.copy(textAlign = TextAlign.Center),
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .onKeyEvent { keyEvent ->
-                                        (keyEvent.key == Key.Backspace).also {
-                                            if (it) {
-                                                focusManager.moveFocus(FocusDirection.Previous)
-                                                if (i > 0) code = code.take(i - 1)
-                                            }
+                    for (i in 0..5) {
+                        TextField(
+                            colors = TextFieldDefaults.textFieldColors(cursorColor = Color.Transparent),
+                            enabled = result !is TaskResult.Loading,
+                            value = code.getOrNull(i)?.toString() ?: "",
+                            singleLine = true,
+                            isError = isCodeError,
+                            textStyle = MaterialTheme.typography.h5.copy(textAlign = TextAlign.Center),
+                            modifier = Modifier
+                                .weight(1f)
+                                .onKeyEvent { keyEvent ->
+                                    (keyEvent.key == Key.Backspace).also {
+                                        if (it) {
+                                            focusManager.moveFocus(FocusDirection.Previous)
+                                            if (i > 0) code = code.take(i - 1)
                                         }
                                     }
-                                    .onFocusEvent {
-                                        // Don't permit focus if previous fields have no values.
-                                        // Previous fields must be preceded by a text field!
-                                        if (it.isFocused && i > 0 && code.length < i) {
-                                            try {
-                                                focusManager.moveFocus(FocusDirection.Previous)
-                                            } catch (ex: IllegalStateException) {
-                                                Log.e(TAG, "VerificationScreen: very weird error!", ex)
-                                            } catch (ex: IllegalArgumentException){
-                                                Log.e(TAG, "VerificationScreen: very weird error!", ex)
-                                            }
-                                        }
-                                    },
-                                onValueChange = {
-                                    val thisCode = it.getOrNull(0)?.toString() ?: ""
-                                    code = if (code.length > i) {
-                                        code.replaceAt(i, thisCode)
-                                    } else {
-                                        "${code}$thisCode"
-                                    }
-                                    isCodeError = false
-                                    if (it.isNotEmpty()) {
-                                        if (i != 5) {
-                                            focusManager.moveFocus(FocusDirection.Next)
-                                        } else if (code.length == 6) {
-                                            // The sixth code should trigger verification
-                                            onCodeEntryFinished()
+                                }
+                                .onFocusEvent {
+                                    // Don't permit focus if previous fields have no values.
+                                    // Previous fields must be preceded by a text field!
+                                    if (it.isFocused && i > 0 && code.length < i) {
+                                        try {
+                                            focusManager.moveFocus(FocusDirection.Previous)
+                                        } catch (ex: IllegalStateException) {
+                                            Log.e(TAG,
+                                                "VerificationScreen: very weird error!",
+                                                ex)
+                                        } catch (ex: IllegalArgumentException) {
+                                            Log.e(TAG,
+                                                "VerificationScreen: very weird error!",
+                                                ex)
                                         }
                                     }
                                 },
-                                keyboardOptions = KeyboardOptions.Default.copy(
-                                    keyboardType = KeyboardType.NumberPassword,
-                                    imeAction = if (i == 5) ImeAction.Done else ImeAction.Next,
-                                ),
-                                keyboardActions = KeyboardActions(onDone = { onCodeEntryFinished() }),
-                            )
-                        }
-                    }
-                    if (isCodeError) {
-                        TextFieldErrorText(codeError, Modifier.fillMaxWidth())
+                            onValueChange = {
+                                val thisCode = it.getOrNull(0)?.toString() ?: ""
+                                code = if (code.length > i) {
+                                    code.replaceAt(i, thisCode)
+                                } else {
+                                    "${code}$thisCode"
+                                }
+                                isCodeError = false
+                                if (it.isNotEmpty()) {
+                                    if (i != 5) {
+                                        focusManager.moveFocus(FocusDirection.Next)
+                                    } else if (code.length == 6) {
+                                        // The sixth code should trigger verification
+                                        onCodeEntryFinished()
+                                    }
+                                }
+                            },
+                            keyboardOptions = KeyboardOptions.Default.copy(
+                                keyboardType = KeyboardType.NumberPassword,
+                                imeAction = if (i == 5) ImeAction.Done else ImeAction.Next,
+                            ),
+                            keyboardActions = KeyboardActions(onDone = { onCodeEntryFinished() }),
+                        )
                     }
                 }
-                Spacer(modifier = Modifier.padding(vertical = 8.dp))
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                if (isCodeError) {
+                    TextFieldErrorText(codeError, Modifier.fillMaxWidth())
+                }
+            }
+            Spacer(modifier = Modifier.padding(vertical = 8.dp))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+            ) {
+                Button(
+                    enabled = resendCountDownFinished && result !is TaskResult.Loading,
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.buttonColors(MaterialTheme.colors.secondary),
+                    onClick = {
+                        // Reset count down to original starting point
+                        resendLastSavedCountDownSecond = 60
+                        focusManager.clearFocus()
+                        onResendClicked()
+                    },
                 ) {
-                    Button(
-                        enabled = resendCountDownFinished && result !is TaskResult.Loading,
-                        modifier = Modifier.weight(1f),
-                        colors = ButtonDefaults.buttonColors(MaterialTheme.colors.secondary),
-                        onClick = {
-                            // Reset count down to original starting point
-                            resendLastSavedCountDownSecond = 60
-                            focusManager.clearFocus()
-                            onResendClicked()
-                        },
-                    ) {
-                        val resendButtonLabel = if (resendCountDownSecond > 0) {
-                            // Show seconds counting down to when resend button will be enabled
-                            stringResource(
-                                R.string.fa_verify_account_resend_code_count_down_label,
-                                resendCountDownSecond,
-                            )
-                        } else {
-                            stringResource(R.string.fa_verify_account_resend_code_label).uppercase()
-                        }
-                        Text(resendButtonLabel)
+                    val resendButtonLabel = if (resendCountDownSecond > 0) {
+                        // Show seconds counting down to when resend button will be enabled
+                        stringResource(
+                            R.string.fa_verify_account_resend_code_count_down_label,
+                            resendCountDownSecond,
+                        )
+                    } else {
+                        stringResource(R.string.fa_verify_account_resend_code_label).uppercase()
                     }
-                    Button(
-                        enabled = code.length == 6 && result !is TaskResult.Loading,
-                        modifier = Modifier.weight(1f),
-                        onClick = onCodeEntryFinished,
-                    ) {
-                        Text(toolbarTitle.uppercase())
-                    }
+                    Text(resendButtonLabel)
+                }
+                Button(
+                    enabled = code.length == 6 && result !is TaskResult.Loading,
+                    modifier = Modifier.weight(1f),
+                    onClick = onCodeEntryFinished,
+                ) {
+                    Text(toolbarTitle.uppercase())
                 }
             }
         }

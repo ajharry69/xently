@@ -217,7 +217,7 @@ class LocationService : Service() {
             .bigText(mainNotificationText)
 
         // 3. Set up main Intent/Pending Intents for notification.
-        val launchActivityIntent = Intent("co.ke.xently.action.MAIN")
+        val launchActivityIntent = Intent("co.ke.xently.action.SHOPPING_LIST")
 
         val cancelIntent = Intent(this, LocationService::class.java)
         cancelIntent.putExtra(EXTRA_CANCEL_LOCATION_TRACKING_FROM_NOTIFICATION, true)

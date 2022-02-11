@@ -5,14 +5,13 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.Button
+import androidx.compose.material.Scaffold
+import androidx.compose.material.Text
+import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.*
 import androidx.compose.ui.tooling.preview.Preview
@@ -22,8 +21,10 @@ import co.ke.xently.accounts.R
 import co.ke.xently.data.TaskResult
 import co.ke.xently.data.User
 import co.ke.xently.data.errorMessage
-import co.ke.xently.feature.ui.TextFieldErrorText
-import kotlinx.coroutines.launch
+import co.ke.xently.feature.ui.PasswordVisibilityToggle
+import co.ke.xently.feature.ui.ToolbarWithProgressbar
+import co.ke.xently.feature.ui.XentlyTextField
+import co.ke.xently.feature.ui.stringRes
 
 
 @Composable
@@ -41,7 +42,7 @@ internal fun PasswordResetScreen(
         isChange,
         onSuccessfulReset,
         onNavigationIconClicked,
-        { viewModel.resetPassword(it) },
+        viewModel::resetPassword,
     )
 }
 
@@ -66,7 +67,7 @@ private fun PasswordResetScreen(
     var isOldPasswordVisible by remember { mutableStateOf(false) }
     var isNewPasswordVisible by remember { mutableStateOf(false) }
 
-    val (coroutineScope, scaffoldState) = Pair(rememberCoroutineScope(), rememberScaffoldState())
+    val scaffoldState = rememberScaffoldState()
 
     if (result is TaskResult.Error) {
         oldPasswordError =
@@ -82,128 +83,105 @@ private fun PasswordResetScreen(
 
         if (setOf(isOldPasswordError, isNewPasswordError).all { false }) {
             val errorMessage =
-                result.errorMessage ?: stringResource(R.string.fs_generic_error_message)
+                result.errorMessage ?: stringResource(R.string.generic_error_message)
             LaunchedEffect(result, errorMessage) {
-                coroutineScope.launch {
-                    scaffoldState.snackbarHostState.showSnackbar(errorMessage)
-                }
+                scaffoldState.snackbarHostState.showSnackbar(errorMessage)
             }
         }
     } else if (result is TaskResult.Success && result.data != null) {
         SideEffect {
-            oldPassword = oldPassword.copy(text = "")
-            newPassword = newPassword.copy(text = "")
+            oldPassword = TextFieldValue()
+            newPassword = TextFieldValue()
             onSuccessfulReset(result.data!!)
         }
     }
     val focusManager = LocalFocusManager.current
 
-    val toolbarTitle = stringResource(R.string.fa_reset_password_toolbar_title,
-        stringResource(if (isChange) R.string.fa_change else R.string.fa_reset))
+    val toolbarTitle = stringRes(R.string.fa_reset_password_toolbar_title,
+        if (isChange) R.string.fa_change else R.string.fa_reset)
 
-    Scaffold(scaffoldState = scaffoldState) {
-        Column(modifier = modifier) {
-            Column(modifier = Modifier.fillMaxWidth()) {
-                TopAppBar(
-                    backgroundColor = Color.Transparent,
-                    elevation = 0.dp,
-                    navigationIcon = {
-                        IconButton(onClick = onNavigationIconClicked) {
-                            Icon(
-                                Icons.Default.ArrowBack,
-                                contentDescription = stringResource(R.string.fa_navigation_icon_content_description),
-                            )
-                        }
-                    },
-                    title = {
-                        Text(toolbarTitle)
-                    },
-                )
-                if (result is TaskResult.Loading) {
-                    LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
-                }
-            }
-            Column(
+    Scaffold(
+        scaffoldState = scaffoldState,
+        topBar = {
+            ToolbarWithProgressbar(
+                toolbarTitle,
+                onNavigationIconClicked,
+                result is TaskResult.Loading,
+            )
+        },
+    ) { paddingValues ->
+        Column(
+            modifier = modifier
+                .padding(paddingValues)
+                .verticalScroll(rememberScrollState()),
+        ) {
+            XentlyTextField(
                 modifier = Modifier
-                    .verticalScroll(rememberScrollState())
-                    .weight(1f),
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+                    .padding(top = 16.dp),
+                value = oldPassword,
+                isError = isOldPasswordError,
+                error = oldPasswordError,
+                onValueChange = {
+                    oldPassword = it
+                    isOldPasswordError = false
+                },
+                label = stringResource(R.string.fa_reset_password_old_password_label),
+                keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Password,
+                    imeAction = ImeAction.Next),
+                visualTransformation = if (isOldPasswordVisible) {
+                    VisualTransformation.None
+                } else {
+                    PasswordVisualTransformation()
+                },
+                trailingIcon = {
+                    PasswordVisibilityToggle(isOldPasswordVisible) {
+                        isOldPasswordVisible = !isOldPasswordVisible
+                    }
+                }
+            )
+            Spacer(modifier = Modifier.padding(vertical = 8.dp))
+            XentlyTextField(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                value = newPassword,
+                isError = isNewPasswordError,
+                error = newPasswordError,
+                onValueChange = {
+                    newPassword = it
+                    isNewPasswordError = false
+                },
+                label = stringResource(R.string.fa_reset_password_new_password_label),
+                keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Password,
+                    imeAction = ImeAction.Done),
+                keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
+                visualTransformation = if (isNewPasswordVisible) {
+                    VisualTransformation.None
+                } else {
+                    PasswordVisualTransformation()
+                },
+                trailingIcon = {
+                    PasswordVisibilityToggle(isNewPasswordVisible) {
+                        isNewPasswordVisible = !isNewPasswordVisible
+                    }
+                }
+            )
+            Spacer(modifier = Modifier.padding(vertical = 8.dp))
+            Button(
+                enabled = arrayOf(oldPassword, newPassword).all { it.text.isNotBlank() },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                onClick = {
+                    focusManager.clearFocus()
+                    onResetClicked(User.ResetPassword(oldPassword.text,
+                        newPassword.text,
+                        isChange))
+                }
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp)
-                        .padding(top = 16.dp),
-                ) {
-                    TextField(
-                        value = oldPassword,
-                        singleLine = true,
-                        isError = isOldPasswordError,
-                        modifier = Modifier.fillMaxWidth(),
-                        onValueChange = {
-                            oldPassword = it
-                            isOldPasswordError = false
-                        },
-                        label = { Text(text = stringResource(R.string.fa_reset_password_old_password_label)) },
-                        keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Password,
-                            imeAction = ImeAction.Next),
-                        visualTransformation = if (isOldPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                        trailingIcon = {
-                            IconButton(onClick = { isOldPasswordVisible = !isOldPasswordVisible }) {
-                                Icon(painterResource(if (isOldPasswordVisible) R.drawable.ic_password_visible else R.drawable.ic_password_invisible),
-                                    contentDescription = stringResource(R.string.fa_toggle_password_visibility))
-                            }
-                        }
-                    )
-                    if (isOldPasswordError) {
-                        TextFieldErrorText(oldPasswordError, Modifier.fillMaxWidth())
-                    }
-                }
-                Spacer(modifier = Modifier.padding(vertical = 8.dp))
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                ) {
-                    TextField(
-                        value = newPassword,
-                        singleLine = true,
-                        isError = isNewPasswordError,
-                        modifier = Modifier.fillMaxWidth(),
-                        onValueChange = {
-                            newPassword = it
-                            isNewPasswordError = false
-                        },
-                        label = { Text(text = stringResource(R.string.fa_reset_password_new_password_label)) },
-                        keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Password,
-                            imeAction = ImeAction.Done),
-                        keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
-                        visualTransformation = if (isNewPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                        trailingIcon = {
-                            IconButton(onClick = { isNewPasswordVisible = !isNewPasswordVisible }) {
-                                Icon(painterResource(if (isNewPasswordVisible) R.drawable.ic_password_visible else R.drawable.ic_password_invisible),
-                                    contentDescription = stringResource(R.string.fa_toggle_password_visibility))
-                            }
-                        }
-                    )
-                    if (isNewPasswordError) {
-                        TextFieldErrorText(newPasswordError, Modifier.fillMaxWidth())
-                    }
-                }
-                Spacer(modifier = Modifier.padding(vertical = 8.dp))
-                Button(
-                    enabled = arrayOf(oldPassword, newPassword).all { it.text.isNotBlank() },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                    onClick = {
-                        focusManager.clearFocus()
-                        onResetClicked(User.ResetPassword(oldPassword.text,
-                            newPassword.text,
-                            isChange))
-                    }
-                ) {
-                    Text(toolbarTitle.uppercase())
-                }
+                Text(toolbarTitle.uppercase())
             }
         }
     }

@@ -5,12 +5,16 @@ import androidx.lifecycle.viewModelScope
 import co.ke.xently.data.*
 import co.ke.xently.data.TaskResult.Success
 import co.ke.xently.feature.utils.flagLoadingOnStartCatchingErrors
+import co.ke.xently.feature.utils.setCleansedQuery
 import co.ke.xently.products.repository.IProductsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.SharingStarted.Companion.WhileSubscribed
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 internal class ProductDetailViewModel @Inject constructor(
     private val repository: IProductsRepository,
@@ -19,13 +23,29 @@ internal class ProductDetailViewModel @Inject constructor(
     val productResult: StateFlow<TaskResult<Product?>>
         get() = _productResult
 
-    private val _measurementUnitsResult = MutableStateFlow<List<MeasurementUnit>>(emptyList())
-    val measurementUnitsResult: StateFlow<List<MeasurementUnit>>
-        get() = _measurementUnitsResult
-
-    private val _shopsResult = MutableStateFlow<List<Shop>>(emptyList())
     val shopsResult: StateFlow<List<Shop>>
-        get() = _shopsResult
+    val measurementUnitsResult: StateFlow<List<MeasurementUnit>>
+
+    private val shopQuery = MutableStateFlow("")
+    private val measurementUnitQuery = MutableStateFlow("")
+
+    init {
+        shopsResult = shopQuery.flatMapLatest(repository::getShops)
+            .flagLoadingOnStartCatchingErrors()
+            .mapLatest {
+                it.getOrNull() ?: emptyList()
+            }.stateIn(viewModelScope, WhileSubscribed(replayExpirationMillis = 0), emptyList())
+
+        measurementUnitsResult = measurementUnitQuery.flatMapLatest(repository::getMeasurementUnits)
+            .flagLoadingOnStartCatchingErrors()
+            .mapLatest {
+                it.getOrNull() ?: emptyList()
+            }.stateIn(viewModelScope, WhileSubscribed(replayExpirationMillis = 0), emptyList())
+    }
+
+    fun setShopQuery(query: String) = shopQuery.setCleansedQuery(query)
+
+    fun setMeasurementUnitQuery(query: String) = measurementUnitQuery.setCleansedQuery(query)
 
     fun addOrUpdate(product: Product) {
         viewModelScope.launch {
@@ -50,26 +70,6 @@ internal class ProductDetailViewModel @Inject constructor(
                 .collectLatest {
                     _productResult.value = it
                 }
-        }
-    }
-
-    fun getShops(query: String) = viewModelScope.launch {
-        combineTransform(flowOf(query.trim())) {
-            if (it[0].isNotEmpty()) {
-                emitAll(repository.getShops(it[0]))
-            }
-        }.flagLoadingOnStartCatchingErrors().collectLatest {
-            _shopsResult.value = it.getOrNull() ?: emptyList()
-        }
-    }
-
-    fun getMeasurementUnits(query: String) = viewModelScope.launch {
-        combineTransform(flowOf(query.trim())) {
-            if (it[0].isNotEmpty()) {
-                emitAll(repository.getMeasurementUnits(it[0]))
-            }
-        }.flagLoadingOnStartCatchingErrors().collectLatest {
-            _measurementUnitsResult.value = it.getOrNull() ?: emptyList()
         }
     }
 }

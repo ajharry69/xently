@@ -37,7 +37,7 @@ internal class AccountRepository @Inject constructor(
 ) : IAccountRepository {
     private suspend fun saveLocally(it: TaskResult<User>) {
         val user = it.getOrThrow()
-        database.accountsDao.save(user)
+        database.accountDao.save(user)
         preferences.edit(commit = true) {
             putString(TOKEN_VALUE_SHARED_PREFERENCE_KEY, user.token)
         }
@@ -65,7 +65,7 @@ internal class AccountRepository @Inject constructor(
         flow {
             emit(sendRequest(401, errorClass = PasswordResetHttpException::class.java) {
                 service.resetPassword(
-                    database.accountsDao.getHistoricallyFirstUserId(),
+                    database.accountDao.getHistoricallyFirstUserId(),
                     resetPassword,
                 )
             })
@@ -87,7 +87,7 @@ internal class AccountRepository @Inject constructor(
     override fun requestVerificationCode() = Retry().run {
         flow {
             emit(sendRequest(401) {
-                service.requestVerificationCode(database.accountsDao.getHistoricallyFirstUserId())
+                service.requestVerificationCode(database.accountDao.getHistoricallyFirstUserId())
             })
         }.onEach {
             if (it is TaskResult.Success) saveLocally(it)
@@ -98,7 +98,7 @@ internal class AccountRepository @Inject constructor(
         flow {
             emit(sendRequest(401, errorClass = VerificationHttpException::class.java) {
                 service.verify(
-                    database.accountsDao.getHistoricallyFirstUserId(),
+                    database.accountDao.getHistoricallyFirstUserId(),
                     mapOf("code" to code),
                 )
             })
@@ -109,9 +109,9 @@ internal class AccountRepository @Inject constructor(
 
     override fun signout() = Retry().run {
         flow {
-            emit(database.accountsDao.getHistoricallyFirstUserId())
+            emit(database.accountDao.getHistoricallyFirstUserId())
         }.map {
-            database.accountsDao.delete(it)
+            database.accountDao.delete(it)
             preferences.edit {
                 remove(TOKEN_VALUE_SHARED_PREFERENCE_KEY)
             }

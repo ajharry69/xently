@@ -1,12 +1,12 @@
 package co.ke.xently.shops.ui.list
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingConfig
+import androidx.paging.PagingData
 import co.ke.xently.shops.repository.IShopsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.combineTransform
-import kotlinx.coroutines.flow.emitAll
-import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 
 @HiltViewModel
@@ -15,6 +15,6 @@ internal class ShopListViewModel @Inject constructor(
 ) : ViewModel() {
     fun get(config: PagingConfig, query: String = "") =
         combineTransform(flowOf(config), flowOf(query)) { c, q ->
-            emitAll(repository.get(c, q).flow)
-        }
+            emitAll(repository.get(c, q))
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), PagingData.empty())
 }

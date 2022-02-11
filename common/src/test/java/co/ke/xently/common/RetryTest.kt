@@ -2,7 +2,6 @@ package co.ke.xently.common
 
 import junit.framework.TestCase
 import kotlinx.coroutines.test.runBlockingTest
-import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
 class RetryTest : TestCase() {

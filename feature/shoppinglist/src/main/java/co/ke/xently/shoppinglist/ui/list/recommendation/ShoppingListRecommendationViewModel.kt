@@ -1,6 +1,6 @@
 package co.ke.xently.shoppinglist.ui.list.recommendation
 
-import android.app.Application
+import android.content.Context
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import co.ke.xently.data.RecommendationReport
@@ -10,32 +10,35 @@ import co.ke.xently.feature.utils.flagLoadingOnStartCatchingErrors
 import co.ke.xently.shoppinglist.Recommend
 import co.ke.xently.shoppinglist.repository.IShoppingListRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.launch
+import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 
 @HiltViewModel
 internal class ShoppingListRecommendationViewModel @Inject constructor(
-    app: Application,
+    @ApplicationContext context: Context,
     savedStateHandle: SavedStateHandle,
     private val repository: IShoppingListRepository,
-) : LocationPermissionViewModel(app, savedStateHandle) {
-    private val _recommendationReportResult =
-        MutableStateFlow<TaskResult<RecommendationReport>>(TaskResult.Loading)
-    val recommendationReportResult: StateFlow<TaskResult<RecommendationReport>>
-        get() = _recommendationReportResult
+) : LocationPermissionViewModel(context, savedStateHandle) {
+    /*private val _recommendationReportResult =
+        MutableStateFlow<TaskResult<RecommendationReport>>(TaskResult.Loading)*/
+    var recommendationReportResult: StateFlow<TaskResult<RecommendationReport>>
+        private set
+
     private val recommend = MutableStateFlow(Recommend())
 
     init {
-        viewModelScope.launch {
+        recommendationReportResult = combineTransform(recommend) {
+            emitAll(repository.get(it[0])
+                .flagLoadingOnStartCatchingErrors())
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000, 5000), TaskResult.Loading)
+        /*viewModelScope.launch {
             recommend.collectLatest { r ->
                 repository.get(r)
                     .flagLoadingOnStartCatchingErrors()
                     .collectLatest { _recommendationReportResult.value = it }
             }
-        }
+        }*/
     }
 
     fun setRecommend(recommend: Recommend) {
