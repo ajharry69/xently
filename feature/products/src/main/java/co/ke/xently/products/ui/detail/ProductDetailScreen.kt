@@ -9,6 +9,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTime
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -53,6 +54,8 @@ internal fun ProductDetailScreen(
     val productResult by viewModel.productResult.collectAsState()
     // TODO: Fix case where searching on either measurement units or shops clears fields
     val measurementUnits by viewModel.measurementUnitsResult.collectAsState()
+    val brands by viewModel.brandsResult.collectAsState()
+    val attributes by viewModel.attributesResult.collectAsState()
 
     // Allow addition of more items if the screen was initially for adding.
     val permitReAddition = isDefaultProduct && productResult.getOrNull() != null
@@ -66,10 +69,13 @@ internal fun ProductDetailScreen(
         },
         permitReAddition,
         shops,
+        brands,
+        attributes,
         measurementUnits,
         onNavigationIconClicked,
         viewModel::setShopQuery,
         viewModel::setMeasurementUnitQuery,
+        viewModel::setBrandQuery,
         viewModel::addOrUpdate,
     )
 }
@@ -80,10 +86,13 @@ private fun ProductDetailScreen(
     result: TaskResult<Product?>,
     permitReAddition: Boolean = false,
     shops: List<Shop> = emptyList(),
+    brandSuggestions: List<Brand> = emptyList(),
+    attributesSuggestions: List<Attribute> = emptyList(),
     measurementUnits: List<MeasurementUnit> = emptyList(),
     onNavigationIconClicked: () -> Unit = {},
     onShopQueryChanged: (String) -> Unit = {},
     onMeasurementUnitQueryChanged: (String) -> Unit = {},
+    onBrandQueryChanged: (String) -> Unit = {},
     onProductDetailsSubmitted: (Product) -> Unit = {},
 ) {
     val product = result.getOrNull() ?: Product.default()
@@ -118,6 +127,12 @@ private fun ProductDetailScreen(
     var unitQuantityError by remember { mutableStateOf("") }
     var isUnitQuantityError by remember { mutableStateOf(false) }
 
+    var purchasedQuantity by remember(product.id, product.purchasedQuantity) {
+        mutableStateOf(TextFieldValue(if (product.isDefault) "" else product.purchasedQuantity.toString()))
+    }
+    var purchasedQuantityError by remember { mutableStateOf("") }
+    var isPurchasedQuantityError by remember { mutableStateOf(false) }
+
     var unitPrice by remember(product.id, product.unitPrice) {
         mutableStateOf(TextFieldValue(if (product.isDefault) "" else product.unitPrice.toString()))
     }
@@ -132,6 +147,9 @@ private fun ProductDetailScreen(
     }
     var datePurchasedError by remember { mutableStateOf("") }
     var isDatePurchasedError by remember { mutableStateOf(false) }
+
+    val brands = remember { mutableStateListOf<Brand>() }
+    var brandQuery by remember { mutableStateOf(TextFieldValue("")) }
 
     val toolbarTitle = stringResource(
         R.string.fp_add_product_toolbar_title,
@@ -157,6 +175,10 @@ private fun ProductDetailScreen(
         unitPriceError = (productHttpException?.unitPrice?.joinToString("\n") ?: "").also {
             isUnitPriceError = it.isNotBlank()
         }
+        purchasedQuantityError =
+            (productHttpException?.purchasedQuantity?.joinToString("\n") ?: "").also {
+                isPurchasedQuantityError = it.isNotBlank()
+            }
         datePurchasedError = (productHttpException?.datePurchased?.joinToString("\n") ?: "").also {
             isDatePurchasedError = it.isNotBlank()
         }
@@ -176,6 +198,8 @@ private fun ProductDetailScreen(
         name = TextFieldValue()
         unitPrice = TextFieldValue()
         unitQuantity = TextFieldValue()
+        purchasedQuantity = TextFieldValue(product.purchasedQuantity.toString())
+        brandQuery = TextFieldValue()
     }
     val focusManager = LocalFocusManager.current
 
@@ -199,8 +223,10 @@ private fun ProductDetailScreen(
                     .padding(horizontal = 16.dp)
                     .padding(top = 16.dp),
                 label = stringResource(R.string.fp_product_detail_shop_label),
-                keyboardOptions = KeyboardOptions.Default.copy(capitalization = KeyboardCapitalization.Sentences,
-                    imeAction = ImeAction.Next),
+                keyboardOptions = KeyboardOptions.Default.copy(
+                    imeAction = ImeAction.Next,
+                    capitalization = KeyboardCapitalization.Sentences,
+                ),
                 onValueChange = {
                     shop = it
                     isShopError = false
@@ -253,7 +279,7 @@ private fun ProductDetailScreen(
                 },
                 suggestions = measurementUnits,
             ) {
-                Text(it.name, style = MaterialTheme.typography.body1)
+                Text(it.toString(), style = MaterialTheme.typography.body1)
             }
             Spacer(modifier = Modifier.padding(vertical = 8.dp))
             XentlyTextField(
@@ -270,6 +296,22 @@ private fun ProductDetailScreen(
                     isUnitQuantityError = false
                 },
                 label = stringResource(R.string.fp_product_detail_unit_quantity_label),
+            )
+            Spacer(modifier = Modifier.padding(vertical = 8.dp))
+            XentlyTextField(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                value = purchasedQuantity,
+                isError = isPurchasedQuantityError,
+                error = purchasedQuantityError,
+                keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next,
+                    keyboardType = KeyboardType.Number),
+                onValueChange = {
+                    purchasedQuantity = it
+                    isPurchasedQuantityError = false
+                },
+                label = stringResource(R.string.fp_product_detail_purchased_quantity_label),
             )
             Spacer(modifier = Modifier.padding(vertical = 8.dp))
             XentlyTextField(
@@ -368,11 +410,72 @@ private fun ProductDetailScreen(
                 }
             }
             Spacer(modifier = Modifier.padding(vertical = 8.dp))
+
+            var showAddBrandIcon by remember { mutableStateOf(false) }
+            val addBrand: (Brand) -> Unit = {
+                brands.add(0, it)
+                brandQuery = TextFieldValue() // Reset search
+            }
+            AutoCompleteTextField(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                value = brandQuery,
+                label = stringResource(R.string.fp_product_detail_brand_query_label),
+                helpText = if(showAddBrandIcon) {
+                    stringResource(R.string.fp_product_detail_brand_query_help_text)
+                } else {
+                    null
+                },
+                keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
+                onValueChange = {
+                    brandQuery = it
+                    onBrandQueryChanged(it.text)
+                },
+                trailingIcon = if (!showAddBrandIcon) {
+                    null
+                } else {
+                    {
+                        IconButton(onClick = { addBrand(Brand(name = brandQuery.text.trim())) }) {
+                            Icon(Icons.Default.Add, contentDescription = null)
+                        }
+                    }
+                },
+                onOptionSelected = addBrand,
+                wasSuggestionPicked = {
+                    showAddBrandIcon = !it && brandQuery.text.isNotBlank()
+                },
+                suggestions = brandSuggestions,
+            ) {
+                Text(it.toString(), style = MaterialTheme.typography.body1)
+            }
+            if (brands.isNotEmpty()) {
+                Text(
+                    stringRes(R.string.fp_product_detail_brands_title),
+                    style = MaterialTheme.typography.h5,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                )
+                Spacer(modifier = Modifier.padding(vertical = 8.dp))
+                ChipGroup(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    isSingleLine = false, chipItems = brands,
+                ) { i, b ->
+                    Chip(b.toString()) {
+                        brands.removeAt(i)
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.padding(vertical = 8.dp))
             Button(
                 enabled = arrayOf(
                     unit,
                     name,
                     unitQuantity,
+                    purchasedQuantity,
                     unitPrice,
                     dateOfPurchase,
                     timeOfPurchase,
@@ -387,9 +490,11 @@ private fun ProductDetailScreen(
                         name = name.text,
                         unit = unit.text,
                         unitQuantity = unitQuantity.text.toFloat(),
+                        purchasedQuantity = purchasedQuantity.text.toFloat(),
                         unitPrice = unitPrice.text.toFloat(),
                         datePurchased = DEFAULT_LOCAL_DATE_TIME_FORMAT.parse("${dateOfPurchase.text} ${timeOfPurchase.text}")
                             ?: error("Invalid date and/or time format"),
+                        brands = brands.filterNot { it.isDefault },
                     ))
                 }
             ) { Text(toolbarTitle.uppercase()) }

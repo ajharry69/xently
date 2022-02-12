@@ -7,6 +7,7 @@ internal class ProductHttpException(
     val name: List<String> = emptyList(),
     val unit: List<String> = emptyList(),
     val unitQuantity: List<String> = emptyList(),
+    val purchasedQuantity: List<String> = emptyList(),
     val unitPrice: List<String> = emptyList(),
     val datePurchased: List<String> = emptyList(),
 ) : HttpException() {
@@ -15,6 +16,7 @@ internal class ProductHttpException(
         name,
         unit,
         unitQuantity,
+        purchasedQuantity,
         unitPrice,
         datePurchased,
     ).any { it.isNotEmpty() }

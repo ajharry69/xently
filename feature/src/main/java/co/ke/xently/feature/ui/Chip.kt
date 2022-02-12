@@ -3,7 +3,7 @@ package co.ke.xently.feature.ui
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
@@ -11,10 +11,10 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import co.ke.xently.feature.R
@@ -24,7 +24,7 @@ import co.ke.xently.feature.theme.XentlyTheme
 private fun ChipContent(
     isCheckable: Boolean,
     isChecked: Boolean,
-    icon: ImageVector?,
+    thumbnail: (@Composable (Modifier) -> Unit)?,
     text: String,
     onClose: (() -> Unit)?,
 ) {
@@ -33,17 +33,18 @@ private fun ChipContent(
         modifier = Modifier.padding(start = 4.dp, end = 6.dp),
     ) {
         val iconModifier = Modifier.size(size = 24.dp)
-        if (icon != null) {
+        if (thumbnail != null) {
             if (isCheckable && isChecked) {
                 Icon(painterResource(R.drawable.ic_mtrl_chip_checked_circle), null, iconModifier)
             } else {
-                Icon(icon, null, modifier = iconModifier)
+                thumbnail(iconModifier)
             }
         } else if (isCheckable && isChecked) {
             Icon(painterResource(R.drawable.ic_mtrl_chip_checked_circle), null, iconModifier)
         }
         Text(
             text = text,
+            textAlign = TextAlign.Center,
             style = MaterialTheme.typography.body2,
             modifier = Modifier.padding(start = 8.dp, end = 6.dp),
             color = MaterialTheme.colors.onSurface.copy(alpha = 0.87f),
@@ -82,7 +83,7 @@ fun Chip(
     type: ChipType = ChipType.ACTION,
     checkable: Boolean = false,
     enabled: Boolean = true,
-    icon: ImageVector? = null,
+    thumbnail: (@Composable (Modifier) -> Unit)? = null,
     border: BorderStroke? = null,
     onCheckChanged: ((Boolean) -> Unit)? = null,
     onClose: (() -> Unit)? = null,
@@ -95,7 +96,7 @@ fun Chip(
 
     var isChecked by remember { mutableStateOf(false) }
 
-    val content = @Composable { ChipContent(isCheckable, isChecked, icon, text, onClose) }
+    val content = @Composable { ChipContent(isCheckable, isChecked, thumbnail, text, onClose) }
     if (isCheckable) {
         onCheckChanged
             ?: error("Improperly configured. `onCheckChanged` cannot be null for a checkable chip.")
@@ -122,7 +123,7 @@ fun <T> ChipGroup(
     modifier: Modifier = Modifier,
     isSingleLine: Boolean = true,
     chipItems: List<T> = emptyList(),
-    chipItem: @Composable (T) -> Unit,
+    chipItem: @Composable (Int, T) -> Unit,
 ) {
     if (isSingleLine) {
         LazyRow(
@@ -130,14 +131,14 @@ fun <T> ChipGroup(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            items(chipItems) {
-                chipItem(it)
+            itemsIndexed(chipItems) { index, item ->
+                chipItem(index, item)
             }
         }
     } else {
         FlowRow(modifier = modifier, verticalSpacing = 8.dp, horizontalSpacing = 8.dp) {
-            for (item in chipItems) {
-                chipItem(item)
+            for ((index, item) in chipItems.withIndex()) {
+                chipItem(index, item)
             }
         }
     }
@@ -157,16 +158,16 @@ private fun ChipGroup() {
             ChipGroup(
                 Modifier.fillMaxWidth(),
                 chipItems = List(20) { "Action ${it + 1}" },
-            ) {
-                Chip(text = it)
+            ) { _, str ->
+                Chip(text = str)
             }
             Text("Multi-line", style = MaterialTheme.typography.h5)
             ChipGroup(
                 Modifier.fillMaxWidth(),
                 isSingleLine = false,
                 chipItems = List(20) { "Action ${it + 1}" },
-            ) {
-                Chip(text = it)
+            ) { _, str ->
+                Chip(text = str)
             }
         }
     }
@@ -180,19 +181,24 @@ private fun Chip() {
             Chip(text = "Action")
             Chip(text = "Disabled action", enabled = false)
             Chip(text = "Checkable action", checkable = true, onCheckChanged = {})
-            Chip(text = "Action with thumbnail", icon = Icons.Default.Person)
-            Chip(text = "Disabled with thumbnail", icon = Icons.Default.Person, enabled = false)
-            Chip(text = "Checkable action with thumbnail",
-                icon = Icons.Default.Person,
+            val thumbnail: @Composable (Modifier) -> Unit = { Icon(Icons.Default.Person, null, it) }
+            Chip(text = "Action with thumbnail", thumbnail = thumbnail)
+            Chip(text = "Disabled with thumbnail", thumbnail = thumbnail, enabled = false)
+            Chip(
+                text = "Checkable action with thumbnail",
+                thumbnail = thumbnail,
                 type = ChipType.CHOICE,
-                onCheckChanged = {})
-            Chip(text = "Checkable disabled with thumbnail",
-                icon = Icons.Default.Person,
+                onCheckChanged = {},
+            )
+            Chip(
+                text = "Checkable disabled with thumbnail",
+                thumbnail = thumbnail,
                 type = ChipType.CHOICE,
                 enabled = false,
-                onCheckChanged = {})
+                onCheckChanged = {},
+            )
             Chip(text = "Very very very very very long chip text") {}
-            Chip(text = "Very very very very very long chip text", icon = Icons.Default.Person) {}
+            Chip(text = "Very very very very very long chip text", thumbnail = thumbnail) {}
         }
     }
 }

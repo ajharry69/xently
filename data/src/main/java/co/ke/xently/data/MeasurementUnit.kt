@@ -36,6 +36,8 @@ data class MeasurementUnit(
         return true
     }
 
+    override fun toString() = name
+
     companion object {
         fun default() = MeasurementUnit(isDefault = true)
     }

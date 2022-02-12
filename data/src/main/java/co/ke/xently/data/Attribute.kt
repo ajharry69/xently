@@ -9,17 +9,18 @@ import androidx.room.Index
     indices = [
         Index("name"),
         Index("value"),
-        Index("name", "value", "productId", unique = true),
+        Index("productId"),
     ],
     primaryKeys = ["name", "value"],
 )
 data class Attribute(
     var name: String = "",
     var value: String = "",
-    var productId: Long = -1,
+    var productId: Long = Product.default().id,
     @Ignore
     val values: List<String> = emptyList(),
-    var isDefault: Boolean = false,
+    @Ignore
+    val isDefault: Boolean = false,
 ) {
     override fun toString() = "${name}:${value}"
 

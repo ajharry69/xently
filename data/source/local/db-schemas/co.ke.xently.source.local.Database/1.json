@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "f48ac8fd543a81ad6eaee5a3c921a1ac",
+    "identityHash": "c1a7e38a0451836c006068a0208e1f1a",
     "entities": [
       {
         "tableName": "remote_keys",
@@ -154,14 +154,8 @@
       },
       {
         "tableName": "brands",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `name` TEXT NOT NULL, `productId` INTEGER NOT NULL, `isDefault` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`name` TEXT NOT NULL, `productId` INTEGER NOT NULL, `canDelete` INTEGER NOT NULL, PRIMARY KEY(`name`))",
         "fields": [
-          {
-            "fieldPath": "id",
-            "columnName": "id",
-            "affinity": "INTEGER",
-            "notNull": true
-          },
           {
             "fieldPath": "name",
             "columnName": "name",
@@ -175,37 +169,27 @@
             "notNull": true
           },
           {
-            "fieldPath": "isDefault",
-            "columnName": "isDefault",
+            "fieldPath": "canDelete",
+            "columnName": "canDelete",
             "affinity": "INTEGER",
             "notNull": true
           }
         ],
         "primaryKey": {
           "columnNames": [
-            "id"
+            "name"
           ],
           "autoGenerate": false
         },
         "indices": [
           {
-            "name": "index_brands_name",
+            "name": "index_brands_productId",
             "unique": false,
             "columnNames": [
-              "name"
-            ],
-            "orders": [],
-            "createSql": "CREATE INDEX IF NOT EXISTS `index_brands_name` ON `${TABLE_NAME}` (`name`)"
-          },
-          {
-            "name": "index_brands_name_productId",
-            "unique": true,
-            "columnNames": [
-              "name",
               "productId"
             ],
             "orders": [],
-            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_brands_name_productId` ON `${TABLE_NAME}` (`name`, `productId`)"
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_brands_productId` ON `${TABLE_NAME}` (`productId`)"
           }
         ],
         "foreignKeys": []
@@ -296,7 +280,7 @@
       },
       {
         "tableName": "attributes",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`name` TEXT NOT NULL, `value` TEXT NOT NULL, `productId` INTEGER NOT NULL, `isDefault` INTEGER NOT NULL, PRIMARY KEY(`name`, `value`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`name` TEXT NOT NULL, `value` TEXT NOT NULL, `productId` INTEGER NOT NULL, PRIMARY KEY(`name`, `value`))",
         "fields": [
           {
             "fieldPath": "name",
@@ -313,12 +297,6 @@
           {
             "fieldPath": "productId",
             "columnName": "productId",
-            "affinity": "INTEGER",
-            "notNull": true
-          },
-          {
-            "fieldPath": "isDefault",
-            "columnName": "isDefault",
             "affinity": "INTEGER",
             "notNull": true
           }
@@ -350,15 +328,13 @@
             "createSql": "CREATE INDEX IF NOT EXISTS `index_attributes_value` ON `${TABLE_NAME}` (`value`)"
           },
           {
-            "name": "index_attributes_name_value_productId",
-            "unique": true,
+            "name": "index_attributes_productId",
+            "unique": false,
             "columnNames": [
-              "name",
-              "value",
               "productId"
             ],
             "orders": [],
-            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_attributes_name_value_productId` ON `${TABLE_NAME}` (`name`, `value`, `productId`)"
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_attributes_productId` ON `${TABLE_NAME}` (`productId`)"
           }
         ],
         "foreignKeys": []
@@ -481,7 +457,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'f48ac8fd543a81ad6eaee5a3c921a1ac')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'c1a7e38a0451836c006068a0208e1f1a')"
     ]
   }
 }

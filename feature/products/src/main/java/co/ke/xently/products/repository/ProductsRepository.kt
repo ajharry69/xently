@@ -6,6 +6,7 @@ import androidx.paging.map
 import co.ke.xently.common.Retry
 import co.ke.xently.common.di.qualifiers.coroutines.IODispatcher
 import co.ke.xently.data.*
+import co.ke.xently.feature.utils.SEARCH_DELAY
 import co.ke.xently.products.ui.detail.ProductHttpException
 import co.ke.xently.source.local.Database
 import co.ke.xently.source.remote.retryCatchIfNecessary
@@ -21,8 +22,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlin.time.Duration.Companion.milliseconds
-import kotlin.time.ExperimentalTime
 
 @Singleton
 internal class ProductsRepository @Inject constructor(
@@ -36,10 +35,8 @@ internal class ProductsRepository @Inject constructor(
 ) : IProductsRepository {
     private fun Flow<TaskResult<Product>>.saveLocallyIfApplicable(retry: Retry) = onEach { result ->
         if (result is TaskResult.Success) {
-            result.getOrThrow().also { product ->
-                database.productDao.save(product)
-                database.brandDao.add(product.brands.map { it.copy(productId = product.id) })
-                database.attributeDao.add(product.attributes.map { it.copy(productId = product.id) })
+            result.getOrThrow().also {
+                it.saveLocallyWithAttributes(database)
             }
         }
     }.retryCatchIfNecessary(retry).flowOn(ioDispatcher)
@@ -67,7 +64,7 @@ internal class ProductsRepository @Inject constructor(
                     service.get(id)
                 }.also { result ->
                     result.getOrNull()?.also {
-                        database.productDao.save(it)
+                        it.saveLocallyWithAttributes(database)
                     }
                 }
             } else {
@@ -90,12 +87,12 @@ internal class ProductsRepository @Inject constructor(
         }
     }
 
-    @OptIn(FlowPreview::class, ExperimentalTime::class)
+    @OptIn(FlowPreview::class)
     override fun getMeasurementUnits(query: String) = Retry().run {
         database.measurementUnitDao.get("%${query}%").flatMapConcat { units ->
             if (units.isEmpty()) {
                 flow {
-                    delay(100.milliseconds)
+                    delay(SEARCH_DELAY)
                     emit(
                         sendRequest(401) { service.getMeasurementUnits(query) }
                             .mapCatching { data ->
@@ -111,12 +108,12 @@ internal class ProductsRepository @Inject constructor(
         }.cancellable().retryCatchIfNecessary(this).flowOn(ioDispatcher)
     }
 
-    @OptIn(FlowPreview::class, ExperimentalTime::class)
+    @OptIn(FlowPreview::class)
     override fun getShops(query: String) = Retry().run {
         database.shopDao.getShops("%${query}%").flatMapConcat { shops ->
             if (shops.isEmpty()) {
                 flow {
-                    delay(100.milliseconds)
+                    delay(SEARCH_DELAY)
                     emit(
                         sendRequest(401) { shopService.get(query, size = 30) }
                             .mapCatching { data ->
@@ -132,12 +129,12 @@ internal class ProductsRepository @Inject constructor(
         }.cancellable().retryCatchIfNecessary(this).flowOn(ioDispatcher)
     }
 
-    @OptIn(FlowPreview::class, ExperimentalTime::class)
+    @OptIn(FlowPreview::class)
     override fun getBrands(query: String) = Retry().run {
         database.brandDao.get("%${query}%").flatMapConcat { brands ->
             if (brands.isEmpty()) {
                 flow {
-                    delay(100.milliseconds)
+                    delay(SEARCH_DELAY)
                     emit(
                         sendRequest(401) { brandService.get(query, size = 30) }
                             .mapCatching { data ->
@@ -153,7 +150,7 @@ internal class ProductsRepository @Inject constructor(
         }.cancellable().retryCatchIfNecessary(this).flowOn(ioDispatcher)
     }
 
-    @OptIn(FlowPreview::class, ExperimentalTime::class)
+    @OptIn(FlowPreview::class)
     override fun getAttributes(query: AttributeQuery) = Retry().run {
         when (query.type) {
             AttributeQuery.Type.NAME -> {
@@ -168,7 +165,7 @@ internal class ProductsRepository @Inject constructor(
         }.flatMapConcat { attributes ->
             if (attributes.isEmpty()) {
                 flow {
-                    delay(100.milliseconds)
+                    delay(SEARCH_DELAY)
                     emit(
                         sendRequest(401) {
                             attributeService.get(arrayOf(query.nameQuery,

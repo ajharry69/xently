@@ -39,7 +39,7 @@ internal class ProductsRemoteMediator(
                 response.getOrThrow().run {
                     database.remoteKeyDao.save(toRemoteKey(REMOTE_KEY_ENDPOINT))
                     results.run {
-                        database.productDao.save(this)
+                        saveLocallyWithAttributes(database)
                         MediatorResult.Success(endOfPaginationReached = isEmpty())
                     }
                 }

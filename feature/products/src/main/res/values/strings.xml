@@ -2,8 +2,9 @@
     <string name="title_activity_products">Products</string>
     <string name="fp_product_item_menu_content_description">More (menu) options for %1$s</string>
     <string name="fp_product_detail_name_label">Name</string>
-    <string name="fp_product_detail_unit_label">Unit</string>
-    <string name="fp_product_detail_unit_quantity_label">Unit quantity</string>
+    <string name="fp_product_detail_unit_label">Measurement unit</string>
+    <string name="fp_product_detail_purchased_quantity_label">Purchased quantity</string>
+    <string name="fp_product_detail_unit_quantity_label">Measurement unit quantity</string>
     <string name="fp_product_detail_unit_price_label">Unit price</string>
     <string name="fp_product_detail_date_of_purchased_label">Date purchased</string>
     <string name="fp_product_detail_time_of_purchased_label">Time purchased</string>
@@ -12,4 +13,7 @@
     <string name="fp_product_detail_time_of_purchase_content_desc">Select time of purchase</string>
     <string name="fp_product_detail_shop_label">Shop</string>
     <string name="fp_success_adding_product">Product successfully added</string>
+    <string name="fp_product_detail_brands_title">Brands</string>
+    <string name="fp_product_detail_brand_query_label">Search brands</string>
+    <string name="fp_product_detail_brand_query_help_text">Click + button to create a new brand</string>
 </resources>

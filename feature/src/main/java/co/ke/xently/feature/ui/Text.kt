@@ -90,13 +90,21 @@ fun <T> AutoCompleteTextField(
     modifier: Modifier = Modifier,
     isError: Boolean = false,
     error: String = "",
+    helpText: String? = null,
     suggestions: List<T> = emptyList(),
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions(),
     label: String? = null,
+    wasSuggestionPicked: (Boolean) -> Unit = {},
+    trailingIcon: @Composable (() -> Unit)? = null,
     suggestionItemContent: @Composable ((T) -> Unit),
 ) {
     var showDropdownMenu by remember { mutableStateOf(false) }
+    var wasSuggestionSelected by remember { mutableStateOf(false) }
+
+    SideEffect {
+        wasSuggestionPicked.invoke(wasSuggestionSelected)
+    }
 
     Box(modifier = modifier) {
         XentlyTextField(
@@ -104,6 +112,7 @@ fun <T> AutoCompleteTextField(
             label = label,
             error = error,
             isError = isError,
+            helpText = helpText,
             keyboardOptions = keyboardOptions,
             keyboardActions = keyboardActions,
             modifier = Modifier
@@ -114,10 +123,11 @@ fun <T> AutoCompleteTextField(
                     }
                 },
             onValueChange = {
+                wasSuggestionSelected = false
                 onValueChange(it)
                 showDropdownMenu = it.text.isNotBlank()
             },
-            trailingIcon = {
+            trailingIcon = trailingIcon ?: {
                 IconButton(onClick = { showDropdownMenu = true }) {
                     Icon(Icons.Default.ArrowDropDown, contentDescription = null)
                 }
@@ -140,6 +150,7 @@ fun <T> AutoCompleteTextField(
                     onClick = {
                         onOptionSelected(it)
                         showDropdownMenu = false
+                        wasSuggestionSelected = true
                     },
                 )
             }
