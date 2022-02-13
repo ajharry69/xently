@@ -6,6 +6,7 @@ import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.Query
+import retrofit2.http.QueryMap
 
 interface AttributeService {
     @GET("attributes/")
@@ -18,5 +19,7 @@ interface AttributeService {
         size: Int? = null,
         @Header("Cache-Control")
         cacheControl: String = "only-if-cached",
+        @QueryMap
+        filters: Map<String, String> = mapOf(),
     ): Response<PagedData<Attribute>>
 }
