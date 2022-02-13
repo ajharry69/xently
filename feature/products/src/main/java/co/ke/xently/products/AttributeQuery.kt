@@ -1,4 +1,4 @@
-package co.ke.xently.products.repository
+package co.ke.xently.products
 
 data class AttributeQuery(private val name: String = "", private val value: String = "") {
     enum class Type {

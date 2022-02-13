@@ -31,4 +31,7 @@ interface AccountService {
 
     @POST("accounts/{id}/signout/")
     suspend fun signout(@Path("id") userId: Long): Response<Unit>
+
+    @POST("accounts/{id}/update-location/")
+    suspend fun update(@Path("id") userId: Long = 1L, @Body location: Array<Double>): Response<Unit>
 }

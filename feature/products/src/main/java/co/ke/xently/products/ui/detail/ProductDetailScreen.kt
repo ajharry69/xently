@@ -31,7 +31,7 @@ import co.ke.xently.data.TaskResult.Success
 import co.ke.xently.feature.theme.XentlyTheme
 import co.ke.xently.feature.ui.*
 import co.ke.xently.products.R
-import co.ke.xently.products.repository.AttributeQuery
+import co.ke.xently.products.AttributeQuery
 import com.google.android.material.datepicker.CalendarConstraints
 import com.google.android.material.datepicker.DateValidatorPointBackward
 
@@ -475,7 +475,8 @@ private fun ProductDetailScreen(
                 var showAddAttributeValueIcon by remember { mutableStateOf(false) }
                 val addAttributeValue: (Attribute) -> Unit = {
                     // Only override name if the attr.value was added without an attr.name
-                    attributes.add(0, it.copy(name = it.name.ifBlank { attributeNameQuery.text.trim() }))
+                    attributes.add(0,
+                        it.copy(name = it.name.ifBlank { attributeNameQuery.text.trim() }))
                     attributeValueQuery = TextFieldValue() // Reset search
                 }
                 // TODO: Show checkbox to enable reusing previously added attribute name when `attributeNameQuery` is blank

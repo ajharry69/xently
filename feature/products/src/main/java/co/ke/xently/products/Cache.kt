@@ -1,4 +1,4 @@
-package co.ke.xently.products.repository
+package co.ke.xently.products
 
 import co.ke.xently.data.Product
 import co.ke.xently.source.local.Database
