@@ -8,7 +8,8 @@
         <activity
             android:name=".ShopsActivity"
             android:exported="false"
-            android:label="@string/title_activity_shops">
+            android:label="@string/title_activity_shops"
+            android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="co.ke.xently.action.SHOPS" />
                 <category android:name="android.intent.category.DEFAULT" />

@@ -7,7 +7,8 @@
     <application>
         <activity
             android:name=".AccountActivity"
-            android:exported="false">
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="co.ke.xently.action.ACCOUNTS" />
                 <category android:name="android.intent.category.DEFAULT" />
