@@ -169,7 +169,8 @@ internal class ProductsRepository @Inject constructor(
                     emit(
                         sendRequest(401) {
                             attributeService.get(arrayOf(query.nameQuery,
-                                query.valueQuery).joinToString("->"), size = 30)
+                                query.valueQuery).joinToString("->")
+                                .replace(Regex("^(->)|(->)$"), ""), size = 30)
                         }.mapCatching { data ->
                             data.results.flatMap { attribute ->
                                 attribute.values.map {

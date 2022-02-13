@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "c1a7e38a0451836c006068a0208e1f1a",
+    "identityHash": "62b0eadbcfbc035fd224b934c852ef8e",
     "entities": [
       {
         "tableName": "remote_keys",
@@ -154,7 +154,7 @@
       },
       {
         "tableName": "brands",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`name` TEXT NOT NULL, `productId` INTEGER NOT NULL, `canDelete` INTEGER NOT NULL, PRIMARY KEY(`name`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`name` TEXT NOT NULL, `productId` INTEGER NOT NULL, PRIMARY KEY(`name`))",
         "fields": [
           {
             "fieldPath": "name",
@@ -165,12 +165,6 @@
           {
             "fieldPath": "productId",
             "columnName": "productId",
-            "affinity": "INTEGER",
-            "notNull": true
-          },
-          {
-            "fieldPath": "canDelete",
-            "columnName": "canDelete",
             "affinity": "INTEGER",
             "notNull": true
           }
@@ -457,7 +451,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'c1a7e38a0451836c006068a0208e1f1a')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '62b0eadbcfbc035fd224b934c852ef8e')"
     ]
   }
 }

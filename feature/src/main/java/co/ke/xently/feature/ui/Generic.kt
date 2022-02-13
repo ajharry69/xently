@@ -26,6 +26,10 @@ import androidx.paging.compose.LazyPagingItems
 import co.ke.xently.feature.R
 import co.ke.xently.feature.theme.XentlyTheme
 
+val VerticalLayoutModifier = Modifier
+    .fillMaxWidth()
+    .padding(horizontal = 16.dp)
+
 @Composable
 fun rememberFragmentManager(): FragmentManager {
     val context = LocalContext.current
@@ -171,5 +175,25 @@ fun AppendOnPagedData(loadState: LoadState, scaffoldState: ScaffoldState) {
             }
         }
         is LoadState.NotLoading -> Unit
+    }
+}
+
+@Composable
+fun MultipleTextFieldRow(
+    modifier: Modifier = Modifier,
+    isError: Boolean = false,
+    error: String = "",
+    content: @Composable RowScope.(Modifier) -> Unit,
+) {
+    Column(modifier = modifier) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            content(Modifier.weight(1f))
+        }
+        if (isError) {
+            TextFieldErrorText(error, Modifier.fillMaxWidth())
+        }
     }
 }

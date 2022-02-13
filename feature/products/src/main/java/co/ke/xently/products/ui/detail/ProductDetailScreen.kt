@@ -31,6 +31,7 @@ import co.ke.xently.data.TaskResult.Success
 import co.ke.xently.feature.theme.XentlyTheme
 import co.ke.xently.feature.ui.*
 import co.ke.xently.products.R
+import co.ke.xently.products.repository.AttributeQuery
 import com.google.android.material.datepicker.CalendarConstraints
 import com.google.android.material.datepicker.DateValidatorPointBackward
 
@@ -76,6 +77,7 @@ internal fun ProductDetailScreen(
         viewModel::setShopQuery,
         viewModel::setMeasurementUnitQuery,
         viewModel::setBrandQuery,
+        viewModel::setAttributeQuery,
         viewModel::addOrUpdate,
     )
 }
@@ -87,12 +89,13 @@ private fun ProductDetailScreen(
     permitReAddition: Boolean = false,
     shops: List<Shop> = emptyList(),
     brandSuggestions: List<Brand> = emptyList(),
-    attributesSuggestions: List<Attribute> = emptyList(),
+    attributeSuggestions: List<Attribute> = emptyList(),
     measurementUnits: List<MeasurementUnit> = emptyList(),
     onNavigationIconClicked: () -> Unit = {},
     onShopQueryChanged: (String) -> Unit = {},
     onMeasurementUnitQueryChanged: (String) -> Unit = {},
     onBrandQueryChanged: (String) -> Unit = {},
+    onAttributeQueryChanged: (AttributeQuery) -> Unit = {},
     onProductDetailsSubmitted: (Product) -> Unit = {},
 ) {
     val product = result.getOrNull() ?: Product.default()
@@ -150,6 +153,14 @@ private fun ProductDetailScreen(
 
     val brands = remember { mutableStateListOf<Brand>() }
     var brandQuery by remember { mutableStateOf(TextFieldValue("")) }
+
+    val attributes = remember { mutableStateListOf<Attribute>() }
+    var attributeNameQuery by remember { mutableStateOf(TextFieldValue("")) }
+    var attributeValueQuery by remember { mutableStateOf(TextFieldValue("")) }
+
+    LaunchedEffect(attributeNameQuery, attributeValueQuery) {
+        onAttributeQueryChanged(AttributeQuery(attributeNameQuery.text, attributeValueQuery.text))
+    }
 
     val toolbarTitle = stringResource(
         R.string.fp_add_product_toolbar_title,
@@ -218,9 +229,7 @@ private fun ProductDetailScreen(
                 value = shop,
                 isError = isShopError,
                 error = shopError,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
+                modifier = VerticalLayoutModifier
                     .padding(top = 16.dp),
                 label = stringResource(R.string.fp_product_detail_shop_label),
                 keyboardOptions = KeyboardOptions.Default.copy(
@@ -245,9 +254,7 @@ private fun ProductDetailScreen(
             }
             Spacer(modifier = Modifier.padding(vertical = 8.dp))
             XentlyTextField(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
+                modifier = VerticalLayoutModifier,
                 value = name,
                 isError = isNameError,
                 error = nameError,
@@ -261,9 +268,7 @@ private fun ProductDetailScreen(
             )
             Spacer(modifier = Modifier.padding(vertical = 8.dp))
             AutoCompleteTextField(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
+                modifier = VerticalLayoutModifier,
                 value = unit,
                 isError = isUnitError,
                 error = unitError,
@@ -283,9 +288,7 @@ private fun ProductDetailScreen(
             }
             Spacer(modifier = Modifier.padding(vertical = 8.dp))
             XentlyTextField(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
+                modifier = VerticalLayoutModifier,
                 value = unitQuantity,
                 isError = isUnitQuantityError,
                 error = unitQuantityError,
@@ -299,9 +302,7 @@ private fun ProductDetailScreen(
             )
             Spacer(modifier = Modifier.padding(vertical = 8.dp))
             XentlyTextField(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
+                modifier = VerticalLayoutModifier,
                 value = purchasedQuantity,
                 isError = isPurchasedQuantityError,
                 error = purchasedQuantityError,
@@ -315,9 +316,7 @@ private fun ProductDetailScreen(
             )
             Spacer(modifier = Modifier.padding(vertical = 8.dp))
             XentlyTextField(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
+                modifier = VerticalLayoutModifier,
                 value = unitPrice,
                 isError = isUnitPriceError,
                 error = unitPriceError,
@@ -330,84 +329,76 @@ private fun ProductDetailScreen(
                 label = stringResource(R.string.fp_product_detail_unit_price_label),
             )
             Spacer(modifier = Modifier.padding(vertical = 8.dp))
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    val fragmentManager = rememberFragmentManager()
+            MultipleTextFieldRow(
+                modifier = VerticalLayoutModifier,
+                isError = isDatePurchasedError,
+                error = datePurchasedError,
+            ) { fieldModifier ->
+                val fragmentManager = rememberFragmentManager()
 
-                    val dateOfPurchasePicker = rememberDatePickerDialog(
-                        select = DEFAULT_LOCAL_DATE_FORMAT.parse(dateOfPurchase.text),
-                        title = R.string.fp_product_detail_date_of_purchased_label,
-                        bounds = CalendarConstraints.Builder()
-                            .setValidator(DateValidatorPointBackward.now()).build(),
-                    ) { dateOfPurchase = TextFieldValue(DEFAULT_LOCAL_DATE_FORMAT.format(it)) }
+                val dateOfPurchasePicker = rememberDatePickerDialog(
+                    select = DEFAULT_LOCAL_DATE_FORMAT.parse(dateOfPurchase.text),
+                    title = R.string.fp_product_detail_date_of_purchased_label,
+                    bounds = CalendarConstraints.Builder()
+                        .setValidator(DateValidatorPointBackward.now()).build(),
+                ) { dateOfPurchase = TextFieldValue(DEFAULT_LOCAL_DATE_FORMAT.format(it)) }
 
-                    XentlyTextField(
-                        readOnly = true,
-                        value = dateOfPurchase,
-                        isError = isDatePurchasedError,
-                        modifier = Modifier.weight(1f),
-                        label = stringRes(R.string.fp_product_detail_date_of_purchased_label),
-                        onValueChange = {
-                            dateOfPurchase = it
-                            isDatePurchasedError = false
-                        },
-                        trailingIcon = {
-                            IconButton(
-                                onClick = {
-                                    dateOfPurchasePicker.show(fragmentManager,
-                                        "ProductDetailDateOfPurchase")
-                                },
-                            ) {
-                                Icon(
-                                    Icons.Default.DateRange,
-                                    contentDescription = stringResource(
-                                        R.string.fp_product_detail_date_of_purchase_content_desc),
-                                )
-                            }
-                        },
-                    )
+                XentlyTextField(
+                    readOnly = true,
+                    value = dateOfPurchase,
+                    isError = isDatePurchasedError,
+                    modifier = fieldModifier,
+                    label = stringRes(R.string.fp_product_detail_date_of_purchased_label),
+                    onValueChange = {
+                        dateOfPurchase = it
+                        isDatePurchasedError = false
+                    },
+                    trailingIcon = {
+                        IconButton(
+                            onClick = {
+                                dateOfPurchasePicker.show(fragmentManager,
+                                    "ProductDetailDateOfPurchase")
+                            },
+                        ) {
+                            Icon(
+                                Icons.Default.DateRange,
+                                contentDescription = stringResource(
+                                    R.string.fp_product_detail_date_of_purchase_content_desc),
+                            )
+                        }
+                    },
+                )
 
-                    val timeOfPurchasePicker = rememberTimePickerDialog(
-                        select = DEFAULT_LOCAL_TIME_FORMAT.parse(timeOfPurchase.text),
-                        title = R.string.fp_product_detail_time_of_purchased_label,
-                    ) { timeOfPurchase = TextFieldValue(DEFAULT_LOCAL_TIME_FORMAT.format(it)) }
+                val timeOfPurchasePicker = rememberTimePickerDialog(
+                    select = DEFAULT_LOCAL_TIME_FORMAT.parse(timeOfPurchase.text),
+                    title = R.string.fp_product_detail_time_of_purchased_label,
+                ) { timeOfPurchase = TextFieldValue(DEFAULT_LOCAL_TIME_FORMAT.format(it)) }
 
-                    XentlyTextField(
-                        readOnly = true,
-                        value = timeOfPurchase,
-                        isError = isDatePurchasedError,
-                        modifier = Modifier.weight(1f),
-                        label = stringRes(R.string.fp_product_detail_time_of_purchased_label),
-                        keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
-                        keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
-                        onValueChange = {
-                            timeOfPurchase = it
-                            isDatePurchasedError = false
-                        },
-                        trailingIcon = {
-                            IconButton({
-                                timeOfPurchasePicker.show(fragmentManager,
-                                    "ProductDetailTimeOfPurchase")
-                            }) {
-                                Icon(
-                                    Icons.Default.AccessTime,
-                                    stringResource(
-                                        R.string.fp_product_detail_time_of_purchase_content_desc),
-                                )
-                            }
-                        },
-                    )
-                }
-                if (isDatePurchasedError) {
-                    TextFieldErrorText(datePurchasedError, Modifier.fillMaxWidth())
-                }
+                XentlyTextField(
+                    readOnly = true,
+                    value = timeOfPurchase,
+                    isError = isDatePurchasedError,
+                    modifier = fieldModifier,
+                    label = stringRes(R.string.fp_product_detail_time_of_purchased_label),
+                    keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
+                    keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
+                    onValueChange = {
+                        timeOfPurchase = it
+                        isDatePurchasedError = false
+                    },
+                    trailingIcon = {
+                        IconButton({
+                            timeOfPurchasePicker.show(fragmentManager,
+                                "ProductDetailTimeOfPurchase")
+                        }) {
+                            Icon(
+                                Icons.Default.AccessTime,
+                                stringResource(
+                                    R.string.fp_product_detail_time_of_purchase_content_desc),
+                            )
+                        }
+                    },
+                )
             }
             Spacer(modifier = Modifier.padding(vertical = 8.dp))
 
@@ -417,12 +408,10 @@ private fun ProductDetailScreen(
                 brandQuery = TextFieldValue() // Reset search
             }
             AutoCompleteTextField(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
+                modifier = VerticalLayoutModifier,
                 value = brandQuery,
                 label = stringResource(R.string.fp_product_detail_brand_query_label),
-                helpText = if(showAddBrandIcon) {
+                helpText = if (showAddBrandIcon) {
                     stringResource(R.string.fp_product_detail_brand_query_help_text)
                 } else {
                     null
@@ -432,14 +421,14 @@ private fun ProductDetailScreen(
                     brandQuery = it
                     onBrandQueryChanged(it.text)
                 },
-                trailingIcon = if (!showAddBrandIcon) {
-                    null
-                } else {
+                trailingIcon = if (showAddBrandIcon) {
                     {
                         IconButton(onClick = { addBrand(Brand(name = brandQuery.text.trim())) }) {
                             Icon(Icons.Default.Add, contentDescription = null)
                         }
                     }
+                } else {
+                    null
                 },
                 onOptionSelected = addBrand,
                 wasSuggestionPicked = {
@@ -453,15 +442,11 @@ private fun ProductDetailScreen(
                 Text(
                     stringRes(R.string.fp_product_detail_brands_title),
                     style = MaterialTheme.typography.h5,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
+                    modifier = VerticalLayoutModifier,
                 )
                 Spacer(modifier = Modifier.padding(vertical = 8.dp))
                 ChipGroup(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
+                    modifier = VerticalLayoutModifier,
                     isSingleLine = false, chipItems = brands,
                 ) { i, b ->
                     Chip(b.toString()) {
@@ -469,6 +454,80 @@ private fun ProductDetailScreen(
                     }
                 }
             }
+            Spacer(modifier = Modifier.padding(vertical = 8.dp))
+            MultipleTextFieldRow(VerticalLayoutModifier) { fieldModifier ->
+                AutoCompleteTextField(
+                    modifier = fieldModifier,
+                    value = attributeNameQuery,
+                    label = stringResource(R.string.fp_product_detail_attribute_name_query_label),
+                    keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
+                    onValueChange = {
+                        attributeNameQuery = it
+                    },
+                    onOptionSelected = {
+                        attributeNameQuery = TextFieldValue(it.name)
+                    },
+                    suggestions = attributeSuggestions,
+                ) {
+                    Text(it.name, style = MaterialTheme.typography.body1)
+                }
+
+                var showAddAttributeValueIcon by remember { mutableStateOf(false) }
+                val addAttributeValue: (Attribute) -> Unit = {
+                    // Only override name if the attr.value was added without an attr.name
+                    attributes.add(0, it.copy(name = it.name.ifBlank { attributeNameQuery.text.trim() }))
+                    attributeValueQuery = TextFieldValue() // Reset search
+                }
+                // TODO: Show checkbox to enable reusing previously added attribute name when `attributeNameQuery` is blank
+                AutoCompleteTextField(
+                    modifier = fieldModifier,
+                    value = attributeValueQuery,
+                    label = stringResource(R.string.fp_product_detail_attribute_value_query_label),
+                    keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
+                    onValueChange = {
+                        attributeValueQuery = it
+                    },
+                    trailingIcon = if (showAddAttributeValueIcon) {
+                        {
+                            IconButton(onClick = {
+                                addAttributeValue(Attribute(value = attributeValueQuery.text.trim()))
+                            }) {
+                                Icon(Icons.Default.Add, contentDescription = null)
+                            }
+                        }
+                    } else {
+                        null
+                    },
+                    onOptionSelected = addAttributeValue,
+                    wasSuggestionPicked = {
+                        showAddAttributeValueIcon =
+                            !it && attributeValueQuery.text.isNotBlank() && attributeNameQuery.text.isNotBlank()
+                    },
+                    suggestions = attributeSuggestions,
+                ) {
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        Text(it.name, style = MaterialTheme.typography.body1)
+                        Text(it.value, style = MaterialTheme.typography.subtitle1)
+                    }
+                }
+            }
+            if (attributes.isNotEmpty()) {
+                Text(
+                    stringRes(R.string.fp_product_detail_attributes_title),
+                    style = MaterialTheme.typography.h5,
+                    modifier = VerticalLayoutModifier,
+                )
+                Spacer(modifier = Modifier.padding(vertical = 8.dp))
+                ChipGroup(
+                    modifier = VerticalLayoutModifier,
+                    isSingleLine = false, chipItems = attributes,
+                ) { i, b ->
+                    Chip(b.toString()) {
+                        attributes.removeAt(i)
+                    }
+                }
+            }
+
             Spacer(modifier = Modifier.padding(vertical = 8.dp))
             Button(
                 enabled = arrayOf(
@@ -480,9 +539,7 @@ private fun ProductDetailScreen(
                     dateOfPurchase,
                     timeOfPurchase,
                 ).all { it.text.isNotBlank() } && savableShop != Product.default().shopId,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
+                modifier = VerticalLayoutModifier,
                 onClick = {
                     focusManager.clearFocus()
                     onProductDetailsSubmitted(product.copy(
@@ -495,6 +552,7 @@ private fun ProductDetailScreen(
                         datePurchased = DEFAULT_LOCAL_DATE_TIME_FORMAT.parse("${dateOfPurchase.text} ${timeOfPurchase.text}")
                             ?: error("Invalid date and/or time format"),
                         brands = brands.filterNot { it.isDefault },
+                        attributes = attributes.filterNot { it.name.isBlank() or it.value.isBlank() },
                     ))
                 }
             ) { Text(toolbarTitle.uppercase()) }
