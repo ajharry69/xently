@@ -30,8 +30,8 @@ import co.ke.xently.data.TaskResult.Loading
 import co.ke.xently.data.TaskResult.Success
 import co.ke.xently.feature.theme.XentlyTheme
 import co.ke.xently.feature.ui.*
-import co.ke.xently.products.R
 import co.ke.xently.products.AttributeQuery
+import co.ke.xently.products.R
 import com.google.android.material.datepicker.CalendarConstraints
 import com.google.android.material.datepicker.DateValidatorPointBackward
 
@@ -100,7 +100,7 @@ private fun ProductDetailScreen(
 ) {
     val product = result.getOrNull() ?: Product.default()
 
-    var shop by remember(product.id, product.shop) {
+    var shop by remember(product.shop) {
         val value = if (product.isDefault) {
             ""
         } else {
@@ -108,35 +108,35 @@ private fun ProductDetailScreen(
         }
         mutableStateOf(TextFieldValue(value))
     }
-    var savableShop by remember(product.id, product.shopId) { mutableStateOf(product.shopId) }
+    var savableShop by remember(product.shopId) { mutableStateOf(product.shopId) }
     var shopError by remember { mutableStateOf("") }
     var isShopError by remember { mutableStateOf(false) }
 
-    var name by remember(product.id, product.name) {
+    var name by remember(product.name) {
         mutableStateOf(TextFieldValue(product.name))
     }
     var nameError by remember { mutableStateOf("") }
     var isNameError by remember { mutableStateOf(false) }
 
-    var unit by remember(product.id, product.unit) {
+    var unit by remember(product.unit) {
         mutableStateOf(TextFieldValue(product.unit))
     }
     var unitError by remember { mutableStateOf("") }
     var isUnitError by remember { mutableStateOf(false) }
 
-    var unitQuantity by remember(product.id, product.unitQuantity) {
-        mutableStateOf(TextFieldValue(if (product.isDefault) "" else product.unitQuantity.toString()))
+    var unitQuantity by remember(product.unitQuantity) {
+        mutableStateOf(TextFieldValue(product.unitQuantity.toString()))
     }
     var unitQuantityError by remember { mutableStateOf("") }
     var isUnitQuantityError by remember { mutableStateOf(false) }
 
-    var purchasedQuantity by remember(product.id, product.purchasedQuantity) {
-        mutableStateOf(TextFieldValue(if (product.isDefault) "" else product.purchasedQuantity.toString()))
+    var purchasedQuantity by remember(product.purchasedQuantity) {
+        mutableStateOf(TextFieldValue(product.purchasedQuantity.toString()))
     }
     var purchasedQuantityError by remember { mutableStateOf("") }
     var isPurchasedQuantityError by remember { mutableStateOf(false) }
 
-    var unitPrice by remember(product.id, product.unitPrice) {
+    var unitPrice by remember(product.unitPrice) {
         mutableStateOf(TextFieldValue(if (product.isDefault) "" else product.unitPrice.toString()))
     }
     var unitPriceError by remember { mutableStateOf("") }
@@ -170,31 +170,30 @@ private fun ProductDetailScreen(
     val (scrollState, scaffoldState) = Pair(rememberScrollState(), rememberScaffoldState())
 
     if (result is TaskResult.Error) {
-        val productHttpException = result.error as? ProductHttpException
-        shopError = (productHttpException?.shop?.joinToString("\n") ?: "").also {
+        val httpException = result.error as? ProductHttpException
+        shopError = httpException.error.shop.also {
             isShopError = it.isNotBlank()
         }
-        nameError = (productHttpException?.name?.joinToString("\n") ?: "").also {
+        nameError = httpException.error.name.also {
             isNameError = it.isNotBlank()
         }
-        unitError = (productHttpException?.unit?.joinToString("\n") ?: "").also {
+        unitError = httpException.error.unit.also {
             isUnitError = it.isNotBlank()
         }
-        unitQuantityError = (productHttpException?.unitQuantity?.joinToString("\n") ?: "").also {
+        unitQuantityError = httpException.error.unitQuantity.also {
             isUnitQuantityError = it.isNotBlank()
         }
-        unitPriceError = (productHttpException?.unitPrice?.joinToString("\n") ?: "").also {
+        unitPriceError = httpException.error.unitPrice.also {
             isUnitPriceError = it.isNotBlank()
         }
-        purchasedQuantityError =
-            (productHttpException?.purchasedQuantity?.joinToString("\n") ?: "").also {
-                isPurchasedQuantityError = it.isNotBlank()
-            }
-        datePurchasedError = (productHttpException?.datePurchased?.joinToString("\n") ?: "").also {
+        purchasedQuantityError = httpException.error.purchasedQuantity.also {
+            isPurchasedQuantityError = it.isNotBlank()
+        }
+        datePurchasedError = httpException.error.datePurchased.also {
             isDatePurchasedError = it.isNotBlank()
         }
 
-        if (productHttpException?.hasFieldErrors() != true) {
+        if (httpException?.hasFieldErrors() != true) {
             val errorMessage = result.errorMessage ?: stringResource(R.string.generic_error_message)
             LaunchedEffect(product.id, result, errorMessage) {
                 scaffoldState.snackbarHostState.showSnackbar(errorMessage)
@@ -208,9 +207,13 @@ private fun ProductDetailScreen(
         unit = TextFieldValue()
         name = TextFieldValue()
         unitPrice = TextFieldValue()
-        unitQuantity = TextFieldValue()
+        unitQuantity = TextFieldValue(product.unitQuantity.toString())
         purchasedQuantity = TextFieldValue(product.purchasedQuantity.toString())
         brandQuery = TextFieldValue()
+        attributeNameQuery = TextFieldValue()
+        attributeValueQuery = TextFieldValue()
+        brands.clear()
+        attributes.clear()
     }
     val focusManager = LocalFocusManager.current
 
