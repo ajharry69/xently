@@ -15,8 +15,8 @@ data class Product(
     @PrimaryKey(autoGenerate = false) var id: Long = -1L,
     var name: String = "",
     var unit: String = "",
-    var unitQuantity: Float = 0f,
-    var purchasedQuantity: Float = 0f,
+    var unitQuantity: Float = 1f,
+    var purchasedQuantity: Float = 1f,
     @Exclude
     @Ignore
     val shop: Shop = Shop.default(),
@@ -25,6 +25,7 @@ data class Product(
     var unitPrice: Float = 0f,
     var datePurchased: Date = Date(),
     var dateAdded: Date = Date(),
+    @Exclude
     var isDefault: Boolean = false,
     @Ignore
     val brands: List<Brand> = emptyList(),

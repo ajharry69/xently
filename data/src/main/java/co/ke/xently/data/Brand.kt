@@ -1,9 +1,9 @@
 package co.ke.xently.data
 
 import androidx.room.Entity
-import androidx.room.Ignore
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import co.ke.xently.common.Exclude
 
 @Entity(
     tableName = "brands",
@@ -14,13 +14,11 @@ import androidx.room.PrimaryKey
 data class Brand(
     @PrimaryKey(autoGenerate = false)
     val name: String = "",
+    @Exclude(Exclude.During.SERIALIZATION)
     val productId: Long = Product.default().id,
 ) {
     val isDefault: Boolean
         get() = name == ""
-
-    @Ignore
-    var canDelete: Boolean = false
 
     override fun toString() = name
 
