@@ -23,8 +23,8 @@ import co.ke.xently.accounts.R
 import co.ke.xently.data.TaskResult
 import co.ke.xently.data.User
 import co.ke.xently.data.errorMessage
+import co.ke.xently.feature.ui.TextInputLayout
 import co.ke.xently.feature.ui.ToolbarWithProgressbar
-import co.ke.xently.feature.ui.XentlyTextField
 
 @Composable
 internal fun PasswordResetRequestScreen(
@@ -99,7 +99,7 @@ private fun PasswordResetRequestScreen(
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState()),
         ) {
-            XentlyTextField(
+            TextInputLayout(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp)

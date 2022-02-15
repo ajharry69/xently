@@ -1,11 +1,11 @@
-package co.ke.xently.products.repository
+package co.ke.xently.products.shared.repository
 
 import co.ke.xently.common.Retry
 import co.ke.xently.data.TaskResult
 import co.ke.xently.data.mapCatching
 import co.ke.xently.feature.repository.Dependencies
 import co.ke.xently.feature.utils.SEARCH_DELAY
-import co.ke.xently.products.AttributeQuery
+import co.ke.xently.products.shared.AttributeQuery
 import co.ke.xently.source.remote.retryCatchIfNecessary
 import co.ke.xently.source.remote.sendRequest
 import kotlinx.coroutines.ExperimentalCoroutinesApi

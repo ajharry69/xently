@@ -1,11 +1,11 @@
-package co.ke.xently.products
+package co.ke.xently.products.shared
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.ke.xently.data.*
 import co.ke.xently.feature.utils.flagLoadingOnStartCatchingErrors
 import co.ke.xently.feature.utils.setCleansedQuery
-import co.ke.xently.products.repository.ISearchableRepository
+import co.ke.xently.products.shared.repository.ISearchableRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 

@@ -24,13 +24,15 @@ data class Product(
     var shopId: Long = -1L,
     var unitPrice: Float = 0f,
     var datePurchased: Date = Date(),
+    @Exclude(Exclude.During.SERIALIZATION)
     var dateAdded: Date = Date(),
-    @Exclude
-    var isDefault: Boolean = false,
     @Ignore
     val brands: List<Brand> = emptyList(),
     @Ignore
     val attributes: List<Attribute> = emptyList(),
+    @Ignore
+    @Exclude
+    val isDefault: Boolean = false,
 ) {
     data class WithRelated(
         @Embedded

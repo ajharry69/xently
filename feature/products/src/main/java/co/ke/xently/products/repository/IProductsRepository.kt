@@ -4,6 +4,7 @@ import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import co.ke.xently.data.Product
 import co.ke.xently.data.TaskResult
+import co.ke.xently.products.shared.repository.ISearchableRepository
 import kotlinx.coroutines.flow.Flow
 
 interface IProductsRepository : ISearchableRepository {

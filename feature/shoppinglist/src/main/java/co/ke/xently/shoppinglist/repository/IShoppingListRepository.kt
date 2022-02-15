@@ -6,11 +6,12 @@ import co.ke.xently.data.GroupedShoppingList
 import co.ke.xently.data.RecommendationReport
 import co.ke.xently.data.ShoppingListItem
 import co.ke.xently.data.TaskResult
+import co.ke.xently.products.shared.repository.ISearchableRepository
 import co.ke.xently.shoppinglist.GroupBy
 import co.ke.xently.shoppinglist.Recommend
 import kotlinx.coroutines.flow.Flow
 
-interface IShoppingListRepository {
+interface IShoppingListRepository : ISearchableRepository {
     fun add(item: ShoppingListItem): Flow<TaskResult<ShoppingListItem>>
 
     fun get(groupBy: GroupBy): Flow<TaskResult<List<GroupedShoppingList>>>

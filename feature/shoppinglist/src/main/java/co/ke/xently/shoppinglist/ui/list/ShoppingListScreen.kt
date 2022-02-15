@@ -85,7 +85,7 @@ private fun ShoppingListScreen(
         floatingActionButton = {
             FloatingActionButton(onClick = onAddShoppingListItemClicked) {
                 Icon(Icons.Default.Add,
-                    stringRes(R.string.fsl_add_shopping_list_item_toolbar_title, R.string.add))
+                    stringRes(R.string.fsl_detail_screen_toolbar_title, R.string.add))
             }
         },
     ) {

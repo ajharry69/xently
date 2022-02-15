@@ -1,33 +1,27 @@
 package co.ke.xently.shoppinglist.ui.detail
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.Button
+import androidx.compose.material.Scaffold
+import androidx.compose.material.Text
+import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import co.ke.xently.common.DEFAULT_LOCAL_DATE_FORMAT
-import co.ke.xently.common.KENYA
-import co.ke.xently.common.localDefaultDateFormatToServerDate
-import co.ke.xently.data.ShoppingListItem
-import co.ke.xently.data.TaskResult
+import co.ke.xently.data.*
 import co.ke.xently.data.TaskResult.Loading
-import co.ke.xently.data.errorMessage
-import co.ke.xently.data.getOrNull
 import co.ke.xently.feature.ui.ToolbarWithProgressbar
-import co.ke.xently.feature.ui.rememberDatePickerDialog
-import co.ke.xently.feature.ui.rememberFragmentManager
+import co.ke.xently.feature.ui.VerticalLayoutModifier
 import co.ke.xently.feature.ui.stringRes
+import co.ke.xently.products.shared.*
 import co.ke.xently.shoppinglist.R
-import com.google.android.material.datepicker.CalendarConstraints
-import com.google.android.material.datepicker.DateValidatorPointForward
-import kotlinx.coroutines.launch
 
 
 @Composable
@@ -37,157 +31,175 @@ internal fun ShoppingListItemScreen(
     viewModel: ShoppingListItemViewModel = hiltViewModel(),
     onNavigationIconClicked: () -> Unit = {},
 ) {
-    var isUpdate = false
-    id?.also {
-        isUpdate = it != ShoppingListItem.DEFAULT_ID
-        if (isUpdate) viewModel.get(it)
+    val isDefault by remember(id) {
+        mutableStateOf(id == null || id == Product.default().id)
     }
-    val coroutineScope = rememberCoroutineScope()
-    val itemResult by viewModel.shoppingItemResult.collectAsState(
-        coroutineScope.coroutineContext,
-    )
+
+    val fetch by rememberUpdatedState { viewModel.get(id!!) }
+    LaunchedEffect(true) {
+        if (!isDefault) fetch()
+    }
+
+    val scope = rememberCoroutineScope()
+    val result by viewModel.result.collectAsState(scope.coroutineContext)
+    // TODO: Fix case where searching on either measurement units or shops clears fields
+    val measurementUnits by viewModel.measurementUnitsResult.collectAsState(scope.coroutineContext)
+    val brands by viewModel.brandsResult.collectAsState(scope.coroutineContext)
+    val attributes by viewModel.attributesResult.collectAsState(scope.coroutineContext)
+
+    // Allow addition of more items if the screen was initially for adding.
+    val permitReAddition = isDefault && result.getOrNull() != null
+
     ShoppingListItemScreen(
-        isUpdate,
-        id,
-        itemResult,
         modifier,
+        if (permitReAddition) {
+            TaskResult.Success(null)
+        } else {
+            result
+        },
+        permitReAddition,
+        brands,
+        attributes,
+        measurementUnits,
         onNavigationIconClicked,
-        viewModel::add,
+        viewModel::setMeasurementUnitQuery,
+        viewModel::setBrandQuery,
+        viewModel::setAttributeQuery,
+        viewModel::addOrUpdate,
     )
 }
 
+
 @Composable
 private fun ShoppingListItemScreen(
-    isUpdate: Boolean,
-    itemId: Long?,
-    result: TaskResult<ShoppingListItem?>,
     modifier: Modifier,
-    onNavigationIconClicked: () -> Unit,
-    onAddShoppingListItemClicked: (ShoppingListItem) -> Unit,
+    result: TaskResult<ShoppingListItem?>,
+    permitReAddition: Boolean = false,
+    brandSuggestions: List<Brand> = emptyList(),
+    attributeSuggestions: List<Attribute> = emptyList(),
+    measurementUnits: List<MeasurementUnit> = emptyList(),
+    onNavigationIconClicked: () -> Unit = {},
+    onMeasurementUnitQueryChanged: (String) -> Unit = {},
+    onBrandQueryChanged: (String) -> Unit = {},
+    onAttributeQueryChanged: (AttributeQuery) -> Unit = {},
+    onDetailsSubmitted: (ShoppingListItem) -> Unit = {},
 ) {
-    val item = result.getOrNull() ?: ShoppingListItem()
-
-    var name by remember(itemId, result, item) { mutableStateOf(TextFieldValue(item.name)) }
-    var unit by remember(itemId, result, item) { mutableStateOf(TextFieldValue(item.unit)) }
-    var unitQuantity by remember(itemId, result, item) {
-        mutableStateOf(TextFieldValue(item.unitQuantity.toString()))
-    }
-    var purchaseQuantity by remember(itemId, result, item) {
-        mutableStateOf(TextFieldValue(item.purchaseQuantity.toString()))
-    }
-    var dateAdded by remember(itemId, result, item) {
-        mutableStateOf(TextFieldValue(DEFAULT_LOCAL_DATE_FORMAT.format(item.dateAdded)))
-    }
-
-    val scaffoldState = rememberScaffoldState()
-    val coroutineScope = rememberCoroutineScope()
-    if (result is TaskResult.Error) {
-        val errorMessage =
-            result.errorMessage ?: stringResource(R.string.generic_error_message)
-        LaunchedEffect(itemId, result, errorMessage) {
-            coroutineScope.launch {
-                scaffoldState.snackbarHostState.showSnackbar(errorMessage)
-            }
-        }
-    }
+    val item = result.getOrNull() ?: ShoppingListItem.default()
 
     val toolbarTitle = stringRes(
         R.string.fsl_detail_screen_toolbar_title,
-        if (isUpdate) R.string.update else R.string.add,
+        if (item.isDefault) {
+            R.string.add
+        } else {
+            R.string.update
+        },
     )
+
+    val (scrollState, scaffoldState) = Pair(rememberScrollState(), rememberScaffoldState())
+
+    var nameError by remember { mutableStateOf("") }
+    var unitError by remember { mutableStateOf("") }
+    var unitQuantityError by remember { mutableStateOf("") }
+    var purchaseQuantityError by remember { mutableStateOf("") }
+
+    if (result is TaskResult.Error) {
+        val exception = result.error as? ShoppingListItemHttpException
+        nameError = exception.error.name
+        unitError = exception.error.unit
+        unitQuantityError = exception.error.unitQuantity
+        purchaseQuantityError = exception.error.purchaseQuantity
+
+        if (exception?.hasFieldErrors() != true) {
+            val message = result.errorMessage ?: stringResource(R.string.generic_error_message)
+            LaunchedEffect(result, message) {
+                scaffoldState.snackbarHostState.showSnackbar(message)
+            }
+        }
+    } else if (permitReAddition) {
+        val message = stringResource(R.string.fsl_success_adding_shopping_list_item)
+        LaunchedEffect(message) {
+            scaffoldState.snackbarHostState.showSnackbar(message)
+        }
+    }
+    val focusManager = LocalFocusManager.current
+
     Scaffold(
-        modifier = modifier,
         scaffoldState = scaffoldState,
         topBar = {
             ToolbarWithProgressbar(toolbarTitle, onNavigationIconClicked, result is Loading)
         },
     ) { paddingValues ->
-        Column(Modifier.padding(paddingValues)) {
-            val scrollState = rememberScrollState()
-            Column(
-                modifier = Modifier
-                    .padding(16.dp)
-                    .verticalScroll(scrollState),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-            ) {
-                TextField(
-                    modifier = Modifier.fillMaxWidth(), singleLine = true,
-                    label = { Text(stringResource(R.string.fsl_text_field_label_name)) },
-                    value = name,
-                    onValueChange = { name = it })
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    TextField(
-                        modifier = Modifier.weight(1f),
-                        label = { Text(stringResource(R.string.fsl_text_field_label_unit)) },
-                        singleLine = true,
-                        value = unit,
-                        onValueChange = { unit = it })
-                    TextField(
-                        modifier = Modifier.weight(1f),
-                        label = { Text(stringResource(R.string.fsl_text_field_label_unit_quantity)) },
-                        singleLine = true,
-                        value = unitQuantity,
-                        onValueChange = { unitQuantity = it },
-                    )
-                }
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    TextField(
-                        modifier = Modifier.weight(1f),
-                        label = { Text(stringResource(R.string.fsl_text_field_label_purchase_quantity)) },
-                        singleLine = true,
-                        value = purchaseQuantity,
-                        onValueChange = { purchaseQuantity = it },
-                    )
+        Column(
+            modifier = modifier
+                .padding(paddingValues)
+                .verticalScroll(scrollState),
+        ) {
+            Spacer(modifier = Modifier.padding(top = 16.dp))
+            val name = productNameTextField(
+                name = item.name,
+                error = nameError,
+                clearField = permitReAddition,
+            )
+            Spacer(modifier = Modifier.padding(vertical = 8.dp))
 
-                    val fragmentManager = rememberFragmentManager()
-                    val datePicker = rememberDatePickerDialog(
-                        R.string.fsl_text_field_label_date_added,
-                        DEFAULT_LOCAL_DATE_FORMAT.parse(dateAdded.text),
-                        CalendarConstraints.Builder()
-                            .setValidator(DateValidatorPointForward.now()).build(),
-                    ) { dateAdded = TextFieldValue(DEFAULT_LOCAL_DATE_FORMAT.format(it)) }
+            val unit = measurementUnitTextField(
+                unit = item.unit,
+                error = unitError,
+                clearField = permitReAddition,
+                suggestions = measurementUnits,
+                onQueryChanged = onMeasurementUnitQueryChanged,
+            )
+            Spacer(modifier = Modifier.padding(vertical = 8.dp))
 
-                    TextField(
-                        modifier = Modifier.weight(1f),
-                        label = { Text(stringResource(R.string.fsl_text_field_label_date_added)) },
-                        singleLine = true,
-                        value = dateAdded,
-                        onValueChange = { dateAdded = it },
-                        readOnly = true,
-                        trailingIcon = {
-                            IconButton(onClick = {
-                                datePicker.show(fragmentManager, "ShoppingListDateAdded")
-                            }) {
-                                Icon(Icons.Default.DateRange, contentDescription = null)
-                            }
-                        },
-                    )
+            val unitQuantity = numberTextField(
+                number = item.unitQuantity,
+                error = unitQuantityError,
+                clearField = permitReAddition,
+                label = R.string.fsp_product_detail_unit_quantity_label,
+            )
+            Spacer(modifier = Modifier.padding(vertical = 8.dp))
+
+            val purchaseQuantity = numberTextField(
+                number = item.purchaseQuantity,
+                error = purchaseQuantityError,
+                clearField = permitReAddition,
+                label = R.string.fsl_text_field_label_purchase_quantity,
+            )
+            Spacer(modifier = Modifier.padding(vertical = 8.dp))
+
+            val brands = productBrandsView(
+                clearFields = permitReAddition,
+                suggestions = brandSuggestions,
+                onQueryChanged = onBrandQueryChanged,
+            )
+            Spacer(modifier = Modifier.padding(vertical = 8.dp))
+
+            val attributes = productAttributesView(
+                clearFields = permitReAddition,
+                suggestions = attributeSuggestions,
+                onQueryChanged = onAttributeQueryChanged,
+            )
+            Spacer(modifier = Modifier.padding(vertical = 8.dp))
+            Button(
+                enabled = arrayOf(
+                    unit,
+                    name,
+                    unitQuantity,
+                    purchaseQuantity,
+                ).all { it.text.isNotBlank() },
+                modifier = VerticalLayoutModifier.padding(bottom = 16.dp),
+                onClick = {
+                    focusManager.clearFocus()
+                    onDetailsSubmitted(item.copy(
+                        name = name.text,
+                        unit = unit.text,
+                        unitQuantity = unitQuantity.text.toFloat(),
+                        purchaseQuantity = purchaseQuantity.text.toFloat(),
+                        brands = brands.filterNot { it.isDefault },
+                        attributes = attributes.filterNot { it.name.isBlank() or it.value.isBlank() },
+                    ))
                 }
-                Button(
-                    modifier = Modifier.fillMaxWidth(),
-                    enabled = arrayOf(name,
-                        unit,
-                        unitQuantity,
-                        purchaseQuantity).all { it.text.isNotBlank() },
-                    onClick = {
-                        onAddShoppingListItemClicked(item.copy(
-                            name = name.text,
-                            unit = unit.text,
-                            unitQuantity = unitQuantity.text.toFloatOrNull()
-                                ?: TODO("Raise invalid error"),
-                            purchaseQuantity = purchaseQuantity.text.toFloatOrNull()
-                                ?: TODO("Raise invalid error"),
-                            dateAdded = localDefaultDateFormatToServerDate(dateAdded.text)!!,
-                        ))
-                    },
-                ) { Text(toolbarTitle.uppercase(KENYA)) }
-            }
+            ) { Text(toolbarTitle.uppercase()) }
         }
     }
 }

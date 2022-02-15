@@ -5,8 +5,8 @@ import co.ke.xently.data.Product
 import co.ke.xently.data.TaskResult
 import co.ke.xently.data.TaskResult.Success
 import co.ke.xently.feature.utils.flagLoadingOnStartCatchingErrors
-import co.ke.xently.products.SearchableViewModel
 import co.ke.xently.products.repository.IProductsRepository
+import co.ke.xently.products.shared.SearchableViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -17,7 +17,7 @@ internal class ProductDetailViewModel @Inject constructor(
     private val repository: IProductsRepository,
 ) : SearchableViewModel(repository) {
     private val _productResult = MutableStateFlow<TaskResult<Product?>>(Success(null))
-    val productResult: StateFlow<TaskResult<Product?>>
+    val result: StateFlow<TaskResult<Product?>>
         get() = _productResult
 
     fun addOrUpdate(product: Product) {

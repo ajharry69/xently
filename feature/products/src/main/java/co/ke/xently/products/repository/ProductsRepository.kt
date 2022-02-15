@@ -11,6 +11,7 @@ import co.ke.xently.data.getOrNull
 import co.ke.xently.feature.repository.Dependencies
 import co.ke.xently.products.ProductsRemoteMediator
 import co.ke.xently.products.saveLocallyWithAttributes
+import co.ke.xently.products.shared.repository.SearchableRepository
 import co.ke.xently.products.ui.detail.ProductHttpException
 import co.ke.xently.source.remote.retryCatchIfNecessary
 import co.ke.xently.source.remote.sendRequest

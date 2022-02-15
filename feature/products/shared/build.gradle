@@ -1,22 +1,17 @@
 plugins {
     id 'com.android.library'
-    id 'kotlin-android'
-    id 'kotlin-kapt'
-    id 'dagger.hilt.android.plugin' // apply below kotlin-kapt
+    id 'org.jetbrains.kotlin.android'
 }
 
 android {
-    compileSdk 31
+    compileSdk 32
 
     defaultConfig {
         minSdk 21
-        targetSdk 31
+        targetSdk 32
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
-        vectorDrawables {
-            useSupportLibrary true
-        }
     }
 
     buildTypes {
@@ -33,7 +28,6 @@ android {
         jvmTarget = '1.8'
         useIR = true
         freeCompilerArgs += [
-                "-Xopt-in=androidx.paging.ExperimentalPagingApi",
                 "-Xopt-in=kotlin.RequiresOptIn",
         ]
     }
@@ -43,12 +37,6 @@ android {
     composeOptions {
         kotlinCompilerExtensionVersion compose_version
     }
-    packagingOptions {
-        resources {
-            excludes += '/META-INF/{AL2.0,LGPL2.1}'
-            pickFirsts += ['build-data.properties']
-        }
-    }
 }
 
 dependencies {
@@ -57,10 +45,6 @@ dependencies {
     implementation project(path: ":data:source:local")
     implementation project(path: ":data:source:remote")
     implementation project(path: ":feature")
-    implementation project(path: ":feature:products:shared")
-    // DI
-    implementation "com.google.dagger:hilt-android:$hilt_version"
-    kapt "com.google.dagger:hilt-compiler:$hilt_version"
 
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.3'

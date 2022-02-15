@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Search
@@ -27,6 +28,7 @@ import co.ke.xently.data.errorMessage
 import co.ke.xently.data.getOrThrow
 import co.ke.xently.feature.ui.FullscreenError
 import co.ke.xently.feature.ui.FullscreenLoading
+import co.ke.xently.feature.ui.stringRes
 import co.ke.xently.shoppinglist.R
 import co.ke.xently.shoppinglist.ui.list.grouped.item.GroupedShoppingListCard
 import kotlinx.coroutines.launch
@@ -42,9 +44,11 @@ internal fun GroupedShoppingListScreen(
     onShopMenuClicked: (() -> Unit) = {},
     onProductMenuClicked: (() -> Unit) = {},
     onSignoutMenuClicked: (() -> Unit) = {},
+    onAddShoppingListItemClicked: () -> Unit,
 ) {
-    val groupedShoppingListResult by viewModel.groupedShoppingListResult.collectAsState()
-    val groupedShoppingListCount by viewModel.groupedShoppingListCount.collectAsState()
+    val scope = rememberCoroutineScope()
+    val groupedShoppingListResult by viewModel.groupedShoppingListResult.collectAsState(scope.coroutineContext)
+    val groupedShoppingListCount by viewModel.groupedShoppingListCount.collectAsState(scope.coroutineContext)
 
     GroupedShoppingListScreen(
         modifier,
@@ -57,6 +61,7 @@ internal fun GroupedShoppingListScreen(
         onShopMenuClicked,
         onProductMenuClicked,
         onSignoutMenuClicked,
+        onAddShoppingListItemClicked,
     )
 }
 
@@ -72,14 +77,21 @@ private fun GroupedShoppingListScreen(
     onShopMenuClicked: () -> Unit,
     onProductMenuClicked: () -> Unit,
     onSignoutMenuClicked: () -> Unit,
+    onAddShoppingListItemClicked: () -> Unit,
 ) {
     val scaffoldState = rememberScaffoldState()
     val coroutineScope = rememberCoroutineScope()
     Scaffold(
         scaffoldState = scaffoldState,
+        floatingActionButton = {
+            FloatingActionButton(onClick = onAddShoppingListItemClicked) {
+                Icon(Icons.Default.Add,
+                    stringRes(R.string.fsl_detail_screen_toolbar_title, R.string.add))
+            }
+        },
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(id = R.string.fsl_toolbar_title)) },
+                title = { Text(stringResource(R.string.fsl_toolbar_title)) },
                 navigationIcon = {
                     IconButton(onClick = {
                         coroutineScope.launch {

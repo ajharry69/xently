@@ -5,6 +5,7 @@ import androidx.paging.PagingConfig
 import co.ke.xently.common.Retry
 import co.ke.xently.data.*
 import co.ke.xently.feature.repository.Dependencies
+import co.ke.xently.products.shared.repository.SearchableRepository
 import co.ke.xently.shoppinglist.GroupBy
 import co.ke.xently.shoppinglist.GroupBy.DateAdded
 import co.ke.xently.shoppinglist.Recommend
@@ -17,7 +18,7 @@ import javax.inject.Singleton
 
 @Singleton
 internal class ShoppingListRepository @Inject constructor(private val dependencies: Dependencies) :
-    IShoppingListRepository {
+    SearchableRepository(dependencies), IShoppingListRepository {
     // TODO: Use memoization to retrieve all grouped shopping list items...
     override fun add(item: ShoppingListItem) = Retry().run {
         flow {

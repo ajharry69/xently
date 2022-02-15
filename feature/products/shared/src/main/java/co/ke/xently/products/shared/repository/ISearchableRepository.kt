@@ -1,7 +1,7 @@
-package co.ke.xently.products.repository
+package co.ke.xently.products.shared.repository
 
 import co.ke.xently.data.*
-import co.ke.xently.products.AttributeQuery
+import co.ke.xently.products.shared.AttributeQuery
 import kotlinx.coroutines.flow.Flow
 
 interface ISearchableRepository {

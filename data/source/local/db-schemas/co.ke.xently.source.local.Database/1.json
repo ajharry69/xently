@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "2b66e0723088a91d48f2f5a00d3aa70f",
+    "identityHash": "b75bf38be91d2f556bf34e8088d818e1",
     "entities": [
       {
         "tableName": "remote_keys",
@@ -190,7 +190,7 @@
       },
       {
         "tableName": "products",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `name` TEXT NOT NULL, `unit` TEXT NOT NULL, `unitQuantity` REAL NOT NULL, `purchasedQuantity` REAL NOT NULL, `shopId` INTEGER NOT NULL, `unitPrice` REAL NOT NULL, `datePurchased` INTEGER NOT NULL, `dateAdded` INTEGER NOT NULL, `isDefault` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `name` TEXT NOT NULL, `unit` TEXT NOT NULL, `unitQuantity` REAL NOT NULL, `purchasedQuantity` REAL NOT NULL, `shopId` INTEGER NOT NULL, `unitPrice` REAL NOT NULL, `datePurchased` INTEGER NOT NULL, `dateAdded` INTEGER NOT NULL, PRIMARY KEY(`id`))",
         "fields": [
           {
             "fieldPath": "id",
@@ -243,12 +243,6 @@
           {
             "fieldPath": "dateAdded",
             "columnName": "dateAdded",
-            "affinity": "INTEGER",
-            "notNull": true
-          },
-          {
-            "fieldPath": "isDefault",
-            "columnName": "isDefault",
             "affinity": "INTEGER",
             "notNull": true
           }
@@ -445,7 +439,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '2b66e0723088a91d48f2f5a00d3aa70f')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'b75bf38be91d2f556bf34e8088d818e1')"
     ]
   }
 }

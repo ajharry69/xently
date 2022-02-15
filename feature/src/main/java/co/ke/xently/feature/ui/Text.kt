@@ -21,12 +21,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.PopupProperties
 
 @Composable
-fun stringRes(@StringRes string: Int, @StringRes vararg strings: Int): String {
-    return stringResource(string, *strings.map {
+fun stringRes(@StringRes string: Int, @StringRes vararg args: Int): String {
+    return stringResource(string, *args.map {
         stringResource(it)
     }.toTypedArray())
 }
 
+@Deprecated("Unnecessary abstraction", ReplaceWith("TextInputLayout", "co.ke.xently.feature.ui"))
 @Composable
 fun TextFieldErrorText(error: String, modifier: Modifier = Modifier) {
     Text(
@@ -38,7 +39,7 @@ fun TextFieldErrorText(error: String, modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun XentlyTextField(
+fun TextInputLayout(
     modifier: Modifier,
     value: TextFieldValue,
     readOnly: Boolean = false,
@@ -68,10 +69,17 @@ fun XentlyTextField(
             visualTransformation = visualTransformation,
         )
         if (isError) {
-            TextFieldErrorText(error, Modifier.fillMaxWidth())
+            Text(
+                text = error,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 16.dp, end = 12.dp),
+                color = MaterialTheme.colors.error,
+                style = MaterialTheme.typography.caption,
+            )
         } else if (!helpText.isNullOrBlank()) {
             Text(
-                helpText,
+                text = helpText,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(start = 16.dp, end = 12.dp),
@@ -107,7 +115,7 @@ fun <T> AutoCompleteTextField(
     }
 
     Box(modifier = modifier) {
-        XentlyTextField(
+        TextInputLayout(
             value = value,
             label = label,
             error = error,

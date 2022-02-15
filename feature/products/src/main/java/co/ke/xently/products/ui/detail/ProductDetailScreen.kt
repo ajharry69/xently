@@ -9,7 +9,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTime
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -17,7 +16,6 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -30,8 +28,8 @@ import co.ke.xently.data.TaskResult.Loading
 import co.ke.xently.data.TaskResult.Success
 import co.ke.xently.feature.theme.XentlyTheme
 import co.ke.xently.feature.ui.*
-import co.ke.xently.products.AttributeQuery
 import co.ke.xently.products.R
+import co.ke.xently.products.shared.*
 import com.google.android.material.datepicker.CalendarConstraints
 import com.google.android.material.datepicker.DateValidatorPointBackward
 
@@ -42,31 +40,32 @@ internal fun ProductDetailScreen(
     viewModel: ProductDetailViewModel = hiltViewModel(),
     onNavigationIconClicked: () -> Unit = {},
 ) {
-    val isDefaultProduct by remember(id) {
+    val isDefault by remember(id) {
         mutableStateOf(id == null || id == Product.default().id)
     }
 
     val fetch by rememberUpdatedState { viewModel.get(id!!) }
     LaunchedEffect(true) {
-        if (!isDefaultProduct) fetch()
+        if (!isDefault) fetch()
     }
 
-    val shops by viewModel.shopsResult.collectAsState()
-    val productResult by viewModel.productResult.collectAsState()
+    val scope = rememberCoroutineScope()
+    val shops by viewModel.shopsResult.collectAsState(scope.coroutineContext)
+    val result by viewModel.result.collectAsState(scope.coroutineContext)
     // TODO: Fix case where searching on either measurement units or shops clears fields
-    val measurementUnits by viewModel.measurementUnitsResult.collectAsState()
-    val brands by viewModel.brandsResult.collectAsState()
-    val attributes by viewModel.attributesResult.collectAsState()
+    val measurementUnits by viewModel.measurementUnitsResult.collectAsState(scope.coroutineContext)
+    val brands by viewModel.brandsResult.collectAsState(scope.coroutineContext)
+    val attributes by viewModel.attributesResult.collectAsState(scope.coroutineContext)
 
     // Allow addition of more items if the screen was initially for adding.
-    val permitReAddition = isDefaultProduct && productResult.getOrNull() != null
+    val permitReAddition = isDefault && result.getOrNull() != null
 
     ProductDetailScreen(
         modifier,
         if (permitReAddition) {
             Success(null)
         } else {
-            productResult
+            result
         },
         permitReAddition,
         shops,
@@ -96,107 +95,43 @@ private fun ProductDetailScreen(
     onMeasurementUnitQueryChanged: (String) -> Unit = {},
     onBrandQueryChanged: (String) -> Unit = {},
     onAttributeQueryChanged: (AttributeQuery) -> Unit = {},
-    onProductDetailsSubmitted: (Product) -> Unit = {},
+    onDetailsSubmitted: (Product) -> Unit = {},
 ) {
     val product = result.getOrNull() ?: Product.default()
 
-    var shop by remember(product.shop) {
-        val value = if (product.isDefault) {
-            ""
-        } else {
-            product.shop.toString()
-        }
-        mutableStateOf(TextFieldValue(value))
-    }
-    var savableShop by remember(product.shopId) { mutableStateOf(product.shopId) }
-    var shopError by remember { mutableStateOf("") }
-    var isShopError by remember { mutableStateOf(false) }
-
-    var name by remember(product.name) {
-        mutableStateOf(TextFieldValue(product.name))
-    }
-    var nameError by remember { mutableStateOf("") }
-    var isNameError by remember { mutableStateOf(false) }
-
-    var unit by remember(product.unit) {
-        mutableStateOf(TextFieldValue(product.unit))
-    }
-    var unitError by remember { mutableStateOf("") }
-    var isUnitError by remember { mutableStateOf(false) }
-
-    var unitQuantity by remember(product.unitQuantity) {
-        mutableStateOf(TextFieldValue(product.unitQuantity.toString()))
-    }
-    var unitQuantityError by remember { mutableStateOf("") }
-    var isUnitQuantityError by remember { mutableStateOf(false) }
-
-    var purchasedQuantity by remember(product.purchasedQuantity) {
-        mutableStateOf(TextFieldValue(product.purchasedQuantity.toString()))
-    }
-    var purchasedQuantityError by remember { mutableStateOf("") }
-    var isPurchasedQuantityError by remember { mutableStateOf(false) }
-
-    var unitPrice by remember(product.unitPrice) {
-        mutableStateOf(TextFieldValue(if (product.isDefault) "" else product.unitPrice.toString()))
-    }
-    var unitPriceError by remember { mutableStateOf("") }
-    var isUnitPriceError by remember { mutableStateOf(false) }
-
-    var dateOfPurchase by remember {
-        mutableStateOf(TextFieldValue(DEFAULT_LOCAL_DATE_FORMAT.format(product.datePurchased)))
-    }
-    var timeOfPurchase by remember {
-        mutableStateOf(TextFieldValue(DEFAULT_LOCAL_TIME_FORMAT.format(product.datePurchased)))
-    }
-    var datePurchasedError by remember { mutableStateOf("") }
-    var isDatePurchasedError by remember { mutableStateOf(false) }
-
-    val brands = remember { mutableStateListOf<Brand>() }
-    var brandQuery by remember { mutableStateOf(TextFieldValue("")) }
-
-    val attributes = remember { mutableStateListOf<Attribute>() }
-    var attributeNameQuery by remember { mutableStateOf(TextFieldValue("")) }
-    var attributeValueQuery by remember { mutableStateOf(TextFieldValue("")) }
-
-    LaunchedEffect(attributeNameQuery, attributeValueQuery) {
-        onAttributeQueryChanged(AttributeQuery(attributeNameQuery.text, attributeValueQuery.text))
-    }
-
-    val toolbarTitle = stringResource(
+    val toolbarTitle = stringRes(
         R.string.fp_add_product_toolbar_title,
-        stringResource(if (product.isDefault) R.string.add else R.string.update),
+        if (product.isDefault) {
+            R.string.add
+        } else {
+            R.string.update
+        },
     )
 
     val (scrollState, scaffoldState) = Pair(rememberScrollState(), rememberScaffoldState())
 
-    if (result is TaskResult.Error) {
-        val httpException = result.error as? ProductHttpException
-        shopError = httpException.error.shop.also {
-            isShopError = it.isNotBlank()
-        }
-        nameError = httpException.error.name.also {
-            isNameError = it.isNotBlank()
-        }
-        unitError = httpException.error.unit.also {
-            isUnitError = it.isNotBlank()
-        }
-        unitQuantityError = httpException.error.unitQuantity.also {
-            isUnitQuantityError = it.isNotBlank()
-        }
-        unitPriceError = httpException.error.unitPrice.also {
-            isUnitPriceError = it.isNotBlank()
-        }
-        purchasedQuantityError = httpException.error.purchasedQuantity.also {
-            isPurchasedQuantityError = it.isNotBlank()
-        }
-        datePurchasedError = httpException.error.datePurchased.also {
-            isDatePurchasedError = it.isNotBlank()
-        }
+    var unitError by remember { mutableStateOf("") }
+    var nameError by remember { mutableStateOf("") }
+    var purchasedQuantityError by remember { mutableStateOf("") }
+    var unitQuantityError by remember { mutableStateOf("") }
+    var unitPriceError by remember { mutableStateOf("") }
+    var shopError by remember { mutableStateOf("") }
+    var datePurchasedError by remember { mutableStateOf("") }
 
-        if (httpException?.hasFieldErrors() != true) {
-            val errorMessage = result.errorMessage ?: stringResource(R.string.generic_error_message)
-            LaunchedEffect(product.id, result, errorMessage) {
-                scaffoldState.snackbarHostState.showSnackbar(errorMessage)
+    if (result is TaskResult.Error) {
+        val exception = result.error as? ProductHttpException
+        shopError = exception.error.shop
+        nameError = exception.error.name
+        unitError = exception.error.unit
+        unitQuantityError = exception.error.unitQuantity
+        unitPriceError = exception.error.unitPrice
+        purchasedQuantityError = exception.error.purchasedQuantity
+        datePurchasedError = exception.error.datePurchased
+
+        if (exception?.hasFieldErrors() != true) {
+            val message = result.errorMessage ?: stringResource(R.string.generic_error_message)
+            LaunchedEffect(result, message) {
+                scaffoldState.snackbarHostState.showSnackbar(message)
             }
         }
     } else if (permitReAddition) {
@@ -204,16 +139,6 @@ private fun ProductDetailScreen(
         LaunchedEffect(message) {
             scaffoldState.snackbarHostState.showSnackbar(message)
         }
-        unit = TextFieldValue()
-        name = TextFieldValue()
-        unitPrice = TextFieldValue()
-        unitQuantity = TextFieldValue(product.unitQuantity.toString())
-        purchasedQuantity = TextFieldValue(product.purchasedQuantity.toString())
-        brandQuery = TextFieldValue()
-        attributeNameQuery = TextFieldValue()
-        attributeValueQuery = TextFieldValue()
-        brands.clear()
-        attributes.clear()
     }
     val focusManager = LocalFocusManager.current
 
@@ -228,6 +153,16 @@ private fun ProductDetailScreen(
                 .padding(paddingValues)
                 .verticalScroll(scrollState),
         ) {
+            var isShopError by remember { mutableStateOf(shopError.isNotBlank()) }
+            var shop by remember(product.shop) {
+                val value = if (product.isDefault) {
+                    ""
+                } else {
+                    product.shop.toString()
+                }
+                mutableStateOf(TextFieldValue(value))
+            }
+            var savableShop by remember(product.shopId) { mutableStateOf(product.shopId) }
             AutoCompleteTextField(
                 value = shop,
                 isError = isShopError,
@@ -256,82 +191,50 @@ private fun ProductDetailScreen(
                 }
             }
             Spacer(modifier = Modifier.padding(vertical = 8.dp))
-            XentlyTextField(
-                modifier = VerticalLayoutModifier,
-                value = name,
-                isError = isNameError,
-                error = nameError,
-                keyboardOptions = KeyboardOptions.Default.copy(capitalization = KeyboardCapitalization.Sentences,
-                    imeAction = ImeAction.Next),
-                onValueChange = {
-                    name = it
-                    isNameError = false
-                },
-                label = stringResource(R.string.fp_product_detail_name_label),
-            )
+
+            val name = productNameTextField(product.name, nameError, permitReAddition)
             Spacer(modifier = Modifier.padding(vertical = 8.dp))
-            AutoCompleteTextField(
-                modifier = VerticalLayoutModifier,
-                value = unit,
-                isError = isUnitError,
+
+            val unit = measurementUnitTextField(
+                unit = product.unit,
                 error = unitError,
-                label = stringResource(R.string.fp_product_detail_unit_label),
-                keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
-                onValueChange = {
-                    unit = it
-                    isUnitError = false
-                    onMeasurementUnitQueryChanged(it.text)
-                },
-                onOptionSelected = {
-                    unit = TextFieldValue(it.name)
-                },
+                clearField = permitReAddition,
                 suggestions = measurementUnits,
-            ) {
-                Text(it.toString(), style = MaterialTheme.typography.body1)
-            }
+                onQueryChanged = onMeasurementUnitQueryChanged,
+            )
             Spacer(modifier = Modifier.padding(vertical = 8.dp))
-            XentlyTextField(
-                modifier = VerticalLayoutModifier,
-                value = unitQuantity,
-                isError = isUnitQuantityError,
+
+            val unitQuantity = numberTextField(
+                number = product.unitQuantity,
                 error = unitQuantityError,
-                keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next,
-                    keyboardType = KeyboardType.Number),
-                onValueChange = {
-                    unitQuantity = it
-                    isUnitQuantityError = false
-                },
-                label = stringResource(R.string.fp_product_detail_unit_quantity_label),
+                clearField = permitReAddition,
+                label = R.string.fsp_product_detail_unit_quantity_label,
             )
             Spacer(modifier = Modifier.padding(vertical = 8.dp))
-            XentlyTextField(
-                modifier = VerticalLayoutModifier,
-                value = purchasedQuantity,
-                isError = isPurchasedQuantityError,
+
+            val purchasedQuantity = numberTextField(
+                number = product.purchasedQuantity,
                 error = purchasedQuantityError,
-                keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next,
-                    keyboardType = KeyboardType.Number),
-                onValueChange = {
-                    purchasedQuantity = it
-                    isPurchasedQuantityError = false
-                },
-                label = stringResource(R.string.fp_product_detail_purchased_quantity_label),
+                clearField = permitReAddition,
+                label = R.string.fp_product_detail_purchased_quantity_label,
             )
             Spacer(modifier = Modifier.padding(vertical = 8.dp))
-            XentlyTextField(
-                modifier = VerticalLayoutModifier,
-                value = unitPrice,
-                isError = isUnitPriceError,
+
+            val unitPrice = numberTextField(
+                number = product.unitPrice,
                 error = unitPriceError,
-                keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next,
-                    keyboardType = KeyboardType.Number),
-                onValueChange = {
-                    unitPrice = it
-                    isUnitPriceError = false
-                },
-                label = stringResource(R.string.fp_product_detail_unit_price_label),
+                clearField = permitReAddition,
+                label = R.string.fp_product_detail_unit_price_label,
             )
             Spacer(modifier = Modifier.padding(vertical = 8.dp))
+
+            var dateOfPurchase by remember {
+                mutableStateOf(TextFieldValue(DEFAULT_LOCAL_DATE_FORMAT.format(product.datePurchased)))
+            }
+            var timeOfPurchase by remember {
+                mutableStateOf(TextFieldValue(DEFAULT_LOCAL_TIME_FORMAT.format(product.datePurchased)))
+            }
+            var isDatePurchasedError by remember { mutableStateOf(datePurchasedError.isNotBlank()) }
             MultipleTextFieldRow(
                 modifier = VerticalLayoutModifier,
                 isError = isDatePurchasedError,
@@ -346,7 +249,7 @@ private fun ProductDetailScreen(
                         .setValidator(DateValidatorPointBackward.now()).build(),
                 ) { dateOfPurchase = TextFieldValue(DEFAULT_LOCAL_DATE_FORMAT.format(it)) }
 
-                XentlyTextField(
+                TextInputLayout(
                     readOnly = true,
                     value = dateOfPurchase,
                     isError = isDatePurchasedError,
@@ -377,7 +280,7 @@ private fun ProductDetailScreen(
                     title = R.string.fp_product_detail_time_of_purchased_label,
                 ) { timeOfPurchase = TextFieldValue(DEFAULT_LOCAL_TIME_FORMAT.format(it)) }
 
-                XentlyTextField(
+                TextInputLayout(
                     readOnly = true,
                     value = timeOfPurchase,
                     isError = isDatePurchasedError,
@@ -390,10 +293,12 @@ private fun ProductDetailScreen(
                         isDatePurchasedError = false
                     },
                     trailingIcon = {
-                        IconButton({
-                            timeOfPurchasePicker.show(fragmentManager,
-                                "ProductDetailTimeOfPurchase")
-                        }) {
+                        IconButton(
+                            onClick = {
+                                timeOfPurchasePicker.show(fragmentManager,
+                                    "ProductDetailTimeOfPurchase")
+                            },
+                        ) {
                             Icon(
                                 Icons.Default.AccessTime,
                                 stringResource(
@@ -405,132 +310,18 @@ private fun ProductDetailScreen(
             }
             Spacer(modifier = Modifier.padding(vertical = 8.dp))
 
-            var showAddBrandIcon by remember { mutableStateOf(false) }
-            val addBrand: (Brand) -> Unit = {
-                brands.add(0, it)
-                brandQuery = TextFieldValue() // Reset search
-            }
-            AutoCompleteTextField(
-                modifier = VerticalLayoutModifier,
-                value = brandQuery,
-                label = stringResource(R.string.fp_product_detail_brand_query_label),
-                helpText = if (showAddBrandIcon) {
-                    stringResource(R.string.fp_product_detail_brand_query_help_text)
-                } else {
-                    null
-                },
-                keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
-                onValueChange = {
-                    brandQuery = it
-                    onBrandQueryChanged(it.text)
-                },
-                trailingIcon = if (showAddBrandIcon) {
-                    {
-                        IconButton(onClick = { addBrand(Brand(name = brandQuery.text.trim())) }) {
-                            Icon(Icons.Default.Add, contentDescription = null)
-                        }
-                    }
-                } else {
-                    null
-                },
-                onOptionSelected = addBrand,
-                wasSuggestionPicked = {
-                    showAddBrandIcon = !it && brandQuery.text.isNotBlank()
-                },
+            val brands = productBrandsView(
+                clearFields = permitReAddition,
                 suggestions = brandSuggestions,
-            ) {
-                Text(it.toString(), style = MaterialTheme.typography.body1)
-            }
-            if (brands.isNotEmpty()) {
-                Text(
-                    stringRes(R.string.fp_product_detail_brands_title),
-                    style = MaterialTheme.typography.h5,
-                    modifier = VerticalLayoutModifier,
-                )
-                Spacer(modifier = Modifier.padding(vertical = 8.dp))
-                ChipGroup(
-                    modifier = VerticalLayoutModifier,
-                    isSingleLine = false, chipItems = brands,
-                ) { i, b ->
-                    Chip(b.toString()) {
-                        brands.removeAt(i)
-                    }
-                }
-            }
+                onQueryChanged = onBrandQueryChanged,
+            )
             Spacer(modifier = Modifier.padding(vertical = 8.dp))
-            MultipleTextFieldRow(VerticalLayoutModifier) { fieldModifier ->
-                AutoCompleteTextField(
-                    modifier = fieldModifier,
-                    value = attributeNameQuery,
-                    label = stringResource(R.string.fp_product_detail_attribute_name_query_label),
-                    keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
-                    onValueChange = {
-                        attributeNameQuery = it
-                    },
-                    onOptionSelected = {
-                        attributeNameQuery = TextFieldValue(it.name)
-                    },
-                    suggestions = attributeSuggestions,
-                ) {
-                    Text(it.name, style = MaterialTheme.typography.body1)
-                }
 
-                var showAddAttributeValueIcon by remember { mutableStateOf(false) }
-                val addAttributeValue: (Attribute) -> Unit = {
-                    // Only override name if the attr.value was added without an attr.name
-                    attributes.add(0,
-                        it.copy(name = it.name.ifBlank { attributeNameQuery.text.trim() }))
-                    attributeValueQuery = TextFieldValue() // Reset search
-                }
-                // TODO: Show checkbox to enable reusing previously added attribute name when `attributeNameQuery` is blank
-                AutoCompleteTextField(
-                    modifier = fieldModifier,
-                    value = attributeValueQuery,
-                    label = stringResource(R.string.fp_product_detail_attribute_value_query_label),
-                    keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
-                    onValueChange = {
-                        attributeValueQuery = it
-                    },
-                    trailingIcon = if (showAddAttributeValueIcon) {
-                        {
-                            IconButton(onClick = {
-                                addAttributeValue(Attribute(value = attributeValueQuery.text.trim()))
-                            }) {
-                                Icon(Icons.Default.Add, contentDescription = null)
-                            }
-                        }
-                    } else {
-                        null
-                    },
-                    onOptionSelected = addAttributeValue,
-                    wasSuggestionPicked = {
-                        showAddAttributeValueIcon =
-                            !it && attributeValueQuery.text.isNotBlank() && attributeNameQuery.text.isNotBlank()
-                    },
-                    suggestions = attributeSuggestions,
-                ) {
-                    Column(modifier = Modifier.fillMaxWidth()) {
-                        Text(it.name, style = MaterialTheme.typography.body1)
-                        Text(it.value, style = MaterialTheme.typography.subtitle1)
-                    }
-                }
-            }
-            if (attributes.isNotEmpty()) {
-                Text(
-                    stringRes(R.string.fp_product_detail_attributes_title),
-                    style = MaterialTheme.typography.h5,
-                    modifier = VerticalLayoutModifier,
-                )
-                Spacer(modifier = Modifier.padding(vertical = 8.dp))
-                ChipGroup(
-                    modifier = VerticalLayoutModifier,
-                    isSingleLine = false, chipItems = attributes,
-                ) { i, b ->
-                    Chip(b.toString()) {
-                        attributes.removeAt(i)
-                    }
-                }
-            }
+            val attributes = productAttributesView(
+                clearFields = permitReAddition,
+                suggestions = attributeSuggestions,
+                onQueryChanged = onAttributeQueryChanged,
+            )
 
             Spacer(modifier = Modifier.padding(vertical = 8.dp))
             Button(
@@ -546,7 +337,7 @@ private fun ProductDetailScreen(
                 modifier = VerticalLayoutModifier,
                 onClick = {
                     focusManager.clearFocus()
-                    onProductDetailsSubmitted(product.copy(
+                    onDetailsSubmitted(product.copy(
                         shopId = savableShop,
                         name = name.text,
                         unit = unit.text,

@@ -20,8 +20,8 @@ import co.ke.xently.data.TaskResult
 import co.ke.xently.data.User
 import co.ke.xently.data.errorMessage
 import co.ke.xently.feature.ui.PasswordVisibilityToggle
+import co.ke.xently.feature.ui.TextInputLayout
 import co.ke.xently.feature.ui.ToolbarWithProgressbar
-import co.ke.xently.feature.ui.XentlyTextField
 
 @Composable
 internal fun SignInScreen(
@@ -96,7 +96,7 @@ private fun SignInScreen(
             Column(modifier = Modifier
                 .verticalScroll(rememberScrollState())
                 .weight(1f)) {
-                XentlyTextField(
+                TextInputLayout(
                     value = uname,
                     onValueChange = { uname = it },
                     modifier = Modifier
@@ -108,7 +108,7 @@ private fun SignInScreen(
                         imeAction = ImeAction.Next),
                 )
                 Spacer(modifier = Modifier.padding(vertical = 8.dp))
-                XentlyTextField(
+                TextInputLayout(
                     value = pword,
                     onValueChange = { pword = it },
                     modifier = Modifier

@@ -9,8 +9,9 @@ import android.os.IBinder
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
@@ -55,23 +56,30 @@ class ShoppingListActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             XentlyTheme {
-                ShoppingListNavHost(
-                    onShopMenuClicked = {
-                        Intent("co.ke.xently.action.SHOPS").also {
-                            startActivity(it)
-                        }
-                    },
-                    onProductMenuClicked = {
-                        Intent("co.ke.xently.action.PRODUCTS").also {
-                            startActivity(it)
-                        }
-                    },
-                    onSignoutMenuClicked = {
-                        Intent("co.ke.xently.action.ACCOUNTS").also {
-                            startActivity(it)
-                        }
-                    },
-                )
+                // A surface container using the 'background' color from the theme
+                Surface(color = MaterialTheme.colors.background) {
+                    val navController = rememberNavController()
+                    ShoppingListNavHost(
+                        navController = navController,
+                        onShopMenuClicked = {
+                            Intent("co.ke.xently.action.SHOPS").also {
+                                startActivity(it)
+                            }
+                        },
+                        onProductMenuClicked = {
+                            Intent("co.ke.xently.action.PRODUCTS").also {
+                                startActivity(it)
+                            }
+                        },
+                        onSignoutMenuClicked = {
+                            Intent("co.ke.xently.action.ACCOUNTS").also {
+                                startActivity(it)
+                            }
+                        },
+                    ) {
+                        if (!navController.navigateUp()) onBackPressed()
+                    }
+                }
             }
         }
         viewModel.locationPermissionsGranted.observe(this) {
@@ -101,15 +109,16 @@ class ShoppingListActivity : AppCompatActivity() {
 @Composable
 internal fun ShoppingListNavHost(
     modifier: Modifier = Modifier,
-    navController: NavHostController = rememberNavController(),
+    navController: NavHostController,
     onShopMenuClicked: () -> Unit = {},
     onProductMenuClicked: () -> Unit = {},
     onSignoutMenuClicked: () -> Unit = {},
+    onNavigationIconClicked: () -> Unit = {},
 ) {
     NavHost(
+        modifier = modifier,
         navController = navController,
         startDestination = "shopping-list-grouped",
-        modifier = modifier,
     ) {
         val onShoppingListItemRecommendClicked: (id: Long) -> Unit = {
             navController.navigate("shopping-list/recommendations/${it}?from=${From.Item}")
@@ -117,11 +126,12 @@ internal fun ShoppingListNavHost(
         val onShoppingListItemClicked: (id: Long) -> Unit = {
             navController.navigate("shopping-list/${it}")
         }
+        val onAddShoppingListItemClicked = {
+            navController.navigate("shopping-list/${ShoppingListItem.default().id}")
+        }
         composable("shopping-list-grouped") {
             GroupedShoppingListScreen(
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .fillMaxWidth(),
+                modifier = Modifier.fillMaxSize(),
                 onShoppingListItemClicked = onShoppingListItemClicked,
                 onShoppingListItemRecommendClicked = onShoppingListItemRecommendClicked,
                 onRecommendGroupClicked = {
@@ -131,19 +141,17 @@ internal fun ShoppingListNavHost(
                 onShopMenuClicked = onShopMenuClicked,
                 onProductMenuClicked = onProductMenuClicked,
                 onSignoutMenuClicked = onSignoutMenuClicked,
+                onAddShoppingListItemClicked = onAddShoppingListItemClicked,
             )
         }
         composable("shopping-list") {
             ShoppingListScreen(
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .fillMaxWidth(),
+                modifier = Modifier.fillMaxSize(),
                 onShoppingListItemClicked = onShoppingListItemClicked,
                 onRecommendClicked = onShoppingListItemRecommendClicked,
-                onNavigationIconClicked = { navController.navigateUp() },
-            ) {
-                navController.navigate("shopping-list/${ShoppingListItem.DEFAULT_ID}")
-            }
+                onNavigationIconClicked = onNavigationIconClicked,
+                onAddShoppingListItemClicked = onAddShoppingListItemClicked,
+            )
         }
         composable(
             "shopping-list/recommendations/{recommendBy}?from={from}",
@@ -152,14 +160,13 @@ internal fun ShoppingListNavHost(
             })
         ) {
             ShoppingListRecommendationScreen(
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .fillMaxWidth(),
+                modifier = Modifier.fillMaxSize(),
                 recommend = Recommend(
                     it.arguments?.get("recommendBy")!!,
                     From.valueOf(it.arguments?.getString("from", From.GroupedList.name)!!),
                 ),
-            ) { navController.navigateUp() }
+                onNavigationIconClicked = onNavigationIconClicked,
+            )
         }
         composable(
             "shopping-list/{id}",
@@ -169,9 +176,11 @@ internal fun ShoppingListNavHost(
                 },
             ),
         ) {
-            ShoppingListItemScreen(it.arguments?.getLong("id"), onNavigationIconClicked = {
-                navController.navigateUp()
-            })
+            ShoppingListItemScreen(
+                it.arguments?.getLong("id"),
+                modifier = Modifier.fillMaxSize(),
+                onNavigationIconClicked = onNavigationIconClicked,
+            )
         }
     }
 }
