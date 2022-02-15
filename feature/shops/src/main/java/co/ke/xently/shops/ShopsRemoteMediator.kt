@@ -25,7 +25,7 @@ class ShopsRemoteMediator(
         }
 
         return try {
-            val response = sendRequest(401) {
+            val response = sendRequest {
                 dependencies.service.shop.get(query ?: "", page, state.config.initialLoadSize)
             }
             dependencies.database.withTransaction {

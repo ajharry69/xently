@@ -6,7 +6,7 @@ import co.ke.xently.data.mapCatching
 import co.ke.xently.feature.repository.Dependencies
 import co.ke.xently.feature.utils.SEARCH_DELAY
 import co.ke.xently.products.shared.AttributeQuery
-import co.ke.xently.source.remote.retryCatchIfNecessary
+import co.ke.xently.source.remote.retryCatch
 import co.ke.xently.source.remote.sendRequest
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
@@ -21,7 +21,7 @@ open class SearchableRepository(private val dependencies: Dependencies) : ISearc
         dependencies.database.shopDao.getShops("%${query}%").mapLatest { shops ->
             if (shops.isEmpty()) {
                 delay(SEARCH_DELAY)
-                sendRequest(401) { dependencies.service.shop.get(query, size = 30) }
+                sendRequest { dependencies.service.shop.get(query, size = 30) }
                     .mapCatching { data ->
                         data.results.also {
                             dependencies.database.shopDao.add(it)
@@ -29,14 +29,14 @@ open class SearchableRepository(private val dependencies: Dependencies) : ISearc
                     }
             }
             TaskResult.Success(shops.take(5))
-        }.cancellable().retryCatchIfNecessary(this).flowOn(dependencies.dispatcher.io)
+        }.cancellable().retryCatch(this).flowOn(dependencies.dispatcher.io)
     }
 
     override fun getBrands(query: String) = Retry().run {
         dependencies.database.brandDao.get("%${query}%").mapLatest { brands ->
             if (brands.isEmpty()) {
                 delay(SEARCH_DELAY)
-                sendRequest(401) { dependencies.service.brand.get(query, size = 30) }
+                sendRequest { dependencies.service.brand.get(query, size = 30) }
                     .mapCatching { data ->
                         data.results.also {
                             dependencies.database.brandDao.add(it)
@@ -44,7 +44,7 @@ open class SearchableRepository(private val dependencies: Dependencies) : ISearc
                     }
             }
             TaskResult.Success(brands.take(5))
-        }.cancellable().retryCatchIfNecessary(this).flowOn(dependencies.dispatcher.io)
+        }.cancellable().retryCatch(this).flowOn(dependencies.dispatcher.io)
     }
 
     override fun getAttributes(query: AttributeQuery) = Retry().run {
@@ -67,7 +67,7 @@ open class SearchableRepository(private val dependencies: Dependencies) : ISearc
         }.cancellable().mapLatest { attributes ->
             if (attributes.isEmpty()) {
                 delay(SEARCH_DELAY)
-                sendRequest(401) {
+                sendRequest {
                     dependencies.service.attribute.get(query = q, filters = filters, size = 30)
                 }.mapCatching { data ->
                     data.results.flatMap { attribute ->
@@ -78,14 +78,14 @@ open class SearchableRepository(private val dependencies: Dependencies) : ISearc
                 }
             }
             TaskResult.Success(attributes.take(5))
-        }.cancellable().retryCatchIfNecessary(this).flowOn(dependencies.dispatcher.io)
+        }.cancellable().retryCatch(this).flowOn(dependencies.dispatcher.io)
     }
 
     override fun getMeasurementUnits(query: String) = Retry().run {
         dependencies.database.measurementUnitDao.get("%${query}%").mapLatest { units ->
             if (units.isEmpty()) {
                 delay(SEARCH_DELAY)
-                sendRequest(401) { dependencies.service.measurementUnit.get(query) }
+                sendRequest { dependencies.service.measurementUnit.get(query) }
                     .mapCatching { data ->
                         data.also {
                             dependencies.database.measurementUnitDao.save(it)
@@ -93,6 +93,6 @@ open class SearchableRepository(private val dependencies: Dependencies) : ISearc
                     }
             }
             TaskResult.Success(units.take(5))
-        }.cancellable().retryCatchIfNecessary(this).flowOn(dependencies.dispatcher.io)
+        }.cancellable().retryCatch(this).flowOn(dependencies.dispatcher.io)
     }
 }

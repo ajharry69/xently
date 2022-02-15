@@ -11,7 +11,7 @@ import co.ke.xently.data.TaskResult
 import co.ke.xently.data.User
 import co.ke.xently.data.getOrNull
 import co.ke.xently.feature.repository.Dependencies
-import co.ke.xently.source.remote.retryCatchIfNecessary
+import co.ke.xently.source.remote.retryCatch
 import co.ke.xently.source.remote.sendRequest
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
@@ -28,17 +28,17 @@ internal class AccountRepository @Inject constructor(private val dependencies: D
                     putString(TOKEN_VALUE_SHARED_PREFERENCE_KEY, it.token)
                 }
             }
-        }.retryCatchIfNecessary(retry).flowOn(dependencies.dispatcher.io)
+        }.retryCatch(retry).flowOn(dependencies.dispatcher.io)
 
     override fun signIn(authHeaderData: String) = Retry().run {
         flow {
-            emit(sendRequest(401) { dependencies.service.account.signIn(authHeaderData) })
+            emit(sendRequest { dependencies.service.account.signIn(authHeaderData) })
         }.doTaskWhileSavingEachLocally(this)
     }
 
     override fun signUp(user: User) = Retry().run {
         flow {
-            emit(sendRequest(401, errorClass = SignUpHttpException::class.java) {
+            emit(sendRequest(errorClass = SignUpHttpException::class.java) {
                 dependencies.service.account.signUp(user)
             })
         }.doTaskWhileSavingEachLocally(this)
@@ -46,7 +46,7 @@ internal class AccountRepository @Inject constructor(private val dependencies: D
 
     override fun resetPassword(resetPassword: User.ResetPassword) = Retry().run {
         flow {
-            emit(sendRequest(401, errorClass = PasswordResetHttpException::class.java) {
+            emit(sendRequest(errorClass = PasswordResetHttpException::class.java) {
                 dependencies.service.account.resetPassword(
                     dependencies.database.accountDao.getHistoricallyFirstUserId(),
                     resetPassword,
@@ -57,7 +57,7 @@ internal class AccountRepository @Inject constructor(private val dependencies: D
 
     override fun requestTemporaryPassword(email: String) = Retry().run {
         flow {
-            emit(sendRequest(401, errorClass = PasswordResetRequestHttpException::class.java) {
+            emit(sendRequest(errorClass = PasswordResetRequestHttpException::class.java) {
                 dependencies.service.account.requestTemporaryPassword(mapOf("email" to email))
             })
         }.doTaskWhileSavingEachLocally(this)
@@ -65,7 +65,7 @@ internal class AccountRepository @Inject constructor(private val dependencies: D
 
     override fun requestVerificationCode() = Retry().run {
         flow {
-            emit(sendRequest(401) {
+            emit(sendRequest {
                 dependencies.service.account.requestVerificationCode(dependencies.database.accountDao.getHistoricallyFirstUserId())
             })
         }.doTaskWhileSavingEachLocally(this)
@@ -73,7 +73,7 @@ internal class AccountRepository @Inject constructor(private val dependencies: D
 
     override fun verifyAccount(code: String) = Retry().run {
         flow {
-            emit(sendRequest(401, errorClass = VerificationHttpException::class.java) {
+            emit(sendRequest(errorClass = VerificationHttpException::class.java) {
                 dependencies.service.account.verify(
                     dependencies.database.accountDao.getHistoricallyFirstUserId(),
                     mapOf("code" to code),
@@ -90,9 +90,9 @@ internal class AccountRepository @Inject constructor(private val dependencies: D
             dependencies.preference.encrypted.edit {
                 remove(TOKEN_VALUE_SHARED_PREFERENCE_KEY)
             }
-            sendRequest(401) {
+            sendRequest {
                 dependencies.service.account.signout(it)
             }
-        }.retryCatchIfNecessary(this).flowOn(dependencies.dispatcher.io)
+        }.retryCatch(this).flowOn(dependencies.dispatcher.io)
     }
 }

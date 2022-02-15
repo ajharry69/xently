@@ -24,7 +24,7 @@ internal class ProductsRemoteMediator(private val dependencies: Dependencies) :
         }
 
         return try {
-            val response = sendRequest(401) {
+            val response = sendRequest {
                 dependencies.service.product.get(page, state.config.initialLoadSize)
             }
             dependencies.database.withTransaction {

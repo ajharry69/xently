@@ -6,7 +6,7 @@ import androidx.lifecycle.viewModelScope
 import co.ke.xently.data.RecommendationReport
 import co.ke.xently.data.TaskResult
 import co.ke.xently.feature.LocationPermissionViewModel
-import co.ke.xently.feature.utils.flagLoadingOnStartCatchingErrors
+import co.ke.xently.feature.utils.flagLoadingOnStart
 import co.ke.xently.shoppinglist.Recommend
 import co.ke.xently.shoppinglist.repository.IShoppingListRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -30,7 +30,7 @@ internal class ShoppingListRecommendationViewModel @Inject constructor(
     init {
         recommendationReportResult = combineTransform(recommend) {
             emitAll(repository.get(it[0])
-                .flagLoadingOnStartCatchingErrors())
+                .flagLoadingOnStart())
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000, 5000), TaskResult.Loading)
         /*viewModelScope.launch {
             recommend.collectLatest { r ->

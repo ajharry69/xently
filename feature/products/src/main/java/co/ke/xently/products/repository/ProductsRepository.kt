@@ -13,7 +13,7 @@ import co.ke.xently.products.ProductsRemoteMediator
 import co.ke.xently.products.saveLocallyWithAttributes
 import co.ke.xently.products.shared.repository.SearchableRepository
 import co.ke.xently.products.ui.detail.ProductHttpException
-import co.ke.xently.source.remote.retryCatchIfNecessary
+import co.ke.xently.source.remote.retryCatch
 import co.ke.xently.source.remote.sendRequest
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
@@ -27,11 +27,11 @@ internal class ProductsRepository @Inject constructor(private val dependencies: 
             result.getOrNull()?.also {
                 it.saveLocallyWithAttributes(dependencies.database)
             }
-        }.retryCatchIfNecessary(retry).flowOn(dependencies.dispatcher.io)
+        }.retryCatch(retry).flowOn(dependencies.dispatcher.io)
 
     override fun add(product: Product) = Retry().run {
         flow {
-            emit(sendRequest(401, errorClass = ProductHttpException::class.java) {
+            emit(sendRequest(errorClass = ProductHttpException::class.java) {
                 dependencies.service.product.add(product)
             })
         }.doTaskWhileSavingEachLocally(this)
@@ -39,7 +39,7 @@ internal class ProductsRepository @Inject constructor(private val dependencies: 
 
     override fun update(product: Product) = Retry().run {
         flow {
-            emit(sendRequest(401, errorClass = ProductHttpException::class.java) {
+            emit(sendRequest(errorClass = ProductHttpException::class.java) {
                 dependencies.service.product.update(product.id, product)
             })
         }.doTaskWhileSavingEachLocally(this)
@@ -48,7 +48,7 @@ internal class ProductsRepository @Inject constructor(private val dependencies: 
     override fun get(id: Long) = Retry().run {
         dependencies.database.productDao.get(id).map { productWithRelated ->
             if (productWithRelated == null) {
-                sendRequest(401) {
+                sendRequest {
                     dependencies.service.product.get(id)
                 }.also { result ->
                     result.getOrNull()?.also {
@@ -62,7 +62,7 @@ internal class ProductsRepository @Inject constructor(private val dependencies: 
                     attributes = productWithRelated.attributes,
                 ))
             }
-        }.retryCatchIfNecessary(this).flowOn(dependencies.dispatcher.io)
+        }.retryCatch(this).flowOn(dependencies.dispatcher.io)
     }
 
     override fun get(config: PagingConfig) = Pager(

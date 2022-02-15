@@ -3,7 +3,7 @@ package co.ke.xently.products.shared
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.ke.xently.data.*
-import co.ke.xently.feature.utils.flagLoadingOnStartCatchingErrors
+import co.ke.xently.feature.utils.flagLoadingOnStart
 import co.ke.xently.feature.utils.setCleansedQuery
 import co.ke.xently.products.shared.repository.ISearchableRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -21,7 +21,7 @@ open class SearchableViewModel(private val repository: ISearchableRepository) : 
     private val measurementUnitQuery = MutableStateFlow("")
     private val attributeQuery = MutableStateFlow(AttributeQuery())
 
-    private fun <T> Flow<TaskResult<List<T>>>.searchStateFlow() = flagLoadingOnStartCatchingErrors()
+    private fun <T> Flow<TaskResult<List<T>>>.searchStateFlow() = flagLoadingOnStart()
         .mapLatest {
             it.getOrNull() ?: emptyList()
         }.stateIn(viewModelScope,

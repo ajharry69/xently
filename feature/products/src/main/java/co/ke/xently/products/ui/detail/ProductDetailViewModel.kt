@@ -4,7 +4,7 @@ import androidx.lifecycle.viewModelScope
 import co.ke.xently.data.Product
 import co.ke.xently.data.TaskResult
 import co.ke.xently.data.TaskResult.Success
-import co.ke.xently.feature.utils.flagLoadingOnStartCatchingErrors
+import co.ke.xently.feature.utils.flagLoadingOnStart
 import co.ke.xently.products.repository.IProductsRepository
 import co.ke.xently.products.shared.SearchableViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -28,7 +28,7 @@ internal class ProductDetailViewModel @Inject constructor(
                 } else {
                     emitAll(repository.update(product))
                 }
-            }.flagLoadingOnStartCatchingErrors()
+            }.flagLoadingOnStart()
                 .collectLatest {
                     _productResult.value = it
                 }
@@ -39,7 +39,7 @@ internal class ProductDetailViewModel @Inject constructor(
         viewModelScope.launch {
             combineTransform(flowOf(id)) {
                 emitAll(repository.get(it[0]))
-            }.flagLoadingOnStartCatchingErrors()
+            }.flagLoadingOnStart()
                 .collectLatest {
                     _productResult.value = it
                 }

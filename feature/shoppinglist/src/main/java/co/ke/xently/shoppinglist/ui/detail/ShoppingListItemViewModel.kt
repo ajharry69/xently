@@ -4,7 +4,7 @@ import androidx.lifecycle.viewModelScope
 import co.ke.xently.data.ShoppingListItem
 import co.ke.xently.data.TaskResult
 import co.ke.xently.data.TaskResult.Success
-import co.ke.xently.feature.utils.flagLoadingOnStartCatchingErrors
+import co.ke.xently.feature.utils.flagLoadingOnStart
 import co.ke.xently.products.shared.SearchableViewModel
 import co.ke.xently.shoppinglist.repository.IShoppingListRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -25,7 +25,7 @@ internal class ShoppingListItemViewModel @Inject constructor(
     fun addOrUpdate(item: ShoppingListItem) {
         viewModelScope.launch {
             repository.add(item)
-                .flagLoadingOnStartCatchingErrors()
+                .flagLoadingOnStart()
                 .collectLatest {
                     _shoppingItemResult.value = it
                 }
@@ -35,7 +35,7 @@ internal class ShoppingListItemViewModel @Inject constructor(
     fun get(id: Long) {
         viewModelScope.launch {
             repository.get(id)
-                .flagLoadingOnStartCatchingErrors()
+                .flagLoadingOnStart()
                 .collectLatest {
                     _shoppingItemResult.value = it
                 }

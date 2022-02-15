@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import co.ke.xently.accounts.repository.IAccountRepository
 import co.ke.xently.data.TaskResult
 import co.ke.xently.data.User
-import co.ke.xently.feature.utils.flagLoadingOnStartCatchingErrors
+import co.ke.xently.feature.utils.flagLoadingOnStart
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -24,7 +24,7 @@ internal class VerificationViewModel @Inject constructor(
     fun verifyAccount(code: String) {
         viewModelScope.launch {
             repository.verifyAccount(code)
-                .flagLoadingOnStartCatchingErrors()
+                .flagLoadingOnStart()
                 .collectLatest {
                     _taskResult.value = it
                 }
@@ -34,7 +34,7 @@ internal class VerificationViewModel @Inject constructor(
     fun resendVerificationCode() {
         viewModelScope.launch {
             repository.requestVerificationCode()
-                .flagLoadingOnStartCatchingErrors()
+                .flagLoadingOnStart()
                 .collectLatest {
                     _taskResult.value = it
                 }

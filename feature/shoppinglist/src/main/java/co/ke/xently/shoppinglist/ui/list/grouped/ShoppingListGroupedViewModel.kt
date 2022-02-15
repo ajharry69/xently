@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.ke.xently.data.GroupedShoppingList
 import co.ke.xently.data.TaskResult
-import co.ke.xently.feature.utils.flagLoadingOnStartCatchingErrors
+import co.ke.xently.feature.utils.flagLoadingOnStart
 import co.ke.xently.shoppinglist.GroupBy
 import co.ke.xently.shoppinglist.repository.IShoppingListRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -30,20 +30,18 @@ internal class ShoppingListGroupedViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            launch {
-                groupBy.collectLatest { group ->
-                    repository.get(group)
-                        .flagLoadingOnStartCatchingErrors()
-                        .collectLatest {
-                            _groupedShoppingListResult.value = it
-                        }
-                }
-            }
-            launch {
-                groupBy.collectLatest { group ->
-                    repository.getCount(group).collectLatest {
-                        _groupedShoppingListCount.value = it
+            groupBy.collectLatest { group ->
+                repository.get(group)
+                    .flagLoadingOnStart()
+                    .collectLatest {
+                        _groupedShoppingListResult.value = it
                     }
+            }
+        }
+        viewModelScope.launch {
+            groupBy.collectLatest { group ->
+                repository.getCount(group).collectLatest {
+                    _groupedShoppingListCount.value = it
                 }
             }
         }

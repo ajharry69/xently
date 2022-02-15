@@ -10,9 +10,11 @@ import co.ke.xently.shoppinglist.GroupBy
 import co.ke.xently.shoppinglist.GroupBy.DateAdded
 import co.ke.xently.shoppinglist.Recommend
 import co.ke.xently.shoppinglist.ShoppingListRemoteMediator
-import co.ke.xently.source.remote.retryCatchIfNecessary
+import co.ke.xently.source.remote.retryCatch
 import co.ke.xently.source.remote.sendRequest
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -22,27 +24,29 @@ internal class ShoppingListRepository @Inject constructor(private val dependenci
     // TODO: Use memoization to retrieve all grouped shopping list items...
     override fun add(item: ShoppingListItem) = Retry().run {
         flow {
-            emit(sendRequest(401) { dependencies.service.shoppingList.add(item) })
+            emit(sendRequest { dependencies.service.shoppingList.add(item) })
         }.onEach { result ->
             result.getOrNull()?.also {
                 dependencies.database.shoppingListDao.save(it)
             }
-        }.retryCatchIfNecessary(this).flowOn(dependencies.dispatcher.io)
+        }.retryCatch(this).flowOn(dependencies.dispatcher.io)
     }
 
     override fun get(groupBy: GroupBy) = Retry().run {
         flow {
-            emit(sendRequest(401) { dependencies.service.shoppingList.get(groupBy = groupBy.name.lowercase()) })
+            emit(sendRequest { dependencies.service.shoppingList.get(groupBy = groupBy.name.lowercase()) })
         }.map { result ->
             result.mapCatching {
                 it.map { entry ->
-                    val shoppingList = entry.value.apply {
-                        dependencies.database.shoppingListDao.save(*toTypedArray())
+                    coroutineScope {
+                        launch(dependencies.dispatcher.io) {
+                            dependencies.database.shoppingListDao.save(entry.value)
+                        }
                     }
-                    GroupedShoppingList(group = entry.key, shoppingList = shoppingList)
+                    GroupedShoppingList(group = entry.key, shoppingList = entry.value)
                 }
             }
-        }.retryCatchIfNecessary(this).flowOn(dependencies.dispatcher.io)
+        }.retryCatch(this).flowOn(dependencies.dispatcher.io)
     }
 
     override fun getCount(groupBy: GroupBy) = when (groupBy) {
@@ -56,7 +60,7 @@ internal class ShoppingListRepository @Inject constructor(private val dependenci
     override fun get(id: Long) = Retry().run {
         dependencies.database.shoppingListDao.get(id).map { item ->
             if (item == null) {
-                sendRequest(401) { dependencies.service.shoppingList.get(id) }.apply {
+                sendRequest { dependencies.service.shoppingList.get(id) }.apply {
                     getOrNull()?.also {
                         dependencies.database.shoppingListDao.save(it)
                     }
@@ -64,13 +68,13 @@ internal class ShoppingListRepository @Inject constructor(private val dependenci
             } else {
                 TaskResult.Success(item)
             }
-        }.retryCatchIfNecessary(this).flowOn(dependencies.dispatcher.io)
+        }.retryCatch(this).flowOn(dependencies.dispatcher.io)
     }
 
     @Suppress("UNCHECKED_CAST")
     override fun get(recommend: Recommend) = Retry().run {
         flow {
-            emit(sendRequest(401) {
+            emit(sendRequest {
                 when (recommend.from) {
                     Recommend.From.Item -> {
                         val item =
@@ -97,7 +101,7 @@ internal class ShoppingListRepository @Inject constructor(private val dependenci
                     }
                 }
             })
-        }.retryCatchIfNecessary(this).flowOn(dependencies.dispatcher.io)
+        }.retryCatch(this).flowOn(dependencies.dispatcher.io)
     }
 
     override fun get(config: PagingConfig) = Pager(

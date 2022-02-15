@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import co.ke.xently.accounts.repository.IAccountRepository
 import co.ke.xently.data.TaskResult
 import co.ke.xently.data.User
-import co.ke.xently.feature.utils.flagLoadingOnStartCatchingErrors
+import co.ke.xently.feature.utils.flagLoadingOnStart
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -26,7 +26,7 @@ internal class SignInViewModel @Inject constructor(
     fun signIn(username: String, password: String) {
         viewModelScope.launch {
             repository.signIn(Credentials.basic(username, password))
-                .flagLoadingOnStartCatchingErrors()
+                .flagLoadingOnStart()
                 .collectLatest {
                     _signInResult.value = it
                 }

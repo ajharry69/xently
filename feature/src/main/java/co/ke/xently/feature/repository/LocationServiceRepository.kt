@@ -5,7 +5,7 @@ import co.ke.xently.common.ENABLE_LOCATION_TRACKING_PREFERENCE_KEY
 import co.ke.xently.common.MY_LOCATION_LATITUDE_SHARED_PREFERENCE_KEY
 import co.ke.xently.common.MY_LOCATION_LONGITUDE_SHARED_PREFERENCE_KEY
 import co.ke.xently.common.Retry
-import co.ke.xently.source.remote.retryCatchIfNecessary
+import co.ke.xently.source.remote.retryCatch
 import co.ke.xently.source.remote.sendRequest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
@@ -29,7 +29,7 @@ internal class LocationServiceRepository @Inject constructor(private val depende
     override fun updateLocation(location: Array<Double>) = Retry().run {
         flow {
             // TODO: Add user ID to location update...
-            emit(sendRequest(401) { dependencies.service.account.update(location = location) })
+            emit(sendRequest { dependencies.service.account.update(location = location) })
         }.onEach {
             dependencies.preference.encrypted.edit(commit = true) {
                 putString(
@@ -41,7 +41,7 @@ internal class LocationServiceRepository @Inject constructor(private val depende
                     location.component2().toString()
                 )
             }
-        }.retryCatchIfNecessary(this).flowOn(dependencies.dispatcher.io)
+        }.retryCatch(this).flowOn(dependencies.dispatcher.io)
     }
 
 }

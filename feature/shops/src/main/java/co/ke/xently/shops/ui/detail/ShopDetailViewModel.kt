@@ -7,7 +7,7 @@ import co.ke.xently.data.Shop
 import co.ke.xently.data.TaskResult
 import co.ke.xently.data.TaskResult.Success
 import co.ke.xently.feature.LocationPermissionViewModel
-import co.ke.xently.feature.utils.flagLoadingOnStartCatchingErrors
+import co.ke.xently.feature.utils.flagLoadingOnStart
 import co.ke.xently.shops.repository.IShopsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -30,7 +30,7 @@ internal class ShopDetailViewModel @Inject constructor(
     fun add(shop: Shop) {
         viewModelScope.launch {
             repository.add(shop)
-                .flagLoadingOnStartCatchingErrors()
+                .flagLoadingOnStart()
                 .collectLatest {
                     _shopResult.value = it
                 }
@@ -40,7 +40,7 @@ internal class ShopDetailViewModel @Inject constructor(
     fun get(id: Long) {
         viewModelScope.launch {
             repository.get(id)
-                .flagLoadingOnStartCatchingErrors()
+                .flagLoadingOnStart()
                 .collectLatest {
                     _shopResult.value = it
                 }
