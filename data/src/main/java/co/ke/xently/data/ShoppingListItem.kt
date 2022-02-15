@@ -1,6 +1,7 @@
 package co.ke.xently.data
 
 import androidx.room.Entity
+import androidx.room.Ignore
 import androidx.room.PrimaryKey
 import co.ke.xently.common.Exclude
 import co.ke.xently.common.Exclude.During.SERIALIZATION
@@ -8,26 +9,26 @@ import java.util.*
 
 @Entity(tableName = "shoppinglist")
 data class ShoppingListItem(
-    @Exclude(SERIALIZATION)
     @PrimaryKey(autoGenerate = false)
-    val id: Long = DEFAULT_ID,
-    val name: String = "",
-    val unit: String = "piece",
-    val unitQuantity: Float = 1f,
-    val purchaseQuantity: Float = 1f,
+    var id: Long = -1L,
+    var name: String = "",
+    var unit: String = "",
+    var unitQuantity: Float = 1f,
+    var purchaseQuantity: Float = 1f,
     @Exclude(SERIALIZATION)
-    val dateAdded: Date = Date(),
-    @Exclude(SERIALIZATION)
-    val naturalInput: String = "",
+    var dateAdded: Date = Date(),
+    @Ignore
+    val brands: List<Brand> = emptyList(),
+    @Ignore
+    val attributes: List<Attribute> = emptyList(),
+    @Ignore
+    @Exclude
+    val isDefault: Boolean = false,
 ) {
-    val isDefaultID: Boolean
-        get() = id == DEFAULT_ID
-
-    override fun toString() = if (naturalInput.isNotBlank()) naturalInput else {
+    override fun toString() =
         "${name.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.ROOT) else it.toString() }}, ${unitQuantity}${unit} - $purchaseQuantity"
-    }
 
     companion object {
-        const val DEFAULT_ID = -1L
+        fun default() = ShoppingListItem(isDefault = true)
     }
 }

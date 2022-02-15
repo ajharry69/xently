@@ -21,12 +21,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.PopupProperties
 
 @Composable
-fun stringRes(@StringRes string: Int, @StringRes vararg strings: Int): String {
-    return stringResource(string, *strings.map {
+fun stringRes(@StringRes string: Int, @StringRes vararg args: Int): String {
+    return stringResource(string, *args.map {
         stringResource(it)
     }.toTypedArray())
 }
 
+@Deprecated("Unnecessary abstraction", ReplaceWith("TextInputLayout", "co.ke.xently.feature.ui"))
 @Composable
 fun TextFieldErrorText(error: String, modifier: Modifier = Modifier) {
     Text(
@@ -38,7 +39,7 @@ fun TextFieldErrorText(error: String, modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun XentlyTextField(
+fun TextInputLayout(
     modifier: Modifier,
     value: TextFieldValue,
     readOnly: Boolean = false,
@@ -68,10 +69,17 @@ fun XentlyTextField(
             visualTransformation = visualTransformation,
         )
         if (isError) {
-            TextFieldErrorText(error, Modifier.fillMaxWidth())
+            Text(
+                text = error,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 16.dp, end = 12.dp),
+                color = MaterialTheme.colors.error,
+                style = MaterialTheme.typography.caption,
+            )
         } else if (!helpText.isNullOrBlank()) {
             Text(
-                helpText,
+                text = helpText,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(start = 16.dp, end = 12.dp),
@@ -90,20 +98,29 @@ fun <T> AutoCompleteTextField(
     modifier: Modifier = Modifier,
     isError: Boolean = false,
     error: String = "",
+    helpText: String? = null,
     suggestions: List<T> = emptyList(),
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions(),
     label: String? = null,
+    wasSuggestionPicked: (Boolean) -> Unit = {},
+    trailingIcon: @Composable (() -> Unit)? = null,
     suggestionItemContent: @Composable ((T) -> Unit),
 ) {
     var showDropdownMenu by remember { mutableStateOf(false) }
+    var wasSuggestionSelected by remember { mutableStateOf(false) }
+
+    SideEffect {
+        wasSuggestionPicked.invoke(wasSuggestionSelected)
+    }
 
     Box(modifier = modifier) {
-        XentlyTextField(
+        TextInputLayout(
             value = value,
             label = label,
             error = error,
             isError = isError,
+            helpText = helpText,
             keyboardOptions = keyboardOptions,
             keyboardActions = keyboardActions,
             modifier = Modifier
@@ -114,10 +131,11 @@ fun <T> AutoCompleteTextField(
                     }
                 },
             onValueChange = {
+                wasSuggestionSelected = false
                 onValueChange(it)
                 showDropdownMenu = it.text.isNotBlank()
             },
-            trailingIcon = {
+            trailingIcon = trailingIcon ?: {
                 IconButton(onClick = { showDropdownMenu = true }) {
                     Icon(Icons.Default.ArrowDropDown, contentDescription = null)
                 }
@@ -140,6 +158,7 @@ fun <T> AutoCompleteTextField(
                     onClick = {
                         onOptionSelected(it)
                         showDropdownMenu = false
+                        wasSuggestionSelected = true
                     },
                 )
             }

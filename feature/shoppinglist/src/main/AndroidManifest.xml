@@ -8,7 +8,8 @@
         <activity
             android:name=".ShoppingListActivity"
             android:exported="true"
-            android:theme="@style/Theme.Xently.NoActionBar">
+            android:theme="@style/Theme.Xently.NoActionBar"
+            android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="co.ke.xently.action.SHOPPING_LIST" />
                 <action android:name="android.intent.action.MAIN" />

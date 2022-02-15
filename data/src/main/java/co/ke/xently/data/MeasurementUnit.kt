@@ -3,6 +3,7 @@ package co.ke.xently.data
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import co.ke.xently.common.Exclude
 
 @Entity(
     tableName = "measurement_units",
@@ -16,6 +17,7 @@ data class MeasurementUnit(
     val id: Long = -1,
     val name: String = "",
     val synonym: Long? = null,
+    @Exclude
     val isDefault: Boolean = false,
 ) {
     override fun hashCode(): Int {
@@ -35,6 +37,8 @@ data class MeasurementUnit(
 
         return true
     }
+
+    override fun toString() = name
 
     companion object {
         fun default() = MeasurementUnit(isDefault = true)

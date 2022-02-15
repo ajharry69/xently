@@ -4,122 +4,74 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.map
 import co.ke.xently.common.Retry
-import co.ke.xently.common.di.qualifiers.coroutines.IODispatcher
-import co.ke.xently.data.*
+import co.ke.xently.data.Product
+import co.ke.xently.data.Shop
+import co.ke.xently.data.TaskResult
+import co.ke.xently.data.getOrNull
+import co.ke.xently.feature.repository.Dependencies
+import co.ke.xently.products.ProductsRemoteMediator
+import co.ke.xently.products.saveLocallyWithAttributes
+import co.ke.xently.products.shared.repository.SearchableRepository
 import co.ke.xently.products.ui.detail.ProductHttpException
-import co.ke.xently.source.local.Database
-import co.ke.xently.source.remote.retryCatchIfNecessary
+import co.ke.xently.source.remote.retryCatch
 import co.ke.xently.source.remote.sendRequest
-import co.ke.xently.source.remote.services.ProductService
-import co.ke.xently.source.remote.services.ShopService
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.FlowPreview
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlin.time.Duration.Companion.milliseconds
-import kotlin.time.ExperimentalTime
 
 @Singleton
-internal class ProductsRepository @Inject constructor(
-    private val service: ProductService,
-    private val shopService: ShopService,
-    private val database: Database,
-    @IODispatcher
-    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
-) : IProductsRepository {
+internal class ProductsRepository @Inject constructor(private val dependencies: Dependencies) :
+    SearchableRepository(dependencies), IProductsRepository {
+    private fun Flow<TaskResult<Product>>.doTaskWhileSavingEachLocally(retry: Retry) =
+        onEach { result ->
+            result.getOrNull()?.also {
+                it.saveLocallyWithAttributes(dependencies.database)
+            }
+        }.retryCatch(retry).flowOn(dependencies.dispatcher.io)
+
     override fun add(product: Product) = Retry().run {
         flow {
-            emit(sendRequest(401, errorClass = ProductHttpException::class.java) {
-                service.add(product)
+            emit(sendRequest(errorClass = ProductHttpException::class.java) {
+                dependencies.service.product.add(product)
             })
-        }.onEach {
-            if (it is TaskResult.Success) {
-                database.productDao.save(it.getOrThrow())
-            }
-        }.retryCatchIfNecessary(this).flowOn(ioDispatcher)
+        }.doTaskWhileSavingEachLocally(this)
     }
 
     override fun update(product: Product) = Retry().run {
         flow {
-            emit(sendRequest(401, errorClass = ProductHttpException::class.java) {
-                service.update(product.id, product)
+            emit(sendRequest(errorClass = ProductHttpException::class.java) {
+                dependencies.service.product.update(product.id, product)
             })
-        }.onEach {
-            if (it is TaskResult.Success) {
-                database.productDao.save(it.getOrThrow())
-            }
-        }.retryCatchIfNecessary(this).flowOn(ioDispatcher)
+        }.doTaskWhileSavingEachLocally(this)
     }
 
     override fun get(id: Long) = Retry().run {
-        database.productDao.get(id).map { productWithShop ->
-            if (productWithShop == null) {
-                sendRequest(401) {
-                    service.get(id)
+        dependencies.database.productDao.get(id).map { productWithRelated ->
+            if (productWithRelated == null) {
+                sendRequest {
+                    dependencies.service.product.get(id)
                 }.also { result ->
                     result.getOrNull()?.also {
-                        database.productDao.save(it)
+                        it.saveLocallyWithAttributes(dependencies.database)
                     }
                 }
             } else {
-                TaskResult.Success(productWithShop.product.copy(shop = productWithShop.shop
-                    ?: Shop.default()))
+                TaskResult.Success(productWithRelated.product.copy(
+                    shop = productWithRelated.shop ?: Shop.default(),
+                    brands = productWithRelated.brands,
+                    attributes = productWithRelated.attributes,
+                ))
             }
-        }.retryCatchIfNecessary(this).flowOn(ioDispatcher)
+        }.retryCatch(this).flowOn(dependencies.dispatcher.io)
     }
 
     override fun get(config: PagingConfig) = Pager(
         config = config,
-        remoteMediator = ProductsRemoteMediator(database, service),
-        pagingSourceFactory = database.productDao::get,
+        remoteMediator = ProductsRemoteMediator(dependencies),
+        pagingSourceFactory = dependencies.database.productDao::get,
     ).flow.map { data ->
         data.map {
             it.product.copy(shop = it.shop ?: Shop.default())
         }
-    }
-
-    @OptIn(FlowPreview::class, ExperimentalTime::class)
-    override fun getMeasurementUnits(query: String) = Retry().run {
-        database.measurementUnitDao.get("%${query}%").flatMapConcat { units ->
-            if (units.isEmpty()) {
-                flow {
-                    delay(100.milliseconds)
-                    emit(
-                        sendRequest(401) { service.getMeasurementUnits(query) }
-                            .mapCatching { data ->
-                                data.also {
-                                    database.measurementUnitDao.save(it)
-                                }.take(5)
-                            },
-                    )
-                }.cancellable()
-            } else {
-                flowOf(TaskResult.Success(units.take(5)))
-            }
-        }.cancellable().retryCatchIfNecessary(this).flowOn(ioDispatcher)
-    }
-
-    @OptIn(FlowPreview::class, ExperimentalTime::class)
-    override fun getShops(query: String): Flow<TaskResult<List<Shop>>> = Retry().run {
-        database.shopDao.getShops("%${query}%").flatMapConcat { shops ->
-            if (shops.isEmpty()) {
-                flow {
-                    delay(100.milliseconds)
-                    emit(
-                        sendRequest(401) { shopService.get(query, size = 30) }
-                            .mapCatching { data ->
-                                data.results.also {
-                                    database.shopDao.add(it)
-                                }.take(5)
-                            },
-                    )
-                }.cancellable()
-            } else {
-                flowOf(TaskResult.Success(shops.take(5)))
-            }
-        }.cancellable().retryCatchIfNecessary(this).flowOn(ioDispatcher)
     }
 }

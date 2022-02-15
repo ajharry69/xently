@@ -4,6 +4,7 @@ import java.text.DecimalFormat
 import kotlin.math.floor
 import kotlin.math.log10
 import kotlin.math.pow
+import kotlin.time.Duration.Companion.milliseconds
 
 fun Number.descriptive(): String {
     val suffix = charArrayOf(' ', 'k', 'M', 'B', 'T', 'P', 'E')
@@ -17,3 +18,5 @@ fun Number.descriptive(): String {
         DecimalFormat("#,##0").format(numValue)
     }
 }
+
+val SEARCH_DELAY = 200.milliseconds

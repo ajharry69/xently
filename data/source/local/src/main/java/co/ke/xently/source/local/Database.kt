@@ -11,7 +11,9 @@ import co.ke.xently.source.local.daos.*
         RemoteKey::class,
         Shop::class,
         User::class,
+        Brand::class,
         Product::class,
+        Attribute::class,
         ShoppingListItem::class,
         MeasurementUnit::class,
     ],
@@ -23,6 +25,8 @@ abstract class Database : RoomDatabase() {
     abstract val remoteKeyDao: RemoteKeyDao
     abstract val accountDao: AccountDao
     abstract val shopDao: ShopDao
+    abstract val brandDao: BrandDao
+    abstract val attributeDao: AttributeDao
     abstract val productDao: ProductDao
     abstract val shoppingListDao: ShoppingListDao
     abstract val measurementUnitDao: MeasurementUnitDao

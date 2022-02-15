@@ -22,8 +22,8 @@ import co.ke.xently.data.TaskResult
 import co.ke.xently.data.User
 import co.ke.xently.data.errorMessage
 import co.ke.xently.feature.ui.PasswordVisibilityToggle
+import co.ke.xently.feature.ui.TextInputLayout
 import co.ke.xently.feature.ui.ToolbarWithProgressbar
-import co.ke.xently.feature.ui.XentlyTextField
 import co.ke.xently.feature.ui.stringRes
 
 
@@ -115,7 +115,7 @@ private fun PasswordResetScreen(
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState()),
         ) {
-            XentlyTextField(
+            TextInputLayout(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp)
@@ -142,7 +142,7 @@ private fun PasswordResetScreen(
                 }
             )
             Spacer(modifier = Modifier.padding(vertical = 8.dp))
-            XentlyTextField(
+            TextInputLayout(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp),

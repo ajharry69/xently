@@ -22,8 +22,8 @@ import co.ke.xently.data.errorMessage
 import co.ke.xently.data.getOrNull
 import co.ke.xently.feature.theme.XentlyTheme
 import co.ke.xently.feature.ui.GoogleMapView
+import co.ke.xently.feature.ui.TextInputLayout
 import co.ke.xently.feature.ui.ToolbarWithProgressbar
-import co.ke.xently.feature.ui.XentlyTextField
 import co.ke.xently.feature.ui.stringRes
 import co.ke.xently.feature.utils.MAP_HEIGHT
 import co.ke.xently.shops.R
@@ -105,7 +105,7 @@ private fun ShopDetailScreen(
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState()),
         ) {
-            XentlyTextField(
+            TextInputLayout(
                 value = name,
                 onValueChange = { name = it },
                 modifier = Modifier
@@ -115,7 +115,7 @@ private fun ShopDetailScreen(
                 label = stringResource(R.string.fs_shop_item_detail_name_label),
             )
             Spacer(modifier = Modifier.padding(vertical = 8.dp))
-            XentlyTextField(
+            TextInputLayout(
                 value = taxPin,
                 onValueChange = { taxPin = it },
                 modifier = Modifier

@@ -22,8 +22,8 @@ import co.ke.xently.data.User
 import co.ke.xently.data.errorMessage
 import co.ke.xently.data.getOrNull
 import co.ke.xently.feature.ui.PasswordVisibilityToggle
+import co.ke.xently.feature.ui.TextInputLayout
 import co.ke.xently.feature.ui.ToolbarWithProgressbar
-import co.ke.xently.feature.ui.XentlyTextField
 
 @Composable
 internal fun SignUpScreen(
@@ -115,7 +115,7 @@ private fun SignUpScreen(
             Column(modifier = Modifier
                 .verticalScroll(rememberScrollState())
                 .weight(1f)) {
-                XentlyTextField(
+                TextInputLayout(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp)
@@ -132,7 +132,7 @@ private fun SignUpScreen(
                     label = stringResource(R.string.fa_signup_username_label),
                 )
                 Spacer(modifier = Modifier.padding(vertical = 8.dp))
-                XentlyTextField(
+                TextInputLayout(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp),

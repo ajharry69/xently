@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import co.ke.xently.accounts.repository.IAccountRepository
 import co.ke.xently.data.TaskResult
 import co.ke.xently.data.User
-import co.ke.xently.feature.utils.flagLoadingOnStartCatchingErrors
+import co.ke.xently.feature.utils.flagLoadingOnStart
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -24,7 +24,7 @@ internal class PasswordResetRequestViewModel @Inject constructor(
     fun requestTemporaryPassword(email: String) {
         viewModelScope.launch {
             repository.requestTemporaryPassword(email)
-                .flagLoadingOnStartCatchingErrors()
+                .flagLoadingOnStart()
                 .collectLatest {
                     _taskResult.value = it
                 }

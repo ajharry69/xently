@@ -9,7 +9,8 @@
             android:name=".ProductsActivity"
             android:exported="false"
             android:label="@string/title_activity_products"
-            android:theme="@style/Theme.Xently.NoActionBar">
+            android:theme="@style/Theme.Xently.NoActionBar"
+            android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="co.ke.xently.action.PRODUCTS" />
                 <category android:name="android.intent.category.DEFAULT" />

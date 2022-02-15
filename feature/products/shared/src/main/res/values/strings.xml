@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="fsp_product_detail_name_label">Name</string>
+    <string name="fsp_product_detail_unit_label">Measurement unit</string>
+    <string name="fsp_product_detail_unit_quantity_label">Measurement unit quantity</string>
+    <string name="fsp_product_detail_brands_title">Brands</string>
+    <string name="fsp_product_detail_brand_query_label">Search brands</string>
+    <string name="fsp_product_detail_brand_query_help_text">Click + to create a new brand</string>
+    <string name="fsp_product_detail_attributes_title">Attributes</string>
+    <string name="fsp_product_detail_attribute_name_query_label">Attribute name</string>
+    <string name="fsp_product_detail_attribute_value_query_label">Attribute value</string>
+</resources>
