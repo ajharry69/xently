@@ -8,9 +8,7 @@ import co.ke.xently.feature.utils.flagLoadingOnStart
 import co.ke.xently.shoppinglist.GroupBy
 import co.ke.xently.shoppinglist.repository.IShoppingListRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -18,10 +16,7 @@ import javax.inject.Inject
 internal class ShoppingListGroupedViewModel @Inject constructor(
     private val repository: IShoppingListRepository,
 ) : ViewModel() {
-    private val _groupedShoppingListResult =
-        MutableStateFlow<TaskResult<List<GroupedShoppingList>>>((TaskResult.Loading))
     val groupedShoppingListResult: StateFlow<TaskResult<List<GroupedShoppingList>>>
-        get() = _groupedShoppingListResult
 
     private val _groupedShoppingListCount = MutableStateFlow(mapOf<Any, Int>())
     val groupedShoppingListCount: StateFlow<Map<Any, Int>> get() = _groupedShoppingListCount
@@ -29,15 +24,10 @@ internal class ShoppingListGroupedViewModel @Inject constructor(
     private val groupBy = MutableStateFlow(GroupBy.DateAdded)
 
     init {
-        viewModelScope.launch {
-            groupBy.collectLatest { group ->
-                repository.get(group)
-                    .flagLoadingOnStart()
-                    .collectLatest {
-                        _groupedShoppingListResult.value = it
-                    }
-            }
-        }
+        groupedShoppingListResult = groupBy.flatMapLatest(repository::get)
+            .flagLoadingOnStart()
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), TaskResult.Loading)
+
         viewModelScope.launch {
             groupBy.collectLatest { group ->
                 repository.getCount(group).collectLatest {

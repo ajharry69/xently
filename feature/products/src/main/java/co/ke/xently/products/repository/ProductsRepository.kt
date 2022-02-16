@@ -5,7 +5,6 @@ import androidx.paging.PagingConfig
 import androidx.paging.map
 import co.ke.xently.common.Retry
 import co.ke.xently.data.Product
-import co.ke.xently.data.Shop
 import co.ke.xently.data.TaskResult
 import co.ke.xently.data.getOrNull
 import co.ke.xently.feature.repository.Dependencies
@@ -25,7 +24,7 @@ internal class ProductsRepository @Inject constructor(private val dependencies: 
     private fun Flow<TaskResult<Product>>.doTaskWhileSavingEachLocally(retry: Retry) =
         onEach { result ->
             result.getOrNull()?.also {
-                it.saveLocallyWithAttributes(dependencies.database)
+                it.saveLocallyWithAttributes(dependencies)
             }
         }.retryCatch(retry).flowOn(dependencies.dispatcher.io)
 
@@ -52,15 +51,11 @@ internal class ProductsRepository @Inject constructor(private val dependencies: 
                     dependencies.service.product.get(id)
                 }.also { result ->
                     result.getOrNull()?.also {
-                        it.saveLocallyWithAttributes(dependencies.database)
+                        it.saveLocallyWithAttributes(dependencies)
                     }
                 }
             } else {
-                TaskResult.Success(productWithRelated.product.copy(
-                    shop = productWithRelated.shop ?: Shop.default(),
-                    brands = productWithRelated.brands,
-                    attributes = productWithRelated.attributes,
-                ))
+                TaskResult.Success(productWithRelated.product)
             }
         }.retryCatch(this).flowOn(dependencies.dispatcher.io)
     }
@@ -70,8 +65,6 @@ internal class ProductsRepository @Inject constructor(private val dependencies: 
         remoteMediator = ProductsRemoteMediator(dependencies),
         pagingSourceFactory = dependencies.database.productDao::get,
     ).flow.map { data ->
-        data.map {
-            it.product.copy(shop = it.shop ?: Shop.default())
-        }
+        data.map { it.product }
     }
 }

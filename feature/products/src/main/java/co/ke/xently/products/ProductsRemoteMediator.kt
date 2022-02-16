@@ -8,6 +8,7 @@ import co.ke.xently.data.Product
 import co.ke.xently.data.getOrThrow
 import co.ke.xently.feature.repository.Dependencies
 import co.ke.xently.source.remote.sendRequest
+import kotlinx.coroutines.CancellationException
 
 internal class ProductsRemoteMediator(private val dependencies: Dependencies) :
     RemoteMediator<Int, Product.WithRelated>() {
@@ -36,12 +37,13 @@ internal class ProductsRemoteMediator(private val dependencies: Dependencies) :
                 response.getOrThrow().run {
                     dependencies.database.remoteKeyDao.save(toRemoteKey(REMOTE_KEY_ENDPOINT))
                     results.run {
-                        saveLocallyWithAttributes(dependencies.database)
+                        saveLocallyWithAttributes(dependencies)
                         MediatorResult.Success(endOfPaginationReached = isEmpty())
                     }
                 }
             }
         } catch (ex: Exception) {
+            if (ex is CancellationException) throw ex
             MediatorResult.Error(ex)
         }
     }

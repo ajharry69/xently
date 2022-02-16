@@ -16,6 +16,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import co.ke.xently.data.*
+import co.ke.xently.data.ShoppingListItem.Attribute
 import co.ke.xently.data.TaskResult.Loading
 import co.ke.xently.feature.ui.ToolbarWithProgressbar
 import co.ke.xently.feature.ui.VerticalLayoutModifier
@@ -75,8 +76,8 @@ private fun ShoppingListItemScreen(
     modifier: Modifier,
     result: TaskResult<ShoppingListItem?>,
     permitReAddition: Boolean = false,
-    brandSuggestions: List<Brand> = emptyList(),
-    attributeSuggestions: List<Attribute> = emptyList(),
+    brandSuggestions: List<Product.Brand> = emptyList(),
+    attributeSuggestions: List<Product.Attribute> = emptyList(),
     measurementUnits: List<MeasurementUnit> = emptyList(),
     onNavigationIconClicked: () -> Unit = {},
     onMeasurementUnitQueryChanged: (String) -> Unit = {},
@@ -195,8 +196,13 @@ private fun ShoppingListItemScreen(
                         unit = unit.text,
                         unitQuantity = unitQuantity.text.toFloat(),
                         purchaseQuantity = purchaseQuantity.text.toFloat(),
-                        brands = brands.filterNot { it.isDefault },
-                        attributes = attributes.filterNot { it.name.isBlank() or it.value.isBlank() },
+                        brands = brands.filterNot { it.isDefault }.map {
+                            ShoppingListItem.Brand(name = it.name)
+                        },
+                        attributes = attributes.filterNot { it.name.isBlank() or it.value.isBlank() }
+                            .map {
+                                Attribute(name = it.name, value = it.value, values = it.values)
+                            },
                     ))
                 }
             ) { Text(toolbarTitle.uppercase()) }
