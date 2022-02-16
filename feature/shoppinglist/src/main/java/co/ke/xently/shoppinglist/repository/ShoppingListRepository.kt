@@ -2,6 +2,7 @@ package co.ke.xently.shoppinglist.repository
 
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
+import androidx.paging.map
 import co.ke.xently.common.Retry
 import co.ke.xently.data.*
 import co.ke.xently.feature.repository.Dependencies
@@ -10,6 +11,7 @@ import co.ke.xently.shoppinglist.GroupBy
 import co.ke.xently.shoppinglist.GroupBy.DateAdded
 import co.ke.xently.shoppinglist.Recommend
 import co.ke.xently.shoppinglist.ShoppingListRemoteMediator
+import co.ke.xently.shoppinglist.saveLocallyWithAttributes
 import co.ke.xently.source.remote.retryCatch
 import co.ke.xently.source.remote.sendRequest
 import kotlinx.coroutines.coroutineScope
@@ -27,7 +29,7 @@ internal class ShoppingListRepository @Inject constructor(private val dependenci
             emit(sendRequest { dependencies.service.shoppingList.add(item) })
         }.onEach { result ->
             result.getOrNull()?.also {
-                dependencies.database.shoppingListDao.save(it)
+                it.saveLocallyWithAttributes(dependencies)
             }
         }.retryCatch(this).flowOn(dependencies.dispatcher.io)
     }
@@ -39,8 +41,8 @@ internal class ShoppingListRepository @Inject constructor(private val dependenci
             result.mapCatching {
                 it.map { entry ->
                     coroutineScope {
-                        launch(dependencies.dispatcher.io) {
-                            dependencies.database.shoppingListDao.save(entry.value)
+                        launch {
+                            entry.value.saveLocallyWithAttributes(dependencies, scope = this)
                         }
                     }
                     GroupedShoppingList(group = entry.key, shoppingList = entry.value)
@@ -58,7 +60,7 @@ internal class ShoppingListRepository @Inject constructor(private val dependenci
     }
 
     override fun get(id: Long) = Retry().run {
-        dependencies.database.shoppingListDao.get(id).map { item ->
+        dependencies.database.shoppingListDao.get(id).mapLatest { item ->
             if (item == null) {
                 sendRequest { dependencies.service.shoppingList.get(id) }.apply {
                     getOrNull()?.also {
@@ -66,7 +68,7 @@ internal class ShoppingListRepository @Inject constructor(private val dependenci
                     }
                 }
             } else {
-                TaskResult.Success(item)
+                TaskResult.Success(item.item)
             }
         }.retryCatch(this).flowOn(dependencies.dispatcher.io)
     }
@@ -77,10 +79,13 @@ internal class ShoppingListRepository @Inject constructor(private val dependenci
             emit(sendRequest {
                 when (recommend.from) {
                     Recommend.From.Item -> {
-                        val item =
-                            if (recommend.by !is ShoppingListItem) dependencies.database.shoppingListDao.get(
+                        val item = if (recommend.by !is ShoppingListItem) {
+                            dependencies.database.shoppingListDao.get(
                                 recommend.by.toString().toLong())
-                                .first()!! else recommend.by
+                                .first()!!.item
+                        } else {
+                            recommend.by
+                        }
                         dependencies.service.shoppingList.getRecommendations(
                             RecommendationRequest(listOf(item), recommend.saveBy)
                         )
@@ -108,5 +113,7 @@ internal class ShoppingListRepository @Inject constructor(private val dependenci
         config = config,
         remoteMediator = ShoppingListRemoteMediator(dependencies),
         pagingSourceFactory = dependencies.database.shoppingListDao::get,
-    ).flow
+    ).flow.map { data ->
+        data.map { it.item }
+    }
 }

@@ -17,4 +17,6 @@ data class Dispatcher @Inject constructor(
     val main: CoroutineDispatcher,
     @ComputationDispatcher
     val computation: CoroutineDispatcher,
-)
+) {
+    val default: CoroutineDispatcher = computation
+}

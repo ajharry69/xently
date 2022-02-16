@@ -12,8 +12,8 @@ import kotlinx.coroutines.flow.*
 @OptIn(ExperimentalCoroutinesApi::class)
 open class SearchableViewModel(private val repository: ISearchableRepository) : ViewModel() {
     val shopsResult: StateFlow<List<Shop>>
-    val brandsResult: StateFlow<List<Brand>>
-    val attributesResult: StateFlow<List<Attribute>>
+    val brandsResult: StateFlow<List<Product.Brand>>
+    val attributesResult: StateFlow<List<Product.Attribute>>
     val measurementUnitsResult: StateFlow<List<MeasurementUnit>>
 
     private val shopQuery = MutableStateFlow("")

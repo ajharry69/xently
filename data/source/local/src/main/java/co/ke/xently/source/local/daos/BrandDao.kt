@@ -4,14 +4,18 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy.REPLACE
 import androidx.room.Query
-import co.ke.xently.data.Brand
+import co.ke.xently.data.Product
+import co.ke.xently.data.ShoppingListItem
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface BrandDao {
     @Insert(onConflict = REPLACE)
-    suspend fun add(brands: List<Brand>)
+    suspend fun add(brands: List<Product.Brand>)
 
-    @Query("SELECT * FROM brands WHERE name LIKE :query ORDER BY name")
-    fun get(query: String): Flow<List<Brand>>
+    @Insert(onConflict = REPLACE)
+    suspend fun save(brands: List<ShoppingListItem.Brand>)
+
+    @Query("SELECT * FROM product_brands WHERE name LIKE :query ORDER BY name")
+    fun get(query: String): Flow<List<Product.Brand>>
 }

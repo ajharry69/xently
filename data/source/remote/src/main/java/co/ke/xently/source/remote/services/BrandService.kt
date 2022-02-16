@@ -1,6 +1,6 @@
 package co.ke.xently.source.remote.services
 
-import co.ke.xently.data.Brand
+import co.ke.xently.data.Product.Brand
 import co.ke.xently.source.remote.PagedData
 import retrofit2.Response
 import retrofit2.http.GET

@@ -18,10 +18,10 @@ interface ShoppingListDao {
     suspend fun save(items: List<ShoppingListItem>)
 
     @Query("SELECT * FROM shoppinglist WHERE id = :id")
-    fun get(id: Long): Flow<ShoppingListItem?>
+    fun get(id: Long): Flow<ShoppingListItem.WithRelated?>
 
     @Query("SELECT * FROM shoppinglist ORDER BY name")
-    fun get(): PagingSource<Int, ShoppingListItem>
+    fun get(): PagingSource<Int, ShoppingListItem.WithRelated>
 
     @Query("SELECT dateAdded AS `group`, COUNT(dateAdded) AS numberOfItems FROM shoppinglist GROUP BY dateAdded")
     fun getCountGroupedByDateAdded(): Flow<List<GroupedShoppingListCount>>

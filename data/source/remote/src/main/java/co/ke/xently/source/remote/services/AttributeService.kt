@@ -1,6 +1,6 @@
 package co.ke.xently.source.remote.services
 
-import co.ke.xently.data.Attribute
+import co.ke.xently.data.Product
 import co.ke.xently.source.remote.PagedData
 import retrofit2.Response
 import retrofit2.http.GET
@@ -21,5 +21,5 @@ interface AttributeService {
         cacheControl: String = "only-if-cached",
         @QueryMap
         filters: Map<String, String> = mapOf(),
-    ): Response<PagedData<Attribute>>
+    ): Response<PagedData<Product.Attribute>>
 }
