@@ -7,7 +7,8 @@ import co.ke.xently.data.Shop
 import co.ke.xently.data.TaskResult
 import co.ke.xently.data.getOrNull
 import co.ke.xently.feature.repository.Dependencies
-import co.ke.xently.shops.ShopsRemoteMediator
+import co.ke.xently.shops.mediators.AddressesRemoteMediator
+import co.ke.xently.shops.mediators.ShopsRemoteMediator
 import co.ke.xently.source.remote.retryCatch
 import co.ke.xently.source.remote.sendRequest
 import kotlinx.coroutines.flow.*
@@ -61,5 +62,12 @@ internal class ShopsRepository @Inject constructor(private val dependencies: Dep
                 get("%${query}%")
             }
         }
+    }.flow
+
+    override fun getAddresses(shopId: Long, config: PagingConfig, query: String) = Pager(
+        config = config,
+        remoteMediator = AddressesRemoteMediator(shopId, dependencies, query),
+    ) {
+        dependencies.database.addressDao.get(shopId)
     }.flow
 }

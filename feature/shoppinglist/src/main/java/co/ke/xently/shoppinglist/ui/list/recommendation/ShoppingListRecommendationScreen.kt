@@ -97,8 +97,8 @@ private fun ShoppingListRecommendationScreen(
                                             snippet("${recommendation.hits.count} item(s), ${recommendation.printableTotalPrice}")
                                             position(
                                                 LatLng(
-                                                    address.latitude,
-                                                    address.longitude,
+                                                    address.location.latitude,
+                                                    address.location.longitude,
                                                 )
                                             )
                                         }

@@ -1,4 +1,4 @@
-package co.ke.xently.shops
+package co.ke.xently.shops.mediators
 
 import androidx.paging.LoadType
 import androidx.paging.PagingState
@@ -8,6 +8,7 @@ import co.ke.xently.data.Shop
 import co.ke.xently.data.getOrThrow
 import co.ke.xently.feature.repository.Dependencies
 import co.ke.xently.source.remote.sendRequest
+import kotlinx.coroutines.CancellationException
 
 class ShopsRemoteMediator(
     private val dependencies: Dependencies,
@@ -43,6 +44,7 @@ class ShopsRemoteMediator(
                 }
             }
         } catch (ex: Exception) {
+            if (ex is CancellationException) throw ex
             MediatorResult.Error(ex)
         }
     }

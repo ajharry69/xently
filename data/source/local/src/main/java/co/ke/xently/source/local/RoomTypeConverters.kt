@@ -1,7 +1,9 @@
 package co.ke.xently.source.local
 
+import android.location.Location
 import android.net.Uri
 import androidx.room.TypeConverter
+import co.ke.xently.common.DEFAULT_LOCATION
 import java.util.*
 
 object RoomTypeConverters {
@@ -19,5 +21,20 @@ object RoomTypeConverters {
 
         @TypeConverter
         fun stringToUri(uri: String?): Uri? = uri?.run { Uri.parse(this) }
+    }
+
+    class LocationConverter {
+        @TypeConverter
+        fun locationToString(location: Location): String =
+            "${location.latitude}#${location.longitude}"
+
+        @TypeConverter
+        fun stringToLocation(location: String): Location = DEFAULT_LOCATION.apply {
+            location.split("#").also {
+                latitude = it[0].toDouble()
+                longitude = it[1].toDouble()
+            }
+
+        }
     }
 }
