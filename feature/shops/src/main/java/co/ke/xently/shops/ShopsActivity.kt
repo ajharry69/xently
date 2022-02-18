@@ -18,6 +18,7 @@ import co.ke.xently.data.Shop
 import co.ke.xently.feature.theme.XentlyTheme
 import co.ke.xently.shops.ui.detail.ShopDetailScreen
 import co.ke.xently.shops.ui.list.ShopListScreen
+import co.ke.xently.shops.ui.list.addresses.AddressListScreen
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -55,7 +56,7 @@ internal fun ShopsNavHost(
                     // TODO: Show shop's products screen
                 },
                 onAddressesClicked = {
-                    // TODO: Show shop's addresses screen
+                    navController.navigate("shops/$it/addresses")
                 },
                 onAddShopClicked = {
                     navController.navigate("shops/${Shop.default().id}")
@@ -75,6 +76,20 @@ internal fun ShopsNavHost(
             ShopDetailScreen(
                 modifier = Modifier.fillMaxSize(),
                 id = it.arguments?.getLong("id")
+            )
+        }
+        composable(
+            "shops/{id}/addresses",
+            arguments = listOf(
+                navArgument("id") {
+                    type = NavType.LongType
+                },
+            ),
+        ) {
+            AddressListScreen(
+                shopId = it.arguments!!.getLong("id"),
+                modifier = Modifier.fillMaxSize(),
+                onNavigationIconClicked = onNavigationIconClicked,
             )
         }
     }

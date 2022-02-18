@@ -1,6 +1,9 @@
 package co.ke.xently.shops.ui.detail
 
 import android.content.Context
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import co.ke.xently.data.Shop
@@ -26,6 +29,8 @@ internal class ShopDetailViewModel @Inject constructor(
     private val _shopResult = MutableStateFlow<TaskResult<Shop?>>(Success(null))
     val shopResult: StateFlow<TaskResult<Shop?>>
         get() = _shopResult
+    var result by mutableStateOf<TaskResult<Shop?>>(Success(null))
+        private set
 
     fun add(shop: Shop) {
         viewModelScope.launch {
@@ -42,6 +47,7 @@ internal class ShopDetailViewModel @Inject constructor(
             repository.get(id)
                 .flagLoadingOnStart()
                 .collectLatest {
+                    result = it
                     _shopResult.value = it
                 }
         }

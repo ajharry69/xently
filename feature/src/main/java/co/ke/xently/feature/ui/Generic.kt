@@ -61,11 +61,21 @@ fun ToolbarWithProgressbar(
     navigationIcon: @Composable () -> Unit = {
         Icon(Icons.Default.ArrowBack, stringResource(R.string.move_back))
     },
+    subTitle: String? = null,
     actions: @Composable RowScope.() -> Unit = {},
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
         TopAppBar(
-            { Text(title) },
+            title = {
+                if (subTitle.isNullOrBlank()) {
+                    Text(title)
+                } else {
+                    Column {
+                        Text(title, style = MaterialTheme.typography.body1)
+                        Text(subTitle, style = MaterialTheme.typography.caption)
+                    }
+                }
+            },
             actions = actions,
             elevation = elevation,
             contentColor = contentColor,

@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "00bf76b0521c951093b39e9360f987dc",
+    "identityHash": "1a0473924b958eb712b9db5514cfa9de",
     "entities": [
       {
         "tableName": "shops",
@@ -116,7 +116,7 @@
       },
       {
         "tableName": "addresses",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `shop` INTEGER NOT NULL, `town` TEXT NOT NULL, `location` TEXT NOT NULL, PRIMARY KEY(`shop`, `town`, `location`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `town` TEXT NOT NULL, `shopId` INTEGER NOT NULL, `location` TEXT NOT NULL, PRIMARY KEY(`shopId`, `town`, `location`))",
         "fields": [
           {
             "fieldPath": "id",
@@ -125,15 +125,15 @@
             "notNull": true
           },
           {
-            "fieldPath": "shop",
-            "columnName": "shop",
-            "affinity": "INTEGER",
-            "notNull": true
-          },
-          {
             "fieldPath": "town",
             "columnName": "town",
             "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "shopId",
+            "columnName": "shopId",
+            "affinity": "INTEGER",
             "notNull": true
           },
           {
@@ -145,7 +145,7 @@
         ],
         "primaryKey": {
           "columnNames": [
-            "shop",
+            "shopId",
             "town",
             "location"
           ],
@@ -153,13 +153,13 @@
         },
         "indices": [
           {
-            "name": "index_addresses_shop",
+            "name": "index_addresses_shopId",
             "unique": false,
             "columnNames": [
-              "shop"
+              "shopId"
             ],
             "orders": [],
-            "createSql": "CREATE INDEX IF NOT EXISTS `index_addresses_shop` ON `${TABLE_NAME}` (`shop`)"
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_addresses_shopId` ON `${TABLE_NAME}` (`shopId`)"
           }
         ],
         "foreignKeys": []
@@ -607,7 +607,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '00bf76b0521c951093b39e9360f987dc')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '1a0473924b958eb712b9db5514cfa9de')"
     ]
   }
 }

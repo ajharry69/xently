@@ -15,11 +15,11 @@ class AddressesRemoteMediator(
     private val dependencies: Dependencies,
     private val query: String? = null,
     private val preLoad: (suspend () -> Unit)? = null,
-) : RemoteMediator<Int, Address>() {
+) : RemoteMediator<Int, Address.WithShop>() {
     private val remoteKeyEndpoint = "/api/shops/${shopId}/addresses/"
     override suspend fun load(
         loadType: LoadType,
-        state: PagingState<Int, Address>,
+        state: PagingState<Int, Address.WithShop>,
     ): MediatorResult {
         preLoad?.invoke()
         val page: Int = when (loadType) {

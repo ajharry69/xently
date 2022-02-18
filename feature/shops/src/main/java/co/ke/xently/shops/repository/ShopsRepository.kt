@@ -2,6 +2,7 @@ package co.ke.xently.shops.repository
 
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
+import androidx.paging.map
 import co.ke.xently.common.Retry
 import co.ke.xently.data.Shop
 import co.ke.xently.data.TaskResult
@@ -69,5 +70,7 @@ internal class ShopsRepository @Inject constructor(private val dependencies: Dep
         remoteMediator = AddressesRemoteMediator(shopId, dependencies, query),
     ) {
         dependencies.database.addressDao.get(shopId)
-    }.flow
+    }.flow.map { data ->
+        data.map { it.address }
+    }
 }
