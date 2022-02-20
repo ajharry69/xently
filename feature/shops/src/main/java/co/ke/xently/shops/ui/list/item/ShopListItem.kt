@@ -42,39 +42,11 @@ internal fun ShopListItem(
                 text = shop.name,
                 style = MaterialTheme.typography.body1
             )
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(IntrinsicSize.Min),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(text = shop.taxPin, style = MaterialTheme.typography.caption)
-                Divider(
-                    modifier = Modifier
-                        .fillMaxHeight()
-                        .width(1.dp),
-                )
-                Text(
-                    resources.getQuantityString(
-                        R.plurals.fs_shop_item_locations,
-                        shop.addressesCount,
-                        shop.addressesCount
-                    ), style = MaterialTheme.typography.caption
-                )
-                Divider(
-                    modifier = Modifier
-                        .fillMaxHeight()
-                        .width(1.dp),
-                )
-                Text(
-                    resources.getQuantityString(
-                        R.plurals.fs_shop_item_products,
-                        shop.productsCount,
-                        shop.productsCount
-                    ),
-                    style = MaterialTheme.typography.caption,
-                )
-            }
+            Text(
+                modifier = Modifier.fillMaxWidth(),
+                text = shop.taxPin,
+                style = MaterialTheme.typography.caption,
+            )
         }
         Box(modifier = Modifier.width(IntrinsicSize.Min)) {
             IconButton(onClick = { showDropMenu = true }) {
@@ -97,52 +69,64 @@ internal fun ShopListItem(
                         showDropMenu = false
                     },
                 ) { Text(stringResource(R.string.update)) }
-                DropdownMenuItem(
-                    onClick = {
-                        onProductsClicked(shop.id)
-                        showDropMenu = false
-                    },
-                ) { Text(stringResource(R.string.fs_shop_item_menu_products)) }
-                DropdownMenuItem(
-                    onClick = {
-                        onAddressesClicked(shop.id)
-                        showDropMenu = false
-                    },
-                ) { Text(stringResource(R.string.fs_shop_item_menu_addresses)) }
+                if (shop.productsCount > 0) {
+                    DropdownMenuItem(
+                        onClick = {
+                            onProductsClicked(shop.id)
+                            showDropMenu = false
+                        },
+                    ) {
+                        Text(resources.getQuantityString(
+                            R.plurals.fs_shop_item_menu_products,
+                            shop.productsCount,
+                            shop.productsCount
+                        ))
+                    }
+                }
+                if (shop.addressesCount > 0) {
+                    DropdownMenuItem(
+                        onClick = {
+                            onAddressesClicked(shop.id)
+                            showDropMenu = false
+                        },
+                    ) {
+                        Text(resources.getQuantityString(
+                            R.plurals.fs_shop_item_menu_addresses,
+                            shop.addressesCount,
+                            shop.addressesCount
+                        ))
+                    }
+                }
             }
         }
     }
 }
 
-@Preview("Shop item", showBackground = true)
+@Preview(showBackground = true)
 @Composable
-private fun ShopListItemPreview() {
+private fun ShopListItem() {
     XentlyTheme {
-        ShopListItem(
-            modifier = Modifier.fillMaxWidth(),
-            shop = Shop(
-                name = "Shop #1000",
-                taxPin = "P000111222B",
-                productsCount = Random.nextInt(0, 500),
-                addressesCount = Random.nextInt(0, 50),
-            ),
-        )
-    }
-}
+        Column {
+            ShopListItem(
+                modifier = Modifier.fillMaxWidth(),
+                shop = Shop(
+                    name = "Shop #1000",
+                    taxPin = "P000111222B",
+                    productsCount = Random.nextInt(0, 500),
+                    addressesCount = Random.nextInt(0, 50),
+                ),
+            )
 
-@Preview("Shop item with popup menu showing", showBackground = true)
-@Composable
-private fun ShopListItemPopupMenuShowingPreview() {
-    XentlyTheme {
-        ShopListItem(
-            modifier = Modifier.fillMaxWidth(),
-            showPopupMenu = true,
-            shop = Shop(
-                name = "Shop #1000",
-                taxPin = "P000111222B",
-                productsCount = Random.nextInt(0, 500),
-                addressesCount = Random.nextInt(0, 50),
-            ),
-        )
+            ShopListItem(
+                modifier = Modifier.fillMaxWidth(),
+                showPopupMenu = true,
+                shop = Shop(
+                    name = "Shop #1001",
+                    taxPin = "P000111222C",
+                    productsCount = Random.nextInt(0, 500),
+                    addressesCount = Random.nextInt(0, 50),
+                ),
+            )
+        }
     }
 }
