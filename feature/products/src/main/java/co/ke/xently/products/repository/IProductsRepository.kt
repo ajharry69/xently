@@ -11,5 +11,6 @@ interface IProductsRepository : ISearchableRepository {
     fun add(product: Product): Flow<TaskResult<Product>>
     fun update(product: Product): Flow<TaskResult<Product>>
     fun get(id: Long): Flow<TaskResult<Product>>
-    fun get(config: PagingConfig): Flow<PagingData<Product>>
+    fun get(shopId: Long?, config: PagingConfig): Flow<PagingData<Product>>
+    fun getShopName(shopId: Long): Flow<String?>
 }

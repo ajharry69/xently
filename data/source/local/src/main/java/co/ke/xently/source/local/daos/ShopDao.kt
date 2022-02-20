@@ -16,6 +16,9 @@ interface ShopDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun add(shops: List<Shop>)
 
+    @Query("SELECT name FROM shops WHERE id = :id")
+    fun getShopName(id: Long): Flow<String?>
+
     @Query("SELECT * FROM shops ORDER BY name")
     fun get(): PagingSource<Int, Shop>
 

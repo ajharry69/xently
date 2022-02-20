@@ -13,7 +13,13 @@ import javax.inject.Inject
 internal class ProductListViewModel @Inject constructor(
     private val repository: IProductsRepository,
 ) : ViewModel() {
-    fun get(config: PagingConfig) = combineTransform(flowOf(config)) {
-        emitAll(repository.get(it[0]))
+    fun getShopName(shopId: Long) = repository.getShopName(shopId).stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(replayExpirationMillis = 5000),
+        null,
+    )
+
+    fun get(config: PagingConfig, shopId: Long?) = combineTransform(flowOf(config)) {
+        emitAll(repository.get(shopId, it[0]))
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), PagingData.empty())
 }

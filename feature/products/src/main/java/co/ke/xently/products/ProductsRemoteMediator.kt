@@ -10,8 +10,17 @@ import co.ke.xently.feature.repository.Dependencies
 import co.ke.xently.source.remote.sendRequest
 import kotlinx.coroutines.CancellationException
 
-internal class ProductsRemoteMediator(private val dependencies: Dependencies) :
-    RemoteMediator<Int, Product.WithRelated>() {
+internal class ProductsRemoteMediator(
+    private val dependencies: Dependencies,
+    private val shopId: Long? = null,
+    private val query: String = "",
+) : RemoteMediator<Int, Product.WithRelated>() {
+    private val remoteKeyEndpoint = if (shopId == null) {
+        "/api/products/"
+    } else {
+        "/api/shops/$shopId/products/"
+    }
+
     override suspend fun load(
         loadType: LoadType,
         state: PagingState<Int, Product.WithRelated>,
@@ -20,22 +29,31 @@ internal class ProductsRemoteMediator(private val dependencies: Dependencies) :
             LoadType.REFRESH -> 1
             LoadType.APPEND -> return MediatorResult.Success(endOfPaginationReached = true)
             LoadType.PREPEND -> dependencies.database.withTransaction {
-                dependencies.database.remoteKeyDao.get(REMOTE_KEY_ENDPOINT)
+                dependencies.database.remoteKeyDao.get(remoteKeyEndpoint)
             }?.nextPage ?: return MediatorResult.Success(endOfPaginationReached = true)
         }
 
         return try {
             val response = sendRequest {
-                dependencies.service.product.get(page, state.config.initialLoadSize)
+                if (shopId == null) {
+                    dependencies.service.product.get(query, page, state.config.initialLoadSize)
+                } else {
+                    dependencies.service.shop.getProducts(
+                        shopId = shopId,
+                        query = query,
+                        page = page,
+                        size = state.config.initialLoadSize,
+                    )
+                }
             }
             dependencies.database.withTransaction {
                 if (loadType == LoadType.REFRESH) {
-                    dependencies.database.remoteKeyDao.delete(REMOTE_KEY_ENDPOINT)
+                    dependencies.database.remoteKeyDao.delete(remoteKeyEndpoint)
                     dependencies.database.productDao.deleteAll()
                 }
 
                 response.getOrThrow().run {
-                    dependencies.database.remoteKeyDao.save(toRemoteKey(REMOTE_KEY_ENDPOINT))
+                    dependencies.database.remoteKeyDao.save(toRemoteKey(remoteKeyEndpoint))
                     results.run {
                         saveLocallyWithAttributes(dependencies)
                         MediatorResult.Success(endOfPaginationReached = isEmpty())
@@ -46,9 +64,5 @@ internal class ProductsRemoteMediator(private val dependencies: Dependencies) :
             if (ex is CancellationException) throw ex
             MediatorResult.Error(ex)
         }
-    }
-
-    private companion object {
-        private const val REMOTE_KEY_ENDPOINT = "/api/products/"
     }
 }

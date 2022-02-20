@@ -4,6 +4,7 @@ import android.location.Location
 import java.text.SimpleDateFormat
 import java.util.*
 
+//const val DEEPLINK_BASE_URL = "xently.co.ke"
 const val TAG = "Xently"
 const val ENCRYPTED_SHARED_PREFERENCE_KEY = "co.ke.xently.ENCRYPTED_SHARED_PREFERENCE_KEY"
 const val UNENCRYPTED_SHARED_PREFERENCE_KEY = "co.ke.xently.UNENCRYPTED_SHARED_PREFERENCE_KEY"
