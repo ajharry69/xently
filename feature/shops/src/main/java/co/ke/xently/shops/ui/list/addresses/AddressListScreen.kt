@@ -11,14 +11,14 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.paging.PagingConfig
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
-import androidx.paging.compose.itemsIndexed
+import androidx.paging.compose.items
 import co.ke.xently.data.Address
-import co.ke.xently.data.Shop
 import co.ke.xently.feature.ui.AppendOnPagedData
 import co.ke.xently.feature.ui.PagedDataScreen
 import co.ke.xently.feature.ui.ToolbarWithProgressbar
 import co.ke.xently.shops.R
 import co.ke.xently.shops.ui.list.addresses.item.AddressListItem
+import kotlinx.coroutines.flow.collectLatest
 
 @Composable
 internal fun AddressListScreen(
@@ -30,31 +30,38 @@ internal fun AddressListScreen(
     val config = PagingConfig(20, enablePlaceholders = false)
 
     val addresses = viewModel.get(shopId, config).collectAsLazyPagingItems()
-    AddressListScreen(modifier, addresses, onNavigationIconClicked)
+    var shopName by remember {
+        mutableStateOf<String?>(null)
+    }
+    LaunchedEffect(shopId) {
+        viewModel.getShopName(shopId).collectLatest {
+            shopName = it
+        }
+    }
+    AddressListScreen(modifier, addresses, shopName, onNavigationIconClicked)
 }
 
 @Composable
 private fun AddressListScreen(
     modifier: Modifier = Modifier,
     addresses: LazyPagingItems<Address>,
+    shopName: String? = null,
     onNavigationIconClicked: () -> Unit,
 ) {
     val scaffoldState = rememberScaffoldState()
-    var shop by remember { mutableStateOf<Shop?>(null) }
     Scaffold(
         scaffoldState = scaffoldState,
         topBar = {
             ToolbarWithProgressbar(
                 title = stringResource(R.string.fs_toolbar_title_addresses),
+                subTitle = shopName,
                 onNavigationIconClicked = onNavigationIconClicked,
-                subTitle = shop?.name ?: "",
             )
         },
     ) { paddingValues ->
         PagedDataScreen(modifier.padding(paddingValues), addresses) {
-            itemsIndexed(addresses) { index, address ->
+            items(addresses) { address ->
                 if (address != null) {
-                    if (index == 0) shop = address.shop
                     AddressListItem(address, modifier = Modifier.fillMaxWidth())
                 } // TODO: Show placeholders on null products...
             }

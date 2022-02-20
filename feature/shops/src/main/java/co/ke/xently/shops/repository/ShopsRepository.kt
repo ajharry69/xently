@@ -73,4 +73,6 @@ internal class ShopsRepository @Inject constructor(private val dependencies: Dep
     }.flow.map { data ->
         data.map { it.address }
     }
+
+    override fun getShopName(shopId: Long) = dependencies.database.shopDao.getShopName(shopId)
 }
