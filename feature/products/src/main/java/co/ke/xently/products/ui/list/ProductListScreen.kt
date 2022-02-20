@@ -72,8 +72,8 @@ private fun ProductListScreen(
         topBar = {
             ToolbarWithProgressbar(
                 title = stringResource(R.string.title_activity_products),
-                subTitle = shopName,
                 onNavigationIconClicked = onNavigationIconClicked,
+                subTitle = shopName,
             )
         },
         floatingActionButton = {

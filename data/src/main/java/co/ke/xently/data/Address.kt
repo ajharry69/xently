@@ -25,6 +25,13 @@ data class Address(
     @SerializedName("coordinates")
     var location: Location = DEFAULT_LOCATION,
 ) {
+    override fun toString(): String {
+        return "${town}, ${String.format("%.4f", location.latitude)},${
+            String.format("%.4f",
+                location.longitude)
+        }".replace(Regex("(^\\s*,\\s+)|(\\s*,\\s+$)"), "")
+    }
+
     data class WithShop(
         @Embedded
         val a: Address,

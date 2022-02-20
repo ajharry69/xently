@@ -90,7 +90,7 @@ private fun PasswordResetRequestScreen(
             ToolbarWithProgressbar(
                 toolbarTitle,
                 onNavigationIconClicked,
-                result is TaskResult.Loading,
+                showProgress = result is TaskResult.Loading,
             )
         },
     ) { paddingValues ->

@@ -54,8 +54,8 @@ private fun AddressListScreen(
         topBar = {
             ToolbarWithProgressbar(
                 title = stringResource(R.string.fs_toolbar_title_addresses),
-                subTitle = shopName,
                 onNavigationIconClicked = onNavigationIconClicked,
+                subTitle = shopName,
             )
         },
     ) { paddingValues ->

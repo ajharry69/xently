@@ -2,11 +2,11 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "1a0473924b958eb712b9db5514cfa9de",
+    "identityHash": "f4a347d9801d599ef7edaa317bf6a370",
     "entities": [
       {
         "tableName": "shops",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `name` TEXT NOT NULL, `taxPin` TEXT NOT NULL, `productsCount` INTEGER NOT NULL, `addressesCount` INTEGER NOT NULL, `isDefault` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `name` TEXT NOT NULL, `taxPin` TEXT NOT NULL, `productsCount` INTEGER NOT NULL, `addressesCount` INTEGER NOT NULL, PRIMARY KEY(`id`))",
         "fields": [
           {
             "fieldPath": "id",
@@ -35,12 +35,6 @@
           {
             "fieldPath": "addressesCount",
             "columnName": "addressesCount",
-            "affinity": "INTEGER",
-            "notNull": true
-          },
-          {
-            "fieldPath": "isDefault",
-            "columnName": "isDefault",
             "affinity": "INTEGER",
             "notNull": true
           }
@@ -607,7 +601,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '1a0473924b958eb712b9db5514cfa9de')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'f4a347d9801d599ef7edaa317bf6a370')"
     ]
   }
 }

@@ -127,7 +127,9 @@ private fun ShoppingListItemScreen(
     Scaffold(
         scaffoldState = scaffoldState,
         topBar = {
-            ToolbarWithProgressbar(toolbarTitle, onNavigationIconClicked, result is Loading)
+            ToolbarWithProgressbar(toolbarTitle,
+                onNavigationIconClicked,
+                showProgress = result is Loading)
         },
     ) { paddingValues ->
         Column(
