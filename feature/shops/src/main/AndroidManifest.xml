@@ -7,12 +7,23 @@
     <application>
         <activity
             android:name=".ShopsActivity"
-            android:exported="false"
+            android:exported="true"
             android:label="@string/title_activity_shops"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="co.ke.xently.action.SHOPS" />
                 <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.BROWSABLE" />
+                <category android:name="android.intent.category.DEFAULT" />
+
+                <data
+                    android:host="shops"
+                    android:pathPattern="/..*/addresses/*"
+                    android:scheme="xently" />
             </intent-filter>
         </activity>
     </application>

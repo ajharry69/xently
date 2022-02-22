@@ -14,6 +14,7 @@ import androidx.compose.ui.viewinterop.NoOpUpdate
 import co.ke.xently.feature.R
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.google.android.libraries.maps.CameraUpdateFactory
+import com.google.android.libraries.maps.GoogleMap
 import com.google.android.libraries.maps.MapView
 import com.google.android.libraries.maps.model.LatLng
 import com.google.android.libraries.maps.model.MarkerOptions
@@ -24,9 +25,10 @@ import com.google.maps.android.ktx.awaitMap
 fun GoogleMapView(
     modifier: Modifier,
     currentPosition: LatLng = rememberMyLocation(),
-    markerPositions: Array<MarkerOptions> = arrayOf(),
+    markerPositions: List<MarkerOptions> = emptyList(),
     onMapViewUpdated: (MapView) -> Unit = NoOpUpdate,
     onLocationPermissionChanged: ((permissionGranted: Boolean) -> Unit) = {},
+    setUp: GoogleMap.() -> Unit = {},
 ) {
     // The MapView lifecycle is handled by this composable. As the MapView also needs to be updated
     // with input from Compose UI, those updates are encapsulated into the GoogleMapViewContainer
@@ -40,18 +42,20 @@ fun GoogleMapView(
         markerPositions,
         onMapViewUpdated,
         onLocationPermissionChanged,
+        setUp,
     )
 }
 
 @SuppressLint("MissingPermission")
 @Composable
-fun GoogleMapViewContainer(
+private fun GoogleMapViewContainer(
     modifier: Modifier,
     map: MapView,
     currentPosition: LatLng,
-    markerPositions: Array<MarkerOptions>,
+    markerPositions: List<MarkerOptions>,
     onMapViewUpdated: (MapView) -> Unit = NoOpUpdate,
     onLocationPermissionChanged: (permissionGranted: Boolean) -> Unit,
+    setUp: GoogleMap.() -> Unit,
 ) {
     val myLocation by rememberSaveable(currentPosition.latitude, currentPosition.longitude) {
         mutableStateOf(currentPosition)
@@ -92,14 +96,10 @@ fun GoogleMapViewContainer(
             text = { Text(stringResource(R.string.location_permission_rationale)) },
         )
     }
-    val cameraPositions = remember(*markerPositions) { markerPositions }
-
-    SideEffect {
-        onLocationPermissionChanged(permissionState.allPermissionsGranted)
-    }
 
     LaunchedEffect(map, permissionState.allPermissionsGranted) {
-        val googleMap = map.awaitMap().apply {
+        onLocationPermissionChanged(permissionState.allPermissionsGranted)
+        map.awaitMap().apply {
             uiSettings.apply {
                 isZoomControlsEnabled = true
                 isZoomGesturesEnabled = true
@@ -107,11 +107,12 @@ fun GoogleMapViewContainer(
             }
             isMyLocationEnabled = permissionState.allPermissionsGranted
             setMinZoomPreference(15f)
+            markerPositions.forEach {
+                addMarker(it)
+            }
+            moveCamera(CameraUpdateFactory.newLatLng(myLocation))
+            setUp()
         }
-        cameraPositions.forEach {
-            googleMap.addMarker(it)
-        }
-        googleMap.moveCamera(CameraUpdateFactory.newLatLng(myLocation))
     }
     AndroidView(modifier = modifier, factory = { map }, update = onMapViewUpdated)
 }

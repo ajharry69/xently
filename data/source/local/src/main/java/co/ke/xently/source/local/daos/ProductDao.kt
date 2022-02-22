@@ -18,8 +18,15 @@ interface ProductDao {
     fun get(): PagingSource<Int, Product.WithRelated>
 
     @Transaction
+    @Query("SELECT * FROM products WHERE shopId = :shopId ORDER BY dateAdded DESC")
+    fun getForShop(shopId: Long): PagingSource<Int, Product.WithRelated>
+
+    @Transaction
     @Query("SELECT * FROM products WHERE id = :id")
     fun get(id: Long): Flow<Product.WithRelated?>
+
+    @Query("DELETE FROM products WHERE shopId = :shopId")
+    suspend fun deleteAll(shopId: Long): Int
 
     @Query("DELETE FROM products")
     suspend fun deleteAll(): Int

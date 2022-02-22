@@ -2,49 +2,11 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "cf73d6be8ed134e8dce0d2c3ea284dd6",
+    "identityHash": "8901e60dbde613a7d498b299191c8427",
     "entities": [
       {
-        "tableName": "remote_keys",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`endpoint` TEXT NOT NULL, `prevPage` INTEGER, `nextPage` INTEGER, `totalItems` INTEGER NOT NULL, PRIMARY KEY(`endpoint`))",
-        "fields": [
-          {
-            "fieldPath": "endpoint",
-            "columnName": "endpoint",
-            "affinity": "TEXT",
-            "notNull": true
-          },
-          {
-            "fieldPath": "prevPage",
-            "columnName": "prevPage",
-            "affinity": "INTEGER",
-            "notNull": false
-          },
-          {
-            "fieldPath": "nextPage",
-            "columnName": "nextPage",
-            "affinity": "INTEGER",
-            "notNull": false
-          },
-          {
-            "fieldPath": "totalItems",
-            "columnName": "totalItems",
-            "affinity": "INTEGER",
-            "notNull": true
-          }
-        ],
-        "primaryKey": {
-          "columnNames": [
-            "endpoint"
-          ],
-          "autoGenerate": false
-        },
-        "indices": [],
-        "foreignKeys": []
-      },
-      {
         "tableName": "shops",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `name` TEXT NOT NULL, `taxPin` TEXT NOT NULL, `productsCount` INTEGER NOT NULL, `addressesCount` INTEGER NOT NULL, `isDefault` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `name` TEXT NOT NULL, `taxPin` TEXT NOT NULL, `productsCount` INTEGER NOT NULL, `addressesCount` INTEGER NOT NULL, PRIMARY KEY(`id`))",
         "fields": [
           {
             "fieldPath": "id",
@@ -73,12 +35,6 @@
           {
             "fieldPath": "addressesCount",
             "columnName": "addressesCount",
-            "affinity": "INTEGER",
-            "notNull": true
-          },
-          {
-            "fieldPath": "isDefault",
-            "columnName": "isDefault",
             "affinity": "INTEGER",
             "notNull": true
           }
@@ -148,6 +104,74 @@
             ],
             "orders": [],
             "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_accounts_email` ON `${TABLE_NAME}` (`email`)"
+          }
+        ],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "addresses",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `town` TEXT NOT NULL, `shopId` INTEGER NOT NULL, `location` TEXT NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "town",
+            "columnName": "town",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "shopId",
+            "columnName": "shopId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "location",
+            "columnName": "location",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "columnNames": [
+            "id"
+          ],
+          "autoGenerate": false
+        },
+        "indices": [
+          {
+            "name": "index_addresses_shopId",
+            "unique": false,
+            "columnNames": [
+              "shopId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_addresses_shopId` ON `${TABLE_NAME}` (`shopId`)"
+          },
+          {
+            "name": "index_addresses_location",
+            "unique": false,
+            "columnNames": [
+              "location"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_addresses_location` ON `${TABLE_NAME}` (`location`)"
+          },
+          {
+            "name": "index_addresses_shopId_town_location",
+            "unique": true,
+            "columnNames": [
+              "shopId",
+              "town",
+              "location"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_addresses_shopId_town_location` ON `${TABLE_NAME}` (`shopId`, `town`, `location`)"
           }
         ],
         "foreignKeys": []
@@ -231,6 +255,44 @@
         "foreignKeys": []
       },
       {
+        "tableName": "remote_keys",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`endpoint` TEXT NOT NULL, `prevPage` INTEGER, `nextPage` INTEGER, `totalItems` INTEGER NOT NULL, PRIMARY KEY(`endpoint`))",
+        "fields": [
+          {
+            "fieldPath": "endpoint",
+            "columnName": "endpoint",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "prevPage",
+            "columnName": "prevPage",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "nextPage",
+            "columnName": "nextPage",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "totalItems",
+            "columnName": "totalItems",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "columnNames": [
+            "endpoint"
+          ],
+          "autoGenerate": false
+        },
+        "indices": [],
+        "foreignKeys": []
+      },
+      {
         "tableName": "product_brands",
         "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`name` TEXT NOT NULL, `relatedId` INTEGER NOT NULL, PRIMARY KEY(`name`, `relatedId`))",
         "fields": [
@@ -274,6 +336,114 @@
             "createSql": "CREATE INDEX IF NOT EXISTS `index_product_brands_relatedId` ON `${TABLE_NAME}` (`relatedId`)"
           }
         ],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "measurement_units",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `name` TEXT NOT NULL, `synonym` INTEGER, `isDefault` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "synonym",
+            "columnName": "synonym",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "isDefault",
+            "columnName": "isDefault",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "columnNames": [
+            "id"
+          ],
+          "autoGenerate": false
+        },
+        "indices": [
+          {
+            "name": "index_measurement_units_name",
+            "unique": true,
+            "columnNames": [
+              "name"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_measurement_units_name` ON `${TABLE_NAME}` (`name`)"
+          },
+          {
+            "name": "index_measurement_units_name_synonym",
+            "unique": true,
+            "columnNames": [
+              "name",
+              "synonym"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_measurement_units_name_synonym` ON `${TABLE_NAME}` (`name`, `synonym`)"
+          }
+        ],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "shoppinglist",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `name` TEXT NOT NULL, `unit` TEXT NOT NULL, `unitQuantity` REAL NOT NULL, `purchaseQuantity` REAL NOT NULL, `dateAdded` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "unit",
+            "columnName": "unit",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "unitQuantity",
+            "columnName": "unitQuantity",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "purchaseQuantity",
+            "columnName": "purchaseQuantity",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "dateAdded",
+            "columnName": "dateAdded",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "columnNames": [
+            "id"
+          ],
+          "autoGenerate": false
+        },
+        "indices": [],
         "foreignKeys": []
       },
       {
@@ -336,56 +506,6 @@
             "createSql": "CREATE INDEX IF NOT EXISTS `index_product_attributes_relatedId` ON `${TABLE_NAME}` (`relatedId`)"
           }
         ],
-        "foreignKeys": []
-      },
-      {
-        "tableName": "shoppinglist",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `name` TEXT NOT NULL, `unit` TEXT NOT NULL, `unitQuantity` REAL NOT NULL, `purchaseQuantity` REAL NOT NULL, `dateAdded` INTEGER NOT NULL, PRIMARY KEY(`id`))",
-        "fields": [
-          {
-            "fieldPath": "id",
-            "columnName": "id",
-            "affinity": "INTEGER",
-            "notNull": true
-          },
-          {
-            "fieldPath": "name",
-            "columnName": "name",
-            "affinity": "TEXT",
-            "notNull": true
-          },
-          {
-            "fieldPath": "unit",
-            "columnName": "unit",
-            "affinity": "TEXT",
-            "notNull": true
-          },
-          {
-            "fieldPath": "unitQuantity",
-            "columnName": "unitQuantity",
-            "affinity": "REAL",
-            "notNull": true
-          },
-          {
-            "fieldPath": "purchaseQuantity",
-            "columnName": "purchaseQuantity",
-            "affinity": "REAL",
-            "notNull": true
-          },
-          {
-            "fieldPath": "dateAdded",
-            "columnName": "dateAdded",
-            "affinity": "INTEGER",
-            "notNull": true
-          }
-        ],
-        "primaryKey": {
-          "columnNames": [
-            "id"
-          ],
-          "autoGenerate": false
-        },
-        "indices": [],
         "foreignKeys": []
       },
       {
@@ -494,70 +614,12 @@
           }
         ],
         "foreignKeys": []
-      },
-      {
-        "tableName": "measurement_units",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `name` TEXT NOT NULL, `synonym` INTEGER, `isDefault` INTEGER NOT NULL, PRIMARY KEY(`id`))",
-        "fields": [
-          {
-            "fieldPath": "id",
-            "columnName": "id",
-            "affinity": "INTEGER",
-            "notNull": true
-          },
-          {
-            "fieldPath": "name",
-            "columnName": "name",
-            "affinity": "TEXT",
-            "notNull": true
-          },
-          {
-            "fieldPath": "synonym",
-            "columnName": "synonym",
-            "affinity": "INTEGER",
-            "notNull": false
-          },
-          {
-            "fieldPath": "isDefault",
-            "columnName": "isDefault",
-            "affinity": "INTEGER",
-            "notNull": true
-          }
-        ],
-        "primaryKey": {
-          "columnNames": [
-            "id"
-          ],
-          "autoGenerate": false
-        },
-        "indices": [
-          {
-            "name": "index_measurement_units_name",
-            "unique": true,
-            "columnNames": [
-              "name"
-            ],
-            "orders": [],
-            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_measurement_units_name` ON `${TABLE_NAME}` (`name`)"
-          },
-          {
-            "name": "index_measurement_units_name_synonym",
-            "unique": true,
-            "columnNames": [
-              "name",
-              "synonym"
-            ],
-            "orders": [],
-            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_measurement_units_name_synonym` ON `${TABLE_NAME}` (`name`, `synonym`)"
-          }
-        ],
-        "foreignKeys": []
       }
     ],
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'cf73d6be8ed134e8dce0d2c3ea284dd6')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '8901e60dbde613a7d498b299191c8427')"
     ]
   }
 }

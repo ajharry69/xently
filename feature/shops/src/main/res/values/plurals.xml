@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <plurals name="fs_shop_item_locations">
-        <item quantity="one">%d location</item>
-        <item quantity="other">%d locations</item>
+    <plurals name="fs_shop_item_menu_addresses">
+        <item quantity="one">Address (%d)</item>
+        <item quantity="other">Addresses (%d)</item>
     </plurals>
-    <plurals name="fs_shop_item_products">
-        <item quantity="one">%d product</item>
-        <item quantity="other">%d products</item>
+    <plurals name="fs_shop_item_menu_products">
+        <item quantity="one">Product (%d)</item>
+        <item quantity="other">Products (%d)</item>
     </plurals>
 </resources>

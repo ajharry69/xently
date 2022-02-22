@@ -1,10 +1,7 @@
 package co.ke.xently.source.local.daos
 
 import androidx.paging.PagingSource
-import androidx.room.Dao
-import androidx.room.Insert
-import androidx.room.OnConflictStrategy
-import androidx.room.Query
+import androidx.room.*
 import co.ke.xently.data.GroupedShoppingListCount
 import co.ke.xently.data.ShoppingListItem
 import kotlinx.coroutines.flow.Flow
@@ -17,9 +14,11 @@ interface ShoppingListDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun save(items: List<ShoppingListItem>)
 
+    @Transaction
     @Query("SELECT * FROM shoppinglist WHERE id = :id")
     fun get(id: Long): Flow<ShoppingListItem.WithRelated?>
 
+    @Transaction
     @Query("SELECT * FROM shoppinglist ORDER BY name")
     fun get(): PagingSource<Int, ShoppingListItem.WithRelated>
 

@@ -97,20 +97,20 @@ private fun ShoppingListRecommendationScreen(
                                             snippet("${recommendation.hits.count} item(s), ${recommendation.printableTotalPrice}")
                                             position(
                                                 LatLng(
-                                                    address.latitude,
-                                                    address.longitude,
+                                                    address.location.latitude,
+                                                    address.location.longitude,
                                                 )
                                             )
                                         }
                                     }
-                                }.toTypedArray(),
+                                },
                                 onLocationPermissionChanged = onLocationPermissionChanged,
                             )
                             ToolbarWithProgressbar(
                                 stringResource(R.string.fsl_recommendations_toolbar_title),
-                                elevation = 0.dp,
+                                onNavigationIconClicked = onNavigationIconClicked,
                                 backgroundColor = Color.Transparent,
-                                onNavigationIconClicked = onNavigationIconClicked
+                                elevation = 0.dp
                             )
                         }
                     }

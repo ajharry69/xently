@@ -145,7 +145,9 @@ private fun ProductDetailScreen(
     Scaffold(
         scaffoldState = scaffoldState,
         topBar = {
-            ToolbarWithProgressbar(toolbarTitle, onNavigationIconClicked, result is Loading)
+            ToolbarWithProgressbar(toolbarTitle,
+                onNavigationIconClicked,
+                showProgress = result is Loading)
         },
     ) { paddingValues ->
         Column(
@@ -339,8 +341,8 @@ private fun ProductDetailScreen(
                     focusManager.clearFocus()
                     onDetailsSubmitted(product.copy(
                         shopId = savableShop,
-                        name = name.text,
-                        unit = unit.text,
+                        name = name.text.trim(),
+                        unit = unit.text.trim(),
                         unitQuantity = unitQuantity.text.toFloat(),
                         purchasedQuantity = purchasedQuantity.text.toFloat(),
                         unitPrice = unitPrice.text.toFloat(),

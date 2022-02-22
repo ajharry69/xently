@@ -60,11 +60,20 @@ internal class ProductsRepository @Inject constructor(private val dependencies: 
         }.retryCatch(this).flowOn(dependencies.dispatcher.io)
     }
 
-    override fun get(config: PagingConfig) = Pager(
+    override fun get(shopId: Long?, config: PagingConfig) = Pager(
         config = config,
-        remoteMediator = ProductsRemoteMediator(dependencies),
-        pagingSourceFactory = dependencies.database.productDao::get,
-    ).flow.map { data ->
+        remoteMediator = ProductsRemoteMediator(dependencies, shopId),
+    ) {
+        dependencies.database.productDao.run {
+            if (shopId == null) {
+                get()
+            } else {
+                getForShop(shopId)
+            }
+        }
+    }.flow.map { data ->
         data.map { it.product }
     }
+
+    override fun getShopName(shopId: Long) = dependencies.database.shopDao.getShopName(shopId)
 }

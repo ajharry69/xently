@@ -1,30 +1,27 @@
-package co.ke.xently.products
+package co.ke.xently.shops.mediators
 
 import androidx.paging.LoadType
 import androidx.paging.PagingState
 import androidx.paging.RemoteMediator
 import androidx.room.withTransaction
-import co.ke.xently.data.Product
+import co.ke.xently.data.Address
 import co.ke.xently.data.getOrThrow
 import co.ke.xently.feature.repository.Dependencies
 import co.ke.xently.source.remote.sendRequest
 import kotlinx.coroutines.CancellationException
 
-internal class ProductsRemoteMediator(
+class AddressesRemoteMediator(
+    private val shopId: Long,
     private val dependencies: Dependencies,
-    private val shopId: Long? = null,
-    private val query: String = "",
-) : RemoteMediator<Int, Product.WithRelated>() {
-    private val remoteKeyEndpoint = if (shopId == null) {
-        "/api/products/"
-    } else {
-        "/api/shops/$shopId/products/"
-    }
-
+    private val query: String? = null,
+    private val preLoad: (suspend () -> Unit)? = null,
+) : RemoteMediator<Int, Address.WithShop>() {
+    private val remoteKeyEndpoint = "/api/shops/${shopId}/addresses/"
     override suspend fun load(
         loadType: LoadType,
-        state: PagingState<Int, Product.WithRelated>,
+        state: PagingState<Int, Address.WithShop>,
     ): MediatorResult {
+        preLoad?.invoke()
         val page: Int = when (loadType) {
             LoadType.REFRESH -> 1
             LoadType.APPEND -> return MediatorResult.Success(endOfPaginationReached = true)
@@ -35,33 +32,18 @@ internal class ProductsRemoteMediator(
 
         return try {
             val response = sendRequest {
-                if (shopId == null) {
-                    dependencies.service.product.get(query, page, state.config.initialLoadSize)
-                } else {
-                    dependencies.service.shop.getProducts(
-                        shopId = shopId,
-                        query = query,
-                        page = page,
-                        size = state.config.initialLoadSize,
-                    )
-                }
+                dependencies.service.shop.getAddresses(shopId, query ?: "", page, state.config.initialLoadSize)
             }
             dependencies.database.withTransaction {
                 if (loadType == LoadType.REFRESH) {
                     dependencies.database.remoteKeyDao.delete(remoteKeyEndpoint)
-                    dependencies.database.productDao.run {
-                        if (shopId == null) {
-                            deleteAll()
-                        } else {
-                            deleteAll(shopId)
-                        }
-                    }
+                    dependencies.database.addressDao.deleteAll(shopId)
                 }
 
                 response.getOrThrow().run {
                     dependencies.database.remoteKeyDao.save(toRemoteKey(remoteKeyEndpoint))
                     results.run {
-                        saveLocallyWithAttributes(dependencies)
+                        dependencies.database.addressDao.add(this)
                         MediatorResult.Success(endOfPaginationReached = isEmpty())
                     }
                 }
