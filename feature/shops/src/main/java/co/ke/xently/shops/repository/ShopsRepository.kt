@@ -47,7 +47,7 @@ internal class ShopsRepository @Inject constructor(private val dependencies: Dep
                     }
                 }
             } else {
-                TaskResult.Success(shop)
+                TaskResult.Success(shop.shop)
             }
         }.retryCatch(this).flowOn(dependencies.dispatcher.io)
     }

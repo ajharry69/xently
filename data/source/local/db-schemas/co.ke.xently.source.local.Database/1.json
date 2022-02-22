@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "f4a347d9801d599ef7edaa317bf6a370",
+    "identityHash": "8901e60dbde613a7d498b299191c8427",
     "entities": [
       {
         "tableName": "shops",
@@ -110,7 +110,7 @@
       },
       {
         "tableName": "addresses",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `town` TEXT NOT NULL, `shopId` INTEGER NOT NULL, `location` TEXT NOT NULL, PRIMARY KEY(`shopId`, `town`, `location`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `town` TEXT NOT NULL, `shopId` INTEGER NOT NULL, `location` TEXT NOT NULL, PRIMARY KEY(`id`))",
         "fields": [
           {
             "fieldPath": "id",
@@ -139,9 +139,7 @@
         ],
         "primaryKey": {
           "columnNames": [
-            "shopId",
-            "town",
-            "location"
+            "id"
           ],
           "autoGenerate": false
         },
@@ -154,6 +152,26 @@
             ],
             "orders": [],
             "createSql": "CREATE INDEX IF NOT EXISTS `index_addresses_shopId` ON `${TABLE_NAME}` (`shopId`)"
+          },
+          {
+            "name": "index_addresses_location",
+            "unique": false,
+            "columnNames": [
+              "location"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_addresses_location` ON `${TABLE_NAME}` (`location`)"
+          },
+          {
+            "name": "index_addresses_shopId_town_location",
+            "unique": true,
+            "columnNames": [
+              "shopId",
+              "town",
+              "location"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_addresses_shopId_town_location` ON `${TABLE_NAME}` (`shopId`, `town`, `location`)"
           }
         ],
         "foreignKeys": []
@@ -601,7 +619,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'f4a347d9801d599ef7edaa317bf6a370')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '8901e60dbde613a7d498b299191c8427')"
     ]
   }
 }

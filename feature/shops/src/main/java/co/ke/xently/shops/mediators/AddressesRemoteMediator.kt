@@ -37,7 +37,7 @@ class AddressesRemoteMediator(
             dependencies.database.withTransaction {
                 if (loadType == LoadType.REFRESH) {
                     dependencies.database.remoteKeyDao.delete(remoteKeyEndpoint)
-                    dependencies.database.addressDao.deleteAll()
+                    dependencies.database.addressDao.deleteAll(shopId)
                 }
 
                 response.getOrThrow().run {

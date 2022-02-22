@@ -1,8 +1,6 @@
 package co.ke.xently.data
 
-import androidx.room.Entity
-import androidx.room.Ignore
-import androidx.room.PrimaryKey
+import androidx.room.*
 import co.ke.xently.common.Exclude
 
 @Entity(tableName = "shops")
@@ -21,8 +19,22 @@ data class Shop(
     @Exclude
     val isDefault: Boolean = false,
 ) {
+    data class WithAddresses(
+        @Embedded
+        val s: Shop,
+        @Relation(entityColumn = "shopId", parentColumn = "id")
+        val addresses: List<Address>,
+    ) {
+        @Ignore
+        val shop = s.copy(addresses = addresses)
+    }
+
     override fun toString(): String {
-        return "${name}, $taxPin".replace(Regex("(^\\s*,\\s+)|(\\s*,\\s+$)"), "")
+        val s = StringBuilder()
+        if (name.isNotBlank()) {
+            s.append("${name}, ")
+        }
+        return s.append(taxPin).replace(Regex(",\\s+$"), "")
     }
 
     companion object {

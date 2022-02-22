@@ -49,7 +49,13 @@ internal class ProductsRemoteMediator(
             dependencies.database.withTransaction {
                 if (loadType == LoadType.REFRESH) {
                     dependencies.database.remoteKeyDao.delete(remoteKeyEndpoint)
-                    dependencies.database.productDao.deleteAll()
+                    dependencies.database.productDao.run {
+                        if (shopId == null) {
+                            deleteAll()
+                        } else {
+                            deleteAll(shopId)
+                        }
+                    }
                 }
 
                 response.getOrThrow().run {

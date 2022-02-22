@@ -32,7 +32,7 @@ internal fun ShopListItem(
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
-        modifier = modifier.padding(start = 8.dp),
+        modifier = modifier.padding(start = 16.dp),
     ) {
         Column(modifier = Modifier.weight(1f)) {
             Text(

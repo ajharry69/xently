@@ -41,27 +41,36 @@ internal fun ShopDetailScreen(
     viewModel: ShopDetailViewModel = hiltViewModel(),
     onNavigationIconClicked: () -> Unit = {},
 ) {
-    var shopResult by remember {
+    val isDefault by remember(id) {
+        mutableStateOf(id == null || id == Shop.default().id)
+    }
+    var result by remember {
         mutableStateOf<TaskResult<Shop?>>(Success(null))
     }
     LaunchedEffect(id) {
-        if (id != null && id != Shop.default().id) {
-            viewModel.get(id).collectLatest {
-                shopResult = it
+        if (!isDefault) {
+            viewModel.get(id!!).collectLatest {
+                result = it
             }
         }
     }
+    // Allow addition of more items if the screen was initially for adding.
+    val permitReAddition = isDefault && result.getOrNull() != null
     val scope = rememberCoroutineScope()
     ShopDetailScreen(
         modifier,
-        shopResult,
-        false,
+        if (permitReAddition) {
+            Success(null)
+        } else {
+            result
+        },
+        permitReAddition,
         onNavigationIconClicked,
         viewModel::setLocationPermissionGranted,
         onAddShopClicked = {
             scope.launch {
-                viewModel.add(it).collectLatest {
-                    shopResult = it
+                viewModel.addOrUpdate(it).collectLatest {
+                    result = it
                 }
             }
         },
@@ -85,13 +94,13 @@ private fun ShopDetailScreen(
     val scaffoldState = rememberScaffoldState()
     var nameError by remember { mutableStateOf("") }
     var taxPinError by remember { mutableStateOf("") }
-//    var addressesError by remember { mutableStateOf("") }
+    var addressesError by remember { mutableStateOf("") }
 
     if (result is TaskResult.Error) {
         val exception = result.error as? ShopHttpException
         nameError = exception.error.name
         taxPinError = exception.error.taxPin
-//        addressesError = exception.error.addresses
+        addressesError = exception.error.addresses
 
         if (exception?.hasFieldErrors() != true) {
             val errorMessage = result.errorMessage ?: stringResource(R.string.generic_error_message)
@@ -106,7 +115,9 @@ private fun ShopDetailScreen(
         }
     }
 
-    val addresses = remember(permitReAddition) { mutableStateListOf<Address>() }
+    var isAddressError by remember { mutableStateOf(addressesError.isNotBlank()) }
+    val addresses =
+        remember(permitReAddition) { mutableStateListOf(*shop.addresses.toTypedArray()) }
     val focusManager = LocalFocusManager.current
     Scaffold(
         scaffoldState = scaffoldState,
@@ -137,6 +148,9 @@ private fun ShopDetailScreen(
                             latitude = it.latitude
                             longitude = it.longitude
                         })
+                        if (address in addresses) {
+                            return@setOnMapClickListener
+                        }
                         addresses.add(address)
                         val markerOptions = MarkerOptions().apply {
                             position(
@@ -147,6 +161,7 @@ private fun ShopDetailScreen(
                             )
                         }
                         addMarker(markerOptions)
+                        isAddressError = false
                     }
                     setOnMarkerClickListener { marker ->
                         marker.remove()
@@ -154,6 +169,7 @@ private fun ShopDetailScreen(
                             it.location.latitude == marker.position.latitude &&
                                     it.location.longitude == marker.position.longitude
                         }
+                        isAddressError = false
                         true
                     }
                 }
@@ -248,11 +264,20 @@ private fun ShopDetailScreen(
                     ) { i, address ->
                         Chip(address.toString()) {
                             addresses.removeAt(i)
+                            isAddressError = false
                             // TODO: Remove marker from map...
                         }
                     }
                 }
                 Spacer(modifier = Modifier.padding(vertical = 8.dp))
+                if (isAddressError) {
+                    Text(
+                        text = addressesError,
+                        modifier = VerticalLayoutModifier,
+                        style = MaterialTheme.typography.caption.copy(color = MaterialTheme.colors.error),
+                    )
+                    Spacer(modifier = Modifier.padding(vertical = 8.dp))
+                }
                 Button(
                     enabled = arrayOf(
                         name,

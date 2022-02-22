@@ -122,7 +122,7 @@ fun Chip(
 fun <T> ChipGroup(
     modifier: Modifier = Modifier,
     isSingleLine: Boolean = true,
-    chipItems: List<T> = emptyList(),
+    chipItems: Iterable<T> = emptyList(),
     chipItem: @Composable (Int, T) -> Unit,
 ) {
     if (isSingleLine) {
@@ -131,7 +131,7 @@ fun <T> ChipGroup(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            itemsIndexed(chipItems) { index, item ->
+            itemsIndexed(chipItems.toList()) { index, item ->
                 chipItem(index, item)
             }
         }

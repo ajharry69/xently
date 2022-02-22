@@ -47,11 +47,12 @@ val JSON_CONVERTER: Gson = GsonBuilder()
         }
     }.nullSafe())
     .registerTypeAdapter(Location::class.java, object : TypeAdapter<Location>() {
+        // N/B: x(1st) - longitude & y(2nd) - latitude
         override fun write(out: JsonWriter?, location: Location) {
             out?.apply {
                 beginArray()
-                value(location.latitude)
                 value(location.longitude)
+                value(location.latitude)
                 endArray()
             }
         }
@@ -59,8 +60,8 @@ val JSON_CONVERTER: Gson = GsonBuilder()
         override fun read(`in`: JsonReader?): Location {
             if (`in` == null) return DEFAULT_LOCATION
             `in`.beginArray()
-            val lat = `in`.nextDouble()
             val lon = `in`.nextDouble()
+            val lat = `in`.nextDouble()
             `in`.endArray()
             return DEFAULT_LOCATION.apply {
                 latitude = lat

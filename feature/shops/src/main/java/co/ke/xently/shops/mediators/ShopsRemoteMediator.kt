@@ -15,13 +15,14 @@ class ShopsRemoteMediator(
     private val query: String? = null,
     private val preLoad: (suspend () -> Unit)? = null,
 ) : RemoteMediator<Int, Shop>() {
+    private val remoteKeyEndpoint = "/api/shops/"
     override suspend fun load(loadType: LoadType, state: PagingState<Int, Shop>): MediatorResult {
         preLoad?.invoke()
         val page: Int = when (loadType) {
             LoadType.REFRESH -> 1
             LoadType.APPEND -> return MediatorResult.Success(endOfPaginationReached = true)
             LoadType.PREPEND -> dependencies.database.withTransaction {
-                dependencies.database.remoteKeyDao.get(REMOTE_KEY_ENDPOINT)
+                dependencies.database.remoteKeyDao.get(remoteKeyEndpoint)
             }?.nextPage ?: return MediatorResult.Success(endOfPaginationReached = true)
         }
 
@@ -31,12 +32,12 @@ class ShopsRemoteMediator(
             }
             dependencies.database.withTransaction {
                 if (loadType == LoadType.REFRESH) {
-                    dependencies.database.remoteKeyDao.delete(REMOTE_KEY_ENDPOINT)
+                    dependencies.database.remoteKeyDao.delete(remoteKeyEndpoint)
                     dependencies.database.shopDao.deleteAll()
                 }
 
                 response.getOrThrow().run {
-                    dependencies.database.remoteKeyDao.save(toRemoteKey(REMOTE_KEY_ENDPOINT))
+                    dependencies.database.remoteKeyDao.save(toRemoteKey(remoteKeyEndpoint))
                     results.run {
                         dependencies.database.shopDao.add(this)
                         MediatorResult.Success(endOfPaginationReached = isEmpty())
@@ -47,9 +48,5 @@ class ShopsRemoteMediator(
             if (ex is CancellationException) throw ex
             MediatorResult.Error(ex)
         }
-    }
-
-    private companion object {
-        private const val REMOTE_KEY_ENDPOINT = "/api/shops/"
     }
 }

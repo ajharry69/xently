@@ -26,15 +26,14 @@ object RoomTypeConverters {
     class LocationConverter {
         @TypeConverter
         fun locationToString(location: Location): String =
-            "${location.latitude}#${location.longitude}"
+            "${location.longitude},${location.latitude}"
 
         @TypeConverter
         fun stringToLocation(location: String): Location = DEFAULT_LOCATION.apply {
-            location.split("#").also {
-                latitude = it[0].toDouble()
-                longitude = it[1].toDouble()
+            location.split(",").also {
+                longitude = it[0].toDouble()
+                latitude = it[1].toDouble()
             }
-
         }
     }
 }

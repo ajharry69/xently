@@ -21,8 +21,11 @@ internal class ShopDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val repository: IShopsRepository,
 ) : LocationPermissionViewModel(context, savedStateHandle) {
-    fun add(shop: Shop) = repository.add(shop)
-        .flagLoadingOnStart()
+    fun addOrUpdate(shop: Shop) = if (shop.isDefault) {
+        repository.add(shop)
+    } else {
+        repository.update(shop)
+    }.flagLoadingOnStart()
         .shareIn(viewModelScope, SharingStarted.WhileSubscribed())
 
     fun get(id: Long) = repository.get(id)
