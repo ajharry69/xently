@@ -20,6 +20,11 @@ import co.ke.xently.shoppinglist.ui.list.item.MenuItem
 import co.ke.xently.shoppinglist.ui.list.item.ShoppingListItemCard
 import java.util.*
 
+internal data class Click(
+    val seeAll: (group: Any) -> Unit = {},
+    val item: (ShoppingListItem) -> Unit = {},
+)
+
 internal data class GroupMenuItem(
     @StringRes
     val label: Int,
@@ -30,10 +35,9 @@ internal data class GroupMenuItem(
 internal fun GroupedShoppingListCard(
     groupList: GroupedShoppingList,
     listCount: Map<Any, Int>,
-    onSeeAllClicked: (group: Any) -> Unit = {},
     menuItems: List<MenuItem> = emptyList(),
     groupMenuItems: List<GroupMenuItem> = emptyList(),
-    onItemClick: (ShoppingListItem) -> Unit = {},
+    click: Click = Click(),
 ) {
     val itemsPerCard = 3
     var showDropDownMenu by remember { mutableStateOf(false) }
@@ -90,23 +94,19 @@ internal fun GroupedShoppingListCard(
             Column {
                 for (item in groupList.shoppingList.take(itemsPerCard)) {
                     ShoppingListItemCard(
-                        modifier = Modifier.fillMaxWidth(),
                         item = item,
+                        onClick = click.item,
                         menuItems = menuItems,
-                        onClick = onItemClick,
+                        modifier = Modifier.fillMaxWidth(),
                     )
                 }
             }
             if (numberOfItems > itemsPerCard) {
                 OutlinedButton(
-                    onClick = { onSeeAllClicked(groupList.group) },
+                    onClick = { click.seeAll.invoke(groupList.group) },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(
-                            end = HORIZONTAL_PADDING,
-                            start = HORIZONTAL_PADDING,
-                            bottom = HORIZONTAL_PADDING / 2,
-                        )
+                        .padding(horizontal = HORIZONTAL_PADDING)
                 ) {
                     Text(
                         stringResource(R.string.fsl_group_button_see_all),

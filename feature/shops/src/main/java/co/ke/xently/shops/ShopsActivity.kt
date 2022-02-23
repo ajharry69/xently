@@ -146,9 +146,12 @@ internal fun ShopsNavHost(
             ),
         ) {
             AddressListScreen(
-                shopId = it.arguments!!.getLong("id"),
                 modifier = Modifier.fillMaxSize(),
-                onNavigationIconClicked = onNavigationIconClicked,
+                shopId = it.arguments!!.getLong("id"),
+                click = co.ke.xently.shops.ui.list.addresses.Click(
+                    navigationIcon = onNavigationIconClicked,
+                    click = co.ke.xently.shops.ui.list.addresses.item.Click(base = {}),
+                ),
             )
         }
     }

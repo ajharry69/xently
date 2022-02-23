@@ -10,15 +10,13 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import co.ke.xently.data.*
 import co.ke.xently.data.RecommendationReport.Recommendation
-import co.ke.xently.feature.ui.FullscreenError
-import co.ke.xently.feature.ui.FullscreenLoading
-import co.ke.xently.feature.ui.GoogleMapView
-import co.ke.xently.feature.ui.ToolbarWithProgressbar
+import co.ke.xently.feature.ui.*
 import co.ke.xently.feature.utils.MAP_HEIGHT
 import co.ke.xently.shoppinglist.R
 import co.ke.xently.shoppinglist.Recommend
@@ -27,14 +25,20 @@ import com.google.android.libraries.maps.model.LatLng
 import com.google.android.libraries.maps.model.MarkerOptions
 import java.text.DecimalFormat
 
+internal data class RecommendationCardItemClick(
+    val base: (Recommendation) -> Unit = {},
+)
+
 internal data class Click(
     val navigationIcon: () -> Unit = {},
     val item: (ShoppingListItem) -> Unit = {},
+    val recommendationItemClick: RecommendationCardItemClick = RecommendationCardItemClick(),
 )
 
 @Composable
 internal fun ShoppingListRecommendationScreen(
     click: Click,
+    menuItems: List<MenuItem>,
     modifier: Modifier = Modifier,
     recommend: Recommend = Recommend(),
     viewModel: ShoppingListRecommendationViewModel = hiltViewModel(),
@@ -47,6 +51,7 @@ internal fun ShoppingListRecommendationScreen(
         recommendationReportResult,
         click,
         viewModel::setLocationPermissionGranted,
+        menuItems,
     )
 }
 
@@ -56,6 +61,7 @@ private fun ShoppingListRecommendationScreen(
     result: TaskResult<RecommendationReport>,
     click: Click,
     onLocationPermissionChanged: (Boolean) -> Unit,
+    menuItems: List<MenuItem>,
 ) {
     val scaffoldState = rememberScaffoldState()
     Scaffold(
@@ -80,7 +86,7 @@ private fun ShoppingListRecommendationScreen(
                 val report = result.getOrThrow()
                 LazyColumn(
                     modifier = modifier.padding(it),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(HORIZONTAL_PADDING / 2),
                 ) {
                     item {
                         Box(
@@ -118,28 +124,30 @@ private fun ShoppingListRecommendationScreen(
                     }
                     item {
                         RecommendationReportItemGroup(
-                            modifier = Modifier.padding(start = 16.dp),
+                            modifier = Modifier.padding(start = HORIZONTAL_PADDING),
                             title = stringResource(R.string.fsl_recommendations_synopsis),
                         ) {
                             RecommendationReportSynopsisCard(
                                 report = report,
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(end = 16.dp),
+                                    .padding(end = HORIZONTAL_PADDING),
                             )
                         }
                     }
                     if (report.count.hitItems > 0) {
                         item {
                             RecommendationReportItemGroup(
-                                modifier = Modifier.padding(start = 16.dp),
+                                textModifier = Modifier.padding(start = HORIZONTAL_PADDING),
                                 title = stringResource(R.string.fsl_recommendations),
                             ) {
                                 Column {
                                     report.recommendations.forEach { recommendation ->
                                         RecommendationCardItem(
+                                            menuItems = menuItems,
                                             recommendation = recommendation,
-                                            modifier = Modifier.fillMaxWidth()
+                                            modifier = Modifier.fillMaxWidth(),
+                                            click = click.recommendationItemClick,
                                         )
                                     }
                                 }
@@ -149,6 +157,7 @@ private fun ShoppingListRecommendationScreen(
                     if (report.count.missedItems > 0) {
                         item {
                             RecommendationReportItemGroup(
+                                textModifier = Modifier.padding(start = HORIZONTAL_PADDING),
                                 title = stringResource(R.string.fsl_recommendations_missed),
                             ) {
                                 report.missedItems.forEach { item ->
@@ -170,11 +179,12 @@ private fun ShoppingListRecommendationScreen(
 @Composable
 private fun RecommendationReportItemGroup(
     modifier: Modifier = Modifier,
+    textModifier: Modifier = Modifier,
     title: String,
     content: @Composable () -> Unit,
 ) {
     Column(modifier = modifier) {
-        Text(text = title.uppercase(), style = MaterialTheme.typography.h6)
+        Text(text = title.uppercase(), modifier = textModifier, style = MaterialTheme.typography.h6)
         content()
     }
 }
@@ -188,17 +198,31 @@ private fun RecommendationReportSynopsisCard(
         Column(
             verticalArrangement = Arrangement.SpaceAround,
             modifier = Modifier
-                .padding(vertical = 8.dp)
-                .padding(end = 8.dp)
+                .padding(end = HORIZONTAL_PADDING / 2)
+                .padding(vertical = HORIZONTAL_PADDING / 2),
         ) {
-            mutableListOf<Pair<String, String>>().apply {
-                if (report.count.hitItems > 0) add("Hits" to "${report.count.hitItems}")
-                if (report.count.missedItems > 0) add("Misses" to "${report.count.missedItems}")
-                if (report.count.shopsVisited > 0) add("Shops visited" to "${report.count.shopsVisited}")
-                if (report.count.recommendations > 0) add("Recommendations" to "${report.count.recommendations}")
-                add("Lookup duration" to DecimalFormat("###,###.##s").format(report.lookupDuration))
+            val context = LocalContext.current
+            buildList {
+                if (report.count.hitItems > 0) {
+                    add(context.getString(R.string.fsl_recommendation_hits) to "${report.count.hitItems}")
+                }
+                if (report.count.missedItems > 0) {
+                    add(context.getString(R.string.fsl_recommendation_misses) to "${report.count.missedItems}")
+                }
+                if (report.count.shopsVisited > 0) {
+                    add(stringResource(R.string.fsl_recommendation_shops_visited) to "${report.count.shopsVisited}")
+                }
+                if (report.count.recommendations > 0) {
+                    add(stringResource(R.string.fsl_recommendation_recommendations) to "${report.count.recommendations}")
+                }
+                add(context.getString(R.string.fsl_recommendation_lookup_duration) to DecimalFormat(
+                    "###,###.##s").format(report.lookupDuration))
             }.forEach {
-                Row(modifier = Modifier.fillMaxWidth()) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = HORIZONTAL_PADDING / 2),
+                ) {
                     Text(text = it.first, modifier = Modifier.weight(2f))
                     Text(text = it.second, modifier = Modifier.weight(1f))
                 }
@@ -207,16 +231,20 @@ private fun RecommendationReportSynopsisCard(
     }
 }
 
+internal data class MenuItem(
+    val label: Int,
+    val onClick: (Recommendation) -> Unit = {},
+)
+
 @Composable
 private fun RecommendationCardItem(
     recommendation: Recommendation,
+    menuItems: List<MenuItem>,
+    click: RecommendationCardItemClick,
     modifier: Modifier = Modifier,
-    onDirectionClicked: ((Recommendation) -> Unit) = {},
-    onHitsClicked: ((Recommendation) -> Unit) = {},
-    onDetailsClicked: ((Recommendation) -> Unit) = {},
 ) {
     var showMenu by remember { mutableStateOf(false) }
-    Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = modifier) {
+    ListItemSurface(modifier = modifier, onClick = { click.base.invoke(recommendation) }) {
         Column {
             Text(text = recommendation.name, style = MaterialTheme.typography.body1)
             Text(
@@ -234,24 +262,14 @@ private fun RecommendationCardItem(
                     )
                 }
                 DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
-                    DropdownMenuItem(
-                        onClick = {
-                            onDirectionClicked(recommendation)
-                            showMenu = false
-                        },
-                    ) { Text(text = "Directions") }
-                    DropdownMenuItem(
-                        onClick = {
-                            onHitsClicked(recommendation)
-                            showMenu = false
-                        },
-                    ) { Text(text = "Hits") }
-                    DropdownMenuItem(
-                        onClick = {
-                            onDetailsClicked(recommendation)
-                            showMenu = false
-                        },
-                    ) { Text(text = "Details") }
+                    for (item in menuItems) {
+                        DropdownMenuItem(
+                            onClick = {
+                                item.onClick.invoke(recommendation)
+                                showMenu = false
+                            },
+                        ) { Text(text = stringResource(item.label)) }
+                    }
                 }
             }
         }

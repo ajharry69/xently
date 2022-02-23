@@ -28,8 +28,7 @@ import kotlinx.coroutines.launch
 
 internal data class Click(
     val add: () -> Unit = {},
-    val seeAll: (group: Any) -> Unit = {},
-    val item: (ShoppingListItem) -> Unit = {},
+    val click: co.ke.xently.shoppinglist.ui.list.grouped.item.Click = co.ke.xently.shoppinglist.ui.list.grouped.item.Click(),
 )
 
 @Composable
@@ -46,25 +45,25 @@ internal fun GroupedShoppingListScreen(
     val groupedShoppingListCount by viewModel.groupedShoppingListCount.collectAsState(scope.coroutineContext)
 
     GroupedShoppingListScreen(
-        modifier,
-        groupedShoppingListCount,
-        groupedShoppingListResult,
-        drawerItems,
-        menuItems,
-        groupMenuItems,
-        click,
+        click = click,
+        modifier = modifier,
+        menuItems = menuItems,
+        drawerItems = drawerItems,
+        groupMenuItems = groupMenuItems,
+        groupedShoppingListCount = groupedShoppingListCount,
+        groupedShoppingListResult = groupedShoppingListResult,
     )
 }
 
 @Composable
 private fun GroupedShoppingListScreen(
+    click: Click,
     modifier: Modifier,
+    menuItems: List<MenuItem>,
+    drawerItems: List<NavDrawerItem>,
+    groupMenuItems: List<GroupMenuItem>,
     groupedShoppingListCount: Map<Any, Int>,
     groupedShoppingListResult: TaskResult<List<GroupedShoppingList>>,
-    drawerItems: List<NavDrawerItem>,
-    menuItems: List<MenuItem>,
-    groupMenuItems: List<GroupMenuItem>,
-    click: Click,
 ) {
     val scaffoldState = rememberScaffoldState()
     val coroutineScope = rememberCoroutineScope()
@@ -141,12 +140,11 @@ private fun GroupedShoppingListScreen(
                     LazyColumn(modifier = modifier) {
                         items(groupedShoppingList) { groupList ->
                             GroupedShoppingListCard(
+                                click = click.click,
                                 groupList = groupList,
-                                listCount = groupedShoppingListCount,
-                                onSeeAllClicked = click.seeAll,
                                 menuItems = menuItems,
-                                onItemClick = click.item,
                                 groupMenuItems = groupMenuItems,
+                                listCount = groupedShoppingListCount,
                             )
                         }
                     }

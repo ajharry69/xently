@@ -33,15 +33,15 @@ internal data class Click(
 
 @Composable
 internal fun ShopListScreen(
+    click: Click,
+    menuItems: @Composable (Shop) -> List<MenuItem>,
     modifier: Modifier = Modifier,
     viewModel: ShopListViewModel = hiltViewModel(),
-    menuItems: @Composable (Shop) -> List<MenuItem>,
-    click: Click,
 ) {
     val config = PagingConfig(20, enablePlaceholders = false)
     val items = viewModel.get(config).collectAsLazyPagingItems()
     ShopListScreen(
-        items,
+        pagingItems = items,
         modifier = modifier,
         menuItems = menuItems,
         click = click,

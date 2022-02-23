@@ -1,7 +1,6 @@
 package co.ke.xently.shoppinglist.ui.list
 
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -9,7 +8,6 @@ import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.paging.PagingConfig
 import androidx.paging.compose.LazyPagingItems
@@ -32,9 +30,9 @@ internal data class Click(
 
 @Composable
 internal fun ShoppingListScreen(
-    modifier: Modifier = Modifier,
     menuItems: List<MenuItem>,
     click: Click,
+    modifier: Modifier = Modifier,
     viewModel: ShoppingListViewModel = hiltViewModel(),
 ) {
     val config = PagingConfig(20, enablePlaceholders = false)
@@ -66,7 +64,8 @@ private fun ShoppingListScreen(
                 }
                 DropdownMenu(
                     expanded = showOptionsMenu,
-                    onDismissRequest = { showOptionsMenu = false }) {
+                    onDismissRequest = { showOptionsMenu = false },
+                ) {
                     DropdownMenuItem(onClick = {
                         showOptionsMenu = false
                         // TODO: Rethink implementation...
@@ -88,13 +87,10 @@ private fun ShoppingListScreen(
             items(pagingItems) {
                 if (it != null) {
                     ShoppingListItemCard(
-                        it,
-                        modifier = Modifier
-                            .padding(start = 16.dp)
-                            .padding(vertical = 8.dp)
-                            .fillMaxWidth(),
+                        item = it,
                         menuItems = menuItems,
                         onClick = click.item,
+                        modifier = Modifier.fillMaxWidth(),
                     )
                 } // TODO: Show placeholders on null products...
             }

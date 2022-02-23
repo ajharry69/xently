@@ -169,11 +169,7 @@ inline fun <reified T : Any> PagedDataScreen(
             if (items.itemCount == 0) {
                 FullscreenEmptyList<T>(modifier, error)
             } else {
-                LazyColumn(
-                    modifier = modifier,
-                    content = noneEmptyItems,
-//                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                )
+                LazyColumn(modifier = modifier, content = noneEmptyItems)
             }
         }
     }

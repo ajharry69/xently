@@ -35,8 +35,10 @@ import co.ke.xently.shoppinglist.Recommend.From
 import co.ke.xently.shoppinglist.ui.detail.ShoppingListItemScreen
 import co.ke.xently.shoppinglist.ui.list.ShoppingListScreen
 import co.ke.xently.shoppinglist.ui.list.grouped.GroupedShoppingListScreen
+import co.ke.xently.shoppinglist.ui.list.grouped.item.Click
 import co.ke.xently.shoppinglist.ui.list.grouped.item.GroupMenuItem
 import co.ke.xently.shoppinglist.ui.list.item.MenuItem
+import co.ke.xently.shoppinglist.ui.list.recommendation.RecommendationCardItemClick
 import co.ke.xently.shoppinglist.ui.list.recommendation.ShoppingListRecommendationScreen
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -140,8 +142,8 @@ internal fun ShoppingListNavHost(
             navController.navigate("shopping-list/${ShoppingListItem.default().id}")
         }
         val shoppingListItemMenuItems = listOf(
-            MenuItem(R.string.update, onShoppingListItemClicked),
             MenuItem(R.string.fsl_group_menu_recommend, onShoppingListItemRecommendClicked),
+            MenuItem(R.string.update, onShoppingListItemClicked),
             MenuItem(R.string.delete),
         )
         composable("shopping-list-grouped") {
@@ -192,8 +194,14 @@ internal fun ShoppingListNavHost(
                 ),
                 click = co.ke.xently.shoppinglist.ui.list.grouped.Click(
                     add = onAddShoppingListItemClicked,
-                    seeAll = { navController.navigate("shopping-list") },
-                    item = {},
+                    click = Click(
+                        item = {
+                            // TODO: ...
+                        },
+                        seeAll = {
+                            navController.navigate("shopping-list")
+                        },
+                    ),
                 ),
                 modifier = Modifier.fillMaxSize(),
             )
@@ -216,14 +224,39 @@ internal fun ShoppingListNavHost(
             })
         ) {
             ShoppingListRecommendationScreen(
+                click = co.ke.xently.shoppinglist.ui.list.recommendation.Click(
+                    item = {},
+                    navigationIcon = onNavigationIconClicked,
+                    recommendationItemClick = RecommendationCardItemClick(
+                        base = {
+                            // TODO: ...
+                        },
+                    ),
+                ),
+                menuItems = listOf(
+                    co.ke.xently.shoppinglist.ui.list.recommendation.MenuItem(
+                        label = R.string.fsl_recommendation_directions,
+                        onClick = {
+
+                        },
+                    ),
+                    co.ke.xently.shoppinglist.ui.list.recommendation.MenuItem(
+                        label = R.string.fsl_recommendation_hits,
+                        onClick = {
+
+                        },
+                    ),
+                    co.ke.xently.shoppinglist.ui.list.recommendation.MenuItem(
+                        label = R.string.fsl_recommendation_details,
+                        onClick = {
+
+                        },
+                    ),
+                ),
                 modifier = Modifier.fillMaxSize(),
                 recommend = Recommend(
                     it.arguments?.get("recommendBy")!!,
                     From.valueOf(it.arguments?.getString("from", From.GroupedList.name)!!),
-                ),
-                click = co.ke.xently.shoppinglist.ui.list.recommendation.Click(
-                    item = {},
-                    navigationIcon = onNavigationIconClicked,
                 ),
             )
         }
