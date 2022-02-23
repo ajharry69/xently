@@ -7,6 +7,8 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -14,7 +16,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -41,12 +42,21 @@ fun rememberFragmentManager(): FragmentManager {
 @Composable
 fun PasswordVisibilityToggle(isVisible: Boolean, onClick: () -> Unit) {
     IconButton(onClick) {
-        val resource = if (isVisible) {
-            R.drawable.ic_password_visible
-        } else {
-            R.drawable.ic_password_invisible
-        }
-        Icon(painterResource(resource), stringResource(R.string.toggle_password_visibility))
+        Icon(
+            if (isVisible) {
+                Icons.Default.VisibilityOff
+            } else {
+                Icons.Default.Visibility
+            },
+            stringResource(
+                R.string.toggle_password_visibility,
+                if (isVisible) {
+                    R.string.hide
+                } else {
+                    R.string.show
+                },
+            ),
+        )
     }
 }
 

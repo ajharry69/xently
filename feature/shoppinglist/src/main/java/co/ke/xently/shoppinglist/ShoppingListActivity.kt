@@ -13,7 +13,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.Business
+import androidx.compose.material.icons.filled.Category
+import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -142,8 +145,10 @@ internal fun ShoppingListNavHost(
                         label = R.string.drawer_menu_shopping_list,
                         icon = Icons.Default.List,
                         onClick = {
-                            navController.navigate("shopping-list-grouped") {
-                                launchSingleTop = true
+                            if (navController.currentDestination?.route != "shopping-list-grouped") {
+                                navController.navigate("shopping-list-grouped") {
+                                    launchSingleTop = true
+                                }
                             }
                         },
                     ),
