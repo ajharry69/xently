@@ -1,5 +1,6 @@
 package co.ke.xently.shoppinglist.ui.list.grouped.item
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
@@ -13,21 +14,30 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import co.ke.xently.data.GroupedShoppingList
 import co.ke.xently.data.ShoppingListItem
+import co.ke.xently.feature.ui.HORIZONTAL_PADDING
 import co.ke.xently.shoppinglist.R
+import co.ke.xently.shoppinglist.ui.list.item.MenuItem
 import co.ke.xently.shoppinglist.ui.list.item.ShoppingListItemCard
 import java.util.*
 
+internal data class Click(
+    val seeAll: (group: Any) -> Unit = {},
+    val item: (ShoppingListItem) -> Unit = {},
+)
+
+internal data class GroupMenuItem(
+    @StringRes
+    val label: Int,
+    val onClick: (group: Any) -> Unit,
+)
 
 @Composable
 internal fun GroupedShoppingListCard(
     groupList: GroupedShoppingList,
     listCount: Map<Any, Int>,
-    onShoppingListItemClicked: ((itemId: Long) -> Unit) = {},
-    onShoppingListItemRecommendClicked: ((itemId: Long) -> Unit) = {},
-    onRecommendGroupClicked: (group: Any) -> Unit = {},
-    onDuplicateGroupClicked: (group: Any) -> Unit = {},
-    onDeleteGroupClicked: (group: Any) -> Unit = {},
-    onSeeAllClicked: (group: Any) -> Unit = {},
+    menuItems: List<MenuItem> = emptyList(),
+    groupMenuItems: List<GroupMenuItem> = emptyList(),
+    click: Click = Click(),
 ) {
     val itemsPerCard = 3
     var showDropDownMenu by remember { mutableStateOf(false) }
@@ -35,16 +45,14 @@ internal fun GroupedShoppingListCard(
 
     Card(
         modifier = Modifier
-            .padding(horizontal = 16.dp)
-            .padding(top = 16.dp),
+            .padding(horizontal = HORIZONTAL_PADDING)
+            .padding(top = HORIZONTAL_PADDING),
     ) {
-        Column(
-            modifier = Modifier
-                .padding(vertical = 8.dp)
-                .padding(start = 16.dp),
-        ) {
+        Column(modifier = Modifier.padding(vertical = HORIZONTAL_PADDING / 2)) {
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = HORIZONTAL_PADDING),
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 Column(modifier = Modifier.padding(bottom = 8.dp)) {
@@ -67,54 +75,42 @@ internal fun GroupedShoppingListCard(
                         expanded = showDropDownMenu,
                         onDismissRequest = { showDropDownMenu = false },
                     ) {
-                        DropdownMenuItem(
-                            onClick = {
-                                onRecommendGroupClicked(groupList.group)
-                                showDropDownMenu = false
-                            },
-                        ) { Text(text = stringResource(R.string.fsl_group_menu_recommend)) }
-                        DropdownMenuItem(
-                            onClick = {
-                                onDuplicateGroupClicked(groupList.group)
-                                showDropDownMenu = false
-                            },
-                        ) { Text(text = stringResource(R.string.fsl_group_menu_duplicate)) }
-                        DropdownMenuItem(
-                            onClick = {
-                                onDeleteGroupClicked(groupList.group)
-                                showDropDownMenu = false
-                            },
-                        ) { Text(stringResource(R.string.delete)) }
+                        for (item in groupMenuItems) {
+                            DropdownMenuItem(
+                                onClick = {
+                                    item.onClick.invoke(groupList.group)
+                                    showDropDownMenu = false
+                                },
+                            ) { Text(text = stringResource(item.label)) }
+                        }
                     }
                 }
             }
             Divider(
                 color = MaterialTheme.colors.onSurface.copy(alpha = 0.2f),
                 thickness = 1.dp,
-                modifier = Modifier.padding(end = 16.dp)
+                modifier = Modifier.padding(end = HORIZONTAL_PADDING, start = HORIZONTAL_PADDING)
             )
             Column {
                 for (item in groupList.shoppingList.take(itemsPerCard)) {
                     ShoppingListItemCard(
-                        item,
-                        modifier = Modifier
-                            .padding(vertical = 8.dp)
-                            .fillMaxWidth(),
-                        onUpdateRequested = onShoppingListItemClicked,
-                        onRecommendClicked = onShoppingListItemRecommendClicked,
+                        item = item,
+                        onClick = click.item,
+                        menuItems = menuItems,
+                        modifier = Modifier.fillMaxWidth(),
                     )
                 }
             }
             if (numberOfItems > itemsPerCard) {
                 OutlinedButton(
-                    onClick = { onSeeAllClicked(groupList.group) },
+                    onClick = { click.seeAll.invoke(groupList.group) },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(end = 16.dp, bottom = 8.dp)
+                        .padding(horizontal = HORIZONTAL_PADDING)
                 ) {
                     Text(
                         stringResource(R.string.fsl_group_button_see_all),
-                        style = MaterialTheme.typography.button
+                        style = MaterialTheme.typography.button,
                     )
                 }
             }

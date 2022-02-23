@@ -58,6 +58,8 @@ data class ShoppingListItem(
         @Ignore
         val isDefault: Boolean = false,
     ) : AbstractAttribute() {
+        override fun toString() = "${name}:${value}"
+
         companion object {
             fun default() = Attribute(isDefault = true)
         }
@@ -76,6 +78,8 @@ data class ShoppingListItem(
         @Exclude(SERIALIZATION)
         val relatedId: Long = ShoppingListItem.default().id,
     ) : AbstractBrand() {
+        override fun toString() = name
+
         companion object {
             fun default() = Brand()
         }

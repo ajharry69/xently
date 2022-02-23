@@ -7,9 +7,19 @@
     <string name="fsl_group_menu_recommend">Recommend</string>
     <string name="fsl_group_menu_duplicate">Duplicate</string>
     <string name="fsl_group_card_menu_content_desc_more">Show card menu</string>
-    <string name="fsl_empty_shopping_list">You have no shopping list, yet!</string>
+    <string name="fsl_empty_shopping_list">Oops! You seem to have no shopping list (item) added, yet.</string>
     <string name="fsl_detail_screen_toolbar_title">%1$s shopping list item</string>
     <string name="fsl_text_field_label_purchase_quantity">Purchase quantity</string>
     <string name="fsl_recommendations_toolbar_title">Recommendations</string>
     <string name="fsl_success_adding_shopping_list_item">Successfully adding shopping list item.</string>
+    <string name="fsl_recommendations_missed">Missed items</string>
+    <string name="fsl_recommendations">Recommendations</string>
+    <string name="fsl_recommendations_synopsis">Synopsis</string>
+    <string name="fsl_recommendation_directions">Directions</string>
+    <string name="fsl_recommendation_hits">Hits</string>
+    <string name="fsl_recommendation_details">Details</string>
+    <string name="fsl_recommendation_misses">Misses</string>
+    <string name="fsl_recommendation_lookup_duration">Lookup duration</string>
+    <string name="fsl_recommendation_recommendations">Recommendations</string>
+    <string name="fsl_recommendation_shops_visited">Shops visited</string>
 </resources>

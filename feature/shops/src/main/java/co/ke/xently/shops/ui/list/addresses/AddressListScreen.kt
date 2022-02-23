@@ -20,12 +20,17 @@ import co.ke.xently.shops.R
 import co.ke.xently.shops.ui.list.addresses.item.AddressListItem
 import kotlinx.coroutines.flow.collectLatest
 
+internal data class Click(
+    val navigationIcon: () -> Unit = {},
+    val click: co.ke.xently.shops.ui.list.addresses.item.Click = co.ke.xently.shops.ui.list.addresses.item.Click(),
+)
+
 @Composable
 internal fun AddressListScreen(
     shopId: Long,
+    click: Click,
     modifier: Modifier = Modifier,
     viewModel: AddressListViewModel = hiltViewModel(),
-    onNavigationIconClicked: () -> Unit = {},
 ) {
     val config = PagingConfig(20, enablePlaceholders = false)
 
@@ -38,15 +43,15 @@ internal fun AddressListScreen(
             shopName = it
         }
     }
-    AddressListScreen(modifier, addresses, shopName, onNavigationIconClicked)
+    AddressListScreen(modifier, addresses, shopName, click)
 }
 
 @Composable
 private fun AddressListScreen(
     modifier: Modifier = Modifier,
     addresses: LazyPagingItems<Address>,
-    shopName: String? = null,
-    onNavigationIconClicked: () -> Unit,
+    shopName: String?,
+    click: Click,
 ) {
     val scaffoldState = rememberScaffoldState()
     Scaffold(
@@ -54,15 +59,19 @@ private fun AddressListScreen(
         topBar = {
             ToolbarWithProgressbar(
                 title = stringResource(R.string.fs_toolbar_title_addresses),
-                onNavigationIconClicked = onNavigationIconClicked,
+                onNavigationIconClicked = click.navigationIcon,
                 subTitle = shopName,
             )
         },
-    ) { paddingValues ->
-        PagedDataScreen(modifier.padding(paddingValues), addresses) {
+    ) {
+        PagedDataScreen(modifier.padding(it), addresses) {
             items(addresses) { address ->
                 if (address != null) {
-                    AddressListItem(address, modifier = Modifier.fillMaxWidth())
+                    AddressListItem(
+                        address = address,
+                        click = click.click,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
                 } // TODO: Show placeholders on null products...
             }
             item {

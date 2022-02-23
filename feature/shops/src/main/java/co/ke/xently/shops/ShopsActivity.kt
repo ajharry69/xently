@@ -12,6 +12,7 @@ import androidx.compose.material.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.core.net.toUri
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -25,6 +26,7 @@ import co.ke.xently.feature.theme.XentlyTheme
 import co.ke.xently.shops.ui.detail.ShopDetailScreen
 import co.ke.xently.shops.ui.list.ShopListScreen
 import co.ke.xently.shops.ui.list.addresses.AddressListScreen
+import co.ke.xently.shops.ui.list.item.MenuItem
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -52,28 +54,68 @@ internal fun ShopsNavHost(
     onNavigationIconClicked: () -> Unit,
 ) {
     val context = LocalContext.current
+    val resources = context.resources
     NavHost(modifier = modifier, navController = navController, startDestination = "shops") {
         composable("shops") {
             ShopListScreen(
                 modifier = Modifier.fillMaxSize(),
-                onUpdateRequested = {
-                    navController.navigate("shops/$it")
-                },
-                onProductsClicked = {
-                    val intent = Intent(Intent.ACTION_VIEW, "xently://shops/$it/products/".toUri())
-                    try {
-                        context.startActivity(intent)
-                    } catch (ex: ActivityNotFoundException) {
-                        Log.e(ShopsActivity::class.simpleName, "ShopsNavHost: ${ex.message}", ex)
+                menuItems = {
+                    buildList {
+                        add(
+                            MenuItem(
+                                label = stringResource(R.string.update),
+                                onClick = {
+                                    navController.navigate("shops/${it.id}")
+                                },
+                            ),
+                        )
+                        if (it.productsCount > 0) {
+                            add(
+                                MenuItem(
+                                    label = resources.getQuantityString(
+                                        R.plurals.fs_shop_item_menu_products,
+                                        it.productsCount,
+                                        it.productsCount,
+                                    ),
+                                    onClick = {
+                                        val intent = Intent(Intent.ACTION_VIEW,
+                                            "xently://shops/${it.id}/products/".toUri())
+                                        try {
+                                            context.startActivity(intent)
+                                        } catch (ex: ActivityNotFoundException) {
+                                            Log.e(ShopsActivity::class.simpleName,
+                                                "ShopsNavHost: ${ex.message}",
+                                                ex)
+                                        }
+                                    }
+                                ),
+                            )
+                        }
+                        if (it.addressesCount > 0) {
+                            add(
+                                MenuItem(
+                                    label = resources.getQuantityString(
+                                        R.plurals.fs_shop_item_menu_addresses,
+                                        it.addressesCount,
+                                        it.addressesCount,
+                                    ),
+                                    onClick = {
+                                        navController.navigate("shops/${it.id}/addresses")
+                                    },
+                                ),
+                            )
+                        }
                     }
                 },
-                onAddressesClicked = {
-                    navController.navigate("shops/$it/addresses")
-                },
-                onAddShopClicked = {
-                    navController.navigate("shops/${Shop.default().id}")
-                },
-                onNavigationIconClicked = onNavigationIconClicked,
+                click = co.ke.xently.shops.ui.list.Click(
+                    add = {
+                        navController.navigate("shops/${Shop.default().id}")
+                    },
+                    navigationIcon = onNavigationIconClicked,
+                    click = co.ke.xently.shops.ui.list.item.Click(
+                        base = {},
+                    ),
+                ),
             )
         }
         composable(
@@ -104,9 +146,12 @@ internal fun ShopsNavHost(
             ),
         ) {
             AddressListScreen(
-                shopId = it.arguments!!.getLong("id"),
                 modifier = Modifier.fillMaxSize(),
-                onNavigationIconClicked = onNavigationIconClicked,
+                shopId = it.arguments!!.getLong("id"),
+                click = co.ke.xently.shops.ui.list.addresses.Click(
+                    navigationIcon = onNavigationIconClicked,
+                    click = co.ke.xently.shops.ui.list.addresses.item.Click(base = {}),
+                ),
             )
         }
     }

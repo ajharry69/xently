@@ -1,7 +1,6 @@
 package co.ke.xently.shoppinglist.ui.list.grouped
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyColumn
@@ -15,89 +14,99 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
-import co.ke.xently.data.GroupedShoppingList
-import co.ke.xently.data.TaskResult
-import co.ke.xently.data.errorMessage
-import co.ke.xently.data.getOrThrow
+import co.ke.xently.data.*
 import co.ke.xently.feature.ui.*
 import co.ke.xently.shoppinglist.R
+import co.ke.xently.shoppinglist.ui.list.grouped.item.GroupMenuItem
 import co.ke.xently.shoppinglist.ui.list.grouped.item.GroupedShoppingListCard
+import co.ke.xently.shoppinglist.ui.list.item.MenuItem
 import kotlinx.coroutines.launch
+
+internal data class Click(
+    val add: () -> Unit = {},
+    val click: co.ke.xently.shoppinglist.ui.list.grouped.item.Click = co.ke.xently.shoppinglist.ui.list.grouped.item.Click(),
+)
 
 @Composable
 internal fun GroupedShoppingListScreen(
     drawerItems: List<NavDrawerItem>,
+    menuItems: List<MenuItem>,
+    groupMenuItems: List<GroupMenuItem>,
+    click: Click,
     modifier: Modifier = Modifier,
     viewModel: ShoppingListGroupedViewModel = hiltViewModel(),
-    onShoppingListItemClicked: (itemId: Long) -> Unit,
-    onShoppingListItemRecommendClicked: (itemId: Long) -> Unit,
-    onRecommendGroupClicked: (group: Any) -> Unit = {},
-    onSeeAllClicked: (group: Any) -> Unit = {},
-    onAddShoppingListItemClicked: () -> Unit,
 ) {
     val scope = rememberCoroutineScope()
     val groupedShoppingListResult by viewModel.groupedShoppingListResult.collectAsState(scope.coroutineContext)
     val groupedShoppingListCount by viewModel.groupedShoppingListCount.collectAsState(scope.coroutineContext)
 
     GroupedShoppingListScreen(
-        modifier,
-        groupedShoppingListCount,
-        groupedShoppingListResult,
-        drawerItems,
-        onShoppingListItemClicked,
-        onShoppingListItemRecommendClicked,
-        onRecommendGroupClicked,
-        onSeeAllClicked,
-        onAddShoppingListItemClicked,
+        click = click,
+        modifier = modifier,
+        menuItems = menuItems,
+        drawerItems = drawerItems,
+        groupMenuItems = groupMenuItems,
+        groupedShoppingListCount = groupedShoppingListCount,
+        groupedShoppingListResult = groupedShoppingListResult,
     )
 }
 
 @Composable
 private fun GroupedShoppingListScreen(
+    click: Click,
     modifier: Modifier,
+    menuItems: List<MenuItem>,
+    drawerItems: List<NavDrawerItem>,
+    groupMenuItems: List<GroupMenuItem>,
     groupedShoppingListCount: Map<Any, Int>,
     groupedShoppingListResult: TaskResult<List<GroupedShoppingList>>,
-    drawerItems: List<NavDrawerItem>,
-    onShoppingListItemClicked: (itemId: Long) -> Unit,
-    onShoppingListItemRecommendClicked: (itemId: Long) -> Unit,
-    onRecommendGroupClicked: (group: Any) -> Unit,
-    onSeeAllClicked: (group: Any) -> Unit,
-    onAddShoppingListItemClicked: () -> Unit,
 ) {
     val scaffoldState = rememberScaffoldState()
     val coroutineScope = rememberCoroutineScope()
     Scaffold(
         scaffoldState = scaffoldState,
         floatingActionButton = {
-            FloatingActionButton(onClick = onAddShoppingListItemClicked) {
+            FloatingActionButton(onClick = click.add) {
                 Icon(Icons.Default.Add,
                     stringRes(R.string.fsl_detail_screen_toolbar_title, R.string.add))
             }
         },
         topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.fsl_toolbar_title)) },
+            ToolbarWithProgressbar(
+                title = stringResource(R.string.fsl_toolbar_title),
                 navigationIcon = {
-                    IconButton(onClick = {
-                        coroutineScope.launch {
-                            scaffoldState.drawerState.apply {
-                                if (isClosed) open() else close()
+                    Icon(
+                        Icons.Default.Menu,
+                        contentDescription = stringRes(
+                            R.string.toggle_drawer_visibility,
+                            if (scaffoldState.drawerState.isOpen) {
+                                R.string.hide
+                            } else {
+                                R.string.show
+                            },
+                        ),
+                    )
+                },
+                onNavigationIconClicked = {
+                    coroutineScope.launch {
+                        scaffoldState.drawerState.apply {
+                            if (isClosed) {
+                                open()
+                            } else {
+                                close()
                             }
                         }
-                    }) {
-                        Icon(Icons.Default.Menu, contentDescription = null)
                     }
                 },
                 actions = {
                     IconButton(onClick = { }) {
                         Icon(Icons.Default.Search, contentDescription = null)
                     }
-                }
+                },
             )
         },
         drawerContent = {
@@ -123,18 +132,19 @@ private fun GroupedShoppingListScreen(
             is TaskResult.Success -> {
                 val groupedShoppingList = groupedShoppingListResult.getOrThrow()
                 if (groupedShoppingList.isEmpty()) {
-                    Box(contentAlignment = Alignment.Center, modifier = modifier) {
-                        Text(stringResource(R.string.fsl_empty_shopping_list))
-                    }
+                    FullscreenEmptyList<ShoppingListItem>(
+                        modifier = modifier,
+                        error = R.string.fsl_empty_shopping_list,
+                    )
                 } else {
                     LazyColumn(modifier = modifier) {
                         items(groupedShoppingList) { groupList ->
                             GroupedShoppingListCard(
-                                groupList, groupedShoppingListCount,
-                                onShoppingListItemClicked = onShoppingListItemClicked,
-                                onShoppingListItemRecommendClicked = onShoppingListItemRecommendClicked,
-                                onRecommendGroupClicked = onRecommendGroupClicked,
-                                onSeeAllClicked = onSeeAllClicked,
+                                click = click.click,
+                                groupList = groupList,
+                                menuItems = menuItems,
+                                groupMenuItems = groupMenuItems,
+                                listCount = groupedShoppingListCount,
                             )
                         }
                     }

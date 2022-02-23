@@ -1,7 +1,6 @@
 package co.ke.xently.shoppinglist.ui.list
 
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -9,7 +8,6 @@ import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.paging.PagingConfig
 import androidx.paging.compose.LazyPagingItems
@@ -21,38 +19,33 @@ import co.ke.xently.feature.ui.PagedDataScreen
 import co.ke.xently.feature.ui.ToolbarWithProgressbar
 import co.ke.xently.feature.ui.stringRes
 import co.ke.xently.shoppinglist.R
+import co.ke.xently.shoppinglist.ui.list.item.MenuItem
 import co.ke.xently.shoppinglist.ui.list.item.ShoppingListItemCard
 
+internal data class Click(
+    val add: () -> Unit = {},
+    val navigationIcon: () -> Unit = {},
+    val item: (ShoppingListItem) -> Unit = {},
+)
 
 @Composable
 internal fun ShoppingListScreen(
+    menuItems: List<MenuItem>,
+    click: Click,
     modifier: Modifier = Modifier,
     viewModel: ShoppingListViewModel = hiltViewModel(),
-    onShoppingListItemClicked: (itemId: Long) -> Unit,
-    onRecommendClicked: (itemId: Long) -> Unit,
-    onNavigationIconClicked: () -> Unit = {},
-    onAddShoppingListItemClicked: () -> Unit = {},
 ) {
     val config = PagingConfig(20, enablePlaceholders = false)
     val items = viewModel.get(config).collectAsLazyPagingItems()
-    ShoppingListScreen(
-        modifier,
-        items,
-        onNavigationIconClicked,
-        onShoppingListItemClicked,
-        onRecommendClicked,
-        onAddShoppingListItemClicked,
-    )
+    ShoppingListScreen(modifier, items, menuItems, click)
 }
 
 @Composable
 private fun ShoppingListScreen(
     modifier: Modifier,
     pagingItems: LazyPagingItems<ShoppingListItem>,
-    onNavigationIconClicked: () -> Unit,
-    onShoppingListItemClicked: (itemId: Long) -> Unit,
-    onRecommendClicked: (itemId: Long) -> Unit,
-    onAddShoppingListItemClicked: () -> Unit,
+    menuItems: List<MenuItem>,
+    click: Click,
 ) {
     val scaffoldState = rememberScaffoldState()
     var showOptionsMenu by remember { mutableStateOf(false) }
@@ -60,8 +53,8 @@ private fun ShoppingListScreen(
         scaffoldState = scaffoldState,
         topBar = {
             ToolbarWithProgressbar(
-                stringResource(R.string.fsl_toolbar_title),
-                onNavigationIconClicked,
+                title = stringResource(R.string.fsl_toolbar_title),
+                onNavigationIconClicked = click.navigationIcon,
             ) {
                 IconButton(onClick = { showOptionsMenu = !showOptionsMenu }) {
                     Icon(
@@ -71,7 +64,8 @@ private fun ShoppingListScreen(
                 }
                 DropdownMenu(
                     expanded = showOptionsMenu,
-                    onDismissRequest = { showOptionsMenu = false }) {
+                    onDismissRequest = { showOptionsMenu = false },
+                ) {
                     DropdownMenuItem(onClick = {
                         showOptionsMenu = false
                         // TODO: Rethink implementation...
@@ -83,7 +77,7 @@ private fun ShoppingListScreen(
             }
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = onAddShoppingListItemClicked) {
+            FloatingActionButton(onClick = click.add) {
                 Icon(Icons.Default.Add,
                     stringRes(R.string.fsl_detail_screen_toolbar_title, R.string.add))
             }
@@ -93,13 +87,10 @@ private fun ShoppingListScreen(
             items(pagingItems) {
                 if (it != null) {
                     ShoppingListItemCard(
-                        it,
-                        modifier = Modifier
-                            .padding(start = 16.dp)
-                            .padding(vertical = 8.dp)
-                            .fillMaxWidth(),
-                        onUpdateRequested = onShoppingListItemClicked,
-                        onRecommendClicked = onRecommendClicked,
+                        item = it,
+                        menuItems = menuItems,
+                        onClick = click.item,
+                        modifier = Modifier.fillMaxWidth(),
                     )
                 } // TODO: Show placeholders on null products...
             }

@@ -6,7 +6,8 @@
     <string name="drawer_menu_shops">Shops</string>
     <string name="drawer_menu_products">Products</string>
 
-    <string name="toggle_password_visibility">Toggle password visibility</string>
+    <string name="toggle_drawer_visibility">%1$s drawer</string>
+    <string name="toggle_password_visibility">%1$s password</string>
     <string name="generic_error_message">Sorry, an unexpected error was encountered.</string>
     <string name="empty_list">No %1$s added, yet!</string>
     <string name="stop_location_tracking_button_text">Stop tracking</string>
@@ -20,4 +21,6 @@
     <string name="add">Add</string>
     <string name="update">Update</string>
     <string name="delete">Delete</string>
+    <string name="show">Show</string>
+    <string name="hide">Hide</string>
 </resources>
