@@ -21,38 +21,33 @@ import co.ke.xently.feature.ui.PagedDataScreen
 import co.ke.xently.feature.ui.ToolbarWithProgressbar
 import co.ke.xently.feature.ui.stringRes
 import co.ke.xently.shoppinglist.R
+import co.ke.xently.shoppinglist.ui.list.item.MenuItem
 import co.ke.xently.shoppinglist.ui.list.item.ShoppingListItemCard
 
+internal data class Click(
+    val add: () -> Unit = {},
+    val navigationIcon: () -> Unit = {},
+    val item: (ShoppingListItem) -> Unit = {},
+)
 
 @Composable
 internal fun ShoppingListScreen(
     modifier: Modifier = Modifier,
+    menuItems: List<MenuItem>,
+    click: Click,
     viewModel: ShoppingListViewModel = hiltViewModel(),
-    onShoppingListItemClicked: (itemId: Long) -> Unit,
-    onRecommendClicked: (itemId: Long) -> Unit,
-    onNavigationIconClicked: () -> Unit = {},
-    onAddShoppingListItemClicked: () -> Unit = {},
 ) {
     val config = PagingConfig(20, enablePlaceholders = false)
     val items = viewModel.get(config).collectAsLazyPagingItems()
-    ShoppingListScreen(
-        modifier,
-        items,
-        onNavigationIconClicked,
-        onShoppingListItemClicked,
-        onRecommendClicked,
-        onAddShoppingListItemClicked,
-    )
+    ShoppingListScreen(modifier, items, menuItems, click)
 }
 
 @Composable
 private fun ShoppingListScreen(
     modifier: Modifier,
     pagingItems: LazyPagingItems<ShoppingListItem>,
-    onNavigationIconClicked: () -> Unit,
-    onShoppingListItemClicked: (itemId: Long) -> Unit,
-    onRecommendClicked: (itemId: Long) -> Unit,
-    onAddShoppingListItemClicked: () -> Unit,
+    menuItems: List<MenuItem>,
+    click: Click,
 ) {
     val scaffoldState = rememberScaffoldState()
     var showOptionsMenu by remember { mutableStateOf(false) }
@@ -60,8 +55,8 @@ private fun ShoppingListScreen(
         scaffoldState = scaffoldState,
         topBar = {
             ToolbarWithProgressbar(
-                stringResource(R.string.fsl_toolbar_title),
-                onNavigationIconClicked,
+                title = stringResource(R.string.fsl_toolbar_title),
+                onNavigationIconClicked = click.navigationIcon,
             ) {
                 IconButton(onClick = { showOptionsMenu = !showOptionsMenu }) {
                     Icon(
@@ -83,7 +78,7 @@ private fun ShoppingListScreen(
             }
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = onAddShoppingListItemClicked) {
+            FloatingActionButton(onClick = click.add) {
                 Icon(Icons.Default.Add,
                     stringRes(R.string.fsl_detail_screen_toolbar_title, R.string.add))
             }
@@ -98,8 +93,8 @@ private fun ShoppingListScreen(
                             .padding(start = 16.dp)
                             .padding(vertical = 8.dp)
                             .fillMaxWidth(),
-                        onUpdateRequested = onShoppingListItemClicked,
-                        onRecommendClicked = onRecommendClicked,
+                        menuItems = menuItems,
+                        onClick = click.item,
                     )
                 } // TODO: Show placeholders on null products...
             }

@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
 import co.ke.xently.data.Product
 import co.ke.xently.feature.theme.XentlyTheme
+import co.ke.xently.feature.ui.ListItemSurface
 import co.ke.xently.feature.utils.descriptive
 import co.ke.xently.products.R
 
@@ -33,11 +34,7 @@ internal fun ProductListItem(
     onDeleteRequested: (id: Long) -> Unit = {},
 ) {
     var showDropMenu by remember(showPopupMenu) { mutableStateOf(showPopupMenu) }
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween,
-        modifier = modifier.padding(start = 8.dp),
-    ) {
+    ListItemSurface(modifier = modifier) {
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 modifier = Modifier
@@ -49,7 +46,8 @@ internal fun ProductListItem(
                 overflow = TextOverflow.Ellipsis,
             )
             Text(
-                DateFormat.getMediumDateFormat(LocalContext.current).format(product.datePurchased),
+                DateFormat.getMediumDateFormat(LocalContext.current)
+                    .format(product.datePurchased),
                 style = MaterialTheme.typography.caption,
             )
         }

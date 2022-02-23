@@ -35,6 +35,8 @@ import co.ke.xently.shoppinglist.Recommend.From
 import co.ke.xently.shoppinglist.ui.detail.ShoppingListItemScreen
 import co.ke.xently.shoppinglist.ui.list.ShoppingListScreen
 import co.ke.xently.shoppinglist.ui.list.grouped.GroupedShoppingListScreen
+import co.ke.xently.shoppinglist.ui.list.grouped.item.GroupMenuItem
+import co.ke.xently.shoppinglist.ui.list.item.MenuItem
 import co.ke.xently.shoppinglist.ui.list.recommendation.ShoppingListRecommendationScreen
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -137,6 +139,11 @@ internal fun ShoppingListNavHost(
         val onAddShoppingListItemClicked = {
             navController.navigate("shopping-list/${ShoppingListItem.default().id}")
         }
+        val shoppingListItemMenuItems = listOf(
+            MenuItem(R.string.update, onShoppingListItemClicked),
+            MenuItem(R.string.fsl_group_menu_recommend, onShoppingListItemRecommendClicked),
+            MenuItem(R.string.delete),
+        )
         composable("shopping-list-grouped") {
             GroupedShoppingListScreen(
                 drawerItems = listOf(
@@ -171,23 +178,35 @@ internal fun ShoppingListNavHost(
                         onClick = onProductMenuClicked,
                     ),
                 ),
+                menuItems = shoppingListItemMenuItems,
+                groupMenuItems = listOf(
+                    GroupMenuItem(R.string.fsl_group_menu_recommend) {
+                        navController.navigate("shopping-list/recommendations/${it}")
+                    },
+                    GroupMenuItem(R.string.fsl_group_menu_duplicate) {
+
+                    },
+                    GroupMenuItem(R.string.delete) {
+
+                    },
+                ),
+                click = co.ke.xently.shoppinglist.ui.list.grouped.Click(
+                    add = onAddShoppingListItemClicked,
+                    seeAll = { navController.navigate("shopping-list") },
+                    item = {},
+                ),
                 modifier = Modifier.fillMaxSize(),
-                onShoppingListItemClicked = onShoppingListItemClicked,
-                onShoppingListItemRecommendClicked = onShoppingListItemRecommendClicked,
-                onRecommendGroupClicked = {
-                    navController.navigate("shopping-list/recommendations/${it}")
-                },
-                onSeeAllClicked = { navController.navigate("shopping-list") },
-                onAddShoppingListItemClicked = onAddShoppingListItemClicked,
             )
         }
         composable("shopping-list") {
             ShoppingListScreen(
                 modifier = Modifier.fillMaxSize(),
-                onShoppingListItemClicked = onShoppingListItemClicked,
-                onRecommendClicked = onShoppingListItemRecommendClicked,
-                onNavigationIconClicked = onNavigationIconClicked,
-                onAddShoppingListItemClicked = onAddShoppingListItemClicked,
+                menuItems = shoppingListItemMenuItems,
+                click = co.ke.xently.shoppinglist.ui.list.Click(
+                    add = onAddShoppingListItemClicked,
+                    navigationIcon = onNavigationIconClicked,
+                    item = {},
+                )
             )
         }
         composable(
@@ -202,7 +221,10 @@ internal fun ShoppingListNavHost(
                     it.arguments?.get("recommendBy")!!,
                     From.valueOf(it.arguments?.getString("from", From.GroupedList.name)!!),
                 ),
-                onNavigationIconClicked = onNavigationIconClicked,
+                click = co.ke.xently.shoppinglist.ui.list.recommendation.Click(
+                    item = {},
+                    navigationIcon = onNavigationIconClicked,
+                ),
             )
         }
         composable(

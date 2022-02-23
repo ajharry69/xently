@@ -13,11 +13,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import co.ke.xently.data.RecommendationReport
+import co.ke.xently.data.*
 import co.ke.xently.data.RecommendationReport.Recommendation
-import co.ke.xently.data.TaskResult
-import co.ke.xently.data.errorMessage
-import co.ke.xently.data.getOrThrow
 import co.ke.xently.feature.ui.FullscreenError
 import co.ke.xently.feature.ui.FullscreenLoading
 import co.ke.xently.feature.ui.GoogleMapView
@@ -30,12 +27,17 @@ import com.google.android.libraries.maps.model.LatLng
 import com.google.android.libraries.maps.model.MarkerOptions
 import java.text.DecimalFormat
 
+internal data class Click(
+    val navigationIcon: () -> Unit = {},
+    val item: (ShoppingListItem) -> Unit = {},
+)
+
 @Composable
 internal fun ShoppingListRecommendationScreen(
+    click: Click,
     modifier: Modifier = Modifier,
     recommend: Recommend = Recommend(),
     viewModel: ShoppingListRecommendationViewModel = hiltViewModel(),
-    onNavigationIconClicked: (() -> Unit) = {},
 ) {
     viewModel.setRecommend(recommend)
     val recommendationReportResult by viewModel.recommendationReportResult.collectAsState()
@@ -43,7 +45,7 @@ internal fun ShoppingListRecommendationScreen(
     ShoppingListRecommendationScreen(
         modifier,
         recommendationReportResult,
-        onNavigationIconClicked,
+        click,
         viewModel::setLocationPermissionGranted,
     )
 }
@@ -52,7 +54,7 @@ internal fun ShoppingListRecommendationScreen(
 private fun ShoppingListRecommendationScreen(
     modifier: Modifier,
     result: TaskResult<RecommendationReport>,
-    onNavigationIconClicked: () -> Unit,
+    click: Click,
     onLocationPermissionChanged: (Boolean) -> Unit,
 ) {
     val scaffoldState = rememberScaffoldState()
@@ -61,8 +63,8 @@ private fun ShoppingListRecommendationScreen(
         topBar = {
             if (result !is TaskResult.Success) {
                 ToolbarWithProgressbar(
-                    stringResource(R.string.fsl_recommendations_toolbar_title),
-                    onNavigationIconClicked = onNavigationIconClicked,
+                    title = stringResource(R.string.fsl_recommendations_toolbar_title),
+                    onNavigationIconClicked = click.navigationIcon,
                 )
             }
         }
@@ -77,7 +79,7 @@ private fun ShoppingListRecommendationScreen(
             is TaskResult.Success -> {
                 val report = result.getOrThrow()
                 LazyColumn(
-                    modifier.padding(it),
+                    modifier = modifier.padding(it),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     item {
@@ -107,8 +109,8 @@ private fun ShoppingListRecommendationScreen(
                                 onLocationPermissionChanged = onLocationPermissionChanged,
                             )
                             ToolbarWithProgressbar(
-                                stringResource(R.string.fsl_recommendations_toolbar_title),
-                                onNavigationIconClicked = onNavigationIconClicked,
+                                title = stringResource(R.string.fsl_recommendations_toolbar_title),
+                                onNavigationIconClicked = click.navigationIcon,
                                 backgroundColor = Color.Transparent,
                                 elevation = 0.dp
                             )
@@ -117,7 +119,7 @@ private fun ShoppingListRecommendationScreen(
                     item {
                         RecommendationReportItemGroup(
                             modifier = Modifier.padding(start = 16.dp),
-                            title = "Synopsis",
+                            title = stringResource(R.string.fsl_recommendations_synopsis),
                         ) {
                             RecommendationReportSynopsisCard(
                                 report = report,
@@ -131,7 +133,7 @@ private fun ShoppingListRecommendationScreen(
                         item {
                             RecommendationReportItemGroup(
                                 modifier = Modifier.padding(start = 16.dp),
-                                title = "Recommendations",
+                                title = stringResource(R.string.fsl_recommendations),
                             ) {
                                 Column {
                                     report.recommendations.forEach { recommendation ->
@@ -147,19 +149,14 @@ private fun ShoppingListRecommendationScreen(
                     if (report.count.missedItems > 0) {
                         item {
                             RecommendationReportItemGroup(
-                                modifier = Modifier.padding(start = 16.dp),
-                                title = "Missed items",
+                                title = stringResource(R.string.fsl_recommendations_missed),
                             ) {
                                 report.missedItems.forEach { item ->
                                     ShoppingListItemCard(
                                         item = item,
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(vertical = 8.dp)
-                                            .fillMaxWidth(),
-                                    ) {
-                                        // TODO: Implement click listener...
-                                    }
+                                        onClick = click.item,
+                                        modifier = Modifier.fillMaxWidth(),
+                                    )
                                 }
                             }
                         }

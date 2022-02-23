@@ -12,4 +12,7 @@
     <string name="fsl_text_field_label_purchase_quantity">Purchase quantity</string>
     <string name="fsl_recommendations_toolbar_title">Recommendations</string>
     <string name="fsl_success_adding_shopping_list_item">Successfully adding shopping list item.</string>
+    <string name="fsl_recommendations_missed">Missed items</string>
+    <string name="fsl_recommendations">Recommendations</string>
+    <string name="fsl_recommendations_synopsis">Synopsis</string>
 </resources>

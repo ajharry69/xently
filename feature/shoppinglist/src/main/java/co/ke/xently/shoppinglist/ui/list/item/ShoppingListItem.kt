@@ -1,6 +1,10 @@
 package co.ke.xently.shoppinglist.ui.list.item
 
-import androidx.compose.foundation.layout.*
+import androidx.annotation.StringRes
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
@@ -10,19 +14,23 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import co.ke.xently.data.ShoppingListItem
-import co.ke.xently.shoppinglist.R
+import co.ke.xently.feature.ui.ListItemSurface
 
+internal data class MenuItem(
+    @StringRes
+    val label: Int,
+    val onClick: (Long) -> Unit = {},
+)
 
 @Composable
 internal fun ShoppingListItemCard(
     item: ShoppingListItem,
     modifier: Modifier = Modifier,
-    onUpdateRequested: ((id: Long) -> Unit) = {},
-    onRecommendClicked: ((id: Long) -> Unit) = {},
-    onDeleteClicked: ((id: Long) -> Unit) = {},
+    menuItems: List<MenuItem> = emptyList(),
+    onClick: (ShoppingListItem) -> Unit,
 ) {
     var showDropMenu by remember { mutableStateOf(false) }
-    Row(modifier = modifier, horizontalArrangement = Arrangement.SpaceBetween) {
+    ListItemSurface(modifier = modifier, onClick = { onClick.invoke(item) }) {
         Column {
             Text(
                 modifier = Modifier.wrapContentWidth(),
@@ -48,24 +56,14 @@ internal fun ShoppingListItemCard(
                     )
                 }
                 DropdownMenu(expanded = showDropMenu, onDismissRequest = { showDropMenu = false }) {
-                    DropdownMenuItem(
-                        onClick = {
-                            onUpdateRequested(item.id)
-                            showDropMenu = false
-                        },
-                    ) { Text(stringResource(R.string.update)) }
-                    DropdownMenuItem(
-                        onClick = {
-                            onRecommendClicked(item.id)
-                            showDropMenu = false
-                        },
-                    ) { Text(stringResource(R.string.fsl_group_menu_recommend)) }
-                    DropdownMenuItem(
-                        onClick = {
-                            onDeleteClicked(item.id)
-                            showDropMenu = false
-                        },
-                    ) { Text(stringResource(R.string.delete)) }
+                    for (menuItem in menuItems) {
+                        DropdownMenuItem(
+                            onClick = {
+                                menuItem.onClick.invoke(item.id)
+                                showDropMenu = false
+                            },
+                        ) { Text(stringResource(menuItem.label)) }
+                    }
                 }
             }
         }

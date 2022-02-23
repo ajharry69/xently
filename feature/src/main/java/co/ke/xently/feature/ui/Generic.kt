@@ -27,9 +27,11 @@ import androidx.paging.compose.LazyPagingItems
 import co.ke.xently.feature.R
 import co.ke.xently.feature.theme.XentlyTheme
 
+val HORIZONTAL_PADDING = 16.dp
+
 val VerticalLayoutModifier = Modifier
     .fillMaxWidth()
-    .padding(horizontal = 16.dp)
+    .padding(horizontal = HORIZONTAL_PADDING)
 
 @Composable
 fun rememberFragmentManager(): FragmentManager {
@@ -170,7 +172,7 @@ inline fun <reified T : Any> PagedDataScreen(
                 LazyColumn(
                     modifier = modifier,
                     content = noneEmptyItems,
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
+//                    verticalArrangement = Arrangement.spacedBy(16.dp),
                 )
             }
         }

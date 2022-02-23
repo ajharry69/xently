@@ -21,19 +21,25 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import co.ke.xently.data.*
 import co.ke.xently.feature.ui.*
 import co.ke.xently.shoppinglist.R
+import co.ke.xently.shoppinglist.ui.list.grouped.item.GroupMenuItem
 import co.ke.xently.shoppinglist.ui.list.grouped.item.GroupedShoppingListCard
+import co.ke.xently.shoppinglist.ui.list.item.MenuItem
 import kotlinx.coroutines.launch
+
+internal data class Click(
+    val add: () -> Unit = {},
+    val seeAll: (group: Any) -> Unit = {},
+    val item: (ShoppingListItem) -> Unit = {},
+)
 
 @Composable
 internal fun GroupedShoppingListScreen(
     drawerItems: List<NavDrawerItem>,
+    menuItems: List<MenuItem>,
+    groupMenuItems: List<GroupMenuItem>,
+    click: Click,
     modifier: Modifier = Modifier,
     viewModel: ShoppingListGroupedViewModel = hiltViewModel(),
-    onShoppingListItemClicked: (itemId: Long) -> Unit,
-    onShoppingListItemRecommendClicked: (itemId: Long) -> Unit,
-    onRecommendGroupClicked: (group: Any) -> Unit = {},
-    onSeeAllClicked: (group: Any) -> Unit = {},
-    onAddShoppingListItemClicked: () -> Unit,
 ) {
     val scope = rememberCoroutineScope()
     val groupedShoppingListResult by viewModel.groupedShoppingListResult.collectAsState(scope.coroutineContext)
@@ -44,11 +50,9 @@ internal fun GroupedShoppingListScreen(
         groupedShoppingListCount,
         groupedShoppingListResult,
         drawerItems,
-        onShoppingListItemClicked,
-        onShoppingListItemRecommendClicked,
-        onRecommendGroupClicked,
-        onSeeAllClicked,
-        onAddShoppingListItemClicked,
+        menuItems,
+        groupMenuItems,
+        click,
     )
 }
 
@@ -58,18 +62,16 @@ private fun GroupedShoppingListScreen(
     groupedShoppingListCount: Map<Any, Int>,
     groupedShoppingListResult: TaskResult<List<GroupedShoppingList>>,
     drawerItems: List<NavDrawerItem>,
-    onShoppingListItemClicked: (itemId: Long) -> Unit,
-    onShoppingListItemRecommendClicked: (itemId: Long) -> Unit,
-    onRecommendGroupClicked: (group: Any) -> Unit,
-    onSeeAllClicked: (group: Any) -> Unit,
-    onAddShoppingListItemClicked: () -> Unit,
+    menuItems: List<MenuItem>,
+    groupMenuItems: List<GroupMenuItem>,
+    click: Click,
 ) {
     val scaffoldState = rememberScaffoldState()
     val coroutineScope = rememberCoroutineScope()
     Scaffold(
         scaffoldState = scaffoldState,
         floatingActionButton = {
-            FloatingActionButton(onClick = onAddShoppingListItemClicked) {
+            FloatingActionButton(onClick = click.add) {
                 Icon(Icons.Default.Add,
                     stringRes(R.string.fsl_detail_screen_toolbar_title, R.string.add))
             }
@@ -139,11 +141,12 @@ private fun GroupedShoppingListScreen(
                     LazyColumn(modifier = modifier) {
                         items(groupedShoppingList) { groupList ->
                             GroupedShoppingListCard(
-                                groupList, groupedShoppingListCount,
-                                onShoppingListItemClicked = onShoppingListItemClicked,
-                                onShoppingListItemRecommendClicked = onShoppingListItemRecommendClicked,
-                                onRecommendGroupClicked = onRecommendGroupClicked,
-                                onSeeAllClicked = onSeeAllClicked,
+                                groupList = groupList,
+                                listCount = groupedShoppingListCount,
+                                onSeeAllClicked = click.seeAll,
+                                menuItems = menuItems,
+                                onItemClick = click.item,
+                                groupMenuItems = groupMenuItems,
                             )
                         }
                     }

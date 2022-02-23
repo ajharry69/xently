@@ -22,28 +22,29 @@ import co.ke.xently.feature.ui.PagedDataScreen
 import co.ke.xently.feature.ui.ToolbarWithProgressbar
 import co.ke.xently.feature.ui.stringRes
 import co.ke.xently.shops.R
+import co.ke.xently.shops.ui.list.item.MenuItem
 import co.ke.xently.shops.ui.list.item.ShopListItem
+
+internal data class Click(
+    val add: () -> Unit = {},
+    val navigationIcon: () -> Unit = {},
+    val click: co.ke.xently.shops.ui.list.item.Click = co.ke.xently.shops.ui.list.item.Click(),
+)
 
 @Composable
 internal fun ShopListScreen(
     modifier: Modifier = Modifier,
     viewModel: ShopListViewModel = hiltViewModel(),
-    onUpdateRequested: ((id: Long) -> Unit) = {},
-    onProductsClicked: ((id: Long) -> Unit) = {},
-    onAddressesClicked: ((id: Long) -> Unit) = {},
-    onNavigationIconClicked: (() -> Unit) = {},
-    onAddShopClicked: (() -> Unit) = {},
+    menuItems: @Composable (Shop) -> List<MenuItem>,
+    click: Click,
 ) {
     val config = PagingConfig(20, enablePlaceholders = false)
     val items = viewModel.get(config).collectAsLazyPagingItems()
     ShopListScreen(
         items,
         modifier = modifier,
-        onUpdateRequested = onUpdateRequested,
-        onProductsClicked = onProductsClicked,
-        onAddressesClicked = onAddressesClicked,
-        onNavigationIconClicked = onNavigationIconClicked,
-        onAddShopClicked = onAddShopClicked,
+        menuItems = menuItems,
+        click = click,
     )
 }
 
@@ -51,22 +52,19 @@ internal fun ShopListScreen(
 private fun ShopListScreen(
     pagingItems: LazyPagingItems<Shop>,
     modifier: Modifier = Modifier,
-    onUpdateRequested: ((id: Long) -> Unit) = {},
-    onProductsClicked: ((id: Long) -> Unit) = {},
-    onAddressesClicked: ((id: Long) -> Unit) = {},
-    onNavigationIconClicked: (() -> Unit) = {},
-    onAddShopClicked: (() -> Unit) = {},
+    menuItems: @Composable (Shop) -> List<MenuItem>,
+    click: Click,
 ) {
     val scaffoldState = rememberScaffoldState()
     Scaffold(
         topBar = {
             ToolbarWithProgressbar(
-                stringResource(R.string.title_activity_shops),
-                onNavigationIconClicked,
+                title = stringResource(R.string.title_activity_shops),
+                onNavigationIconClicked = click.navigationIcon,
             )
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = onAddShopClicked) {
+            FloatingActionButton(onClick = click.add) {
                 Icon(Icons.Default.Add, stringRes(R.string.fs_add_shop_toolbar_title, R.string.add))
             }
         },
@@ -77,9 +75,8 @@ private fun ShopListScreen(
                     ShopListItem(
                         it,
                         modifier = Modifier.fillMaxWidth(),
-                        onUpdateRequested = onUpdateRequested,
-                        onProductsClicked = onProductsClicked,
-                        onAddressesClicked = onAddressesClicked,
+                        click = click.click,
+                        menuItems = menuItems,
                     )
                 } // TODO: Show placeholders on null products...
             }
