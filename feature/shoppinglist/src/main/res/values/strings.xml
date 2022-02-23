@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="drawer_menu_signout">Signout</string>
+    <string name="drawer_menu_account">Account</string>
+    <string name="drawer_menu_shopping_list">Shopping list</string>
     <string name="fsl_toolbar_title">Shopping list</string>
     <string name="fsl_group_button_see_all">SEE ALL</string>
     <string name="fsl_group_menu_recommend">Recommend</string>

@@ -12,8 +12,11 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -24,6 +27,7 @@ import co.ke.xently.data.ShoppingListItem
 import co.ke.xently.feature.LocationPermissionViewModel
 import co.ke.xently.feature.LocationService
 import co.ke.xently.feature.theme.XentlyTheme
+import co.ke.xently.feature.ui.NavDrawerItem
 import co.ke.xently.shoppinglist.Recommend.From
 import co.ke.xently.shoppinglist.ui.detail.ShoppingListItemScreen
 import co.ke.xently.shoppinglist.ui.list.ShoppingListScreen
@@ -71,7 +75,7 @@ class ShoppingListActivity : AppCompatActivity() {
                                 startActivity(it)
                             }
                         },
-                        onSignoutMenuClicked = {
+                        onAccountMenuClicked = {
                             Intent("co.ke.xently.action.ACCOUNTS").also {
                                 startActivity(it)
                             }
@@ -112,9 +116,10 @@ internal fun ShoppingListNavHost(
     navController: NavHostController,
     onShopMenuClicked: () -> Unit = {},
     onProductMenuClicked: () -> Unit = {},
-    onSignoutMenuClicked: () -> Unit = {},
+    onAccountMenuClicked: () -> Unit = {},
     onNavigationIconClicked: () -> Unit = {},
 ) {
+    val context = LocalContext.current
     NavHost(
         modifier = modifier,
         navController = navController,
@@ -131,6 +136,36 @@ internal fun ShoppingListNavHost(
         }
         composable("shopping-list-grouped") {
             GroupedShoppingListScreen(
+                drawerItems = listOf(
+                    NavDrawerItem(
+                        context = context,
+                        label = R.string.drawer_menu_shopping_list,
+                        icon = Icons.Default.List,
+                        onClick = {
+                            navController.navigate("shopping-list-grouped") {
+                                launchSingleTop = true
+                            }
+                        },
+                    ),
+                    NavDrawerItem(
+                        context = context,
+                        label = R.string.drawer_menu_account,
+                        icon = Icons.Default.Person,
+                        onClick = onAccountMenuClicked,
+                    ),
+                    NavDrawerItem(
+                        context = context,
+                        label = R.string.drawer_menu_shops,
+                        icon = Icons.Default.Business,
+                        onClick = onShopMenuClicked,
+                    ),
+                    NavDrawerItem(
+                        context = context,
+                        label = R.string.drawer_menu_products,
+                        icon = Icons.Default.Category,
+                        onClick = onProductMenuClicked,
+                    ),
+                ),
                 modifier = Modifier.fillMaxSize(),
                 onShoppingListItemClicked = onShoppingListItemClicked,
                 onShoppingListItemRecommendClicked = onShoppingListItemRecommendClicked,
@@ -138,9 +173,6 @@ internal fun ShoppingListNavHost(
                     navController.navigate("shopping-list/recommendations/${it}")
                 },
                 onSeeAllClicked = { navController.navigate("shopping-list") },
-                onShopMenuClicked = onShopMenuClicked,
-                onProductMenuClicked = onProductMenuClicked,
-                onSignoutMenuClicked = onSignoutMenuClicked,
                 onAddShoppingListItemClicked = onAddShoppingListItemClicked,
             )
         }

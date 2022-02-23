@@ -1,5 +1,7 @@
 package co.ke.xently.feature.ui
 
+import android.content.Context
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
@@ -15,12 +17,23 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import co.ke.xently.feature.theme.XentlyTheme
+import kotlinx.coroutines.launch
 
-data class NavItem(
+private val DRAWER_HORIZONTAL_PADDING = 22.dp
+val DRAWER_HEADER_HEIGHT = 176.dp
+
+data class NavDrawerItem(
     val label: String,
     val icon: ImageVector? = null,
     val onClick: () -> Unit = {},
-)
+) {
+    constructor(
+        context: Context,
+        @StringRes label: Int,
+        icon: ImageVector? = null,
+        onClick: () -> Unit = {},
+    ) : this(context.getString(label), icon, onClick)
+}
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
@@ -36,7 +49,7 @@ fun NavigationDrawerItem(
         mutableStateOf(isSelected)
     }
     Surface(
-        modifier = modifier.padding(horizontal = 22.dp),
+        modifier = modifier.padding(horizontal = DRAWER_HORIZONTAL_PADDING),
         color = if (selected) {
             MaterialTheme.colors.primary.copy(alpha = 0.12f)
         } else {
@@ -54,10 +67,12 @@ fun NavigationDrawerItem(
         onClickLabel = label,
     ) {
         Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            Box(modifier = Modifier
-                .padding(all = 14.dp)
-                .size(size = 24.dp),
-                contentAlignment = Alignment.Center) {
+            Box(
+                modifier = Modifier
+                    .padding(all = 14.dp)
+                    .size(size = 24.dp),
+                contentAlignment = Alignment.Center,
+            ) {
                 if (icon != null) {
                     Icon(
                         modifier = Modifier.fillMaxSize(),
@@ -87,18 +102,20 @@ fun NavigationDrawerItem(
 
 @Composable
 fun NavigationDrawerGroup(
-    items: List<NavItem>,
+    drawerItems: List<NavDrawerItem>,
     modifier: Modifier = Modifier,
+    drawerState: DrawerState? = null,
     title: String? = null,
     isCheckable: Boolean = true,
 ) {
     var currentlySelected by remember {
         mutableStateOf(0)
     }
+    val coroutineScope = rememberCoroutineScope()
 
     val content: @Composable (Modifier) -> Unit = {
         Column(modifier = it) {
-            for ((index, item) in items.withIndex()) {
+            for ((index, item) in drawerItems.withIndex()) {
                 NavigationDrawerItem(
                     modifier = Modifier.fillMaxWidth(),
                     label = item.label,
@@ -106,7 +123,14 @@ fun NavigationDrawerGroup(
                     onClick = {
                         if (currentlySelected != index) {
                             currentlySelected = index
-                            item.onClick.invoke()
+                        }
+                        item.onClick.invoke()
+                        drawerState?.also { state ->
+                            coroutineScope.launch {
+                                if (state.isOpen) {
+                                    state.close()
+                                }
+                            }
                         }
                     },
                     isCheckable = false,
@@ -124,7 +148,7 @@ fun NavigationDrawerGroup(
                 maxLines = 1,
                 style = MaterialTheme.typography.body2,
                 color = MaterialTheme.colors.onSecondary,
-                modifier = Modifier.padding(horizontal = 22.dp),
+                modifier = Modifier.padding(horizontal = DRAWER_HORIZONTAL_PADDING),
             )
             content(Modifier.fillMaxWidth())
         }
@@ -138,19 +162,19 @@ private fun NavigationDrawerGroup() {
         Column(Modifier.fillMaxSize()) {
             NavigationDrawerGroup(
                 modifier = Modifier.fillMaxWidth(),
-                items = listOf(
-                    NavItem(icon = Icons.Default.Person, label = "Account"),
-                    NavItem(icon = Icons.Default.Favorite, label = "Favourites"),
-                    NavItem(label = "No icon"),
+                drawerItems = listOf(
+                    NavDrawerItem(icon = Icons.Default.Person, label = "Account"),
+                    NavDrawerItem(icon = Icons.Default.Favorite, label = "Favourites"),
+                    NavDrawerItem(label = "No icon"),
                 ),
             )
             NavigationDrawerGroup(
                 modifier = Modifier.fillMaxWidth(),
                 title = "Others",
                 isCheckable = false,
-                items = listOf(
-                    NavItem(icon = Icons.Default.Settings, label = "Settings"),
-                    NavItem(icon = Icons.Default.Help, label = "Help"),
+                drawerItems = listOf(
+                    NavDrawerItem(icon = Icons.Default.Settings, label = "Settings"),
+                    NavDrawerItem(icon = Icons.Default.Help, label = "Help"),
                 ),
             )
         }
