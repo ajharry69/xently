@@ -145,6 +145,7 @@ private fun GroupedShoppingListScreen(
                                 menuItems = menuItems,
                                 groupMenuItems = groupMenuItems,
                                 listCount = groupedShoppingListCount,
+                                showPlaceholder = !true, // TODO: Handle intelligently...
                             )
                         }
                     }

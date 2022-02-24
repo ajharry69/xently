@@ -29,6 +29,8 @@ import co.ke.xently.feature.theme.XentlyTheme
 
 val HORIZONTAL_PADDING = 16.dp
 
+val NEGLIGIBLE_SPACE_BY = 2.dp
+
 val VerticalLayoutModifier = Modifier
     .fillMaxWidth()
     .padding(horizontal = HORIZONTAL_PADDING)

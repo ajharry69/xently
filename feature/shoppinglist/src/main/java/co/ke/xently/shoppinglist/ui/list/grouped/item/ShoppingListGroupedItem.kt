@@ -15,6 +15,8 @@ import androidx.compose.ui.unit.dp
 import co.ke.xently.data.GroupedShoppingList
 import co.ke.xently.data.ShoppingListItem
 import co.ke.xently.feature.ui.HORIZONTAL_PADDING
+import co.ke.xently.feature.ui.NEGLIGIBLE_SPACE_BY
+import co.ke.xently.feature.ui.shimmerPlaceholder
 import co.ke.xently.shoppinglist.R
 import co.ke.xently.shoppinglist.ui.list.item.MenuItem
 import co.ke.xently.shoppinglist.ui.list.item.ShoppingListItemCard
@@ -35,6 +37,8 @@ internal data class GroupMenuItem(
 internal fun GroupedShoppingListCard(
     groupList: GroupedShoppingList,
     listCount: Map<Any, Int>,
+    modifier: Modifier = Modifier,
+    showPlaceholder: Boolean = false,
     menuItems: List<MenuItem> = emptyList(),
     groupMenuItems: List<GroupMenuItem> = emptyList(),
     click: Click = Click(),
@@ -44,7 +48,7 @@ internal fun GroupedShoppingListCard(
     val numberOfItems = listCount.getOrElse(groupList.group) { groupList.numberOfItems }
 
     Card(
-        modifier = Modifier
+        modifier = modifier
             .padding(horizontal = HORIZONTAL_PADDING)
             .padding(top = HORIZONTAL_PADDING),
     ) {
@@ -55,20 +59,30 @@ internal fun GroupedShoppingListCard(
                     .padding(start = HORIZONTAL_PADDING),
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
-                Column(modifier = Modifier.padding(bottom = 8.dp)) {
-                    Text(text = groupList.group, style = MaterialTheme.typography.h6)
+                Column(
+                    modifier = Modifier.padding(bottom = HORIZONTAL_PADDING / 2),
+                    verticalArrangement = Arrangement.spacedBy(NEGLIGIBLE_SPACE_BY),
+                ) {
+                    Text(
+                        text = groupList.group,
+                        style = MaterialTheme.typography.h6,
+                        modifier = Modifier.shimmerPlaceholder(showPlaceholder),
+                    )
                     Text(
                         text = LocalContext.current.resources.getQuantityString(
                             R.plurals.fsl_group_items_count,
                             numberOfItems, numberOfItems
-                        ), style = MaterialTheme.typography.subtitle2
+                        ),
+                        style = MaterialTheme.typography.subtitle2,
+                        modifier = Modifier.shimmerPlaceholder(showPlaceholder),
                     )
                 }
                 Box(modifier = Modifier.align(Alignment.Top)) {
                     IconButton(onClick = { showDropDownMenu = true }) {
                         Icon(
-                            Icons.Filled.MoreVert,
-                            contentDescription = stringResource(R.string.fsl_group_card_menu_content_desc_more)
+                            imageVector = Icons.Filled.MoreVert,
+                            contentDescription = stringResource(R.string.fsl_group_card_menu_content_desc_more),
+                            modifier = Modifier.shimmerPlaceholder(showPlaceholder),
                         )
                     }
                     DropdownMenu(
@@ -89,7 +103,9 @@ internal fun GroupedShoppingListCard(
             Divider(
                 color = MaterialTheme.colors.onSurface.copy(alpha = 0.2f),
                 thickness = 1.dp,
-                modifier = Modifier.padding(end = HORIZONTAL_PADDING, start = HORIZONTAL_PADDING)
+                modifier = Modifier
+                    .padding(end = HORIZONTAL_PADDING, start = HORIZONTAL_PADDING)
+                    .shimmerPlaceholder(showPlaceholder),
             )
             Column {
                 for (item in groupList.shoppingList.take(itemsPerCard)) {
@@ -97,6 +113,7 @@ internal fun GroupedShoppingListCard(
                         item = item,
                         onClick = click.item,
                         menuItems = menuItems,
+                        showPlaceholder = showPlaceholder,
                         modifier = Modifier.fillMaxWidth(),
                     )
                 }
@@ -106,6 +123,7 @@ internal fun GroupedShoppingListCard(
                     onClick = { click.seeAll.invoke(groupList.group) },
                     modifier = Modifier
                         .fillMaxWidth()
+                        .shimmerPlaceholder(showPlaceholder)
                         .padding(horizontal = HORIZONTAL_PADDING)
                 ) {
                     Text(

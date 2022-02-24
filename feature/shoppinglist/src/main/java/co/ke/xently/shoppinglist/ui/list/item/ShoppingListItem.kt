@@ -1,10 +1,7 @@
 package co.ke.xently.shoppinglist.ui.list.item
 
 import androidx.annotation.StringRes
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
@@ -15,6 +12,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import co.ke.xently.data.ShoppingListItem
 import co.ke.xently.feature.ui.ListItemSurface
+import co.ke.xently.feature.ui.NEGLIGIBLE_SPACE_BY
+import co.ke.xently.feature.ui.shimmerPlaceholder
+import co.ke.xently.shoppinglist.R
 
 internal data class MenuItem(
     @StringRes
@@ -26,33 +26,46 @@ internal data class MenuItem(
 internal fun ShoppingListItemCard(
     item: ShoppingListItem,
     modifier: Modifier = Modifier,
+    showPlaceholder: Boolean = false,
     menuItems: List<MenuItem> = emptyList(),
     onClick: (ShoppingListItem) -> Unit,
 ) {
+    val placeholderVisible = showPlaceholder || item.isDefault
     var showDropMenu by remember { mutableStateOf(false) }
     ListItemSurface(modifier = modifier, onClick = { onClick.invoke(item) }) {
-        Column {
+        Column(verticalArrangement = Arrangement.spacedBy(NEGLIGIBLE_SPACE_BY)) {
             Text(
-                modifier = Modifier.wrapContentWidth(),
                 text = item.name,
-                style = MaterialTheme.typography.body1
+                style = MaterialTheme.typography.body1,
+                modifier = Modifier
+                    .wrapContentWidth()
+                    .shimmerPlaceholder(placeholderVisible),
             )
             Text(
                 text = "${item.unitQuantity} ${item.unit}",
-                style = MaterialTheme.typography.caption
+                style = MaterialTheme.typography.caption,
+                modifier = Modifier.shimmerPlaceholder(placeholderVisible),
             )
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(text = "${item.purchaseQuantity}", style = MaterialTheme.typography.h6)
+            Text(
+                text = "${item.purchaseQuantity}",
+                style = MaterialTheme.typography.h6,
+                modifier = Modifier.shimmerPlaceholder(placeholderVisible),
+            )
             Box {
                 IconButton(onClick = { showDropMenu = true }) {
                     Icon(
-                        if (showDropMenu) {
+                        imageVector = if (showDropMenu) {
                             Icons.Default.KeyboardArrowDown
                         } else {
                             Icons.Default.KeyboardArrowRight
                         },
-                        contentDescription = "${item.name} shopping list item options"
+                        contentDescription = stringResource(
+                            R.string.fsl_detail_more_actions_content_description,
+                            item.name,
+                        ),
+                        modifier = Modifier.shimmerPlaceholder(placeholderVisible),
                     )
                 }
                 DropdownMenu(expanded = showDropMenu, onDismissRequest = { showDropMenu = false }) {

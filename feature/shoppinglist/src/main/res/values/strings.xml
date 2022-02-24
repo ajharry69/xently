@@ -22,4 +22,5 @@
     <string name="fsl_recommendation_lookup_duration">Lookup duration</string>
     <string name="fsl_recommendation_recommendations">Recommendations</string>
     <string name="fsl_recommendation_shops_visited">Shops visited</string>
+    <string name="fsl_detail_more_actions_content_description">%1$s shopping list item options</string>
 </resources>
