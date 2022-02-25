@@ -3,6 +3,7 @@ package co.ke.xently.shoppinglist.ui.list.grouped
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
@@ -126,18 +127,18 @@ private fun GroupedShoppingListScreen(
     ) {
         when (groupedShoppingListResult) {
             is TaskResult.Error -> {
-                FullscreenError(modifier, groupedShoppingListResult.errorMessage)
+                FullscreenError(modifier.padding(it), groupedShoppingListResult.errorMessage)
             }
-            TaskResult -> FullscreenLoading(modifier)
+            TaskResult -> FullscreenLoading(modifier.padding(it))
             is TaskResult.Success -> {
                 val groupedShoppingList = groupedShoppingListResult.getOrThrow()
                 if (groupedShoppingList.isEmpty()) {
                     FullscreenEmptyList<ShoppingListItem>(
-                        modifier = modifier,
+                        modifier = modifier.padding(it),
                         error = R.string.fsl_empty_shopping_list,
                     )
                 } else {
-                    LazyColumn(modifier = modifier) {
+                    LazyColumn(modifier = modifier.padding(it)) {
                         items(groupedShoppingList) { groupList ->
                             GroupedShoppingListCard(
                                 click = click.click,
