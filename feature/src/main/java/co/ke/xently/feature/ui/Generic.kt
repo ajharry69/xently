@@ -120,20 +120,24 @@ val navigateToSignInScreen: (Context) -> Unit = {
     }
 }
 
+fun Throwable.isAuthError() = this is HttpException && statusCode == 401
+
 @Composable
-fun HttpErrorButton(it: Throwable, modifier: Modifier = Modifier, onClick: (() -> Unit)? = null) {
-    (it as? HttpException)?.also { exception ->
-        if (exception.statusCode == 401) {
-            val context = LocalContext.current
-            Button(
-                modifier = modifier,
-                onClick = onClick ?: { navigateToSignInScreen.invoke(context) },
-            ) {
-                Text(
-                    style = MaterialTheme.typography.button,
-                    text = stringResource(R.string.common_signin_button_text).uppercase(KENYA),
-                )
-            }
+fun HttpErrorButton(
+    error: Throwable,
+    modifier: Modifier = Modifier,
+    onClick: (() -> Unit)? = null,
+) {
+    if (error.isAuthError()) {
+        val context = LocalContext.current
+        Button(
+            modifier = modifier,
+            onClick = onClick ?: { navigateToSignInScreen.invoke(context) },
+        ) {
+            Text(
+                style = MaterialTheme.typography.button,
+                text = stringResource(R.string.common_signin_button_text).uppercase(KENYA),
+            )
         }
     }
 }

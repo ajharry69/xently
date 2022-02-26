@@ -95,9 +95,11 @@ private fun GroupedShoppingListScreen(
     Scaffold(
         scaffoldState = scaffoldState,
         floatingActionButton = {
-            FloatingActionButton(onClick = click.add) {
-                Icon(Icons.Default.Add,
-                    stringRes(R.string.fsl_detail_screen_toolbar_title, R.string.add))
+            if (user != null && !(result is TaskResult.Error && result.error.isAuthError())) {
+                FloatingActionButton(onClick = click.add) {
+                    Icon(Icons.Default.Add,
+                        stringRes(R.string.fsl_detail_screen_toolbar_title, R.string.add))
+                }
             }
         },
         topBar = {
