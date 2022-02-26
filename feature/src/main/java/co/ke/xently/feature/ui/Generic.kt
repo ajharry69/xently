@@ -111,7 +111,7 @@ fun ToolbarWithProgressbar(
     }
 }
 
-private val navigateToSignInScreen: (Context) -> Unit = {
+val navigateToSignInScreen: (Context) -> Unit = {
     val intent = Intent(Intent.ACTION_VIEW, "xently://accounts/signin/".toUri())
     try {
         it.startActivity(intent)

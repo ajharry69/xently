@@ -8,30 +8,27 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.material.icons.filled.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
-import co.ke.xently.data.GroupedShoppingList
-import co.ke.xently.data.ShoppingListItem
-import co.ke.xently.data.TaskResult
-import co.ke.xently.data.getOrThrow
+import co.ke.xently.data.*
 import co.ke.xently.feature.ui.*
 import co.ke.xently.shoppinglist.R
 import co.ke.xently.shoppinglist.ui.list.grouped.item.GroupMenuItem
 import co.ke.xently.shoppinglist.ui.list.grouped.item.GroupedShoppingListCard
 import co.ke.xently.shoppinglist.ui.list.item.MenuItem
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 internal data class Click(
     val add: () -> Unit = {},
+    val help: () -> Unit = {},
+    val feedback: () -> Unit = {},
+    val signInOrOut: () -> Unit = {},
     val click: co.ke.xently.shoppinglist.ui.list.grouped.item.Click = co.ke.xently.shoppinglist.ui.list.grouped.item.Click(),
 )
 
@@ -47,26 +44,51 @@ internal fun GroupedShoppingListScreen(
     val scope = rememberCoroutineScope()
     val shoppingListResult by viewModel.shoppingListResult.collectAsState(scope.coroutineContext)
     val shoppingListCount by viewModel.shoppingListCount.collectAsState(scope.coroutineContext)
+    var user by remember { mutableStateOf<User?>(null) }
+    LaunchedEffect(true) {
+        viewModel.historicallyFirstUser.collectLatest {
+            user = it
+        }
+    }
+    var signOutResult by remember { mutableStateOf<TaskResult<Unit>>(TaskResult.Success(Unit)) }
+    LaunchedEffect(true) {
+        viewModel.signOutResult.collectLatest {
+            signOutResult = it
+        }
+    }
+    val context = LocalContext.current
 
     GroupedShoppingListScreen(
-        click = click,
+        user = user,
         modifier = modifier,
         menuItems = menuItems,
         drawerItems = drawerItems,
-        groupMenuItems = groupMenuItems,
-        groupCount = shoppingListCount,
         result = shoppingListResult,
+        signOutResult = signOutResult,
+        groupCount = shoppingListCount,
+        groupMenuItems = groupMenuItems,
+        click = click.copy(
+            signInOrOut = {
+                if (user == null) {
+                    navigateToSignInScreen.invoke(context)
+                } else {
+                    viewModel.signOut()
+                }
+            },
+        ),
     )
 }
 
 @Composable
 private fun GroupedShoppingListScreen(
+    user: User?,
     click: Click,
     modifier: Modifier,
     menuItems: List<MenuItem>,
     drawerItems: List<NavDrawerItem>,
     groupMenuItems: List<GroupMenuItem>,
     groupCount: Map<Any, Int>,
+    signOutResult: TaskResult<Unit>,
     result: TaskResult<List<GroupedShoppingList>>,
 ) {
     val scaffoldState = rememberScaffoldState()
@@ -111,6 +133,7 @@ private fun GroupedShoppingListScreen(
                         Icon(Icons.Default.Search, contentDescription = null)
                     }
                 },
+                showProgress = signOutResult is TaskResult.Loading,
             )
         },
         drawerContent = {
@@ -125,6 +148,34 @@ private fun GroupedShoppingListScreen(
                 drawerItems = drawerItems,
                 modifier = Modifier.fillMaxWidth(),
                 drawerState = scaffoldState.drawerState,
+            )
+            NavigationDrawerGroup(
+                isCheckable = false,
+                modifier = Modifier.fillMaxWidth(),
+                drawerState = scaffoldState.drawerState,
+                title = stringResource(R.string.fsl_navigation_drawer_other_menu),
+                drawerItems = listOf(
+                    NavDrawerItem(
+                        onClick = click.feedback,
+                        icon = Icons.Default.Feedback,
+                        label = stringResource(R.string.fsl_drawer_menu_feedback),
+                    ),
+                    NavDrawerItem(
+                        onClick = click.help,
+                        icon = Icons.Default.Help,
+                        label = stringResource(R.string.fsl_drawer_menu_help),
+                    ),
+                    NavDrawerItem(
+                        onClick = click.signInOrOut,
+                        label = stringResource(
+                            if (user == null) {
+                                R.string.fsl_drawer_menu_signin
+                            } else {
+                                R.string.fsl_drawer_menu_signout
+                            },
+                        ),
+                    ),
+                ),
             )
         },
     ) { paddingValues ->

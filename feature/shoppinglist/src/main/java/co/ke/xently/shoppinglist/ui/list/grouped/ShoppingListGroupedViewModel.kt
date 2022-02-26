@@ -4,19 +4,19 @@ import androidx.lifecycle.viewModelScope
 import co.ke.xently.data.GroupedShoppingList
 import co.ke.xently.data.TaskResult
 import co.ke.xently.feature.AbstractAuthViewModel
+import co.ke.xently.feature.repository.IAuthRepository
 import co.ke.xently.feature.utils.flagLoadingOnStart
 import co.ke.xently.shoppinglist.GroupBy
 import co.ke.xently.shoppinglist.repository.IShoppingListRepository
-import co.ke.xently.source.local.Database
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 
 @HiltViewModel
 internal class ShoppingListGroupedViewModel @Inject constructor(
-    database: Database,
+    authRepository: IAuthRepository,
     private val repository: IShoppingListRepository,
-) : AbstractAuthViewModel(database) {
+) : AbstractAuthViewModel(authRepository) {
     val shoppingListResult: StateFlow<TaskResult<List<GroupedShoppingList>>>
     val shoppingListCount: StateFlow<Map<Any, Int>>
 

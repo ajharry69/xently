@@ -11,5 +11,4 @@ interface IAccountRepository {
     fun requestTemporaryPassword(email: String): Flow<TaskResult<User>>
     fun requestVerificationCode(): Flow<TaskResult<User>>
     fun verifyAccount(code: String): Flow<TaskResult<User>>
-    fun signout(): Flow<TaskResult<Unit>>
 }
