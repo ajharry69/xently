@@ -117,15 +117,21 @@ object NetworkModule {
 
     @Provides
     @Singleton
+    fun provideCache(@ApplicationContext context: Context): Cache {
+        return Cache(context.cacheDir, (5 * 1024 * 1024).toLong())
+    }
+
+    @Provides
+    @Singleton
     fun provideOkHttpClient(
-        @ApplicationContext context: Context,
+        cache: Cache,
         loggingInterceptor: HttpLoggingInterceptor,
         @CacheInterceptor cacheInterceptor: Interceptor,
         @RequestHeadersInterceptor headerInterceptor: Interceptor,
         @RequestQueriesInterceptor queriesInterceptor: Interceptor,
     ): OkHttpClient {
         return OkHttpClient.Builder()
-            .cache(Cache(context.cacheDir, (5 * 1024 * 1024).toLong()))
+            .cache(cache)
             .addInterceptor(headerInterceptor)
             .addInterceptor(queriesInterceptor)
             .addInterceptor(cacheInterceptor) // maintain order - cache may depend on the headers

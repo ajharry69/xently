@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -27,6 +28,10 @@ internal class AuthRepository @Inject constructor(
             dependencies.database.accountDao.delete(it)
             dependencies.preference.encrypted.edit {
                 remove(TOKEN_VALUE_SHARED_PREFERENCE_KEY)
+            }
+            @Suppress("BlockingMethodInNonBlockingContext")
+            withContext(dependencies.dispatcher.io) {
+                dependencies.cache.evictAll()
             }
             sendRequest {
                 dependencies.service.account.signout(it)
