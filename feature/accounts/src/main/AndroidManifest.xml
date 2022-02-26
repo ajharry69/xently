@@ -13,6 +13,22 @@
                 <action android:name="co.ke.xently.action.ACCOUNTS" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.BROWSABLE" />
+                <category android:name="android.intent.category.DEFAULT" />
+
+                <data
+                    android:host="accounts"
+                    android:pathPattern="/signin/"
+                    android:scheme="xently" />
+
+                <data
+                    android:host="accounts"
+                    android:pathPattern="/signup/"
+                    android:scheme="xently" />
+            </intent-filter>
         </activity>
     </application>
 

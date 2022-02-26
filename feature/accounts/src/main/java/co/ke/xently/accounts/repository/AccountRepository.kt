@@ -81,18 +81,4 @@ internal class AccountRepository @Inject constructor(private val dependencies: D
             })
         }.doTaskWhileSavingEachLocally(this)
     }
-
-    override fun signout() = Retry().run {
-        flow {
-            emit(dependencies.database.accountDao.getHistoricallyFirstUserId())
-        }.map {
-            dependencies.database.accountDao.delete(it)
-            dependencies.preference.encrypted.edit {
-                remove(TOKEN_VALUE_SHARED_PREFERENCE_KEY)
-            }
-            sendRequest {
-                dependencies.service.account.signout(it)
-            }
-        }.retryCatch(this).flowOn(dependencies.dispatcher.io)
-    }
 }

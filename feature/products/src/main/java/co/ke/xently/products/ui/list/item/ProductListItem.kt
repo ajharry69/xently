@@ -1,6 +1,7 @@
 package co.ke.xently.products.ui.list.item
 
 import android.text.format.DateFormat
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
@@ -23,6 +24,10 @@ import co.ke.xently.feature.ui.ListItemSurface
 import co.ke.xently.feature.utils.descriptive
 import co.ke.xently.products.R
 
+internal data class MenuItem(
+    @StringRes val label: Int,
+    val onClick: (Product) -> Unit = {},
+)
 
 @OptIn(ExperimentalUnitApi::class)
 @Composable
@@ -30,8 +35,7 @@ internal fun ProductListItem(
     product: Product,
     modifier: Modifier = Modifier,
     showPopupMenu: Boolean = false,
-    onUpdateRequested: (id: Long) -> Unit = {},
-    onDeleteRequested: (id: Long) -> Unit = {},
+    menuItems: List<MenuItem> = emptyList(),
 ) {
     var showDropMenu by remember(showPopupMenu) { mutableStateOf(showPopupMenu) }
     ListItemSurface(modifier = modifier) {
@@ -78,7 +82,15 @@ internal fun ProductListItem(
                     expanded = showDropMenu,
                     onDismissRequest = { showDropMenu = false },
                 ) {
-                    DropdownMenuItem(
+                    for (item in menuItems){
+                        DropdownMenuItem(
+                            onClick = {
+                                item.onClick.invoke(product)
+                                showDropMenu = false
+                            },
+                        ) { Text(stringResource(item.label)) }
+                    }
+                    /*DropdownMenuItem(
                         onClick = {
                             onUpdateRequested(product.id)
                             showDropMenu = false
@@ -89,7 +101,7 @@ internal fun ProductListItem(
                             onDeleteRequested(product.id)
                             showDropMenu = false
                         },
-                    ) { Text(stringResource(R.string.delete)) }
+                    ) { Text(stringResource(R.string.delete)) }*/
                 }
             }
         }
