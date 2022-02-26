@@ -19,7 +19,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
-import co.ke.xently.data.*
+import co.ke.xently.data.GroupedShoppingList
+import co.ke.xently.data.ShoppingListItem
+import co.ke.xently.data.TaskResult
+import co.ke.xently.data.getOrThrow
 import co.ke.xently.feature.ui.*
 import co.ke.xently.shoppinglist.R
 import co.ke.xently.shoppinglist.ui.list.grouped.item.GroupMenuItem
@@ -42,8 +45,8 @@ internal fun GroupedShoppingListScreen(
     viewModel: ShoppingListGroupedViewModel = hiltViewModel(),
 ) {
     val scope = rememberCoroutineScope()
-    val groupedShoppingListResult by viewModel.groupedShoppingListResult.collectAsState(scope.coroutineContext)
-    val groupedShoppingListCount by viewModel.groupedShoppingListCount.collectAsState(scope.coroutineContext)
+    val shoppingListResult by viewModel.shoppingListResult.collectAsState(scope.coroutineContext)
+    val shoppingListCount by viewModel.shoppingListCount.collectAsState(scope.coroutineContext)
 
     GroupedShoppingListScreen(
         click = click,
@@ -51,8 +54,8 @@ internal fun GroupedShoppingListScreen(
         menuItems = menuItems,
         drawerItems = drawerItems,
         groupMenuItems = groupMenuItems,
-        groupedShoppingListCount = groupedShoppingListCount,
-        groupedShoppingListResult = groupedShoppingListResult,
+        groupCount = shoppingListCount,
+        result = shoppingListResult,
     )
 }
 
@@ -63,8 +66,8 @@ private fun GroupedShoppingListScreen(
     menuItems: List<MenuItem>,
     drawerItems: List<NavDrawerItem>,
     groupMenuItems: List<GroupMenuItem>,
-    groupedShoppingListCount: Map<Any, Int>,
-    groupedShoppingListResult: TaskResult<List<GroupedShoppingList>>,
+    groupCount: Map<Any, Int>,
+    result: TaskResult<List<GroupedShoppingList>>,
 ) {
     val scaffoldState = rememberScaffoldState()
     val coroutineScope = rememberCoroutineScope()
@@ -124,28 +127,28 @@ private fun GroupedShoppingListScreen(
                 drawerState = scaffoldState.drawerState,
             )
         },
-    ) {
-        when (groupedShoppingListResult) {
+    ) { paddingValues ->
+        when (result) {
             is TaskResult.Error -> {
-                FullscreenError(modifier.padding(it), groupedShoppingListResult.errorMessage)
+                FullscreenError(modifier = modifier.padding(paddingValues), error = result.error)
             }
-            TaskResult -> FullscreenLoading(modifier.padding(it))
+            TaskResult -> FullscreenLoading(modifier.padding(paddingValues))
             is TaskResult.Success -> {
-                val groupedShoppingList = groupedShoppingListResult.getOrThrow()
+                val groupedShoppingList = result.getOrThrow()
                 if (groupedShoppingList.isEmpty()) {
                     FullscreenEmptyList<ShoppingListItem>(
-                        modifier = modifier.padding(it),
+                        modifier = modifier.padding(paddingValues),
                         error = R.string.fsl_empty_shopping_list,
                     )
                 } else {
-                    LazyColumn(modifier = modifier.padding(it)) {
+                    LazyColumn(modifier = modifier.padding(paddingValues)) {
                         items(groupedShoppingList) { groupList ->
                             GroupedShoppingListCard(
                                 click = click.click,
                                 groupList = groupList,
                                 menuItems = menuItems,
+                                listCount = groupCount,
                                 groupMenuItems = groupMenuItems,
-                                listCount = groupedShoppingListCount,
                             )
                         }
                     }

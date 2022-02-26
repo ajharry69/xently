@@ -8,13 +8,10 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.navigation.NavBackStackEntry
-import androidx.navigation.NavHostController
-import androidx.navigation.NavType
+import androidx.navigation.*
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navArgument
 import co.ke.xently.accounts.ui.password_reset.PasswordResetScreen
 import co.ke.xently.accounts.ui.password_reset.request.PasswordResetRequestScreen
 import co.ke.xently.accounts.ui.signin.SignInScreen
@@ -72,7 +69,15 @@ internal fun ProductsNavHost(
                 },
             )
         }
-        composable("signin", content = signInScreen)
+        composable(
+            "signin",
+            deepLinks = listOf(
+                navDeepLink {
+                    uriPattern = "xently://accounts/signin/"
+                }
+            ),
+            content = signInScreen,
+        )
         composable(
             "signin?username={username}&password={password}",
             listOf(
@@ -94,6 +99,11 @@ internal fun ProductsNavHost(
                 navArgument("password") {
                     defaultValue = ""
                 },
+            ),
+            deepLinks = listOf(
+                navDeepLink {
+                    uriPattern = "xently://accounts/signup/"
+                }
             ),
         ) {
             SignUpScreen(

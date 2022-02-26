@@ -77,7 +77,7 @@ private fun ShoppingListRecommendationScreen(
     ) {
         when (result) {
             is TaskResult.Error -> {
-                FullscreenError(modifier.padding(it), result.errorMessage)
+                FullscreenError(modifier.padding(it), result.error)
             }
             TaskResult -> {
                 FullscreenLoading(modifier.padding(it))

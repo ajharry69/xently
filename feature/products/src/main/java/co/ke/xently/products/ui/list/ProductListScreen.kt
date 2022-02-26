@@ -21,17 +21,22 @@ import co.ke.xently.feature.ui.PagedDataScreen
 import co.ke.xently.feature.ui.ToolbarWithProgressbar
 import co.ke.xently.feature.ui.stringRes
 import co.ke.xently.products.R
+import co.ke.xently.products.ui.list.item.MenuItem
 import co.ke.xently.products.ui.list.item.ProductListItem
 import kotlinx.coroutines.flow.collectLatest
+
+internal data class ProductListScreenClick(
+    val add: () -> Unit = {},
+    val navigationIcon: () -> Unit = {},
+)
 
 @Composable
 internal fun ProductListScreen(
     shopId: Long?,
+    click: ProductListScreenClick,
+    menuItems: List<MenuItem>,
     modifier: Modifier = Modifier,
     viewModel: ProductListViewModel = hiltViewModel(),
-    onUpdateRequested: (id: Long) -> Unit = {},
-    onNavigationIconClicked: () -> Unit = {},
-    onAddProductClicked: () -> Unit = {},
 ) {
     val config = PagingConfig(20, enablePlaceholders = false)
     val items = viewModel.get(config, shopId).collectAsLazyPagingItems()
@@ -46,25 +51,21 @@ internal fun ProductListScreen(
         }
     }
     ProductListScreen(
-        pagingItems = items,
+        click = click,
+        items = items,
         modifier = modifier,
         shopName = shopName,
-        onUpdateRequested = onUpdateRequested,
-        onDeleteRequested = { /* TODO: Delete should only be permitted to superusers */ },
-        onNavigationIconClicked = onNavigationIconClicked,
-        onAddProductClicked = onAddProductClicked,
+        menuItems = menuItems,
     )
 }
 
 @Composable
 private fun ProductListScreen(
-    pagingItems: LazyPagingItems<Product>,
-    modifier: Modifier = Modifier,
-    shopName: String? = null,
-    onUpdateRequested: (id: Long) -> Unit = {},
-    onDeleteRequested: (id: Long) -> Unit = {},
-    onNavigationIconClicked: () -> Unit = {},
-    onAddProductClicked: () -> Unit = {},
+    modifier: Modifier,
+    shopName: String?,
+    click: ProductListScreenClick,
+    items: LazyPagingItems<Product>,
+    menuItems: List<MenuItem>,
 ) {
     val scaffoldState = rememberScaffoldState()
     Scaffold(
@@ -72,30 +73,29 @@ private fun ProductListScreen(
         topBar = {
             ToolbarWithProgressbar(
                 title = stringResource(R.string.title_activity_products),
-                onNavigationIconClicked = onNavigationIconClicked,
+                onNavigationIconClicked = click.navigationIcon,
                 subTitle = shopName,
             )
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = onAddProductClicked) {
+            FloatingActionButton(onClick = click.add) {
                 Icon(Icons.Default.Add,
                     stringRes(R.string.fp_add_product_toolbar_title, R.string.add))
             }
         }
     ) {
-        PagedDataScreen(modifier, pagingItems) {
-            items(pagingItems) {
+        PagedDataScreen(modifier, items) {
+            items(items) {
                 if (it != null) {
                     ProductListItem(
-                        it,
+                        product = it,
+                        menuItems = menuItems,
                         modifier = Modifier.fillMaxWidth(),
-                        onUpdateRequested = onUpdateRequested,
-                        onDeleteRequested = onDeleteRequested,
                     )
                 } // TODO: Show placeholders on null products...
             }
             item {
-                AppendOnPagedData(pagingItems.loadState.append, scaffoldState)
+                AppendOnPagedData(items.loadState.append, scaffoldState)
             }
         }
     }

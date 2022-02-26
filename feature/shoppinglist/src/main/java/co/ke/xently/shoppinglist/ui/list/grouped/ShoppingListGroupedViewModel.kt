@@ -1,39 +1,37 @@
 package co.ke.xently.shoppinglist.ui.list.grouped
 
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.ke.xently.data.GroupedShoppingList
 import co.ke.xently.data.TaskResult
+import co.ke.xently.feature.AbstractAuthViewModel
 import co.ke.xently.feature.utils.flagLoadingOnStart
 import co.ke.xently.shoppinglist.GroupBy
 import co.ke.xently.shoppinglist.repository.IShoppingListRepository
+import co.ke.xently.source.local.Database
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 internal class ShoppingListGroupedViewModel @Inject constructor(
+    database: Database,
     private val repository: IShoppingListRepository,
-) : ViewModel() {
-    val groupedShoppingListResult: StateFlow<TaskResult<List<GroupedShoppingList>>>
-
-    private val _groupedShoppingListCount = MutableStateFlow(mapOf<Any, Int>())
-    val groupedShoppingListCount: StateFlow<Map<Any, Int>> get() = _groupedShoppingListCount
+) : AbstractAuthViewModel(database) {
+    val shoppingListResult: StateFlow<TaskResult<List<GroupedShoppingList>>>
+    val shoppingListCount: StateFlow<Map<Any, Int>>
 
     private val groupBy = MutableStateFlow(GroupBy.DateAdded)
 
     init {
-        groupedShoppingListResult = groupBy.flatMapLatest(repository::get)
-            .flagLoadingOnStart()
-            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), TaskResult.Loading)
+        shoppingListResult = historicallyFirstUser.combineTransform(groupBy) { _, b ->
+            emitAll(repository.get(b).flagLoadingOnStart())
+        }.stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(),
+            TaskResult.Success(emptyList()),
+        )
 
-        viewModelScope.launch {
-            groupBy.collectLatest { group ->
-                repository.getCount(group).collectLatest {
-                    _groupedShoppingListCount.value = it
-                }
-            }
-        }
+        shoppingListCount = groupBy.flatMapLatest(repository::getCount)
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyMap())
     }
 }

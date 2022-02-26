@@ -1,5 +1,9 @@
 package co.ke.xently.feature.ui
 
+import android.content.ActivityNotFoundException
+import android.content.Context
+import android.content.Intent
+import android.util.Log
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -17,15 +21,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.FragmentManager
 import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
+import co.ke.xently.common.KENYA
+import co.ke.xently.common.TAG
 import co.ke.xently.feature.R
 import co.ke.xently.feature.theme.XentlyTheme
+import co.ke.xently.source.remote.HttpException
 
 val HORIZONTAL_PADDING = 16.dp
 
@@ -102,21 +111,58 @@ fun ToolbarWithProgressbar(
     }
 }
 
+private val navigateToSignInScreen: (Context) -> Unit = {
+    val intent = Intent(Intent.ACTION_VIEW, "xently://accounts/signin/".toUri())
+    try {
+        it.startActivity(intent)
+    } catch (ex: ActivityNotFoundException) {
+        Log.e(TAG, ex.message, ex)
+    }
+}
+
 @Composable
-fun FullscreenError(modifier: Modifier, message: String?, onButtonClicked: () -> Unit = {}) {
+fun HttpErrorButton(it: Throwable, modifier: Modifier = Modifier, onClick: (() -> Unit)? = null) {
+    (it as? HttpException)?.also { exception ->
+        if (exception.statusCode == 401) {
+            val context = LocalContext.current
+            Button(
+                modifier = modifier,
+                onClick = onClick ?: { navigateToSignInScreen.invoke(context) },
+            ) {
+                Text(
+                    style = MaterialTheme.typography.button,
+                    text = stringResource(R.string.common_signin_button_text).uppercase(KENYA),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun FullscreenError(
+    modifier: Modifier,
+    error: Throwable,
+    httpSignInErrorClick: (() -> Unit)? = null,
+    preErrorContent: @Composable ColumnScope.(Throwable) -> Unit = {},
+    postErrorContent: @Composable ColumnScope.(Throwable) -> Unit = {
+        HttpErrorButton(it, onClick = httpSignInErrorClick)
+    },
+) {
     Box(modifier = modifier, contentAlignment = Alignment.Center) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .wrapContentHeight()
-                .padding(16.dp),
+                .padding(HORIZONTAL_PADDING),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            Text(message ?: stringResource(R.string.generic_error_message))
-            Button(onClick = onButtonClicked) {
-                Text(stringResource(R.string.retry).uppercase())
-            }
+            preErrorContent(error)
+            Text(
+                textAlign = TextAlign.Center,
+                text = error.localizedMessage ?: stringResource(R.string.generic_error_message),
+            )
+            postErrorContent(error)
         }
     }
 }
@@ -135,21 +181,22 @@ inline fun <reified T : Any> FullscreenEmptyList(
 ) {
     Box(modifier = modifier, contentAlignment = Alignment.Center) {
         Text(
-            if (error != null) {
+            modifier = Modifier.padding(HORIZONTAL_PADDING),
+            textAlign = TextAlign.Center,
+            text = if (error != null) {
                 stringResource(error)
             } else {
                 stringResource(R.string.empty_list,
                     T::class.java.simpleName.mapIndexed { i, c -> if (i != 0 && c.isUpperCase()) " $c" else "$c" }
                         .joinToString("") { it }.lowercase())
             },
-            modifier = Modifier.padding(16.dp),
         )
     }
 }
 
 @Preview(showBackground = true)
 @Composable
-fun FullscreenEmptyListPreview() {
+private fun FullscreenEmptyListPreview() {
     XentlyTheme {
         FullscreenEmptyList<String>(Modifier.fillMaxSize())
     }
@@ -159,15 +206,27 @@ fun FullscreenEmptyListPreview() {
 inline fun <reified T : Any> PagedDataScreen(
     modifier: Modifier,
     items: LazyPagingItems<T>,
-    @StringRes error: Int? = null,
+    @StringRes emptyListMessage: Int? = null,
+    noinline httpSignInErrorClick: (() -> Unit)? = null,
+    noinline preErrorContent: @Composable ColumnScope.(Throwable) -> Unit = {},
+    noinline postErrorContent: @Composable ColumnScope.(Throwable) -> Unit = {
+        HttpErrorButton(it, onClick = httpSignInErrorClick)
+    },
     noinline noneEmptyItems: LazyListScope.() -> Unit,
 ) {
     when (val refresh = items.loadState.refresh) {
         is LoadState.Loading -> FullscreenLoading(modifier)
-        is LoadState.Error -> FullscreenError(modifier, refresh.error.localizedMessage)
+        is LoadState.Error -> {
+            FullscreenError(
+                modifier = modifier,
+                error = refresh.error,
+                preErrorContent = preErrorContent,
+                postErrorContent = postErrorContent,
+            )
+        }
         is LoadState.NotLoading -> {
             if (items.itemCount == 0) {
-                FullscreenEmptyList<T>(modifier, error)
+                FullscreenEmptyList<T>(modifier, emptyListMessage)
             } else {
                 LazyColumn(modifier = modifier, content = noneEmptyItems)
             }
@@ -206,7 +265,7 @@ fun MultipleTextFieldRow(
     Column(modifier = modifier) {
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(HORIZONTAL_PADDING / 2),
         ) {
             content(Modifier.weight(1f))
         }
