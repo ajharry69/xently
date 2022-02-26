@@ -1,8 +1,7 @@
 package co.ke.xently.shoppinglist.ui.list.grouped
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -34,7 +33,7 @@ internal data class Click(
 
 @Composable
 internal fun GroupedShoppingListScreen(
-    drawerItems: List<NavDrawerItem>,
+    drawerItems: List<NavMenuItem>,
     menuItems: List<MenuItem>,
     groupMenuItems: List<GroupMenuItem>,
     click: Click,
@@ -85,7 +84,7 @@ private fun GroupedShoppingListScreen(
     click: Click,
     modifier: Modifier,
     menuItems: List<MenuItem>,
-    drawerItems: List<NavDrawerItem>,
+    drawerItems: List<NavMenuItem>,
     groupMenuItems: List<GroupMenuItem>,
     groupCount: Map<Any, Int>,
     signOutResult: TaskResult<Unit>,
@@ -137,46 +136,45 @@ private fun GroupedShoppingListScreen(
             )
         },
         drawerContent = {
-            Image(
-                painterResource(R.drawable.ic_launcher_background),
-                null,
-                modifier = Modifier
-                    .height(DRAWER_HEADER_HEIGHT)
-                    .fillMaxWidth(),
-            )
-            NavigationDrawerGroup(
-                drawerItems = drawerItems,
-                modifier = Modifier.fillMaxWidth(),
+            NavigationDrawer(
                 drawerState = scaffoldState.drawerState,
-            )
-            NavigationDrawerGroup(
-                isCheckable = false,
-                modifier = Modifier.fillMaxWidth(),
-                drawerState = scaffoldState.drawerState,
-                title = stringResource(R.string.fsl_navigation_drawer_other_menu),
-                drawerItems = listOf(
-                    NavDrawerItem(
-                        onClick = click.feedback,
-                        icon = Icons.Default.Feedback,
-                        label = stringResource(R.string.fsl_drawer_menu_feedback),
-                    ),
-                    NavDrawerItem(
-                        onClick = click.help,
-                        icon = Icons.Default.Help,
-                        label = stringResource(R.string.fsl_drawer_menu_help),
-                    ),
-                    NavDrawerItem(
-                        onClick = click.signInOrOut,
-                        label = stringResource(
-                            if (user == null) {
-                                R.string.fsl_drawer_menu_signin
-                            } else {
-                                R.string.fsl_drawer_menu_signout
-                            },
+                navGroups = listOf(
+                    NavDrawerGroupItem(items = drawerItems),
+                    NavDrawerGroupItem(
+                        checkable = false,
+                        title = stringResource(R.string.fsl_navigation_drawer_other_menu),
+                        items = listOf(
+                            NavMenuItem(
+                                onClick = click.feedback,
+                                icon = Icons.Default.Feedback,
+                                label = stringResource(R.string.fsl_drawer_menu_feedback),
+                            ),
+                            NavMenuItem(
+                                onClick = click.help,
+                                icon = Icons.Default.Help,
+                                label = stringResource(R.string.fsl_drawer_menu_help),
+                            ),
+                            NavMenuItem(
+                                onClick = click.signInOrOut,
+                                icon = Icons.Default.ExitToApp,
+                                label = stringResource(
+                                    if (user == null) {
+                                        R.string.fsl_drawer_menu_signin
+                                    } else {
+                                        R.string.fsl_drawer_menu_signout
+                                    },
+                                ),
+                            ),
                         ),
-                    ),
+                    )
                 ),
-            )
+            ) {
+                Image(
+                    painterResource(R.drawable.ic_launcher_background),
+                    null,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
         },
     ) { paddingValues ->
         when (result) {

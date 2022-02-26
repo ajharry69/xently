@@ -30,7 +30,7 @@ import co.ke.xently.data.ShoppingListItem
 import co.ke.xently.feature.LocationPermissionViewModel
 import co.ke.xently.feature.LocationService
 import co.ke.xently.feature.theme.XentlyTheme
-import co.ke.xently.feature.ui.NavDrawerItem
+import co.ke.xently.feature.ui.NavMenuItem
 import co.ke.xently.shoppinglist.Recommend.From
 import co.ke.xently.shoppinglist.ui.detail.ShoppingListItemScreen
 import co.ke.xently.shoppinglist.ui.list.ShoppingListScreen
@@ -149,7 +149,7 @@ internal fun ShoppingListNavHost(
         composable("shopping-list-grouped") {
             GroupedShoppingListScreen(
                 drawerItems = listOf(
-                    NavDrawerItem(
+                    NavMenuItem(
                         context = context,
                         label = R.string.drawer_menu_shopping_list,
                         icon = Icons.Default.List,
@@ -161,19 +161,19 @@ internal fun ShoppingListNavHost(
                             }
                         },
                     ),
-                    NavDrawerItem(
+                    NavMenuItem(
                         context = context,
                         label = R.string.drawer_menu_account,
                         icon = Icons.Default.Person,
                         onClick = onAccountMenuClicked,
                     ),
-                    NavDrawerItem(
+                    NavMenuItem(
                         context = context,
                         label = R.string.drawer_menu_shops,
                         icon = Icons.Default.Business,
                         onClick = onShopMenuClicked,
                     ),
-                    NavDrawerItem(
+                    NavMenuItem(
                         context = context,
                         label = R.string.drawer_menu_products,
                         icon = Icons.Default.Category,
