@@ -1,6 +1,7 @@
 package co.ke.xently.shoppinglist.ui.list
 
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -12,9 +13,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.paging.PagingConfig
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
-import androidx.paging.compose.items
 import co.ke.xently.data.ShoppingListItem
-import co.ke.xently.feature.ui.AppendOnPagedData
 import co.ke.xently.feature.ui.PagedDataScreen
 import co.ke.xently.feature.ui.ToolbarWithProgressbar
 import co.ke.xently.feature.ui.stringRes
@@ -43,7 +42,7 @@ internal fun ShoppingListScreen(
 @Composable
 private fun ShoppingListScreen(
     modifier: Modifier,
-    pagingItems: LazyPagingItems<ShoppingListItem>,
+    items: LazyPagingItems<ShoppingListItem>,
     menuItems: List<MenuItem>,
     click: Click,
 ) {
@@ -83,20 +82,19 @@ private fun ShoppingListScreen(
             }
         },
     ) {
-        PagedDataScreen(modifier, pagingItems, R.string.fsl_empty_shopping_list) {
-            items(pagingItems) {
-                if (it != null) {
-                    ShoppingListItemCard(
-                        item = it,
-                        menuItems = menuItems,
-                        onClick = click.item,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                } // TODO: Show placeholders on null products...
-            }
-            item {
-                AppendOnPagedData(pagingItems.loadState.append, scaffoldState)
-            }
+        PagedDataScreen(
+            items = items,
+            scaffoldState = scaffoldState,
+            modifier = modifier.padding(it),
+            defaultItem = ShoppingListItem.default(),
+            emptyListMessage = R.string.fsl_empty_shopping_list,
+        ) { item, modifier ->
+            ShoppingListItemCard(
+                item = item,
+                menuItems = menuItems,
+                onClick = click.item,
+                modifier = modifier.fillMaxWidth(),
+            )
         }
     }
 }

@@ -15,9 +15,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.paging.PagingConfig
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
-import androidx.paging.compose.items
 import co.ke.xently.data.Shop
-import co.ke.xently.feature.ui.AppendOnPagedData
 import co.ke.xently.feature.ui.PagedDataScreen
 import co.ke.xently.feature.ui.ToolbarWithProgressbar
 import co.ke.xently.feature.ui.stringRes
@@ -41,7 +39,7 @@ internal fun ShopListScreen(
     val config = PagingConfig(20, enablePlaceholders = false)
     val items = viewModel.get(config).collectAsLazyPagingItems()
     ShopListScreen(
-        pagingItems = items,
+        items = items,
         modifier = modifier,
         menuItems = menuItems,
         click = click,
@@ -50,7 +48,7 @@ internal fun ShopListScreen(
 
 @Composable
 private fun ShopListScreen(
-    pagingItems: LazyPagingItems<Shop>,
+    items: LazyPagingItems<Shop>,
     modifier: Modifier = Modifier,
     menuItems: @Composable (Shop) -> List<MenuItem>,
     click: Click,
@@ -68,21 +66,19 @@ private fun ShopListScreen(
                 Icon(Icons.Default.Add, stringRes(R.string.fs_add_shop_toolbar_title, R.string.add))
             }
         },
-    ) { paddingValues ->
-        PagedDataScreen(modifier.padding(paddingValues), pagingItems) {
-            items(pagingItems) {
-                if (it != null) {
-                    ShopListItem(
-                        it,
-                        modifier = Modifier.fillMaxWidth(),
-                        click = click.click,
-                        menuItems = menuItems,
-                    )
-                } // TODO: Show placeholders on null products...
-            }
-            item {
-                AppendOnPagedData(pagingItems.loadState.append, scaffoldState)
-            }
+    ) {
+        PagedDataScreen(
+            items = items,
+            defaultItem = Shop.default(),
+            scaffoldState = scaffoldState,
+            modifier = modifier.padding(it),
+        ) { shop, modifier ->
+            ShopListItem(
+                shop = shop,
+                modifier = modifier.fillMaxWidth(),
+                click = click.click,
+                menuItems = menuItems,
+            )
         }
     }
 }
