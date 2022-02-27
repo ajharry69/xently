@@ -7,6 +7,7 @@ import androidx.room.withTransaction
 import co.ke.xently.data.Product
 import co.ke.xently.data.getOrThrow
 import co.ke.xently.feature.repository.Dependencies
+import co.ke.xently.source.remote.CacheControl
 import co.ke.xently.source.remote.sendRequest
 import kotlinx.coroutines.CancellationException
 
@@ -25,8 +26,12 @@ internal class ProductsRemoteMediator(
         loadType: LoadType,
         state: PagingState<Int, Product.WithRelated>,
     ): MediatorResult {
+        var cacheControl: CacheControl = CacheControl.OnlyIfCached
         val page: Int = when (loadType) {
-            LoadType.REFRESH -> 1
+            LoadType.REFRESH -> {
+                cacheControl = CacheControl.NoCache
+                1
+            }
             LoadType.APPEND -> return MediatorResult.Success(endOfPaginationReached = true)
             LoadType.PREPEND -> dependencies.database.withTransaction {
                 dependencies.database.remoteKeyDao.get(remoteKeyEndpoint)
@@ -36,13 +41,19 @@ internal class ProductsRemoteMediator(
         return try {
             val response = sendRequest {
                 if (shopId == null) {
-                    dependencies.service.product.get(query, page, state.config.initialLoadSize)
+                    dependencies.service.product.get(
+                        query = query,
+                        page = page,
+                        size = state.config.initialLoadSize,
+                        cacheControl = cacheControl.toString(),
+                    )
                 } else {
                     dependencies.service.shop.getProducts(
                         shopId = shopId,
                         query = query,
                         page = page,
                         size = state.config.initialLoadSize,
+                        cacheControl = cacheControl.toString(),
                     )
                 }
             }

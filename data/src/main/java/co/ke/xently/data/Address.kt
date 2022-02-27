@@ -27,6 +27,9 @@ data class Address(
     val shop: Shop = Shop.default(),
     @SerializedName("coordinates")
     var location: Location = DEFAULT_LOCATION,
+    @Ignore
+    @Exclude
+    val isDefault: Boolean = false,
 ) {
     override fun toString(): String {
         val s = StringBuilder()
@@ -67,5 +70,9 @@ data class Address(
     ) {
         @Ignore
         val address = a.copy(shop = shop)
+    }
+
+    companion object {
+        fun default() = Address(isDefault = true)
     }
 }

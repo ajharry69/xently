@@ -7,7 +7,7 @@ import android.util.Log
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -30,11 +30,14 @@ import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.FragmentManager
 import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
+import androidx.paging.compose.items
 import co.ke.xently.common.KENYA
 import co.ke.xently.common.TAG
 import co.ke.xently.feature.R
 import co.ke.xently.feature.theme.XentlyTheme
 import co.ke.xently.source.remote.HttpException
+import com.google.accompanist.swiperefresh.SwipeRefresh
+import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 
 val HORIZONTAL_PADDING = 16.dp
 
@@ -209,14 +212,16 @@ private fun FullscreenEmptyListPreview() {
 @Composable
 inline fun <reified T : Any> PagedDataScreen(
     modifier: Modifier,
+    defaultItem: T,
     items: LazyPagingItems<T>,
+    scaffoldState: ScaffoldState,
     @StringRes emptyListMessage: Int? = null,
     noinline httpSignInErrorClick: (() -> Unit)? = null,
-    noinline preErrorContent: @Composable ColumnScope.(Throwable) -> Unit = {},
-    noinline postErrorContent: @Composable ColumnScope.(Throwable) -> Unit = {
+    noinline preErrorContent: @Composable (ColumnScope.(Throwable) -> Unit) = {},
+    noinline postErrorContent: @Composable (ColumnScope.(Throwable) -> Unit) = {
         HttpErrorButton(it, onClick = httpSignInErrorClick)
     },
-    noinline noneEmptyItems: LazyListScope.() -> Unit,
+    noinline itemContent: @Composable (LazyItemScope.(T, Modifier) -> Unit),
 ) {
     when (val refresh = items.loadState.refresh) {
         is LoadState.Loading -> FullscreenLoading(modifier)
@@ -232,30 +237,45 @@ inline fun <reified T : Any> PagedDataScreen(
             if (items.itemCount == 0) {
                 FullscreenEmptyList<T>(modifier, emptyListMessage)
             } else {
-                LazyColumn(modifier = modifier, content = noneEmptyItems)
+                val refreshState = rememberSwipeRefreshState(
+                    isRefreshing = items.loadState.mediator?.refresh == LoadState.Loading,
+                )
+                SwipeRefresh(
+                    modifier = modifier,
+                    state = refreshState,
+                    onRefresh = items::refresh,
+                ) {
+                    LazyColumn(modifier = Modifier.fillMaxSize()) {
+                        items(items) { item ->
+                            if (item == null) {
+                                itemContent(defaultItem, Modifier) // TODO: Append placeholder
+                            } else {
+                                itemContent(item, Modifier)
+                            }
+                        }
+                        item {
+                            when (val loadState = items.loadState.append) {
+                                is LoadState.Loading -> {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .wrapContentWidth(Alignment.CenterHorizontally)
+                                    )
+                                }
+                                is LoadState.Error -> {
+                                    val message = (loadState.error.localizedMessage
+                                        ?: stringResource(R.string.generic_error_message))
+                                    LaunchedEffect(message) {
+                                        scaffoldState.snackbarHostState.showSnackbar(message)
+                                    }
+                                }
+                                is LoadState.NotLoading -> Unit
+                            }
+                        }
+                    }
+                }
             }
         }
-    }
-}
-
-@Composable
-fun AppendOnPagedData(loadState: LoadState, scaffoldState: ScaffoldState) {
-    when (loadState) {
-        is LoadState.Loading -> {
-            CircularProgressIndicator(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .wrapContentWidth(Alignment.CenterHorizontally)
-            )
-        }
-        is LoadState.Error -> {
-            val message = (loadState.error.localizedMessage
-                ?: stringResource(R.string.generic_error_message))
-            LaunchedEffect(message) {
-                scaffoldState.snackbarHostState.showSnackbar(message)
-            }
-        }
-        is LoadState.NotLoading -> Unit
     }
 }
 

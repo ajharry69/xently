@@ -9,12 +9,13 @@ import co.ke.xently.data.TaskResult
 import co.ke.xently.products.shared.repository.ISearchableRepository
 import co.ke.xently.shoppinglist.GroupBy
 import co.ke.xently.shoppinglist.Recommend
+import co.ke.xently.source.remote.CacheControl
 import kotlinx.coroutines.flow.Flow
 
 interface IShoppingListRepository : ISearchableRepository {
     fun add(item: ShoppingListItem): Flow<TaskResult<ShoppingListItem>>
 
-    fun get(groupBy: GroupBy): Flow<TaskResult<List<GroupedShoppingList>>>
+    fun get(groupBy: GroupBy, cacheControl: CacheControl): Flow<TaskResult<List<GroupedShoppingList>>>
 
     fun getCount(groupBy: GroupBy): Flow<Map<Any, Int>>
 

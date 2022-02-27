@@ -1,6 +1,7 @@
 package co.ke.xently.shoppinglist.ui.list
 
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -9,12 +10,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.paging.PagingConfig
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
-import androidx.paging.compose.items
 import co.ke.xently.data.ShoppingListItem
-import co.ke.xently.feature.ui.AppendOnPagedData
 import co.ke.xently.feature.ui.PagedDataScreen
 import co.ke.xently.feature.ui.ToolbarWithProgressbar
 import co.ke.xently.feature.ui.stringRes
@@ -35,15 +33,18 @@ internal fun ShoppingListScreen(
     modifier: Modifier = Modifier,
     viewModel: ShoppingListViewModel = hiltViewModel(),
 ) {
-    val config = PagingConfig(20, enablePlaceholders = false)
-    val items = viewModel.get(config).collectAsLazyPagingItems()
-    ShoppingListScreen(modifier, items, menuItems, click)
+    ShoppingListScreen(
+        click = click,
+        modifier = modifier,
+        menuItems = menuItems,
+        items = viewModel.pagingData.collectAsLazyPagingItems(),
+    )
 }
 
 @Composable
 private fun ShoppingListScreen(
     modifier: Modifier,
-    pagingItems: LazyPagingItems<ShoppingListItem>,
+    items: LazyPagingItems<ShoppingListItem>,
     menuItems: List<MenuItem>,
     click: Click,
 ) {
@@ -83,20 +84,19 @@ private fun ShoppingListScreen(
             }
         },
     ) {
-        PagedDataScreen(modifier, pagingItems, R.string.fsl_empty_shopping_list) {
-            items(pagingItems) {
-                if (it != null) {
-                    ShoppingListItemCard(
-                        item = it,
-                        menuItems = menuItems,
-                        onClick = click.item,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                } // TODO: Show placeholders on null products...
-            }
-            item {
-                AppendOnPagedData(pagingItems.loadState.append, scaffoldState)
-            }
+        PagedDataScreen(
+            modifier = modifier.padding(it),
+            defaultItem = ShoppingListItem.default(),
+            items = items,
+            scaffoldState = scaffoldState,
+            emptyListMessage = R.string.fsl_empty_shopping_list,
+        ) { item, modifier ->
+            ShoppingListItemCard(
+                item = item,
+                menuItems = menuItems,
+                onClick = click.item,
+                modifier = modifier.fillMaxWidth(),
+            )
         }
     }
 }
