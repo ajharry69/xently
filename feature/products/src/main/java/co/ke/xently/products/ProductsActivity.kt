@@ -17,6 +17,8 @@ import co.ke.xently.data.Product
 import co.ke.xently.feature.theme.XentlyTheme
 import co.ke.xently.products.ui.detail.ProductDetailScreen
 import co.ke.xently.products.ui.list.ProductListScreen
+import co.ke.xently.products.ui.list.ProductListScreenClick
+import co.ke.xently.products.ui.list.item.MenuItem
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -49,21 +51,28 @@ internal fun ProductsNavHost(
     NavHost(modifier = modifier,
         navController = navController,
         startDestination = startDestination) {
-        val productList: @Composable (NavBackStackEntry) -> Unit = {
+        val productList: @Composable (NavBackStackEntry) -> Unit = { backStackEntry ->
             ProductListScreen(
-                shopId = it.arguments?.getLong("shopId"),
+                shopId = backStackEntry.arguments?.getLong("shopId"),
+                click = ProductListScreenClick(
+                    add = {
+                        navController.navigate("products/${Product.default().id}") {
+                            launchSingleTop = true
+                        }
+                    },
+                    navigationIcon = onNavigationIconClicked,
+                ),
                 modifier = Modifier.fillMaxSize(),
-                onUpdateRequested = { productId ->
-                    navController.navigate("products/$productId") {
-                        launchSingleTop = true
-                    }
-                },
-                onNavigationIconClicked = onNavigationIconClicked,
-                onAddProductClicked = {
-                    navController.navigate("products/${Product.default().id}") {
-                        launchSingleTop = true
-                    }
-                },
+                menuItems = listOf(
+                    MenuItem(R.string.update) {
+                        navController.navigate("products/${it.id}") {
+                            launchSingleTop = true
+                        }
+                    },
+                    MenuItem(R.string.delete) {
+                        // TODO: Handle delete...
+                    },
+                ),
             )
         }
         composable("products", content = productList)

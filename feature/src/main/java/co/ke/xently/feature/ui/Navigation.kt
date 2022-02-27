@@ -1,7 +1,9 @@
 package co.ke.xently.feature.ui
 
+import android.annotation.SuppressLint
 import android.content.Context
 import androidx.annotation.StringRes
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
@@ -14,15 +16,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import co.ke.xently.feature.R
 import co.ke.xently.feature.theme.XentlyTheme
 import kotlinx.coroutines.launch
 
 private val DRAWER_HORIZONTAL_PADDING = 22.dp
 val DRAWER_HEADER_HEIGHT = 176.dp
 
-data class NavDrawerItem(
+data class NavMenuItem(
     val label: String,
     val icon: ImageVector? = null,
     val onClick: () -> Unit = {},
@@ -37,12 +41,12 @@ data class NavDrawerItem(
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun NavigationDrawerItem(
+private fun NavigationDrawerItem(
     label: String,
     modifier: Modifier = Modifier,
     icon: ImageVector? = null,
     isSelected: Boolean = false,
-    isCheckable: Boolean = true,
+    @Suppress("SameParameterValue") isCheckable: Boolean = true,
     onClick: () -> Unit = {},
 ) {
     var selected by remember(isSelected) {
@@ -101,8 +105,8 @@ fun NavigationDrawerItem(
 }
 
 @Composable
-fun NavigationDrawerGroup(
-    drawerItems: List<NavDrawerItem>,
+private fun NavigationDrawerGroup(
+    menuItems: List<NavMenuItem>,
     modifier: Modifier = Modifier,
     drawerState: DrawerState? = null,
     title: String? = null,
@@ -115,7 +119,7 @@ fun NavigationDrawerGroup(
 
     val content: @Composable (Modifier) -> Unit = {
         Column(modifier = it) {
-            for ((index, item) in drawerItems.withIndex()) {
+            for ((index, item) in menuItems.withIndex()) {
                 NavigationDrawerItem(
                     modifier = Modifier.fillMaxWidth(),
                     label = item.label,
@@ -143,15 +147,64 @@ fun NavigationDrawerGroup(
         content(modifier)
     } else {
         Column(modifier = modifier) {
-            Text(
-                text = title,
-                maxLines = 1,
-                style = MaterialTheme.typography.body2,
-                color = MaterialTheme.colors.onSecondary,
-                modifier = Modifier.padding(horizontal = DRAWER_HORIZONTAL_PADDING),
-            )
+            Box(
+                modifier = Modifier
+                    .height(28.dp)
+                    .padding(horizontal = DRAWER_HORIZONTAL_PADDING),
+                contentAlignment = Alignment.BottomStart,
+            ) {
+                Text(
+                    text = title,
+                    maxLines = 1,
+                    style = MaterialTheme.typography.body2,
+                    color = MaterialTheme.colors.onSecondary,
+                )
+            }
             content(Modifier.fillMaxWidth())
         }
+    }
+}
+
+
+data class NavDrawerGroupItem(
+    val items: List<NavMenuItem>,
+    val title: String? = null,
+    val checkable: Boolean = true,
+) {
+    init {
+        if (items.isEmpty()) {
+            throw IllegalStateException("Menu items cannot be empty")
+        }
+    }
+}
+
+@SuppressLint("ComposableNaming")
+@Composable
+fun ColumnScope.NavigationDrawer(
+    navGroups: List<NavDrawerGroupItem>,
+    drawerState: DrawerState? = null,
+    headerContentAlignment: Alignment = Alignment.BottomCenter,
+    headerContent: @Composable (BoxScope.() -> Unit)? = null,
+) = apply {
+    if (headerContent != null) {
+        Box(
+            modifier = Modifier
+                .height(DRAWER_HEADER_HEIGHT)
+                .fillMaxWidth(),
+            content = headerContent,
+            contentAlignment = headerContentAlignment,
+        )
+        Divider(modifier = Modifier.fillMaxWidth())
+        Spacer(modifier = Modifier.height(HORIZONTAL_PADDING / 2))
+    }
+    for (groupItem in navGroups) {
+        NavigationDrawerGroup(
+            title = groupItem.title,
+            drawerState = drawerState,
+            menuItems = groupItem.items,
+            isCheckable = groupItem.checkable,
+            modifier = Modifier.fillMaxWidth(),
+        )
     }
 }
 
@@ -160,23 +213,31 @@ fun NavigationDrawerGroup(
 private fun NavigationDrawerGroup() {
     XentlyTheme {
         Column(Modifier.fillMaxSize()) {
-            NavigationDrawerGroup(
-                modifier = Modifier.fillMaxWidth(),
-                drawerItems = listOf(
-                    NavDrawerItem(icon = Icons.Default.Person, label = "Account"),
-                    NavDrawerItem(icon = Icons.Default.Favorite, label = "Favourites"),
-                    NavDrawerItem(label = "No icon"),
+            NavigationDrawer(
+                navGroups = listOf(
+                    NavDrawerGroupItem(
+                        items = listOf(
+                            NavMenuItem(icon = Icons.Default.Person, label = "Account"),
+                            NavMenuItem(icon = Icons.Default.Favorite, label = "Favourites"),
+                            NavMenuItem(label = "No icon"),
+                        ),
+                    ),
+                    NavDrawerGroupItem(
+                        title = "Title",
+                        checkable = false,
+                        items = listOf(
+                            NavMenuItem(icon = Icons.Default.Settings, label = "Settings"),
+                            NavMenuItem(icon = Icons.Default.Help, label = "Help"),
+                        ),
+                    )
                 ),
-            )
-            NavigationDrawerGroup(
-                modifier = Modifier.fillMaxWidth(),
-                title = "Others",
-                isCheckable = false,
-                drawerItems = listOf(
-                    NavDrawerItem(icon = Icons.Default.Settings, label = "Settings"),
-                    NavDrawerItem(icon = Icons.Default.Help, label = "Help"),
-                ),
-            )
+            ) {
+                Image(
+                    painterResource(R.drawable.ic_launcher_background),
+                    null,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
         }
     }
 }
