@@ -1,29 +1,29 @@
 package co.ke.xently.products.ui.list
 
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.FloatingActionButton
 import androidx.compose.material.Icon
 import androidx.compose.material.Scaffold
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.rememberScaffoldState
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.paging.PagingConfig
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
-import androidx.paging.compose.items
 import co.ke.xently.data.Product
-import co.ke.xently.feature.ui.AppendOnPagedData
 import co.ke.xently.feature.ui.PagedDataScreen
 import co.ke.xently.feature.ui.ToolbarWithProgressbar
 import co.ke.xently.feature.ui.stringRes
 import co.ke.xently.products.R
 import co.ke.xently.products.ui.list.item.MenuItem
 import co.ke.xently.products.ui.list.item.ProductListItem
-import kotlinx.coroutines.flow.collectLatest
 
 internal data class ProductListScreenClick(
     val add: () -> Unit = {},
@@ -38,23 +38,16 @@ internal fun ProductListScreen(
     modifier: Modifier = Modifier,
     viewModel: ProductListViewModel = hiltViewModel(),
 ) {
-    val config = PagingConfig(20, enablePlaceholders = false)
-    val items = viewModel.get(config, shopId).collectAsLazyPagingItems()
-    var shopName by remember {
-        mutableStateOf<String?>(null)
-    }
+    val items = viewModel.pagingData.collectAsLazyPagingItems()
+    val shopName by viewModel.shopName.collectAsState()
     LaunchedEffect(shopId) {
-        if (shopId != null) {
-            viewModel.getShopName(shopId).collectLatest {
-                shopName = it
-            }
-        }
+        viewModel.setShopId(shopId)
     }
     ProductListScreen(
-        click = click,
-        items = items,
         modifier = modifier,
         shopName = shopName,
+        click = click,
+        items = items,
         menuItems = menuItems,
     )
 }
@@ -84,19 +77,17 @@ private fun ProductListScreen(
             }
         }
     ) {
-        PagedDataScreen(modifier, items) {
-            items(items) {
-                if (it != null) {
-                    ProductListItem(
-                        product = it,
-                        menuItems = menuItems,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                } // TODO: Show placeholders on null products...
-            }
-            item {
-                AppendOnPagedData(items.loadState.append, scaffoldState)
-            }
+        PagedDataScreen(
+            modifier = modifier.padding(it),
+            defaultItem = Product.default(),
+            items = items,
+            scaffoldState = scaffoldState,
+        ) { product, modifier ->
+            ProductListItem(
+                product = product,
+                menuItems = menuItems,
+                modifier = modifier.fillMaxWidth(),
+            )
         }
     }
 }

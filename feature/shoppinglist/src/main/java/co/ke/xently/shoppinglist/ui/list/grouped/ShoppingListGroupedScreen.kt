@@ -8,7 +8,10 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -20,7 +23,8 @@ import co.ke.xently.shoppinglist.R
 import co.ke.xently.shoppinglist.ui.list.grouped.item.GroupMenuItem
 import co.ke.xently.shoppinglist.ui.list.grouped.item.GroupedShoppingListCard
 import co.ke.xently.shoppinglist.ui.list.item.MenuItem
-import kotlinx.coroutines.flow.collectLatest
+import com.google.accompanist.swiperefresh.SwipeRefresh
+import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import kotlinx.coroutines.launch
 
 internal data class Click(
@@ -41,30 +45,26 @@ internal fun GroupedShoppingListScreen(
     viewModel: ShoppingListGroupedViewModel = hiltViewModel(),
 ) {
     val scope = rememberCoroutineScope()
-    val shoppingListResult by viewModel.shoppingListResult.collectAsState(scope.coroutineContext)
+    val result by viewModel.shoppingListResult.collectAsState(scope.coroutineContext)
     val shoppingListCount by viewModel.shoppingListCount.collectAsState(scope.coroutineContext)
-    var user by remember { mutableStateOf<User?>(null) }
-    LaunchedEffect(true) {
-        viewModel.historicallyFirstUser.collectLatest {
-            user = it
-        }
-    }
-    var signOutResult by remember { mutableStateOf<TaskResult<Unit>>(TaskResult.Success(Unit)) }
-    LaunchedEffect(true) {
-        viewModel.signOutResult.collectLatest {
-            signOutResult = it
-        }
-    }
-    val context = LocalContext.current
+    val user by viewModel.historicallyFirstUser.collectAsState(null, scope.coroutineContext)
+    val signOutResult by viewModel.signOutResult.collectAsState(
+        initial = TaskResult.Success(Unit),
+        context = scope.coroutineContext,
+    )
+    val isRefreshing by viewModel.isRefreshing.collectAsState(scope.coroutineContext)
 
+    val context = LocalContext.current
     GroupedShoppingListScreen(
         user = user,
+        result = result,
         modifier = modifier,
         menuItems = menuItems,
         drawerItems = drawerItems,
-        result = shoppingListResult,
+        isRefreshing = isRefreshing,
         signOutResult = signOutResult,
         groupCount = shoppingListCount,
+        onRefresh = viewModel::refresh,
         groupMenuItems = groupMenuItems,
         click = click.copy(
             signInOrOut = {
@@ -89,6 +89,8 @@ private fun GroupedShoppingListScreen(
     groupCount: Map<Any, Int>,
     signOutResult: TaskResult<Unit>,
     result: TaskResult<List<GroupedShoppingList>>,
+    isRefreshing: Boolean,
+    onRefresh: () -> Unit,
 ) {
     val scaffoldState = rememberScaffoldState()
     val coroutineScope = rememberCoroutineScope()
@@ -192,16 +194,22 @@ private fun GroupedShoppingListScreen(
                         error = R.string.fsl_empty_shopping_list,
                     )
                 } else {
-                    LazyColumn(modifier = modifier.padding(paddingValues)) {
-                        items(groupedShoppingList) { groupList ->
-                            GroupedShoppingListCard(
-                                click = click.click,
-                                groupList = groupList,
-                                menuItems = menuItems,
-                                listCount = groupCount,
-                                groupMenuItems = groupMenuItems,
-                                showPlaceholder = !true, // TODO: Handle intelligently...
-                            )
+                    SwipeRefresh(
+                        modifier = modifier.padding(paddingValues),
+                        state = rememberSwipeRefreshState(isRefreshing),
+                        onRefresh = onRefresh,
+                    ) {
+                        LazyColumn(modifier = modifier.padding(paddingValues)) {
+                            items(groupedShoppingList) { groupList ->
+                                GroupedShoppingListCard(
+                                    click = click.click,
+                                    groupList = groupList,
+                                    menuItems = menuItems,
+                                    listCount = groupCount,
+                                    groupMenuItems = groupMenuItems,
+                                    showPlaceholder = groupList.isDefault,
+                                )
+                            }
                         }
                     }
                 }

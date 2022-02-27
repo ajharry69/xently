@@ -12,12 +12,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.paging.PagingConfig
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
-import androidx.paging.compose.items
 import co.ke.xently.data.Shop
-import co.ke.xently.feature.ui.AppendOnPagedData
 import co.ke.xently.feature.ui.PagedDataScreen
 import co.ke.xently.feature.ui.ToolbarWithProgressbar
 import co.ke.xently.feature.ui.stringRes
@@ -34,26 +31,24 @@ internal data class Click(
 @Composable
 internal fun ShopListScreen(
     click: Click,
+    modifier: Modifier,
     menuItems: @Composable (Shop) -> List<MenuItem>,
-    modifier: Modifier = Modifier,
     viewModel: ShopListViewModel = hiltViewModel(),
 ) {
-    val config = PagingConfig(20, enablePlaceholders = false)
-    val items = viewModel.get(config).collectAsLazyPagingItems()
     ShopListScreen(
-        pagingItems = items,
+        click = click,
         modifier = modifier,
         menuItems = menuItems,
-        click = click,
+        items = viewModel.pagingData.collectAsLazyPagingItems(),
     )
 }
 
 @Composable
 private fun ShopListScreen(
-    pagingItems: LazyPagingItems<Shop>,
-    modifier: Modifier = Modifier,
-    menuItems: @Composable (Shop) -> List<MenuItem>,
     click: Click,
+    modifier: Modifier,
+    items: LazyPagingItems<Shop>,
+    menuItems: @Composable (Shop) -> List<MenuItem>,
 ) {
     val scaffoldState = rememberScaffoldState()
     Scaffold(
@@ -68,21 +63,19 @@ private fun ShopListScreen(
                 Icon(Icons.Default.Add, stringRes(R.string.fs_add_shop_toolbar_title, R.string.add))
             }
         },
-    ) { paddingValues ->
-        PagedDataScreen(modifier.padding(paddingValues), pagingItems) {
-            items(pagingItems) {
-                if (it != null) {
-                    ShopListItem(
-                        it,
-                        modifier = Modifier.fillMaxWidth(),
-                        click = click.click,
-                        menuItems = menuItems,
-                    )
-                } // TODO: Show placeholders on null products...
-            }
-            item {
-                AppendOnPagedData(pagingItems.loadState.append, scaffoldState)
-            }
+    ) {
+        PagedDataScreen(
+            modifier = modifier.padding(it),
+            defaultItem = Shop.default(),
+            items = items,
+            scaffoldState = scaffoldState,
+        ) { shop, modifier ->
+            ShopListItem(
+                shop = shop,
+                modifier = modifier.fillMaxWidth(),
+                click = click.click,
+                menuItems = menuItems,
+            )
         }
     }
 }
