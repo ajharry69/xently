@@ -5,13 +5,15 @@ import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
-import kotlinx.coroutines.flow.*
+import co.ke.xently.feature.utils.DEFAULT_SHARING_STARTED
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
 
-abstract class AbstractListViewModel : ViewModel() {
-    protected val defaultSharingStarted = SharingStarted.WhileSubscribed(
-        replayExpirationMillis = 5000,
-    )
-    private val _pagingConfig = MutableStateFlow(PagingConfig(20, enablePlaceholders = false))
+abstract class AbstractPagedListViewModel : ViewModel() {
+    private val _pagingConfig =
+        MutableStateFlow(PagingConfig(pageSize = 30, enablePlaceholders = false))
     protected val pagingConfig = _pagingConfig.asStateFlow()
 
     @Suppress("unused")
@@ -21,7 +23,7 @@ abstract class AbstractListViewModel : ViewModel() {
 
     fun <T : Any> Flow<PagingData<T>>.cachedState() = cachedIn(viewModelScope).stateIn(
         scope = viewModelScope,
-        started = defaultSharingStarted,
+        started = DEFAULT_SHARING_STARTED,
         initialValue = PagingData.empty()
     )
 }

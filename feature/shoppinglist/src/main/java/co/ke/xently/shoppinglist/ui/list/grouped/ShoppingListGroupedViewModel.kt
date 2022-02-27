@@ -1,13 +1,16 @@
 package co.ke.xently.shoppinglist.ui.list.grouped
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
-import co.ke.xently.data.GroupedShoppingList
 import co.ke.xently.data.TaskResult
 import co.ke.xently.feature.AbstractAuthViewModel
 import co.ke.xently.feature.repository.IAuthRepository
+import co.ke.xently.feature.utils.DEFAULT_SHARING_STARTED
 import co.ke.xently.feature.utils.flagLoadingOnStart
 import co.ke.xently.shoppinglist.GroupBy
 import co.ke.xently.shoppinglist.repository.IShoppingListRepository
+import co.ke.xently.source.remote.CacheControl
+import co.ke.xently.source.remote.getOrThrow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
@@ -15,23 +18,49 @@ import javax.inject.Inject
 @HiltViewModel
 internal class ShoppingListGroupedViewModel @Inject constructor(
     authRepository: IAuthRepository,
+    private val savedStateHandle: SavedStateHandle,
     private val repository: IShoppingListRepository,
 ) : AbstractAuthViewModel(authRepository) {
-    val shoppingListResult: StateFlow<TaskResult<List<GroupedShoppingList>>>
-    val shoppingListCount: StateFlow<Map<Any, Int>>
+    private val cacheControlKey = "${ShoppingListGroupedViewModel::class.java.name}.cacheControl"
+
+    private val _cacheControl =
+        MutableStateFlow(savedStateHandle.get<String>(cacheControlKey)?.let { getOrThrow(it) }
+            ?: CacheControl.OnlyIfCached)
+    private val cacheControl = _cacheControl.asStateFlow()
+    val isRefreshing = cacheControl.mapLatest { it is CacheControl.NoCache }.stateIn(
+        initialValue = false,
+        scope = viewModelScope,
+        started = DEFAULT_SHARING_STARTED,
+    )
 
     private val groupBy = MutableStateFlow(GroupBy.DateAdded)
 
-    init {
-        shoppingListResult = historicallyFirstUser.combineTransform(groupBy) { _, b ->
-            emitAll(repository.get(b).flagLoadingOnStart())
+    val shoppingListResult =
+        combineTransform(historicallyFirstUser, groupBy, cacheControl) { _, by, cacheCtrl ->
+            emitAll(
+                repository.get(by, cacheCtrl).flagLoadingOnStart().onCompletion {
+                    // TODO: Fix case where refresh would trigger new network request
+                    setCacheControl(CacheControl.OnlyIfCached)
+                },
+            )
         }.stateIn(
-            viewModelScope,
-            SharingStarted.WhileSubscribed(),
-            TaskResult.Success(emptyList()),
+            scope = viewModelScope,
+            started = DEFAULT_SHARING_STARTED,
+            initialValue = TaskResult.Success(emptyList()),
         )
 
-        shoppingListCount = groupBy.flatMapLatest(repository::getCount)
-            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyMap())
+    val shoppingListCount = groupBy.flatMapLatest(repository::getCount).stateIn(
+        scope = viewModelScope,
+        initialValue = emptyMap(),
+        started = DEFAULT_SHARING_STARTED,
+    )
+
+    fun refresh() {
+        setCacheControl(CacheControl.NoCache)
+    }
+
+    private fun setCacheControl(v: CacheControl) {
+        _cacheControl.value = v
+        savedStateHandle[cacheControlKey] = v.toString()
     }
 }

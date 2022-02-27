@@ -10,8 +10,6 @@ sealed class CacheControl(private val name: String) {
     object OnlyIfCached : CacheControl("only-if-cached")
 }
 
-val Default = CacheControl.OnlyIfCached
-
 fun getOrThrow(lookup: String): CacheControl {
     return when (lookup) {
         CacheControl.NoCache.toString() -> {

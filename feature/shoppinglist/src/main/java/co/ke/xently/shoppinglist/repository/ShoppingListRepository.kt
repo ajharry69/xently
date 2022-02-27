@@ -12,11 +12,12 @@ import co.ke.xently.shoppinglist.GroupBy.DateAdded
 import co.ke.xently.shoppinglist.Recommend
 import co.ke.xently.shoppinglist.ShoppingListRemoteMediator
 import co.ke.xently.shoppinglist.saveLocallyWithAttributes
+import co.ke.xently.source.remote.CacheControl
 import co.ke.xently.source.remote.retryCatch
 import co.ke.xently.source.remote.sendRequest
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -34,13 +35,26 @@ internal class ShoppingListRepository @Inject constructor(private val dependenci
         }.retryCatch(this).flowOn(dependencies.dispatcher.io)
     }
 
-    override fun get(groupBy: GroupBy) = Retry().run {
+    override fun get(groupBy: GroupBy, cacheControl: CacheControl) = Retry().run {
         flow {
-            emit(sendRequest { dependencies.service.shoppingList.get(groupBy = groupBy.name.lowercase()) })
+            emit(
+                sendRequest {
+                    dependencies.service.shoppingList.get(
+                        groupBy = groupBy.name.lowercase(),
+                        cacheControl = cacheControl.toString(),
+                    )
+                },
+            )
         }.map { result ->
             result.mapCatching {
+                if (cacheControl is CacheControl.NoCache) {
+                    // Signifies refresh
+                    withContext(dependencies.dispatcher.io) {
+                        dependencies.database.shoppingListDao.deleteAll()
+                    }
+                }
                 it.map { entry ->
-                    coroutineScope {
+                    withContext(dependencies.dispatcher.io) {
                         launch {
                             entry.value.saveLocallyWithAttributes(dependencies, scope = this)
                         }
@@ -55,7 +69,9 @@ internal class ShoppingListRepository @Inject constructor(private val dependenci
         DateAdded -> dependencies.database.shoppingListDao.getCountGroupedByDateAdded()
     }.mapLatest {
         mutableMapOf<Any, Int>().apply {
-            for (item in it) put(item.group, item.numberOfItems)
+            for (item in it) {
+                put(item.group, item.numberOfItems)
+            }
         }.toMap()
     }
 
