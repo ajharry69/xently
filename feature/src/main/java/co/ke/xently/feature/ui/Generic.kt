@@ -216,8 +216,6 @@ inline fun <reified T : Any> PagedDataScreen(
     items: LazyPagingItems<T>,
     scaffoldState: ScaffoldState,
     @StringRes emptyListMessage: Int? = null,
-    isRefreshing: Boolean = false,
-    noinline onRefresh: () -> Unit = {},
     noinline httpSignInErrorClick: (() -> Unit)? = null,
     noinline preErrorContent: @Composable (ColumnScope.(Throwable) -> Unit) = {},
     noinline postErrorContent: @Composable (ColumnScope.(Throwable) -> Unit) = {
@@ -239,8 +237,14 @@ inline fun <reified T : Any> PagedDataScreen(
             if (items.itemCount == 0) {
                 FullscreenEmptyList<T>(modifier, emptyListMessage)
             } else {
-                val refreshState = rememberSwipeRefreshState(isRefreshing = isRefreshing)
-                SwipeRefresh(modifier = modifier, state = refreshState, onRefresh = onRefresh) {
+                val refreshState = rememberSwipeRefreshState(
+                    isRefreshing = items.loadState.mediator?.refresh == LoadState.Loading,
+                )
+                SwipeRefresh(
+                    modifier = modifier,
+                    state = refreshState,
+                    onRefresh = items::refresh,
+                ) {
                     LazyColumn(modifier = Modifier.fillMaxSize()) {
                         items(items) { item ->
                             if (item == null) {

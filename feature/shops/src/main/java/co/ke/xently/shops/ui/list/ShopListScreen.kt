@@ -12,7 +12,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.paging.PagingConfig
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import co.ke.xently.data.Shop
@@ -32,26 +31,24 @@ internal data class Click(
 @Composable
 internal fun ShopListScreen(
     click: Click,
+    modifier: Modifier,
     menuItems: @Composable (Shop) -> List<MenuItem>,
-    modifier: Modifier = Modifier,
     viewModel: ShopListViewModel = hiltViewModel(),
 ) {
-    val config = PagingConfig(20, enablePlaceholders = false)
-    val items = viewModel.get(config).collectAsLazyPagingItems()
     ShopListScreen(
-        items = items,
+        click = click,
         modifier = modifier,
         menuItems = menuItems,
-        click = click,
+        items = viewModel.pagingData.collectAsLazyPagingItems(),
     )
 }
 
 @Composable
 private fun ShopListScreen(
-    items: LazyPagingItems<Shop>,
-    modifier: Modifier = Modifier,
-    menuItems: @Composable (Shop) -> List<MenuItem>,
     click: Click,
+    modifier: Modifier,
+    items: LazyPagingItems<Shop>,
+    menuItems: @Composable (Shop) -> List<MenuItem>,
 ) {
     val scaffoldState = rememberScaffoldState()
     Scaffold(
@@ -68,10 +65,10 @@ private fun ShopListScreen(
         },
     ) {
         PagedDataScreen(
-            items = items,
-            defaultItem = Shop.default(),
-            scaffoldState = scaffoldState,
             modifier = modifier.padding(it),
+            defaultItem = Shop.default(),
+            items = items,
+            scaffoldState = scaffoldState,
         ) { shop, modifier ->
             ShopListItem(
                 shop = shop,

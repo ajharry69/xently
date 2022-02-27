@@ -7,6 +7,7 @@ import androidx.room.withTransaction
 import co.ke.xently.data.Address
 import co.ke.xently.data.getOrThrow
 import co.ke.xently.feature.repository.Dependencies
+import co.ke.xently.source.remote.CacheControl
 import co.ke.xently.source.remote.sendRequest
 import kotlinx.coroutines.CancellationException
 
@@ -22,8 +23,12 @@ class AddressesRemoteMediator(
         state: PagingState<Int, Address.WithShop>,
     ): MediatorResult {
         preLoad?.invoke()
+        var cacheControl: CacheControl = CacheControl.OnlyIfCached
         val page: Int = when (loadType) {
-            LoadType.REFRESH -> 1
+            LoadType.REFRESH -> {
+                cacheControl = CacheControl.NoCache
+                1
+            }
             LoadType.APPEND -> return MediatorResult.Success(endOfPaginationReached = true)
             LoadType.PREPEND -> dependencies.database.withTransaction {
                 dependencies.database.remoteKeyDao.get(remoteKeyEndpoint)
@@ -32,7 +37,13 @@ class AddressesRemoteMediator(
 
         return try {
             val response = sendRequest {
-                dependencies.service.shop.getAddresses(shopId, query ?: "", page, state.config.initialLoadSize)
+                dependencies.service.shop.getAddresses(
+                    shopId = shopId,
+                    query = query ?: "",
+                    page = page,
+                    size = state.config.initialLoadSize,
+                    cacheControl = cacheControl.toString(),
+                )
             }
             dependencies.database.withTransaction {
                 if (loadType == LoadType.REFRESH) {

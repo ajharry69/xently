@@ -10,7 +10,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.paging.PagingConfig
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import co.ke.xently.data.ShoppingListItem
@@ -34,9 +33,12 @@ internal fun ShoppingListScreen(
     modifier: Modifier = Modifier,
     viewModel: ShoppingListViewModel = hiltViewModel(),
 ) {
-    val config = PagingConfig(20, enablePlaceholders = false)
-    val items = viewModel.get(config).collectAsLazyPagingItems()
-    ShoppingListScreen(modifier, items, menuItems, click)
+    ShoppingListScreen(
+        click = click,
+        modifier = modifier,
+        menuItems = menuItems,
+        items = viewModel.pagingData.collectAsLazyPagingItems(),
+    )
 }
 
 @Composable
@@ -83,10 +85,10 @@ private fun ShoppingListScreen(
         },
     ) {
         PagedDataScreen(
-            items = items,
-            scaffoldState = scaffoldState,
             modifier = modifier.padding(it),
             defaultItem = ShoppingListItem.default(),
+            items = items,
+            scaffoldState = scaffoldState,
             emptyListMessage = R.string.fsl_empty_shopping_list,
         ) { item, modifier ->
             ShoppingListItemCard(
