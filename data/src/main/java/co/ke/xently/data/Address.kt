@@ -73,6 +73,6 @@ data class Address(
     }
 
     companion object {
-        fun default() = Address(isDefault = true)
+        fun default() = Address(town = "Ace town, Kenya", isDefault = true)
     }
 }

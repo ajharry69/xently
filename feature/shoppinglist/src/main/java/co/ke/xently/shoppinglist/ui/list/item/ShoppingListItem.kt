@@ -12,7 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import co.ke.xently.data.ShoppingListItem
 import co.ke.xently.feature.ui.ListItemSurface
-import co.ke.xently.feature.ui.NEGLIGIBLE_SPACE_BY
+import co.ke.xently.feature.ui.NEGLIGIBLE_SPACE
 import co.ke.xently.feature.ui.shimmerPlaceholder
 import co.ke.xently.shoppinglist.R
 
@@ -33,7 +33,7 @@ internal fun ShoppingListItemCard(
     val placeholderVisible = showPlaceholder || item.isDefault
     var showDropMenu by remember { mutableStateOf(false) }
     ListItemSurface(modifier = modifier, onClick = { onClick.invoke(item) }) {
-        Column(verticalArrangement = Arrangement.spacedBy(NEGLIGIBLE_SPACE_BY)) {
+        Column(verticalArrangement = Arrangement.spacedBy(NEGLIGIBLE_SPACE)) {
             Text(
                 text = item.name,
                 style = MaterialTheme.typography.body1,

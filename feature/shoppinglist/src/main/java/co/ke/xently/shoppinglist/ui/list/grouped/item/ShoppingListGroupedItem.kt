@@ -15,7 +15,7 @@ import androidx.compose.ui.unit.dp
 import co.ke.xently.data.GroupedShoppingList
 import co.ke.xently.data.ShoppingListItem
 import co.ke.xently.feature.ui.HORIZONTAL_PADDING
-import co.ke.xently.feature.ui.NEGLIGIBLE_SPACE_BY
+import co.ke.xently.feature.ui.NEGLIGIBLE_SPACE
 import co.ke.xently.feature.ui.shimmerPlaceholder
 import co.ke.xently.shoppinglist.R
 import co.ke.xently.shoppinglist.ui.list.item.MenuItem
@@ -61,7 +61,7 @@ internal fun GroupedShoppingListCard(
             ) {
                 Column(
                     modifier = Modifier.padding(bottom = HORIZONTAL_PADDING / 2),
-                    verticalArrangement = Arrangement.spacedBy(NEGLIGIBLE_SPACE_BY),
+                    verticalArrangement = Arrangement.spacedBy(NEGLIGIBLE_SPACE),
                 ) {
                     Text(
                         text = groupList.group,

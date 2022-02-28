@@ -65,14 +65,14 @@ private fun ShopListScreen(
         },
     ) {
         PagedDataScreen(
-            modifier = modifier.padding(it),
-            defaultItem = Shop.default(),
             items = items,
+            placeholder = { Shop.default() },
             scaffoldState = scaffoldState,
-        ) { shop, modifier ->
+            modifier = modifier.padding(it),
+        ) { shop ->
             ShopListItem(
                 shop = shop,
-                modifier = modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth(),
                 click = click.click,
                 menuItems = menuItems,
             )

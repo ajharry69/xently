@@ -21,6 +21,8 @@ import androidx.compose.ui.unit.dp
 import co.ke.xently.data.Product
 import co.ke.xently.feature.theme.XentlyTheme
 import co.ke.xently.feature.ui.ListItemSurface
+import co.ke.xently.feature.ui.NEGLIGIBLE_SPACE
+import co.ke.xently.feature.ui.shimmerPlaceholder
 import co.ke.xently.feature.utils.descriptive
 import co.ke.xently.products.R
 
@@ -39,18 +41,23 @@ internal fun ProductListItem(
 ) {
     var showDropMenu by remember(showPopupMenu) { mutableStateOf(showPopupMenu) }
     ListItemSurface(modifier = modifier) {
-        Column(modifier = Modifier.weight(1f)) {
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(NEGLIGIBLE_SPACE),
+        ) {
             Text(
                 modifier = Modifier
                     .wrapContentWidth()
-                    .fillMaxWidth(),
+                    .fillMaxWidth()
+                    .shimmerPlaceholder(product.isDefault),
                 text = product.toString(),
                 style = MaterialTheme.typography.body1,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
             Text(
-                DateFormat.getMediumDateFormat(LocalContext.current)
+                modifier = Modifier.shimmerPlaceholder(product.isDefault),
+                text = DateFormat.getMediumDateFormat(LocalContext.current)
                     .format(product.datePurchased),
                 style = MaterialTheme.typography.caption,
             )
@@ -61,13 +68,17 @@ internal fun ProductListItem(
                 .padding(start = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text("${stringResource(co.ke.xently.feature.R.string.default_currency)}${product.unitPrice.descriptive()}",
-                style = MaterialTheme.typography.subtitle2.copy(fontSize = TextUnit(18f,
-                    TextUnitType.Sp)))
+            Text(
+                text = "${stringResource(co.ke.xently.feature.R.string.default_currency)}${product.unitPrice.descriptive()}",
+                style = MaterialTheme.typography.subtitle2.copy(
+                    fontSize = TextUnit(18f, TextUnitType.Sp),
+                ),
+                modifier = Modifier.shimmerPlaceholder(product.isDefault),
+            )
             Box {
                 IconButton(onClick = { showDropMenu = !showDropMenu }) {
                     Icon(
-                        if (showDropMenu) {
+                        imageVector = if (showDropMenu) {
                             Icons.Default.KeyboardArrowDown
                         } else {
                             Icons.Default.KeyboardArrowRight
@@ -76,13 +87,14 @@ internal fun ProductListItem(
                             R.string.fp_product_item_menu_content_description,
                             product.name,
                         ),
+                        modifier = Modifier.shimmerPlaceholder(product.isDefault),
                     )
                 }
                 DropdownMenu(
                     expanded = showDropMenu,
                     onDismissRequest = { showDropMenu = false },
                 ) {
-                    for (item in menuItems){
+                    for (item in menuItems) {
                         DropdownMenuItem(
                             onClick = {
                                 item.onClick.invoke(product)
@@ -90,18 +102,6 @@ internal fun ProductListItem(
                             },
                         ) { Text(stringResource(item.label)) }
                     }
-                    /*DropdownMenuItem(
-                        onClick = {
-                            onUpdateRequested(product.id)
-                            showDropMenu = false
-                        },
-                    ) { Text(stringResource(R.string.update)) }
-                    DropdownMenuItem(
-                        onClick = {
-                            onDeleteRequested(product.id)
-                            showDropMenu = false
-                        },
-                    ) { Text(stringResource(R.string.delete)) }*/
                 }
             }
         }

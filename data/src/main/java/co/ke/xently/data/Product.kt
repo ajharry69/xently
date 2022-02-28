@@ -104,6 +104,11 @@ data class Product(
     }
 
     companion object {
-        fun default(): Product = Product(isDefault = true)
+        fun default(): Product = Product(
+            name = "Superloaf bread",
+            unit = "grams",
+            unitPrice = 50f,
+            isDefault = true,
+        )
     }
 }

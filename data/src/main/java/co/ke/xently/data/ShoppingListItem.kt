@@ -89,6 +89,10 @@ data class ShoppingListItem(
         "${name.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.ROOT) else it.toString() }}, ${unitQuantity}${unit} - $purchaseQuantity"
 
     companion object {
-        fun default() = ShoppingListItem(isDefault = true)
+        fun default() = ShoppingListItem(
+            name = "Golden crown milk",
+            unit = "litres",
+            isDefault = true,
+        )
     }
 }

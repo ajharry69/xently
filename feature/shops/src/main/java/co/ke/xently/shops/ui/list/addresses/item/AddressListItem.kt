@@ -1,9 +1,6 @@
 package co.ke.xently.shops.ui.list.addresses.item
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
@@ -16,6 +13,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import co.ke.xently.data.Address
 import co.ke.xently.feature.theme.XentlyTheme
 import co.ke.xently.feature.ui.ListItemSurface
+import co.ke.xently.feature.ui.NEGLIGIBLE_SPACE
+import co.ke.xently.feature.ui.shimmerPlaceholder
 
 internal data class Click(val base: (Address) -> Unit = {})
 
@@ -26,12 +25,27 @@ internal fun AddressListItem(
     click: Click = Click(),
 ) {
     ListItemSurface(modifier = modifier, onClick = { click.base.invoke(address) }) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(text = address.town, style = MaterialTheme.typography.body1)
-            Text(text = address.town, style = MaterialTheme.typography.caption)
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(NEGLIGIBLE_SPACE),
+        ) {
+            Text(
+                text = address.town,
+                style = MaterialTheme.typography.body1,
+                modifier = Modifier.shimmerPlaceholder(address.isDefault),
+            )
+            Text(
+                text = address.town,
+                style = MaterialTheme.typography.caption,
+                modifier = Modifier.shimmerPlaceholder(address.isDefault),
+            )
         }
         IconButton(modifier = Modifier.width(IntrinsicSize.Min), onClick = { /*TODO*/ }) {
-            Icon(Icons.Default.KeyboardArrowRight, contentDescription = null)
+            Icon(
+                imageVector = Icons.Default.KeyboardArrowRight,
+                contentDescription = null,
+                modifier = Modifier.shimmerPlaceholder(address.isDefault),
+            )
         }
     }
 }
