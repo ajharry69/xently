@@ -5,7 +5,6 @@ import androidx.paging.PagingData
 import co.ke.xently.data.Product
 import co.ke.xently.data.TaskResult
 import co.ke.xently.products.shared.repository.ISearchableRepository
-import co.ke.xently.source.remote.CacheControl
 import kotlinx.coroutines.flow.Flow
 
 interface IProductsRepository : ISearchableRepository {
