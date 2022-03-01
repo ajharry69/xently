@@ -12,6 +12,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import co.ke.xently.data.Shop
 import co.ke.xently.feature.theme.XentlyTheme
 import co.ke.xently.feature.ui.ListItemSurface
+import co.ke.xently.feature.ui.NEGLIGIBLE_SPACE
+import co.ke.xently.feature.ui.shimmerPlaceholder
 import co.ke.xently.shops.R
 import kotlin.random.Random
 
@@ -29,24 +31,28 @@ internal fun ShopListItem(
 ) {
     var showDropMenu by remember { mutableStateOf(showPopupMenu) }
     ListItemSurface(modifier = modifier, onClick = { click.base.invoke(shop) }) {
-        Column(modifier = Modifier.weight(1f)) {
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(NEGLIGIBLE_SPACE),
+        ) {
             Text(
                 modifier = Modifier
                     .wrapContentWidth()
-                    .fillMaxWidth(),
+                    .shimmerPlaceholder(shop.isDefault),
                 text = shop.name,
-                style = MaterialTheme.typography.body1
+                style = MaterialTheme.typography.body1,
             )
             Text(
-                modifier = Modifier.fillMaxWidth(),
+                maxLines = 1,
                 text = shop.taxPin,
                 style = MaterialTheme.typography.caption,
+                modifier = Modifier.shimmerPlaceholder(shop.isDefault),
             )
         }
         Box(modifier = Modifier.width(IntrinsicSize.Min)) {
             IconButton(onClick = { showDropMenu = true }) {
                 Icon(
-                    if (showDropMenu) {
+                    imageVector = if (showDropMenu) {
                         Icons.Default.KeyboardArrowDown
                     } else {
                         Icons.Default.KeyboardArrowRight
@@ -55,6 +61,7 @@ internal fun ShopListItem(
                         R.string.fs_shop_item_menu_content_description,
                         shop.name,
                     ),
+                    modifier = Modifier.shimmerPlaceholder(shop.isDefault),
                 )
             }
             DropdownMenu(expanded = showDropMenu, onDismissRequest = { showDropMenu = false }) {

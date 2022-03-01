@@ -4,6 +4,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
@@ -181,11 +182,28 @@ private fun GroupedShoppingListScreen(
             }
         },
     ) { paddingValues ->
+        val itemContent: @Composable (LazyItemScope.(GroupedShoppingList) -> Unit) = { groupList ->
+            GroupedShoppingListCard(
+                click = click.click,
+                groupList = groupList,
+                menuItems = menuItems,
+                listCount = groupCount,
+                groupMenuItems = groupMenuItems,
+                showPlaceholder = groupList.isDefault,
+            )
+        }
         when (result) {
             is TaskResult.Error -> {
                 FullscreenError(modifier = modifier.padding(paddingValues), error = result.error)
             }
-            TaskResult -> FullscreenLoading(modifier.padding(paddingValues))
+            TaskResult -> {
+                FullscreenLoading(
+                    placeholderContent = itemContent,
+                    modifier = modifier.padding(paddingValues),
+                    placeholder = { GroupedShoppingList.default() },
+                    numberOfPlaceholders = PLACEHOLDER_COUNT_LARGE_ITEM_SIZE,
+                )
+            }
             is TaskResult.Success -> {
                 val groupedShoppingList = result.getOrThrow()
                 if (groupedShoppingList.isEmpty()) {
@@ -200,15 +218,7 @@ private fun GroupedShoppingListScreen(
                         onRefresh = onRefresh,
                     ) {
                         LazyColumn(modifier = modifier.padding(paddingValues)) {
-                            items(groupedShoppingList) { groupList ->
-                                GroupedShoppingListCard(
-                                    click = click.click,
-                                    groupList = groupList,
-                                    menuItems = menuItems,
-                                    listCount = groupCount,
-                                    groupMenuItems = groupMenuItems,
-                                )
-                            }
+                            items(groupedShoppingList, itemContent = itemContent)
                         }
                     }
                 }

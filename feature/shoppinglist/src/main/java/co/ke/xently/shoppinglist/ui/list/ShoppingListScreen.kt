@@ -86,16 +86,16 @@ private fun ShoppingListScreen(
     ) {
         PagedDataScreen(
             modifier = modifier.padding(it),
-            defaultItem = ShoppingListItem.default(),
+            placeholder = { ShoppingListItem.default() },
             items = items,
             scaffoldState = scaffoldState,
             emptyListMessage = R.string.fsl_empty_shopping_list,
-        ) { item, modifier ->
+        ) { item ->
             ShoppingListItemCard(
                 item = item,
                 menuItems = menuItems,
                 onClick = click.item,
-                modifier = modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth(),
             )
         }
     }

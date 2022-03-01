@@ -15,7 +15,10 @@ import kotlinx.coroutines.flow.Flow
 interface IShoppingListRepository : ISearchableRepository {
     fun add(item: ShoppingListItem): Flow<TaskResult<ShoppingListItem>>
 
-    fun get(groupBy: GroupBy, cacheControl: CacheControl): Flow<TaskResult<List<GroupedShoppingList>>>
+    fun get(
+        groupBy: GroupBy,
+        cacheControl: CacheControl,
+    ): Flow<TaskResult<List<GroupedShoppingList>>>
 
     fun getCount(groupBy: GroupBy): Flow<Map<Any, Int>>
 

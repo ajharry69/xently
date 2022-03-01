@@ -14,8 +14,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import co.ke.xently.data.*
+import co.ke.xently.data.RecommendationReport
 import co.ke.xently.data.RecommendationReport.Recommendation
+import co.ke.xently.data.ShoppingListItem
+import co.ke.xently.data.TaskResult
+import co.ke.xently.data.getOrThrow
 import co.ke.xently.feature.ui.*
 import co.ke.xently.feature.utils.MAP_HEIGHT
 import co.ke.xently.shoppinglist.R
@@ -80,7 +83,7 @@ private fun ShoppingListRecommendationScreen(
                 FullscreenError(modifier.padding(it), result.error)
             }
             TaskResult -> {
-                FullscreenLoading(modifier.padding(it))
+                FullscreenLoading<RecommendationReport>(modifier.padding(it))
             }
             is TaskResult.Success -> {
                 val report = result.getOrThrow()

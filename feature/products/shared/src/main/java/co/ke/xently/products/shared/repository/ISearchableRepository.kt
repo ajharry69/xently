@@ -1,6 +1,9 @@
 package co.ke.xently.products.shared.repository
 
-import co.ke.xently.data.*
+import co.ke.xently.data.MeasurementUnit
+import co.ke.xently.data.Product
+import co.ke.xently.data.Shop
+import co.ke.xently.data.TaskResult
 import co.ke.xently.products.shared.AttributeQuery
 import kotlinx.coroutines.flow.Flow
 

@@ -38,6 +38,10 @@ data class Shop(
     }
 
     companion object {
-        fun default() = Shop(isDefault = true)
+        fun default() = Shop(
+            name = "Xently electronic store",
+            taxPin = "P000111222Z",
+            isDefault = true,
+        )
     }
 }

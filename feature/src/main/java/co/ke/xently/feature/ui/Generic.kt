@@ -8,6 +8,7 @@ import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyItemScope
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -40,6 +41,8 @@ import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 
 val HORIZONTAL_PADDING = 16.dp
+
+val NEGLIGIBLE_SPACE = 2.dp
 
 val VerticalLayoutModifier = Modifier
     .fillMaxWidth()
@@ -174,10 +177,30 @@ fun FullscreenError(
     }
 }
 
+const val PLACEHOLDER_COUNT_SMALL_ITEM_SIZE = 30
+const val PLACEHOLDER_COUNT_MEDIUM_ITEM_SIZE = 10
+const val PLACEHOLDER_COUNT_LARGE_ITEM_SIZE = 5
+
 @Composable
-fun FullscreenLoading(modifier: Modifier) {
-    Box(modifier = modifier, contentAlignment = Alignment.Center) {
-        CircularProgressIndicator()
+fun <T> FullscreenLoading(
+    modifier: Modifier,
+    placeholder: (() -> T)? = null,
+    numberOfPlaceholders: Int = PLACEHOLDER_COUNT_MEDIUM_ITEM_SIZE,
+    placeholderContent: @Composable (LazyItemScope.(item: T) -> Unit) = {},
+) {
+    if (placeholder == null) {
+        Box(modifier = modifier, contentAlignment = Alignment.Center) {
+            CircularProgressIndicator()
+        }
+    } else {
+        LazyColumn(modifier = modifier) {
+            items(
+                itemContent = placeholderContent,
+                items = List(numberOfPlaceholders) {
+                    placeholder.invoke()
+                },
+            )
+        }
     }
 }
 
@@ -212,19 +235,27 @@ private fun FullscreenEmptyListPreview() {
 @Composable
 inline fun <reified T : Any> PagedDataScreen(
     modifier: Modifier,
-    defaultItem: T,
     items: LazyPagingItems<T>,
     scaffoldState: ScaffoldState,
+    noinline placeholder: (() -> T)?,
     @StringRes emptyListMessage: Int? = null,
     noinline httpSignInErrorClick: (() -> Unit)? = null,
+    numberOfPlaceholders: Int = PLACEHOLDER_COUNT_SMALL_ITEM_SIZE,
     noinline preErrorContent: @Composable (ColumnScope.(Throwable) -> Unit) = {},
     noinline postErrorContent: @Composable (ColumnScope.(Throwable) -> Unit) = {
         HttpErrorButton(it, onClick = httpSignInErrorClick)
     },
-    noinline itemContent: @Composable (LazyItemScope.(T, Modifier) -> Unit),
+    noinline itemContent: @Composable (LazyItemScope.(T) -> Unit),
 ) {
     when (val refresh = items.loadState.refresh) {
-        is LoadState.Loading -> FullscreenLoading(modifier)
+        is LoadState.Loading -> {
+            FullscreenLoading(
+                modifier = modifier,
+                placeholder = placeholder,
+                placeholderContent = itemContent,
+                numberOfPlaceholders = numberOfPlaceholders,
+            )
+        }
         is LoadState.Error -> {
             FullscreenError(
                 modifier = modifier,
@@ -248,9 +279,11 @@ inline fun <reified T : Any> PagedDataScreen(
                     LazyColumn(modifier = Modifier.fillMaxSize()) {
                         items(items) { item ->
                             if (item == null) {
-                                itemContent(defaultItem, Modifier) // TODO: Append placeholder
+                                if (placeholder != null) {
+                                    itemContent(placeholder.invoke())
+                                }
                             } else {
-                                itemContent(item, Modifier)
+                                itemContent(item)
                             }
                         }
                         item {

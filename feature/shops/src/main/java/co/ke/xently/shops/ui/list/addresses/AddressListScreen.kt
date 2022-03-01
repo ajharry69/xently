@@ -64,14 +64,14 @@ private fun AddressListScreen(
     ) {
         PagedDataScreen(
             modifier = modifier.padding(it),
-            defaultItem = Address.default(),
+            placeholder = { Address.default() },
             items = items,
             scaffoldState = scaffoldState,
-        ) { address, modifier ->
+        ) { address ->
             AddressListItem(
                 address = address,
                 click = click.click,
-                modifier = modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth(),
             )
         }
     }
