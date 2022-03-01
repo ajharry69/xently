@@ -1,7 +1,7 @@
 package co.ke.xently.shops.ui.list.addresses
 
 import androidx.lifecycle.viewModelScope
-import co.ke.xently.feature.AbstractPagedListViewModel
+import co.ke.xently.feature.viewmodels.AbstractPagedListViewModel
 import co.ke.xently.feature.utils.DEFAULT_SHARING_STARTED
 import co.ke.xently.shops.repository.IShopsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel

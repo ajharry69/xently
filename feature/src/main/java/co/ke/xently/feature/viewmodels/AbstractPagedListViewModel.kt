@@ -1,4 +1,4 @@
-package co.ke.xently.feature
+package co.ke.xently.feature.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
