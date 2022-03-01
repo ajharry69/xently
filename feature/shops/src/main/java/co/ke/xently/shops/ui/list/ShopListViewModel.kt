@@ -1,6 +1,6 @@
 package co.ke.xently.shops.ui.list
 
-import co.ke.xently.feature.AbstractPagedListViewModel
+import co.ke.xently.feature.viewmodels.AbstractPagedListViewModel
 import co.ke.xently.shops.repository.IShopsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi

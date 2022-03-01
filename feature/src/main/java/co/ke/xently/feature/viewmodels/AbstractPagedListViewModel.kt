@@ -1,4 +1,4 @@
-package co.ke.xently.feature
+package co.ke.xently.feature.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.stateIn
 
 abstract class AbstractPagedListViewModel : ViewModel() {
     private val _pagingConfig =
-        MutableStateFlow(PagingConfig(pageSize = 30, enablePlaceholders = false))
+        MutableStateFlow(PagingConfig(pageSize = 30, enablePlaceholders = true))
     protected val pagingConfig = _pagingConfig.asStateFlow()
 
     @Suppress("unused")
@@ -23,7 +23,7 @@ abstract class AbstractPagedListViewModel : ViewModel() {
 
     fun <T : Any> Flow<PagingData<T>>.cachedState() = cachedIn(viewModelScope).stateIn(
         scope = viewModelScope,
+        initialValue = PagingData.empty(),
         started = DEFAULT_SHARING_STARTED,
-        initialValue = PagingData.empty()
     )
 }

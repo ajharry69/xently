@@ -3,7 +3,7 @@ package co.ke.xently.shoppinglist.ui.list.grouped
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import co.ke.xently.data.TaskResult
-import co.ke.xently.feature.AbstractAuthViewModel
+import co.ke.xently.feature.viewmodels.AbstractAuthViewModel
 import co.ke.xently.feature.repository.IAuthRepository
 import co.ke.xently.feature.utils.DEFAULT_SHARING_STARTED
 import co.ke.xently.feature.utils.flagLoadingOnStart

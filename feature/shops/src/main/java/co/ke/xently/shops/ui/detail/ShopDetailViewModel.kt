@@ -5,7 +5,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import co.ke.xently.data.Shop
 import co.ke.xently.data.TaskResult.Success
-import co.ke.xently.feature.LocationPermissionViewModel
+import co.ke.xently.feature.viewmodels.LocationPermissionViewModel
 import co.ke.xently.feature.utils.flagLoadingOnStart
 import co.ke.xently.shops.repository.IShopsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel

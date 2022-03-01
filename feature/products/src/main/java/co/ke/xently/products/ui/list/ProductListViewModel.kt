@@ -1,7 +1,7 @@
 package co.ke.xently.products.ui.list
 
 import androidx.lifecycle.viewModelScope
-import co.ke.xently.feature.AbstractPagedListViewModel
+import co.ke.xently.feature.viewmodels.AbstractPagedListViewModel
 import co.ke.xently.feature.utils.DEFAULT_SHARING_STARTED
 import co.ke.xently.products.repository.IProductsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel

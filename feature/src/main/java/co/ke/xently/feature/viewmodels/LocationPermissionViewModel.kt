@@ -1,4 +1,4 @@
-package co.ke.xently.feature
+package co.ke.xently.feature.viewmodels
 
 import android.Manifest.permission.ACCESS_COARSE_LOCATION
 import android.Manifest.permission.ACCESS_FINE_LOCATION
@@ -18,22 +18,28 @@ open class LocationPermissionViewModel @Inject constructor(
     @ApplicationContext context: Context,
     private val savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
-    val locationPermissionsGranted: LiveData<Boolean> =
-        Transformations.map(
-            savedStateHandle.getLiveData(
-                KEY,
-                if (arrayOf(ACCESS_FINE_LOCATION, ACCESS_COARSE_LOCATION).all {
-                        checkSelfPermission(context, it) == PERMISSION_GRANTED
-                    }) 1 else 0
-            )
-        ) { it == 1 }
+    val locationPermissionsGranted: LiveData<Boolean> = Transformations.map(
+        savedStateHandle.getLiveData(
+            KEY,
+            if (PERMISSIONS.all { checkSelfPermission(context, it) == PERMISSION_GRANTED }) {
+                1
+            } else {
+                0
+            }
+        )
+    ) { it == 1 }
 
     fun setLocationPermissionGranted(granted: Boolean) {
-        savedStateHandle[KEY] = if (granted) 1 else 0
+        savedStateHandle[KEY] = if (granted) {
+            1
+        } else {
+            0
+        }
     }
 
     private companion object {
         private val KEY =
             "${LocationPermissionViewModel::class.java.name}.locationPermissionsGranted"
+        private val PERMISSIONS = arrayOf(ACCESS_FINE_LOCATION, ACCESS_COARSE_LOCATION)
     }
 }
