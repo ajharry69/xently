@@ -193,7 +193,7 @@ fun <T> FullscreenLoading(
             CircularProgressIndicator()
         }
     } else {
-        LazyColumn(modifier = modifier) {
+        LazyColumn(modifier = modifier, userScrollEnabled = false) {
             items(
                 itemContent = placeholderContent,
                 items = List(numberOfPlaceholders) {
