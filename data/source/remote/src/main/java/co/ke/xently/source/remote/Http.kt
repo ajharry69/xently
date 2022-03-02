@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.retry
 import retrofit2.Response
 import java.net.ConnectException
+import java.net.SocketTimeoutException
 
 open class HttpException(
     val detail: Any? = null,
@@ -38,29 +39,32 @@ open class HttpException(
         }
 }
 
-val RETRY_ABLE_ERROR_CLASSES = arrayOf(ConnectException::class)
+val RETRY_ABLE_ERROR_CLASSES = mapOf(
+    ConnectException::class to "Failed to connect to server.",
+    SocketTimeoutException::class to "Connection to the server timeout.",
+)
 
-const val DEFAULT_CONNECT_EXCEPTION_MESSAGE = "Failed to connect to server."
+fun Throwable.getCleansedError(): Throwable {
+    return when {
+        this is CancellationException -> {
+            throw this
+        }
+        this::class in RETRY_ABLE_ERROR_CLASSES -> {
+            HttpException(RETRY_ABLE_ERROR_CLASSES[this::class], "io_error").apply {
+                initCause(this@getCleansedError)
+            }
+        }
+        else -> {
+            this
+        }
+    }
+}
 
 fun <T> Flow<TaskResult<T>>.retryCatch(retry: Retry, logTag: String = TAG) = retry {
     it::class in RETRY_ABLE_ERROR_CLASSES && retry.canRetry()
 }.catch {
     Log.e(logTag, "retryCatchConnectionException: ${it.message}", it)
-
-    val error = when (it) {
-        is CancellationException -> {
-            throw it
-        }
-        is ConnectException -> {
-            HttpException(DEFAULT_CONNECT_EXCEPTION_MESSAGE, "connection_failed").apply {
-                initCause(it)
-            }
-        }
-        else -> {
-            it
-        }
-    }
-    emit(TaskResult.Error(error))
+    emit(TaskResult.Error(it.getCleansedError()))
 }
 
 @Suppress("UNCHECKED_CAST", "BlockingMethodInNonBlockingContext")

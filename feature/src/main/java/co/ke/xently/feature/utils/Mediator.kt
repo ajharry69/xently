@@ -1,26 +1,17 @@
 package co.ke.xently.feature.utils
 
+import android.util.Log
 import androidx.paging.ExperimentalPagingApi
 import androidx.paging.RemoteMediator
-import co.ke.xently.source.remote.DEFAULT_CONNECT_EXCEPTION_MESSAGE
-import kotlinx.coroutines.CancellationException
-import java.net.ConnectException
-
+import co.ke.xently.common.TAG
+import co.ke.xently.source.remote.getCleansedError
 
 @OptIn(ExperimentalPagingApi::class)
-fun getMediatorResultsOrThrow(ex: Exception): RemoteMediator.MediatorResult.Error {
-    val error = when (ex) {
-        is CancellationException -> {
-            throw ex
-        }
-        is ConnectException -> {
-            ConnectException(DEFAULT_CONNECT_EXCEPTION_MESSAGE).apply {
-                initCause(ex)
-            }
-        }
-        else -> {
-            ex
-        }
-    }
-    return RemoteMediator.MediatorResult.Error(error)
+fun getMediatorResultsOrThrow(
+    ex: Exception,
+    logTag: String = TAG,
+): RemoteMediator.MediatorResult.Error {
+    Log.e(logTag, "retryCatchConnectionException: ${ex.message}", ex)
+
+    return RemoteMediator.MediatorResult.Error(ex.getCleansedError())
 }

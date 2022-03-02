@@ -151,7 +151,7 @@ fun HttpErrorButton(
                 text = stringResource(R.string.common_signin_button_text).uppercase(KENYA),
             )
         }
-    } else if (error::class in RETRY_ABLE_ERROR_CLASSES) {
+    } else if (error.cause != null && error.cause!!::class in RETRY_ABLE_ERROR_CLASSES) {
         Button(modifier = modifier, onClick = { click.retryAble?.invoke(error) }) {
             Text(
                 style = MaterialTheme.typography.button,
