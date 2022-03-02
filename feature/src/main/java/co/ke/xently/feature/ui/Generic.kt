@@ -37,6 +37,7 @@ import co.ke.xently.common.TAG
 import co.ke.xently.feature.R
 import co.ke.xently.feature.theme.XentlyTheme
 import co.ke.xently.source.remote.HttpException
+import co.ke.xently.source.remote.RETRY_ABLE_ERROR_CLASSES
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 
@@ -128,21 +129,33 @@ val navigateToSignInScreen: (Context) -> Unit = {
 
 fun Throwable.isAuthError() = this is HttpException && statusCode == 401
 
+data class HttpErrorButtonClick(
+    val signIn: (() -> Unit)? = null,
+    val retryAble: ((Throwable) -> Unit)? = null,
+)
+
 @Composable
 fun HttpErrorButton(
     error: Throwable,
     modifier: Modifier = Modifier,
-    onClick: (() -> Unit)? = null,
+    click: HttpErrorButtonClick = HttpErrorButtonClick(),
 ) {
     if (error.isAuthError()) {
         val context = LocalContext.current
         Button(
             modifier = modifier,
-            onClick = onClick ?: { navigateToSignInScreen.invoke(context) },
+            onClick = click.signIn ?: { navigateToSignInScreen.invoke(context) },
         ) {
             Text(
                 style = MaterialTheme.typography.button,
                 text = stringResource(R.string.common_signin_button_text).uppercase(KENYA),
+            )
+        }
+    } else if (error::class in RETRY_ABLE_ERROR_CLASSES) {
+        Button(modifier = modifier, onClick = { click.retryAble?.invoke(error) }) {
+            Text(
+                style = MaterialTheme.typography.button,
+                text = stringResource(R.string.retry).uppercase(KENYA),
             )
         }
     }
@@ -152,10 +165,10 @@ fun HttpErrorButton(
 fun FullscreenError(
     modifier: Modifier,
     error: Throwable,
-    httpSignInErrorClick: (() -> Unit)? = null,
+    click: HttpErrorButtonClick = HttpErrorButtonClick(),
     preErrorContent: @Composable ColumnScope.(Throwable) -> Unit = {},
     postErrorContent: @Composable ColumnScope.(Throwable) -> Unit = {
-        HttpErrorButton(it, onClick = httpSignInErrorClick)
+        HttpErrorButton(it, click = click)
     },
 ) {
     Box(modifier = modifier, contentAlignment = Alignment.Center) {
@@ -193,7 +206,7 @@ fun <T> FullscreenLoading(
             CircularProgressIndicator()
         }
     } else {
-        LazyColumn(modifier = modifier) {
+        LazyColumn(modifier = modifier, userScrollEnabled = false) {
             items(
                 itemContent = placeholderContent,
                 items = List(numberOfPlaceholders) {
@@ -239,11 +252,11 @@ inline fun <reified T : Any> PagedDataScreen(
     scaffoldState: ScaffoldState,
     noinline placeholder: (() -> T)?,
     @StringRes emptyListMessage: Int? = null,
-    noinline httpSignInErrorClick: (() -> Unit)? = null,
+    click: HttpErrorButtonClick = HttpErrorButtonClick(retryAble = { items.retry() }),
     numberOfPlaceholders: Int = PLACEHOLDER_COUNT_SMALL_ITEM_SIZE,
     noinline preErrorContent: @Composable (ColumnScope.(Throwable) -> Unit) = {},
     noinline postErrorContent: @Composable (ColumnScope.(Throwable) -> Unit) = {
-        HttpErrorButton(it, onClick = httpSignInErrorClick)
+        HttpErrorButton(it, click = click)
     },
     noinline itemContent: @Composable (LazyItemScope.(T) -> Unit),
 ) {

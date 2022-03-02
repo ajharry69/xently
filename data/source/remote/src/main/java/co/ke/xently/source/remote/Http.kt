@@ -38,8 +38,12 @@ open class HttpException(
         }
 }
 
+val RETRY_ABLE_ERROR_CLASSES = arrayOf(ConnectException::class)
+
+const val DEFAULT_CONNECT_EXCEPTION_MESSAGE = "Failed to connect to server."
+
 fun <T> Flow<TaskResult<T>>.retryCatch(retry: Retry, logTag: String = TAG) = retry {
-    it is ConnectException && retry.canRetry()
+    it::class in RETRY_ABLE_ERROR_CLASSES && retry.canRetry()
 }.catch {
     Log.e(logTag, "retryCatchConnectionException: ${it.message}", it)
 
@@ -48,7 +52,7 @@ fun <T> Flow<TaskResult<T>>.retryCatch(retry: Retry, logTag: String = TAG) = ret
             throw it
         }
         is ConnectException -> {
-            HttpException("Failed to connect to server.", "connection_failed").apply {
+            HttpException(DEFAULT_CONNECT_EXCEPTION_MESSAGE, "connection_failed").apply {
                 initCause(it)
             }
         }

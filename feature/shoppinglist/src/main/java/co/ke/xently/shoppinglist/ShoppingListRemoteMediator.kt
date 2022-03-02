@@ -7,9 +7,9 @@ import androidx.room.withTransaction
 import co.ke.xently.data.ShoppingListItem
 import co.ke.xently.data.getOrThrow
 import co.ke.xently.feature.repository.Dependencies
+import co.ke.xently.feature.utils.getMediatorResultsOrThrow
 import co.ke.xently.source.remote.CacheControl
 import co.ke.xently.source.remote.sendRequest
-import kotlinx.coroutines.CancellationException
 
 internal class ShoppingListRemoteMediator(
     private val dependencies: Dependencies,
@@ -53,8 +53,7 @@ internal class ShoppingListRemoteMediator(
                 }
             }
         } catch (ex: Exception) {
-            if (ex is CancellationException) throw ex
-            MediatorResult.Error(ex)
+            getMediatorResultsOrThrow(ex)
         }
     }
 
