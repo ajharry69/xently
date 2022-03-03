@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "8901e60dbde613a7d498b299191c8427",
+    "identityHash": "c37f0c222231d0a6b1353042e2766020",
     "entities": [
       {
         "tableName": "shops",
@@ -50,7 +50,7 @@
       },
       {
         "tableName": "accounts",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `email` TEXT NOT NULL, `isVerified` INTEGER NOT NULL, `photo` TEXT, `token` TEXT, `timeRecorded` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `email` TEXT NOT NULL, `isVerified` INTEGER NOT NULL, `photo` TEXT, `token` TEXT, `isActive` INTEGER NOT NULL, PRIMARY KEY(`id`))",
         "fields": [
           {
             "fieldPath": "id",
@@ -83,8 +83,8 @@
             "notNull": false
           },
           {
-            "fieldPath": "timeRecorded",
-            "columnName": "timeRecorded",
+            "fieldPath": "isActive",
+            "columnName": "isActive",
             "affinity": "INTEGER",
             "notNull": true
           }
@@ -619,7 +619,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '8901e60dbde613a7d498b299191c8427')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'c37f0c222231d0a6b1353042e2766020')"
     ]
   }
 }

@@ -41,13 +41,13 @@ import co.ke.xently.source.remote.RETRY_ABLE_ERROR_CLASSES
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 
-val HORIZONTAL_PADDING = 16.dp
+val VIEW_SPACE = 16.dp
 
 val NEGLIGIBLE_SPACE = 2.dp
 
 val VerticalLayoutModifier = Modifier
     .fillMaxWidth()
-    .padding(horizontal = HORIZONTAL_PADDING)
+    .padding(horizontal = VIEW_SPACE)
 
 @Composable
 fun rememberFragmentManager(): FragmentManager {
@@ -176,7 +176,7 @@ fun FullscreenError(
             modifier = Modifier
                 .fillMaxWidth()
                 .wrapContentHeight()
-                .padding(HORIZONTAL_PADDING),
+                .padding(VIEW_SPACE),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
@@ -224,7 +224,7 @@ inline fun <reified T : Any> FullscreenEmptyList(
 ) {
     Box(modifier = modifier, contentAlignment = Alignment.Center) {
         Text(
-            modifier = Modifier.padding(HORIZONTAL_PADDING),
+            modifier = Modifier.padding(VIEW_SPACE),
             textAlign = TextAlign.Center,
             text = if (error != null) {
                 stringResource(error)
@@ -335,7 +335,7 @@ fun MultipleTextFieldRow(
     Column(modifier = modifier) {
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(HORIZONTAL_PADDING / 2),
+            horizontalArrangement = Arrangement.spacedBy(VIEW_SPACE / 2),
         ) {
             content(Modifier.weight(1f))
         }

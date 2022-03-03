@@ -89,7 +89,7 @@ private fun ShoppingListRecommendationScreen(
                 val report = result.getOrThrow()
                 LazyColumn(
                     modifier = modifier.padding(it),
-                    verticalArrangement = Arrangement.spacedBy(HORIZONTAL_PADDING / 2),
+                    verticalArrangement = Arrangement.spacedBy(VIEW_SPACE / 2),
                 ) {
                     item {
                         Box(
@@ -127,21 +127,21 @@ private fun ShoppingListRecommendationScreen(
                     }
                     item {
                         RecommendationReportItemGroup(
-                            modifier = Modifier.padding(start = HORIZONTAL_PADDING),
+                            modifier = Modifier.padding(start = VIEW_SPACE),
                             title = stringResource(R.string.fsl_recommendations_synopsis),
                         ) {
                             RecommendationReportSynopsisCard(
                                 report = report,
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(end = HORIZONTAL_PADDING),
+                                    .padding(end = VIEW_SPACE),
                             )
                         }
                     }
                     if (report.count.hitItems > 0) {
                         item {
                             RecommendationReportItemGroup(
-                                textModifier = Modifier.padding(start = HORIZONTAL_PADDING),
+                                textModifier = Modifier.padding(start = VIEW_SPACE),
                                 title = stringResource(R.string.fsl_recommendations),
                             ) {
                                 Column {
@@ -160,7 +160,7 @@ private fun ShoppingListRecommendationScreen(
                     if (report.count.missedItems > 0) {
                         item {
                             RecommendationReportItemGroup(
-                                textModifier = Modifier.padding(start = HORIZONTAL_PADDING),
+                                textModifier = Modifier.padding(start = VIEW_SPACE),
                                 title = stringResource(R.string.fsl_recommendations_missed),
                             ) {
                                 report.missedItems.forEach { item ->
@@ -201,8 +201,8 @@ private fun RecommendationReportSynopsisCard(
         Column(
             verticalArrangement = Arrangement.SpaceAround,
             modifier = Modifier
-                .padding(end = HORIZONTAL_PADDING / 2)
-                .padding(vertical = HORIZONTAL_PADDING / 2),
+                .padding(end = VIEW_SPACE / 2)
+                .padding(vertical = VIEW_SPACE / 2),
         ) {
             val context = LocalContext.current
             buildList {
@@ -224,7 +224,7 @@ private fun RecommendationReportSynopsisCard(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(start = HORIZONTAL_PADDING / 2),
+                        .padding(start = VIEW_SPACE / 2),
                 ) {
                     Text(text = it.first, modifier = Modifier.weight(2f))
                     Text(text = it.second, modifier = Modifier.weight(1f))

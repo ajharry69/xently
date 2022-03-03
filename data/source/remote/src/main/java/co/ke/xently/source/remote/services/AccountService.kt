@@ -5,6 +5,9 @@ import retrofit2.Response
 import retrofit2.http.*
 
 interface AccountService {
+    @GET("accounts/{id}/")
+    suspend fun get(@Path("id") userId: Long): Response<User>
+
     @POST("accounts/signin/")
     suspend fun signIn(@Header("Authorization") basicAuthData: String): Response<User>
 
@@ -31,6 +34,9 @@ interface AccountService {
 
     @POST("accounts/{id}/signout/")
     suspend fun signout(@Path("id") userId: Long): Response<Unit>
+
+    @PUT("accounts/{id}/")
+    suspend fun update(@Path("id") userId: Long = 1L, @Body user: User): Response<User>
 
     @POST("accounts/{id}/update-location/")
     suspend fun update(@Path("id") userId: Long = 1L, @Body location: Array<Double>): Response<Unit>

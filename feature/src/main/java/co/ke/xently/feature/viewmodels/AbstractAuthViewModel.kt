@@ -13,10 +13,10 @@ import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.launch
 
 abstract class AbstractAuthViewModel(private val repository: IAuthRepository) : ViewModel() {
-    val historicallyFirstUser = repository.historicallyFirstUser.shareIn(
+    val currentlyActiveUser = repository.currentlyActiveUser.shareIn(
+        replay = 1,
         scope = viewModelScope,
         started = DEFAULT_SHARING_STARTED,
-        replay = 1,
     )
     private val _signOutResult = MutableSharedFlow<TaskResult<Unit>>()
     val signOutResult = _signOutResult.asSharedFlow()

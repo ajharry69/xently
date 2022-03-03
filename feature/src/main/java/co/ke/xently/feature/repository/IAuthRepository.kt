@@ -5,6 +5,8 @@ import co.ke.xently.data.User
 import kotlinx.coroutines.flow.Flow
 
 interface IAuthRepository {
-    val historicallyFirstUser: Flow<User?>
+    val currentlyActiveUser: Flow<User?>
+    fun getUser(id: Long?): Flow<TaskResult<User>>
+    fun update(user: User): Flow<TaskResult<User>>
     fun signOut(): Flow<TaskResult<Unit>>
 }
