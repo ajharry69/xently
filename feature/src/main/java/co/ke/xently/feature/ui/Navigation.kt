@@ -195,7 +195,7 @@ fun ColumnScope.NavigationDrawer(
             contentAlignment = headerContentAlignment,
         )
         Divider(modifier = Modifier.fillMaxWidth())
-        Spacer(modifier = Modifier.height(VIEW_SPACE / 2))
+        Spacer(modifier = Modifier.height(VIEW_SPACE_HALVED))
     }
     for (groupItem in navGroups) {
         NavigationDrawerGroup(

@@ -16,6 +16,7 @@ import co.ke.xently.data.GroupedShoppingList
 import co.ke.xently.data.ShoppingListItem
 import co.ke.xently.feature.ui.VIEW_SPACE
 import co.ke.xently.feature.ui.NEGLIGIBLE_SPACE
+import co.ke.xently.feature.ui.VIEW_SPACE_HALVED
 import co.ke.xently.feature.ui.shimmerPlaceholder
 import co.ke.xently.shoppinglist.R
 import co.ke.xently.shoppinglist.ui.list.item.MenuItem
@@ -52,7 +53,7 @@ internal fun GroupedShoppingListCard(
             .padding(horizontal = VIEW_SPACE)
             .padding(top = VIEW_SPACE),
     ) {
-        Column(modifier = Modifier.padding(vertical = VIEW_SPACE / 2)) {
+        Column(modifier = Modifier.padding(vertical = VIEW_SPACE_HALVED)) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -60,7 +61,7 @@ internal fun GroupedShoppingListCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 Column(
-                    modifier = Modifier.padding(bottom = VIEW_SPACE / 2),
+                    modifier = Modifier.padding(bottom = VIEW_SPACE_HALVED),
                     verticalArrangement = Arrangement.spacedBy(NEGLIGIBLE_SPACE),
                 ) {
                     Text(

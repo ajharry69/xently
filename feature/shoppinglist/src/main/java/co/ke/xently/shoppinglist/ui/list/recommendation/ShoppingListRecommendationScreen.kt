@@ -89,7 +89,7 @@ private fun ShoppingListRecommendationScreen(
                 val report = result.getOrThrow()
                 LazyColumn(
                     modifier = modifier.padding(it),
-                    verticalArrangement = Arrangement.spacedBy(VIEW_SPACE / 2),
+                    verticalArrangement = Arrangement.spacedBy(VIEW_SPACE_HALVED),
                 ) {
                     item {
                         Box(
@@ -201,8 +201,8 @@ private fun RecommendationReportSynopsisCard(
         Column(
             verticalArrangement = Arrangement.SpaceAround,
             modifier = Modifier
-                .padding(end = VIEW_SPACE / 2)
-                .padding(vertical = VIEW_SPACE / 2),
+                .padding(end = VIEW_SPACE_HALVED)
+                .padding(vertical = VIEW_SPACE_HALVED),
         ) {
             val context = LocalContext.current
             buildList {
@@ -224,7 +224,7 @@ private fun RecommendationReportSynopsisCard(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(start = VIEW_SPACE / 2),
+                        .padding(start = VIEW_SPACE_HALVED),
                 ) {
                     Text(text = it.first, modifier = Modifier.weight(2f))
                     Text(text = it.second, modifier = Modifier.weight(1f))

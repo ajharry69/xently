@@ -31,29 +31,33 @@ import co.ke.xently.common.replaceAt
 import co.ke.xently.data.TaskResult
 import co.ke.xently.data.User
 import co.ke.xently.data.errorMessage
-import co.ke.xently.feature.ui.TextFieldErrorText
-import co.ke.xently.feature.ui.ToolbarWithProgressbar
+import co.ke.xently.feature.ui.*
 import kotlinx.coroutines.delay
 import kotlin.time.Duration.Companion.seconds
 
+internal data class VerificationScreenFunction(
+    val navigationIcon: () -> Unit = {},
+    val verificationSuccess: (User) -> Unit = {},
+    val resendCode: () -> Unit = {},
+    val verify: (String) -> Unit = {},
+)
 
 @Composable
 internal fun VerificationScreen(
-    modifier: Modifier = Modifier,
-    verificationCode: String = "",
+    modifier: Modifier,
+    verificationCode: String,
+    function: VerificationScreenFunction,
     viewModel: VerificationViewModel = hiltViewModel(),
-    onSuccessfulVerification: (User) -> Unit = {},
-    onNavigationIconClicked: () -> Unit = {},
 ) {
     val result by viewModel.taskResult.collectAsState()
     VerificationScreen(
-        modifier,
-        result,
-        verificationCode,
-        onSuccessfulVerification,
-        onNavigationIconClicked,
-        viewModel::resendVerificationCode,
-        viewModel::verifyAccount,
+        modifier = modifier,
+        result = result,
+        verificationCode = verificationCode,
+        function = function.copy(
+            verify = viewModel::verifyAccount,
+            resendCode = viewModel::resendVerificationCode,
+        ),
     )
 }
 
@@ -63,10 +67,7 @@ private fun VerificationScreen(
     modifier: Modifier,
     result: TaskResult<User?>,
     verificationCode: String = "",
-    onSuccessfulVerification: (User) -> Unit = {},
-    onNavigationIconClicked: () -> Unit = {},
-    onResendClicked: () -> Unit = {},
-    onVerifyClicked: (String) -> Unit = {},
+    function: VerificationScreenFunction = VerificationScreenFunction(),
 ) {
     var code by remember { mutableStateOf(verificationCode) }
 
@@ -108,9 +109,9 @@ private fun VerificationScreen(
         }
         code = ""  // Reset code...
     } else if (result is TaskResult.Success && result.data != null) {
+        code = ""
         SideEffect {
-            code = ""
-            onSuccessfulVerification(result.data!!)
+            function.verificationSuccess.invoke(result.data!!)
         }
     }
     val focusManager = LocalFocusManager.current
@@ -121,9 +122,9 @@ private fun VerificationScreen(
         scaffoldState = scaffoldState,
         topBar = {
             ToolbarWithProgressbar(
-                toolbarTitle,
-                onNavigationIconClicked,
+                title = toolbarTitle,
                 showProgress = result is TaskResult.Loading,
+                onNavigationIconClicked = function.navigationIcon,
             )
         },
     ) { paddingValues ->
@@ -134,14 +135,9 @@ private fun VerificationScreen(
         ) {
             val onCodeEntryFinished = {
                 focusManager.clearFocus()
-                onVerifyClicked(code)
+                function.verify.invoke(code)
             }
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-                    .padding(top = 16.dp),
-            ) {
+            Column(modifier = VerticalLayoutModifier.padding(top = VIEW_SPACE)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(4.dp),
@@ -200,7 +196,11 @@ private fun VerificationScreen(
                             },
                             keyboardOptions = KeyboardOptions.Default.copy(
                                 keyboardType = KeyboardType.NumberPassword,
-                                imeAction = if (i == 5) ImeAction.Done else ImeAction.Next,
+                                imeAction = if (i == 5) {
+                                    ImeAction.Done
+                                } else {
+                                    ImeAction.Next
+                                },
                             ),
                             keyboardActions = KeyboardActions(onDone = { onCodeEntryFinished() }),
                         )
@@ -210,12 +210,10 @@ private fun VerificationScreen(
                     TextFieldErrorText(codeError, Modifier.fillMaxWidth())
                 }
             }
-            Spacer(modifier = Modifier.padding(vertical = 8.dp))
+            Spacer(modifier = Modifier.padding(vertical = VIEW_SPACE_HALVED))
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                modifier = VerticalLayoutModifier,
+                horizontalArrangement = Arrangement.spacedBy(VIEW_SPACE),
             ) {
                 Button(
                     enabled = resendCountDownFinished && result !is TaskResult.Loading,
@@ -225,7 +223,7 @@ private fun VerificationScreen(
                         // Reset count down to original starting point
                         resendLastSavedCountDownSecond = 60
                         focusManager.clearFocus()
-                        onResendClicked()
+                        function.resendCode.invoke()
                     },
                 ) {
                     val resendButtonLabel = if (resendCountDownSecond > 0) {
@@ -254,17 +252,19 @@ private fun VerificationScreen(
 @Preview
 @Composable
 private fun VerificationLoadingPreview() {
-    VerificationScreen(Modifier.fillMaxSize(), TaskResult.Loading, "12345")
-}
-
-@Preview
-@Composable
-private fun VerificationErrorPreview() {
-    VerificationScreen(Modifier.fillMaxSize(), TaskResult.Error("Error message"), "12345")
+    VerificationScreen(
+        verificationCode = "12345",
+        result = TaskResult.Loading,
+        modifier = Modifier.fillMaxSize(),
+    )
 }
 
 @Preview
 @Composable
 private fun VerificationSuccessPreview() {
-    VerificationScreen(Modifier.fillMaxSize(), TaskResult.Success(User.default()), "12345")
+    VerificationScreen(
+        verificationCode = "12345",
+        modifier = Modifier.fillMaxSize(),
+        result = TaskResult.Success(User.default()),
+    )
 }

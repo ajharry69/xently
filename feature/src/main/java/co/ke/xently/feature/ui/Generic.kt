@@ -43,6 +43,8 @@ import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 
 val VIEW_SPACE = 16.dp
 
+val VIEW_SPACE_HALVED = VIEW_SPACE / 2
+
 val NEGLIGIBLE_SPACE = 2.dp
 
 val VerticalLayoutModifier = Modifier
@@ -335,7 +337,7 @@ fun MultipleTextFieldRow(
     Column(modifier = modifier) {
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(VIEW_SPACE / 2),
+            horizontalArrangement = Arrangement.spacedBy(VIEW_SPACE_HALVED),
         ) {
             content(Modifier.weight(1f))
         }

@@ -8,20 +8,22 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.navigation.NavHostController
-import androidx.navigation.NavType
+import androidx.navigation.*
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navArgument
-import androidx.navigation.navDeepLink
 import co.ke.xently.accounts.ui.password_reset.PasswordResetScreen
+import co.ke.xently.accounts.ui.password_reset.PasswordResetScreenFunction
 import co.ke.xently.accounts.ui.password_reset.request.PasswordResetRequestScreen
+import co.ke.xently.accounts.ui.password_reset.request.PasswordResetRequestScreenFunction
 import co.ke.xently.accounts.ui.profile.ProfileScreen
 import co.ke.xently.accounts.ui.profile.ProfileScreenClick
 import co.ke.xently.accounts.ui.signin.SignInScreen
+import co.ke.xently.accounts.ui.signin.SignInScreenFunction
 import co.ke.xently.accounts.ui.signup.SignUpScreen
+import co.ke.xently.accounts.ui.signup.SignUpScreenFunction
 import co.ke.xently.accounts.ui.verification.VerificationScreen
+import co.ke.xently.accounts.ui.verification.VerificationScreenFunction
 import co.ke.xently.feature.theme.XentlyTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -78,23 +80,25 @@ internal fun ProductsNavHost(
                 modifier = Modifier.fillMaxSize(),
                 username = it.arguments?.getString("username") ?: "",
                 password = it.arguments?.getString("password") ?: "",
-                onNavigationIconClicked = onNavigationIconClicked,
-                onSuccessfulSignIn = { user ->
-                    if (user.isVerified) {
-                        // TODO: Navigate to home screen...
-                        onNavigationIconClicked()
-                    } else {
-                        navController.navigate("verify-account")
-                    }
-                },
-                onCreateAccountButtonClicked = { username, password ->
-                    navController.navigate("signup?username=${username}&password=${password}") {
-                        launchSingleTop = true
-                    }
-                },
-                onForgotPasswordButtonClicked = {
-                    navController.navigate("request-password-reset")
-                },
+                function = SignInScreenFunction(
+                    navigationIcon = onNavigationIconClicked,
+                    forgotPassword = {
+                        navController.navigate("request-password-reset")
+                    },
+                    signInSuccess = { user ->
+                        if (user.isVerified) {
+                            // TODO: Navigate to home screen...
+                            onNavigationIconClicked()
+                        } else {
+                            navController.navigate("verify-account")
+                        }
+                    },
+                    createAccount = { username, password ->
+                        navController.navigate("signup?username=${username}&password=${password}") {
+                            launchSingleTop = true
+                        }
+                    },
+                ),
             )
         }
         composable(
@@ -114,23 +118,30 @@ internal fun ProductsNavHost(
             ),
         ) {
             SignUpScreen(
+                function = SignUpScreenFunction(
+                    navigationIcon = onNavigationIconClicked,
+                    signUpSuccess = { user ->
+                        if (user.isVerified) {
+                            // TODO: Navigate to home screen...
+                            onNavigationIconClicked()
+                        } else {
+                            navController.navigate("verify-account")
+                        }
+                    },
+                    signIn = { username, password ->
+                        "signin?username=${username}&password=${password}".also { route ->
+                            navController.navigate(route) {
+                                launchSingleTop = true
+                                popUpTo(route.substringBefore("?")) {
+                                    inclusive = false
+                                }
+                            }
+                        }
+                    }
+                ),
                 modifier = Modifier.fillMaxSize(),
                 username = it.arguments?.getString("username") ?: "",
                 password = it.arguments?.getString("password") ?: "",
-                onNavigationIconClicked = onNavigationIconClicked,
-                onSuccessfulSignUp = { user ->
-                    if (user.isVerified) {
-                        // TODO: Navigate to home screen...
-                        onNavigationIconClicked()
-                    } else {
-                        navController.navigate("verify-account")
-                    }
-                },
-                onSignInButtonClicked = { username, password ->
-                    navController.navigate("signin?username=${username}&password=${password}") {
-                        launchSingleTop = true
-                    }
-                }
             )
         }
         composable(
@@ -140,11 +151,13 @@ internal fun ProductsNavHost(
             VerificationScreen(
                 modifier = Modifier.fillMaxSize(),
                 verificationCode = it.arguments?.getString("code") ?: "",
-                onNavigationIconClicked = onNavigationIconClicked,
-                onSuccessfulVerification = {
+                function = VerificationScreenFunction(
+                    navigationIcon = onNavigationIconClicked,
+                    verificationSuccess = {
 //                    navController.navigate("reset-password")
-                    // TODO: Navigate to home page... Above code may not be necessary if the `this` activity is finished when starting a new activity
-                },
+                        // TODO: Navigate to home page... Above code may not be necessary if the `this` activity is finished when starting a new activity
+                    }
+                ),
             )
         }
         composable(
@@ -154,10 +167,12 @@ internal fun ProductsNavHost(
             PasswordResetRequestScreen(
                 modifier = Modifier.fillMaxSize(),
                 email = it.arguments?.getString("email") ?: "",
-                onNavigationIconClicked = onNavigationIconClicked,
-                onSuccessfulRequest = {
-                    navController.navigate("reset-password")
-                },
+                function = PasswordResetRequestScreenFunction(
+                    navigationIcon = onNavigationIconClicked,
+                    requestSuccess = {
+                        navController.navigate("reset-password")
+                    },
+                ),
             )
         }
         composable(
@@ -172,11 +187,13 @@ internal fun ProductsNavHost(
             PasswordResetScreen(
                 modifier = Modifier.fillMaxSize(),
                 isChange = it.arguments?.getBoolean("isChange") ?: false,
-                onNavigationIconClicked = onNavigationIconClicked,
-                onSuccessfulReset = {
-                    navController.popBackStack("reset-password", true)
-                    // TODO: Navigate to home page... Above code may not be necessary if the `this` activity is finished when starting a new activity
-                },
+                function = PasswordResetScreenFunction(
+                    navigationIcon = onNavigationIconClicked,
+                    resetSuccess = {
+                        navController.popBackStack("reset-password", true)
+                        // TODO: Navigate to home page... Above code may not be necessary if the `this` activity is finished when starting a new activity
+                    },
+                ),
             )
         }
     }

@@ -132,12 +132,12 @@ private fun ProfileScreen(
                 helpText = stringResource(R.string.fa_profile_email_help_text),
                 modifier = VerticalLayoutModifier.padding(
                     top = VIEW_SPACE,
-                    bottom = VIEW_SPACE / 2,
+                    bottom = VIEW_SPACE_HALVED,
                 ),
             )
             Button(
                 enabled = arrayOf(email).all { it.text.isNotBlank() },
-                modifier = VerticalLayoutModifier.padding(top = VIEW_SPACE / 2),
+                modifier = VerticalLayoutModifier.padding(top = VIEW_SPACE_HALVED),
                 onClick = { click.update.invoke(user!!) },
             ) {
                 Text(
