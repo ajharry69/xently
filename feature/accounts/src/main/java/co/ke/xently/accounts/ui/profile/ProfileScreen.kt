@@ -40,7 +40,7 @@ internal fun ProfileScreen(
 ) {
     val fetchResult by viewModel.result.collectAsState()
     val updateResult by viewModel.updateResult.collectAsState(
-        initial = TaskResult.Success(fetchResult.getOrNull()),
+        initial = TaskResult.Success(null),
     )
     viewModel.setUserID(userId)
     ProfileScreen(
