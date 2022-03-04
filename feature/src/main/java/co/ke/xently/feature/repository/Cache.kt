@@ -21,8 +21,10 @@ fun Flow<TaskResult<User>>.doTaskWhileSavingEachLocally(
             save(it.copy(isActive = true))
             makeInactiveExcept(userId = it.id)
         }
-        dependencies.preference.encrypted.edit(commit = true) {
-            putString(TOKEN_VALUE_SHARED_PREFERENCE_KEY, it.token)
+        if (it.token != null) {
+            dependencies.preference.encrypted.edit(commit = true) {
+                putString(TOKEN_VALUE_SHARED_PREFERENCE_KEY, it.token)
+            }
         }
     }
 }.retryCatch(retry).flowOn(dependencies.dispatcher.io)
