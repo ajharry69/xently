@@ -3,13 +3,13 @@ package co.ke.xently.accounts.ui.password_reset.request
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.ke.xently.accounts.repository.IAccountRepository
-import co.ke.xently.data.TaskResult
-import co.ke.xently.data.User
+import co.ke.xently.feature.utils.DEFAULT_SHARING_STARTED
 import co.ke.xently.feature.utils.flagLoadingOnStart
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -17,17 +17,16 @@ import javax.inject.Inject
 internal class PasswordResetRequestViewModel @Inject constructor(
     private val repository: IAccountRepository,
 ) : ViewModel() {
-    private val _taskResult = MutableStateFlow<TaskResult<User?>>(TaskResult.Success(null))
-    val taskResult: StateFlow<TaskResult<User?>>
-        get() = _taskResult
+    private val email = MutableSharedFlow<String>()
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val result = email.flatMapLatest {
+        repository.requestTemporaryPassword(it).flagLoadingOnStart()
+    }.shareIn(viewModelScope, DEFAULT_SHARING_STARTED)
 
     fun requestTemporaryPassword(email: String) {
         viewModelScope.launch {
-            repository.requestTemporaryPassword(email)
-                .flagLoadingOnStart()
-                .collectLatest {
-                    _taskResult.value = it
-                }
+            this@PasswordResetRequestViewModel.email.emit(email)
         }
     }
 }

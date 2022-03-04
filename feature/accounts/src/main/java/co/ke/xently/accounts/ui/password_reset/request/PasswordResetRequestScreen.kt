@@ -40,11 +40,15 @@ internal fun PasswordResetRequestScreen(
     function: PasswordResetRequestScreenFunction,
     viewModel: PasswordResetRequestViewModel = hiltViewModel(),
 ) {
-    val result by viewModel.taskResult.collectAsState()
+    val scope = rememberCoroutineScope()
+    val result by viewModel.result.collectAsState(
+        context = scope.coroutineContext,
+        initial = TaskResult.Success(null),
+    )
     PasswordResetRequestScreen(
-        modifier = modifier,
-        result = result,
         email = email,
+        result = result,
+        modifier = modifier,
         function = function.copy(request = viewModel::requestTemporaryPassword)
     )
 }
@@ -59,18 +63,14 @@ private fun PasswordResetRequestScreen(
     var emailAddress by remember(email) {
         mutableStateOf(TextFieldValue(email))
     }
-    var emailError by remember { mutableStateOf("") }
-    var isEmailError by remember { mutableStateOf(false) }
     val scaffoldState = rememberScaffoldState()
 
+    var emailError by remember { mutableStateOf("") }
     if (result is TaskResult.Error) {
-        emailError =
-            ((result.error as? PasswordResetRequestHttpException)?.email?.joinToString("\n")
-                ?: "").also {
-                isEmailError = it.isNotBlank()
-            }
+        val exception = result.error as? PasswordResetRequestHttpException
+        emailError = exception?.email?.joinToString("\n") ?: ""
 
-        if (!isEmailError) {
+        if (exception?.hasFieldErrors() != true) {
             val errorMessage =
                 result.errorMessage ?: stringResource(R.string.generic_error_message)
             LaunchedEffect(result, errorMessage) {
@@ -78,7 +78,6 @@ private fun PasswordResetRequestScreen(
             }
         }
     } else if (result is TaskResult.Success && result.data != null) {
-        emailAddress = TextFieldValue()
         SideEffect {
             function.requestSuccess.invoke(result.data!!)
         }
@@ -101,6 +100,9 @@ private fun PasswordResetRequestScreen(
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState()),
         ) {
+            var isEmailError by remember(emailError) {
+                mutableStateOf(emailError.isNotBlank())
+            }
             TextInputLayout(
                 modifier = VerticalLayoutModifier.padding(top = VIEW_SPACE),
                 value = emailAddress,
@@ -119,7 +121,7 @@ private fun PasswordResetRequestScreen(
             )
             Spacer(modifier = Modifier.padding(vertical = VIEW_SPACE_HALVED))
             Button(
-                enabled = emailAddress.text.isNotBlank(),
+                enabled = emailAddress.text.isNotBlank() && result !is TaskResult.Loading,
                 modifier = VerticalLayoutModifier,
                 onClick = {
                     focusManager.clearFocus()

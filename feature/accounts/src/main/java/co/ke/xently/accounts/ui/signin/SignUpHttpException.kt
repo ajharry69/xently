@@ -5,4 +5,8 @@ import co.ke.xently.source.remote.HttpException
 internal class SignUpHttpException(
     val email: List<String> = emptyList(),
     val password: List<String> = emptyList(),
-) : HttpException()
+) : HttpException() {
+    override fun hasFieldErrors(): Boolean {
+        return arrayOf(email, password).any { it.isNotEmpty() }
+    }
+}

@@ -342,7 +342,12 @@ fun MultipleTextFieldRow(
             content(Modifier.weight(1f))
         }
         if (isError) {
-            TextFieldErrorText(error, Modifier.fillMaxWidth())
+            Text(
+                text = error,
+                color = MaterialTheme.colors.error,
+                style = MaterialTheme.typography.caption,
+                modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 12.dp),
+            )
         }
     }
 }

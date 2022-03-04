@@ -8,10 +8,13 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.navigation.*
+import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
+import androidx.navigation.navDeepLink
 import co.ke.xently.accounts.ui.password_reset.PasswordResetScreen
 import co.ke.xently.accounts.ui.password_reset.PasswordResetScreenFunction
 import co.ke.xently.accounts.ui.password_reset.request.PasswordResetRequestScreen
@@ -24,6 +27,7 @@ import co.ke.xently.accounts.ui.signup.SignUpScreen
 import co.ke.xently.accounts.ui.signup.SignUpScreenFunction
 import co.ke.xently.accounts.ui.verification.VerificationScreen
 import co.ke.xently.accounts.ui.verification.VerificationScreenFunction
+import co.ke.xently.data.User
 import co.ke.xently.feature.theme.XentlyTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -75,11 +79,13 @@ internal fun ProductsNavHost(
                     uriPattern = "xently://accounts/signin/"
                 }
             ),
-        ) {
+        ) { navBackStackEntry ->
             SignInScreen(
                 modifier = Modifier.fillMaxSize(),
-                username = it.arguments?.getString("username") ?: "",
-                password = it.arguments?.getString("password") ?: "",
+                auth = User.BasicAuth(
+                    username = navBackStackEntry.arguments?.getString("username") ?: "",
+                    password = navBackStackEntry.arguments?.getString("password") ?: "",
+                ),
                 function = SignInScreenFunction(
                     navigationIcon = onNavigationIconClicked,
                     forgotPassword = {
@@ -93,8 +99,8 @@ internal fun ProductsNavHost(
                             navController.navigate("verify-account")
                         }
                     },
-                    createAccount = { username, password ->
-                        navController.navigate("signup?username=${username}&password=${password}") {
+                    createAccount = {
+                        navController.navigate("signup?username=${it.username}&password=${it.password}") {
                             launchSingleTop = true
                         }
                     },
@@ -116,7 +122,7 @@ internal fun ProductsNavHost(
                     uriPattern = "xently://accounts/signup/"
                 }
             ),
-        ) {
+        ) { navBackStackEntry ->
             SignUpScreen(
                 function = SignUpScreenFunction(
                     navigationIcon = onNavigationIconClicked,
@@ -128,8 +134,8 @@ internal fun ProductsNavHost(
                             navController.navigate("verify-account")
                         }
                     },
-                    signIn = { username, password ->
-                        "signin?username=${username}&password=${password}".also { route ->
+                    signIn = {
+                        "signin?username=${it.username}&password=${it.password}".also { route ->
                             navController.navigate(route) {
                                 launchSingleTop = true
                                 popUpTo(route.substringBefore("?")) {
@@ -140,8 +146,10 @@ internal fun ProductsNavHost(
                     }
                 ),
                 modifier = Modifier.fillMaxSize(),
-                username = it.arguments?.getString("username") ?: "",
-                password = it.arguments?.getString("password") ?: "",
+                auth = User.BasicAuth(
+                    username = navBackStackEntry.arguments?.getString("username") ?: "",
+                    password = navBackStackEntry.arguments?.getString("password") ?: "",
+                ),
             )
         }
         composable(

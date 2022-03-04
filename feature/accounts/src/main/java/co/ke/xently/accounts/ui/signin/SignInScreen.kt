@@ -23,24 +23,26 @@ internal data class SignInScreenFunction(
     val navigationIcon: () -> Unit = {},
     val forgotPassword: () -> Unit = {},
     val signInSuccess: (User) -> Unit = {},
-    val signIn: (username: String, password: String) -> Unit = { _, _ -> },
-    val createAccount: (username: String, password: String) -> Unit = { _, _ -> },
+    val signIn: (User.BasicAuth) -> Unit = { },
+    val createAccount: (User.BasicAuth) -> Unit = { },
 )
 
 @Composable
 internal fun SignInScreen(
     modifier: Modifier,
-    username: String,
-    password: String,
+    auth: User.BasicAuth,
     function: SignInScreenFunction,
     viewModel: SignInViewModel = hiltViewModel(),
 ) {
-    val result by viewModel.signInResult.collectAsState()
+    val scope = rememberCoroutineScope()
+    val result by viewModel.result.collectAsState(
+        context = scope.coroutineContext,
+        initial = TaskResult.Success(null),
+    )
     SignInScreen(
-        modifier = modifier,
+        auth = auth,
         result = result,
-        username = username,
-        password = password,
+        modifier = modifier,
         function = function.copy(signIn = viewModel::signIn),
     )
 }
@@ -49,12 +51,15 @@ internal fun SignInScreen(
 private fun SignInScreen(
     modifier: Modifier,
     result: TaskResult<User?>,
-    username: String = "",
-    password: String = "",
+    auth: User.BasicAuth = User.BasicAuth("", ""),
     function: SignInScreenFunction = SignInScreenFunction(),
 ) {
-    var uname by remember { mutableStateOf(TextFieldValue(username)) }
-    var pword by remember { mutableStateOf(TextFieldValue(password)) }
+    var uname by remember(auth.username) {
+        mutableStateOf(TextFieldValue(auth.username))
+    }
+    var pword by remember(auth.password) {
+        mutableStateOf(TextFieldValue(auth.password))
+    }
     var isPasswordVisible by remember { mutableStateOf(false) }
 
     val scaffoldState = rememberScaffoldState()
@@ -65,8 +70,6 @@ private fun SignInScreen(
             scaffoldState.snackbarHostState.showSnackbar(errorMessage)
         }
     } else if (result is TaskResult.Success && result.data != null) {
-        uname = TextFieldValue()
-        pword = TextFieldValue()
         SideEffect {
             function.signInSuccess.invoke(result.data!!)
         }
@@ -131,23 +134,34 @@ private fun SignInScreen(
                 }
                 Spacer(modifier = Modifier.padding(vertical = VIEW_SPACE_HALVED))
                 Button(
-                    enabled = arrayOf(uname, pword).all { it.text.isNotBlank() },
+                    enabled = arrayOf(
+                        uname,
+                        pword,
+                    ).all { it.text.isNotBlank() } && result !is TaskResult.Loading,
                     modifier = VerticalLayoutModifier,
                     onClick = {
                         focusManager.clearFocus()
-                        function.signIn.invoke(uname.text, pword.text)
+                        function.signIn.invoke(
+                            auth.copy(
+                                username = uname.text,
+                                password = pword.text,
+                            ),
+                        )
                     }
                 ) {
                     Text(toolbarTitle.uppercase())
                 }
             }
             OutlinedButton(
-                onClick = {
-                    function.createAccount.invoke(uname.text, pword.text)
-                },
                 modifier = VerticalLayoutModifier,
-//                border = BorderStroke(1.dp,
-//                    MaterialTheme.colors.onBackground.copy(alpha = 0.2f)),
+                onClick = {
+                    function.createAccount.invoke(
+                        auth.copy(
+                            username = uname.text,
+                            password = pword.text,
+                        ),
+                    )
+                },
             ) {
                 Text(stringResource(R.string.fa_signin_signup_button_label))
             }

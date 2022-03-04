@@ -8,7 +8,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
@@ -31,9 +30,10 @@ import co.ke.xently.common.replaceAt
 import co.ke.xently.data.TaskResult
 import co.ke.xently.data.User
 import co.ke.xently.data.errorMessage
-import co.ke.xently.feature.ui.*
-import kotlinx.coroutines.delay
-import kotlin.time.Duration.Companion.seconds
+import co.ke.xently.feature.ui.ToolbarWithProgressbar
+import co.ke.xently.feature.ui.VIEW_SPACE
+import co.ke.xently.feature.ui.VIEW_SPACE_HALVED
+import co.ke.xently.feature.ui.VerticalLayoutModifier
 
 internal data class VerificationScreenFunction(
     val navigationIcon: () -> Unit = {},
@@ -49,11 +49,24 @@ internal fun VerificationScreen(
     function: VerificationScreenFunction,
     viewModel: VerificationViewModel = hiltViewModel(),
 ) {
-    val result by viewModel.taskResult.collectAsState()
+    val scope = rememberCoroutineScope()
+    val verifyResult by viewModel.verifyResult.collectAsState(
+        context = scope.coroutineContext,
+        initial = TaskResult.Success(null),
+    )
+    val resendResult by viewModel.resendResult.collectAsState(
+        context = scope.coroutineContext,
+        initial = TaskResult.Success(null),
+    )
+    val resendCountDownSecond by viewModel.resendCountDownSecond.collectAsState(
+        context = scope.coroutineContext,
+    )
     VerificationScreen(
         modifier = modifier,
-        result = result,
+        verifyResult = verifyResult,
+        resendResult = resendResult,
         verificationCode = verificationCode,
+        resendCountDownSecond = resendCountDownSecond,
         function = function.copy(
             verify = viewModel::verifyAccount,
             resendCode = viewModel::resendVerificationCode,
@@ -65,53 +78,32 @@ internal fun VerificationScreen(
 @Composable
 private fun VerificationScreen(
     modifier: Modifier,
-    result: TaskResult<User?>,
+    verifyResult: TaskResult<User?>,
+    resendResult: TaskResult<User?>,
+    resendCountDownSecond: Int = 60,
     verificationCode: String = "",
     function: VerificationScreenFunction = VerificationScreenFunction(),
 ) {
     var code by remember { mutableStateOf(verificationCode) }
 
-    var codeError by remember { mutableStateOf("") }
-
-    var isCodeError by remember { mutableStateOf(false) }
-
-    // Avoid unnecessarily restarting count down for enabling resend code button
-    var resendLastSavedCountDownSecond by rememberSaveable { mutableStateOf(60) }
-
-    var resendCountDownSecond by remember { mutableStateOf(resendLastSavedCountDownSecond) }
-
-    var resendCountDownFinished by remember { mutableStateOf(false) }
-
-    LaunchedEffect(result !is TaskResult.Loading) {
-        for (i in 1..resendLastSavedCountDownSecond) {
-            delay(1.seconds)
-            resendCountDownFinished = i == resendLastSavedCountDownSecond
-            resendCountDownSecond = resendLastSavedCountDownSecond - i
-        }
-    }
-
     val scaffoldState = rememberScaffoldState()
 
-    if (result is TaskResult.Loading) {
-        resendLastSavedCountDownSecond = resendCountDownSecond
-    } else if (result is TaskResult.Error) {
-        codeError = ((result.error as? VerificationHttpException)?.code?.joinToString("\n")
-            ?: "").also {
-            isCodeError = it.isNotBlank()
-        }
+    var codeError by remember { mutableStateOf("") }
+    if (verifyResult is TaskResult.Error) {
+        val exception = verifyResult.error as? VerificationHttpException
+        codeError = exception?.code?.joinToString("\n") ?: ""
 
-        if (!isCodeError) {
+        if (exception?.hasFieldErrors() != true) {
             val errorMessage =
-                result.errorMessage ?: stringResource(R.string.generic_error_message)
-            LaunchedEffect(result, errorMessage) {
+                verifyResult.errorMessage ?: stringResource(R.string.generic_error_message)
+            LaunchedEffect(verifyResult, errorMessage) {
                 scaffoldState.snackbarHostState.showSnackbar(errorMessage)
             }
         }
         code = ""  // Reset code...
-    } else if (result is TaskResult.Success && result.data != null) {
-        code = ""
+    } else if (resendResult is TaskResult.Success && resendResult.data != null) {
         SideEffect {
-            function.verificationSuccess.invoke(result.data!!)
+            function.verificationSuccess.invoke(resendResult.data!!)
         }
     }
     val focusManager = LocalFocusManager.current
@@ -123,7 +115,7 @@ private fun VerificationScreen(
         topBar = {
             ToolbarWithProgressbar(
                 title = toolbarTitle,
-                showProgress = result is TaskResult.Loading,
+                showProgress = arrayOf(resendResult, verifyResult).any { it is TaskResult.Loading },
                 onNavigationIconClicked = function.navigationIcon,
             )
         },
@@ -138,6 +130,9 @@ private fun VerificationScreen(
                 function.verify.invoke(code)
             }
             Column(modifier = VerticalLayoutModifier.padding(top = VIEW_SPACE)) {
+                var isCodeError by remember(codeError) {
+                    mutableStateOf(codeError.isNotBlank())
+                }
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(4.dp),
@@ -145,7 +140,7 @@ private fun VerificationScreen(
                     for (i in 0..5) {
                         TextField(
                             colors = TextFieldDefaults.textFieldColors(cursorColor = Color.Transparent),
-                            enabled = result !is TaskResult.Loading,
+                            enabled = resendResult !is TaskResult.Loading,
                             value = code.getOrNull(i)?.toString() ?: "",
                             singleLine = true,
                             isError = isCodeError,
@@ -207,7 +202,14 @@ private fun VerificationScreen(
                     }
                 }
                 if (isCodeError) {
-                    TextFieldErrorText(codeError, Modifier.fillMaxWidth())
+                    Text(
+                        text = codeError,
+                        color = MaterialTheme.colors.error,
+                        style = MaterialTheme.typography.caption,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 16.dp, end = 12.dp),
+                    )
                 }
             }
             Spacer(modifier = Modifier.padding(vertical = VIEW_SPACE_HALVED))
@@ -216,12 +218,10 @@ private fun VerificationScreen(
                 horizontalArrangement = Arrangement.spacedBy(VIEW_SPACE),
             ) {
                 Button(
-                    enabled = resendCountDownFinished && result !is TaskResult.Loading,
+                    enabled = resendCountDownSecond == 0 && resendResult !is TaskResult.Loading,
                     modifier = Modifier.weight(1f),
                     colors = ButtonDefaults.buttonColors(MaterialTheme.colors.secondary),
                     onClick = {
-                        // Reset count down to original starting point
-                        resendLastSavedCountDownSecond = 60
                         focusManager.clearFocus()
                         function.resendCode.invoke()
                     },
@@ -238,7 +238,7 @@ private fun VerificationScreen(
                     Text(resendButtonLabel)
                 }
                 Button(
-                    enabled = code.length == 6 && result !is TaskResult.Loading,
+                    enabled = code.length == 6 && verifyResult !is TaskResult.Loading,
                     modifier = Modifier.weight(1f),
                     onClick = onCodeEntryFinished,
                 ) {
@@ -254,7 +254,8 @@ private fun VerificationScreen(
 private fun VerificationLoadingPreview() {
     VerificationScreen(
         verificationCode = "12345",
-        result = TaskResult.Loading,
+        verifyResult = TaskResult.Loading,
+        resendResult = TaskResult.Loading,
         modifier = Modifier.fillMaxSize(),
     )
 }
@@ -265,6 +266,7 @@ private fun VerificationSuccessPreview() {
     VerificationScreen(
         verificationCode = "12345",
         modifier = Modifier.fillMaxSize(),
-        result = TaskResult.Success(User.default()),
+        verifyResult = TaskResult.Success(User.default()),
+        resendResult = TaskResult.Success(User.default()),
     )
 }
