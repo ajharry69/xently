@@ -36,7 +36,7 @@ internal class ShoppingListGroupedViewModel @Inject constructor(
     private val groupBy = MutableStateFlow(GroupBy.DateAdded)
 
     val shoppingListResult =
-        combineTransform(historicallyFirstUser, groupBy, cacheControl) { _, by, cacheCtrl ->
+        combineTransform(currentlyActiveUser, groupBy, cacheControl) { _, by, cacheCtrl ->
             emitAll(
                 repository.get(by, cacheCtrl).flagLoadingOnStart().onCompletion {
                     // TODO: Fix case where refresh would trigger new network request

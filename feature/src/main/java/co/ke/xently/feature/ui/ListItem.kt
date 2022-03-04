@@ -30,8 +30,8 @@ fun ListItemSurface(
             content = content,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = HORIZONTAL_PADDING)
-                .padding(vertical = HORIZONTAL_PADDING / 2),
+                .padding(start = VIEW_SPACE)
+                .padding(vertical = VIEW_SPACE / 2),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
         )

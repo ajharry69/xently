@@ -6,7 +6,6 @@ import androidx.room.Ignore
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import co.ke.xently.common.Exclude
-import java.util.*
 
 @Entity(tableName = "accounts", indices = [
     Index("email", unique = true),
@@ -20,13 +19,14 @@ data class User(
     var isVerified: Boolean = false,
     @Exclude(Exclude.During.SERIALIZATION)
     var photo: Uri? = null,
+    @Ignore
     @Exclude(Exclude.During.SERIALIZATION)
     var token: String? = null,
     @Ignore
     @Exclude(Exclude.During.DESERIALIZATION)
     val password: String? = null,
     @Exclude
-    var timeRecorded: Date = Date(),
+    var isActive: Boolean = false,
     @Ignore
     @Exclude
     val isDefault: Boolean = false,

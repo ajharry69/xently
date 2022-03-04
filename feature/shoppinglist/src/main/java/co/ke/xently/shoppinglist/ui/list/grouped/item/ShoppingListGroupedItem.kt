@@ -14,7 +14,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import co.ke.xently.data.GroupedShoppingList
 import co.ke.xently.data.ShoppingListItem
-import co.ke.xently.feature.ui.HORIZONTAL_PADDING
+import co.ke.xently.feature.ui.VIEW_SPACE
 import co.ke.xently.feature.ui.NEGLIGIBLE_SPACE
 import co.ke.xently.feature.ui.shimmerPlaceholder
 import co.ke.xently.shoppinglist.R
@@ -49,18 +49,18 @@ internal fun GroupedShoppingListCard(
 
     Card(
         modifier = modifier
-            .padding(horizontal = HORIZONTAL_PADDING)
-            .padding(top = HORIZONTAL_PADDING),
+            .padding(horizontal = VIEW_SPACE)
+            .padding(top = VIEW_SPACE),
     ) {
-        Column(modifier = Modifier.padding(vertical = HORIZONTAL_PADDING / 2)) {
+        Column(modifier = Modifier.padding(vertical = VIEW_SPACE / 2)) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = HORIZONTAL_PADDING),
+                    .padding(start = VIEW_SPACE),
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 Column(
-                    modifier = Modifier.padding(bottom = HORIZONTAL_PADDING / 2),
+                    modifier = Modifier.padding(bottom = VIEW_SPACE / 2),
                     verticalArrangement = Arrangement.spacedBy(NEGLIGIBLE_SPACE),
                 ) {
                     Text(
@@ -104,7 +104,7 @@ internal fun GroupedShoppingListCard(
                 color = MaterialTheme.colors.onSurface.copy(alpha = 0.2f),
                 thickness = 1.dp,
                 modifier = Modifier
-                    .padding(end = HORIZONTAL_PADDING, start = HORIZONTAL_PADDING)
+                    .padding(end = VIEW_SPACE, start = VIEW_SPACE)
                     .shimmerPlaceholder(showPlaceholder),
             )
             Column {
@@ -124,7 +124,7 @@ internal fun GroupedShoppingListCard(
                     modifier = Modifier
                         .fillMaxWidth()
                         .shimmerPlaceholder(showPlaceholder)
-                        .padding(horizontal = HORIZONTAL_PADDING)
+                        .padding(horizontal = VIEW_SPACE)
                 ) {
                     Text(
                         stringResource(R.string.fsl_group_button_see_all),

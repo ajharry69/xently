@@ -12,11 +12,14 @@ interface AccountDao {
     @Insert(onConflict = REPLACE)
     suspend fun save(user: User)
 
-    @Query("SELECT * FROM accounts ORDER BY timeRecorded LIMIT 1")
-    fun getHistoricallyFirstUser(): Flow<User?>
+    @Query("UPDATE accounts SET isActive = 0 WHERE id != :userId")
+    suspend fun makeInactiveExcept(userId: Long)
 
-    @Query("SELECT id FROM accounts ORDER BY timeRecorded LIMIT 1")
-    suspend fun getHistoricallyFirstUserId(): Long
+    @Query("SELECT * FROM accounts WHERE isActive = 1")
+    fun getCurrentlyActiveUser(): Flow<User?>
+
+    @Query("SELECT id FROM accounts WHERE isActive = 1")
+    suspend fun getCurrentlyActiveUserID(): Long
 
     @Query("DELETE FROM accounts WHERE id = :id")
     suspend fun delete(id: Long)

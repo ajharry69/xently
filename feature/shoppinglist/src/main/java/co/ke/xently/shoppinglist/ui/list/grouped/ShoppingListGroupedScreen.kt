@@ -48,7 +48,7 @@ internal fun GroupedShoppingListScreen(
     val scope = rememberCoroutineScope()
     val result by viewModel.shoppingListResult.collectAsState(scope.coroutineContext)
     val shoppingListCount by viewModel.shoppingListCount.collectAsState(scope.coroutineContext)
-    val user by viewModel.historicallyFirstUser.collectAsState(null, scope.coroutineContext)
+    val user by viewModel.currentlyActiveUser.collectAsState(null, scope.coroutineContext)
     val signOutResult by viewModel.signOutResult.collectAsState(
         initial = TaskResult.Success(Unit),
         context = scope.coroutineContext,

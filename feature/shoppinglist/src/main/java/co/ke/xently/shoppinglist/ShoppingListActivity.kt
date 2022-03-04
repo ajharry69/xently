@@ -27,10 +27,10 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import co.ke.xently.data.ShoppingListItem
-import co.ke.xently.feature.viewmodels.LocationPermissionViewModel
 import co.ke.xently.feature.LocationService
 import co.ke.xently.feature.theme.XentlyTheme
 import co.ke.xently.feature.ui.NavMenuItem
+import co.ke.xently.feature.viewmodels.LocationPermissionViewModel
 import co.ke.xently.shoppinglist.Recommend.From
 import co.ke.xently.shoppinglist.ui.detail.ShoppingListItemScreen
 import co.ke.xently.shoppinglist.ui.list.ShoppingListScreen
@@ -162,6 +162,7 @@ internal fun ShoppingListNavHost(
                         },
                     ),
                     NavMenuItem(
+                        // TODO: Show only if user is signed in
                         context = context,
                         label = R.string.drawer_menu_account,
                         icon = Icons.Default.Person,

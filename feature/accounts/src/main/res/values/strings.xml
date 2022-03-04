@@ -20,4 +20,9 @@
     <string name="fa_verify_account_toolbar_title">Verify account</string>
     <string name="fa_verify_account_resend_code_label">Resend code</string>
     <string name="fa_verify_account_resend_code_count_down_label">Resend in %1$ds</string>
+    <string name="fa_account_profile_screen_title">Profile</string>
+    <string name="fa_account_profile_edit_detail_content_description">%1$s profile details</string>
+    <string name="edit">Edit</string>
+    <string name="view">View</string>
+    <string name="fa_profile_email_help_text">Change will require verification</string>
 </resources>

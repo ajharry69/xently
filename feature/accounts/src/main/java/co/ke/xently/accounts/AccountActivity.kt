@@ -8,12 +8,17 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.navigation.*
+import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
+import androidx.navigation.navDeepLink
 import co.ke.xently.accounts.ui.password_reset.PasswordResetScreen
 import co.ke.xently.accounts.ui.password_reset.request.PasswordResetRequestScreen
+import co.ke.xently.accounts.ui.profile.ProfileScreen
+import co.ke.xently.accounts.ui.profile.ProfileScreenClick
 import co.ke.xently.accounts.ui.signin.SignInScreen
 import co.ke.xently.accounts.ui.signup.SignUpScreen
 import co.ke.xently.accounts.ui.verification.VerificationScreen
@@ -30,7 +35,7 @@ class AccountActivity : ComponentActivity() {
                 Surface(color = MaterialTheme.colors.background) {
                     val navController = rememberNavController()
                     ProductsNavHost(navController = navController) {
-                        if (!navController.navigateUp()) onBackPressed()
+                        onBackPressed()
                     }
                 }
             }
@@ -44,8 +49,31 @@ internal fun ProductsNavHost(
     navController: NavHostController,
     onNavigationIconClicked: () -> Unit,
 ) {
-    NavHost(modifier = modifier, navController = navController, startDestination = "signin") {
-        val signInScreen: @Composable (NavBackStackEntry) -> Unit = {
+    NavHost(modifier = modifier, navController = navController, startDestination = "profile") {
+        composable("profile") {
+            ProfileScreen(
+                modifier = Modifier.fillMaxSize(),
+                click = ProfileScreenClick(
+                    navigationIcon = onNavigationIconClicked,
+                ),
+            )
+        }
+        composable(
+            "signin?username={username}&password={password}",
+            arguments = listOf(
+                navArgument("username") {
+                    defaultValue = ""
+                },
+                navArgument("password") {
+                    defaultValue = ""
+                },
+            ),
+            deepLinks = listOf(
+                navDeepLink {
+                    uriPattern = "xently://accounts/signin/"
+                }
+            ),
+        ) {
             SignInScreen(
                 modifier = Modifier.fillMaxSize(),
                 username = it.arguments?.getString("username") ?: "",
@@ -69,27 +97,6 @@ internal fun ProductsNavHost(
                 },
             )
         }
-        composable(
-            "signin",
-            deepLinks = listOf(
-                navDeepLink {
-                    uriPattern = "xently://accounts/signin/"
-                }
-            ),
-            content = signInScreen,
-        )
-        composable(
-            "signin?username={username}&password={password}",
-            listOf(
-                navArgument("username") {
-                    defaultValue = ""
-                },
-                navArgument("password") {
-                    defaultValue = ""
-                },
-            ),
-            content = signInScreen,
-        )
         composable(
             "signup?username={username}&password={password}",
             listOf(
