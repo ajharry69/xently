@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "c37f0c222231d0a6b1353042e2766020",
+    "identityHash": "259891d9771409b7dcc1e33b965cc0a9",
     "entities": [
       {
         "tableName": "shops",
@@ -50,7 +50,7 @@
       },
       {
         "tableName": "accounts",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `email` TEXT NOT NULL, `isVerified` INTEGER NOT NULL, `photo` TEXT, `token` TEXT, `isActive` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `email` TEXT NOT NULL, `isVerified` INTEGER NOT NULL, `photo` TEXT, `isActive` INTEGER NOT NULL, PRIMARY KEY(`id`))",
         "fields": [
           {
             "fieldPath": "id",
@@ -73,12 +73,6 @@
           {
             "fieldPath": "photo",
             "columnName": "photo",
-            "affinity": "TEXT",
-            "notNull": false
-          },
-          {
-            "fieldPath": "token",
-            "columnName": "token",
             "affinity": "TEXT",
             "notNull": false
           },
@@ -619,7 +613,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'c37f0c222231d0a6b1353042e2766020')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '259891d9771409b7dcc1e33b965cc0a9')"
     ]
   }
 }

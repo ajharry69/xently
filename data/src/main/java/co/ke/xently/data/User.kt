@@ -19,6 +19,7 @@ data class User(
     var isVerified: Boolean = false,
     @Exclude(Exclude.During.SERIALIZATION)
     var photo: Uri? = null,
+    @Ignore
     @Exclude(Exclude.During.SERIALIZATION)
     var token: String? = null,
     @Ignore
