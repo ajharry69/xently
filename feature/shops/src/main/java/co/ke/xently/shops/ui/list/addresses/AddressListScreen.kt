@@ -14,6 +14,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import co.ke.xently.data.Address
+import co.ke.xently.feature.ui.OptionMenu
+import co.ke.xently.feature.ui.OverflowOptionMenu
 import co.ke.xently.feature.ui.PagedDataScreen
 import co.ke.xently.feature.ui.ToolbarWithProgressbar
 import co.ke.xently.shops.R
@@ -29,6 +31,7 @@ internal data class AddressListScreenFunction(
 internal fun AddressListScreen(
     shopId: Long,
     modifier: Modifier,
+    optionsMenu: List<OptionMenu>,
     function: AddressListScreenFunction,
     viewModel: AddressListViewModel = hiltViewModel(),
 ) {
@@ -38,11 +41,19 @@ internal fun AddressListScreen(
     val shopName by viewModel.shopName.collectAsState(
         context = scope.coroutineContext,
     )
+    val items = viewModel.pagingData.collectAsLazyPagingItems()
     AddressListScreen(
+        items = items,
         function = function,
         shopName = shopName,
         modifier = modifier,
-        items = viewModel.pagingData.collectAsLazyPagingItems(),
+        optionsMenu = optionsMenu.map { menu ->
+            if (menu.title == stringResource(R.string.refresh)) {
+                menu.copy(onClick = items::refresh)
+            } else {
+                menu
+            }
+        },
     )
 }
 
@@ -52,6 +63,7 @@ private fun AddressListScreen(
     items: LazyPagingItems<Address>,
     shopName: String?,
     function: AddressListScreenFunction,
+    optionsMenu: List<OptionMenu>,
 ) {
     val scaffoldState = rememberScaffoldState()
     Scaffold(
@@ -61,7 +73,12 @@ private fun AddressListScreen(
                 subTitle = shopName,
                 onNavigationIconClicked = function.onNavigationIcon,
                 title = stringResource(R.string.fs_toolbar_title_addresses),
-            )
+            ) {
+                OverflowOptionMenu(
+                    menu = optionsMenu,
+                    contentDescription = stringResource(R.string.fs_address_list_overflow_menu_description),
+                )
+            }
         },
     ) {
         PagedDataScreen(

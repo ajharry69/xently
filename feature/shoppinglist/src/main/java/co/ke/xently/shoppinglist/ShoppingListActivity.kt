@@ -20,6 +20,7 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -30,6 +31,7 @@ import co.ke.xently.data.ShoppingListItem
 import co.ke.xently.feature.LocationService
 import co.ke.xently.feature.theme.XentlyTheme
 import co.ke.xently.feature.ui.NavMenuItem
+import co.ke.xently.feature.ui.OptionMenu
 import co.ke.xently.feature.viewmodels.LocationPermissionViewModel
 import co.ke.xently.shoppinglist.Recommend.From
 import co.ke.xently.shoppinglist.ui.detail.ShoppingListItemScreen
@@ -153,6 +155,7 @@ internal fun ShoppingListNavHost(
         )
         composable("shopping-list-grouped") {
             GroupedShoppingListScreen(
+                modifier = Modifier.fillMaxSize(),
                 drawerItems = listOf(
                     NavMenuItem(
                         context = context,
@@ -187,6 +190,9 @@ internal fun ShoppingListNavHost(
                     ),
                 ),
                 menuItems = shoppingListItemMenuItems,
+                optionsMenu = listOf(
+                    OptionMenu(title = stringResource(R.string.refresh)),
+                ),
                 groupMenuItems = listOf(
                     GroupMenuItem(R.string.fsl_group_menu_recommend) {
                         navController.navigate("shopping-list/recommendations/${it}")
@@ -209,7 +215,6 @@ internal fun ShoppingListNavHost(
                         },
                     ),
                 ),
-                modifier = Modifier.fillMaxSize(),
             )
         }
         composable("shopping-list") {
@@ -220,7 +225,16 @@ internal fun ShoppingListNavHost(
                     onAddClicked = onAddShoppingListItemClicked,
                     onNavigationIconClicked = onNavigationIconClicked,
                     onItemClicked = {},
-                )
+                ),
+                optionsMenu = listOf(
+                    OptionMenu(
+                        title = stringResource(R.string.fsl_group_menu_recommend),
+                        onClick = {
+                            // TODO: Rethink implementation...
+                            // onRecommendOptionsMenuClicked(shoppingListResult.getOrNull())
+                        },
+                    ),
+                ),
             )
         }
         composable(

@@ -23,6 +23,7 @@ import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
 import co.ke.xently.data.Shop
 import co.ke.xently.feature.theme.XentlyTheme
+import co.ke.xently.feature.ui.OptionMenu
 import co.ke.xently.shops.ui.detail.ShopDetailScreen
 import co.ke.xently.shops.ui.detail.ShopDetailScreenFunction
 import co.ke.xently.shops.ui.list.ShopListScreen
@@ -64,6 +65,9 @@ internal fun ShopsNavHost(
         composable("shops") {
             ShopListScreen(
                 modifier = Modifier.fillMaxSize(),
+                optionsMenu = listOf(
+                    OptionMenu(title = stringResource(R.string.refresh)),
+                ),
                 menuItems = {
                     buildList {
                         add(
@@ -156,6 +160,9 @@ internal fun ShopsNavHost(
             AddressListScreen(
                 modifier = Modifier.fillMaxSize(),
                 shopId = it.arguments!!.getLong("id"),
+                optionsMenu = listOf(
+                    OptionMenu(title = stringResource(R.string.refresh)),
+                ),
                 function = AddressListScreenFunction(
                     onNavigationIcon = onNavigationIconClicked,
                     function = AddressListItemFunction(onItemClick = {}),

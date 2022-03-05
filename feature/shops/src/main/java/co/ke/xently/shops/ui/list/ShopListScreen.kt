@@ -15,9 +15,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import co.ke.xently.data.Shop
-import co.ke.xently.feature.ui.PagedDataScreen
-import co.ke.xently.feature.ui.ToolbarWithProgressbar
-import co.ke.xently.feature.ui.stringRes
+import co.ke.xently.feature.ui.*
 import co.ke.xently.shops.R
 import co.ke.xently.shops.ui.list.item.MenuItem
 import co.ke.xently.shops.ui.list.item.ShopListItem
@@ -31,16 +29,25 @@ internal data class ShopListScreenFunction(
 
 @Composable
 internal fun ShopListScreen(
-    function: ShopListScreenFunction,
     modifier: Modifier,
+    optionsMenu: List<OptionMenu>,
+    function: ShopListScreenFunction,
     menuItems: @Composable (Shop) -> List<MenuItem>,
     viewModel: ShopListViewModel = hiltViewModel(),
 ) {
+    val items = viewModel.pagingData.collectAsLazyPagingItems()
     ShopListScreen(
+        items = items,
         function = function,
         modifier = modifier,
         menuItems = menuItems,
-        items = viewModel.pagingData.collectAsLazyPagingItems(),
+        optionsMenu = optionsMenu.map { menu ->
+            if (menu.title == stringResource(R.string.refresh)) {
+                menu.copy(onClick = items::refresh)
+            } else {
+                menu
+            }
+        },
     )
 }
 
@@ -49,6 +56,7 @@ private fun ShopListScreen(
     function: ShopListScreenFunction,
     modifier: Modifier,
     items: LazyPagingItems<Shop>,
+    optionsMenu: List<OptionMenu>,
     menuItems: @Composable (Shop) -> List<MenuItem>,
 ) {
     val scaffoldState = rememberScaffoldState()
@@ -57,7 +65,12 @@ private fun ShopListScreen(
             ToolbarWithProgressbar(
                 title = stringResource(R.string.title_activity_shops),
                 onNavigationIconClicked = function.onNavigationIcon,
-            )
+            ) {
+                OverflowOptionMenu(
+                    menu = optionsMenu,
+                    contentDescription = stringResource(R.string.fs_shop_list_overflow_menu_description),
+                )
+            }
         },
         floatingActionButton = {
             FloatingActionButton(onClick = function.onAddFabClicked) {

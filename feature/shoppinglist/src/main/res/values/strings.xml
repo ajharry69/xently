@@ -28,4 +28,6 @@
     <string name="fsl_recommendation_recommendations">Recommendations</string>
     <string name="fsl_recommendation_shops_visited">Shops visited</string>
     <string name="fsl_detail_more_actions_content_description">%1$s shopping list item options</string>
+    <string name="fsl_shopping_list_overflow_menu_description">More options for shopping list.</string>
+    <string name="fsl_grouped_shopping_list_overflow_menu_description">More options for grouped shopping list.</string>
 </resources>

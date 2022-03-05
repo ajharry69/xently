@@ -44,6 +44,7 @@ internal fun GroupedShoppingListScreen(
     menuItems: List<MenuItem>,
     groupMenuItems: List<GroupMenuItem>,
     function: GroupedShoppingListScreenFunction,
+    optionsMenu: List<OptionMenu>,
     groupBy: GroupBy = GroupBy.DateAdded,
     viewModel: ShoppingListGroupedViewModel = hiltViewModel(),
 ) {
@@ -81,6 +82,13 @@ internal fun GroupedShoppingListScreen(
         signOutResult = signOutResult,
         groupCount = shoppingListCount,
         groupMenuItems = groupMenuItems,
+        optionsMenu = optionsMenu.map { menu ->
+            if (menu.title == stringResource(R.string.refresh)) {
+                menu.copy(onClick = viewModel::refresh)
+            } else {
+                menu
+            }
+        },
         function = function.copy(
             onRefresh = viewModel::refresh,
             signInOrOut = {
@@ -109,6 +117,7 @@ private fun GroupedShoppingListScreen(
     signOutResult: TaskResult<Unit>,
     result: TaskResult<List<GroupedShoppingList>>,
     isRefreshing: Boolean,
+    optionsMenu: List<OptionMenu>,
 ) {
     val scaffoldState = rememberScaffoldState()
     val coroutineScope = rememberCoroutineScope()
@@ -153,6 +162,10 @@ private fun GroupedShoppingListScreen(
                     IconButton(onClick = { }) {
                         Icon(Icons.Default.Search, contentDescription = null)
                     }
+                    OverflowOptionMenu(
+                        menu = optionsMenu,
+                        contentDescription = stringResource(R.string.fsl_grouped_shopping_list_overflow_menu_description),
+                    )
                 },
                 showProgress = signOutResult is TaskResult.Loading,
             )
