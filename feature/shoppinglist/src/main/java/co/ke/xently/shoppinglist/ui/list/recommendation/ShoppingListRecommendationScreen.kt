@@ -34,6 +34,7 @@ internal data class RecommendationCardItemFunction(
 
 internal data class ShoppingListRecommendationScreenFunction(
     val onNavigationIconClicked: () -> Unit = {},
+    val onRetryClicked: (Throwable) -> Unit = {},
     val onItemClicked: (ShoppingListItem) -> Unit = {},
     val onLocationPermissionChanged: (Boolean) -> Unit = {},
     val function: RecommendationCardItemFunction = RecommendationCardItemFunction(),
@@ -47,17 +48,24 @@ internal fun ShoppingListRecommendationScreen(
     recommend: Recommend = Recommend(),
     viewModel: ShoppingListRecommendationViewModel = hiltViewModel(),
 ) {
-    viewModel.setRecommend(recommend)
     val scope = rememberCoroutineScope()
-    val recommendationReportResult by viewModel.recommendationReportResult.collectAsState(
+    val result by viewModel.result.collectAsState(
+        initial = TaskResult.Loading,
         context = scope.coroutineContext,
     )
 
+    LaunchedEffect(recommend) {
+        viewModel.initRecommendation(recommend)
+    }
+
     ShoppingListRecommendationScreen(
+        result = result,
         modifier = modifier,
         menuItems = menuItems,
-        result = recommendationReportResult,
         function = function.copy(
+            onRetryClicked = {
+                viewModel.initRecommendation(recommend)
+            },
             onLocationPermissionChanged = viewModel::setLocationPermissionGranted,
         ),
     )
@@ -67,8 +75,8 @@ internal fun ShoppingListRecommendationScreen(
 private fun ShoppingListRecommendationScreen(
     modifier: Modifier,
     result: TaskResult<RecommendationReport>,
-    function: ShoppingListRecommendationScreenFunction,
     menuItems: List<RecommendationCardItemMenuItem>,
+    function: ShoppingListRecommendationScreenFunction,
 ) {
     val scaffoldState = rememberScaffoldState()
     Scaffold(
@@ -84,10 +92,14 @@ private fun ShoppingListRecommendationScreen(
     ) {
         when (result) {
             is TaskResult.Error -> {
-                FullscreenError(modifier.padding(it), result.error)
+                FullscreenError(
+                    error = result.error,
+                    modifier = modifier.padding(it),
+                    click = HttpErrorButtonClick(retryAble = function.onRetryClicked),
+                )
             }
             TaskResult -> {
-                FullscreenLoading<RecommendationReport>(modifier.padding(it))
+                FullscreenLoading<RecommendationReport>(modifier = modifier.padding(it))
             }
             is TaskResult.Success -> {
                 val report = result.getOrThrow()

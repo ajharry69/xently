@@ -53,6 +53,7 @@ internal class AuthRepository @Inject constructor(
             emit(dependencies.database.accountDao.getCurrentlyActiveUserID())
         }.map {
             dependencies.database.accountDao.delete(it)
+            dependencies.database.shoppingListDao.deleteAll()
             dependencies.preference.encrypted.edit {
                 remove(TOKEN_VALUE_SHARED_PREFERENCE_KEY)
             }
