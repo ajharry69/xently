@@ -24,10 +24,8 @@ internal class ShoppingListGroupedViewModel @Inject constructor(
 ) : AbstractAuthViewModel(authRepository) {
     private val cacheControlKey = "${ShoppingListGroupedViewModel::class.java.name}.cacheControl"
 
-    private val _cacheControl =
-        MutableStateFlow(savedStateHandle.get<String>(cacheControlKey)?.let { getOrThrow(it) }
-            ?: CacheControl.OnlyIfCached)
-    private val cacheControl = _cacheControl.asStateFlow()
+    private val cacheControl = MutableSharedFlow<CacheControl>()
+
     val isRefreshing = cacheControl.mapLatest { it is CacheControl.NoCache }.stateIn(
         initialValue = false,
         scope = viewModelScope,
@@ -35,25 +33,30 @@ internal class ShoppingListGroupedViewModel @Inject constructor(
     )
 
     private val groupBy = MutableSharedFlow<GroupBy>()
-    fun setGroupBy(by: GroupBy) {
-        viewModelScope.launch {
-            this@ShoppingListGroupedViewModel.groupBy.emit(by)
-        }
-    }
 
-    val shoppingListResult =
-        combineTransform(currentlyActiveUser, groupBy, cacheControl) { _, by, cacheCtrl ->
-            emitAll(
-                repository.get(by, cacheCtrl).flagLoadingOnStart().onCompletion {
-                    // TODO: Fix case where refresh would trigger new network request
-                    setCacheControl(CacheControl.OnlyIfCached)
-                },
-            )
-        }.stateIn(
+    val shoppingListResult = combineTransform(
+        currentlyActiveUser,
+        groupBy,
+        cacheControl.stateIn(
             scope = viewModelScope,
-            started = DEFAULT_SHARING_STARTED,
-            initialValue = TaskResult.Success(emptyList()),
+            initialValue = savedStateHandle.get<String>(cacheControlKey)?.let { getOrThrow(it) }
+                ?: CacheControl.OnlyIfCached,
+            started = SharingStarted.WhileSubscribed(),
+        ),
+    ) { _, by, cacheCtrl ->
+        emitAll(
+            repository.get(by, cacheCtrl).flagLoadingOnStart().onCompletion {
+                // TODO: Fix case where refresh would trigger new network request
+                if (it == null) {
+                    setCacheControl(CacheControl.OnlyIfCached)
+                }
+            }
         )
+    }.stateIn(
+        scope = viewModelScope,
+        started = DEFAULT_SHARING_STARTED,
+        initialValue = TaskResult.Success(emptyList()),
+    )
 
     val shoppingListCount = groupBy.flatMapLatest(repository::getCount).stateIn(
         scope = viewModelScope,
@@ -65,8 +68,16 @@ internal class ShoppingListGroupedViewModel @Inject constructor(
         setCacheControl(CacheControl.NoCache)
     }
 
-    private fun setCacheControl(v: CacheControl) {
-        _cacheControl.value = v
-        savedStateHandle[cacheControlKey] = v.toString()
+    fun initFetch(by: GroupBy) {
+        viewModelScope.launch {
+            this@ShoppingListGroupedViewModel.groupBy.emit(by)
+        }
+    }
+
+    private fun setCacheControl(control: CacheControl) {
+        viewModelScope.launch {
+            this@ShoppingListGroupedViewModel.cacheControl.emit(control)
+        }
+        savedStateHandle[cacheControlKey] = control.toString()
     }
 }

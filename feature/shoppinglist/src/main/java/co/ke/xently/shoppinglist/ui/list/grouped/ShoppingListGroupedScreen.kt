@@ -44,6 +44,7 @@ internal fun GroupedShoppingListScreen(
     menuItems: List<MenuItem>,
     groupMenuItems: List<GroupMenuItem>,
     function: GroupedShoppingListScreenFunction,
+    groupBy: GroupBy = GroupBy.DateAdded,
     viewModel: ShoppingListGroupedViewModel = hiltViewModel(),
 ) {
     val scope = rememberCoroutineScope()
@@ -65,11 +66,8 @@ internal fun GroupedShoppingListScreen(
         context = scope.coroutineContext,
     )
 
-    var groupBy by remember {
-        mutableStateOf(GroupBy.DateAdded)
-    }
-    LaunchedEffect(true) {
-        viewModel.setGroupBy(groupBy)
+    LaunchedEffect(groupBy) {
+        viewModel.initFetch(groupBy)
     }
 
     val context = LocalContext.current
@@ -93,7 +91,7 @@ internal fun GroupedShoppingListScreen(
                 }
             },
             onRetryClicked = {
-                groupBy = GroupBy.DateAdded
+                viewModel.initFetch(groupBy)
             },
         ),
     )
