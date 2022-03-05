@@ -20,21 +20,21 @@ import co.ke.xently.shoppinglist.R
 import co.ke.xently.shoppinglist.ui.list.item.MenuItem
 import co.ke.xently.shoppinglist.ui.list.item.ShoppingListItemCard
 
-internal data class Click(
-    val add: () -> Unit = {},
-    val navigationIcon: () -> Unit = {},
-    val item: (ShoppingListItem) -> Unit = {},
+internal data class ShoppingListScreenFunction(
+    val onAddClicked: () -> Unit = {},
+    val onNavigationIconClicked: () -> Unit = {},
+    val onItemClicked: (ShoppingListItem) -> Unit = {},
 )
 
 @Composable
 internal fun ShoppingListScreen(
+    modifier: Modifier,
     menuItems: List<MenuItem>,
-    click: Click,
-    modifier: Modifier = Modifier,
+    function: ShoppingListScreenFunction,
     viewModel: ShoppingListViewModel = hiltViewModel(),
 ) {
     ShoppingListScreen(
-        click = click,
+        function = function,
         modifier = modifier,
         menuItems = menuItems,
         items = viewModel.pagingData.collectAsLazyPagingItems(),
@@ -46,7 +46,7 @@ private fun ShoppingListScreen(
     modifier: Modifier,
     items: LazyPagingItems<ShoppingListItem>,
     menuItems: List<MenuItem>,
-    click: Click,
+    function: ShoppingListScreenFunction,
 ) {
     val scaffoldState = rememberScaffoldState()
     var showOptionsMenu by remember { mutableStateOf(false) }
@@ -55,7 +55,7 @@ private fun ShoppingListScreen(
         topBar = {
             ToolbarWithProgressbar(
                 title = stringResource(R.string.fsl_toolbar_title),
-                onNavigationIconClicked = click.navigationIcon,
+                onNavigationIconClicked = function.onNavigationIconClicked,
             ) {
                 IconButton(onClick = { showOptionsMenu = !showOptionsMenu }) {
                     Icon(
@@ -78,7 +78,7 @@ private fun ShoppingListScreen(
             }
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = click.add) {
+            FloatingActionButton(onClick = function.onAddClicked) {
                 Icon(Icons.Default.Add,
                     stringRes(R.string.fsl_detail_screen_toolbar_title, R.string.add))
             }
@@ -94,7 +94,7 @@ private fun ShoppingListScreen(
             ShoppingListItemCard(
                 item = item,
                 menuItems = menuItems,
-                onClick = click.item,
+                onClick = function.onItemClicked,
                 modifier = Modifier.fillMaxWidth(),
             )
         }

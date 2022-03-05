@@ -19,18 +19,26 @@ import co.ke.xently.data.*
 import co.ke.xently.data.ShoppingListItem.Attribute
 import co.ke.xently.data.TaskResult.Loading
 import co.ke.xently.feature.ui.ToolbarWithProgressbar
+import co.ke.xently.feature.ui.VIEW_SPACE
 import co.ke.xently.feature.ui.VerticalLayoutModifier
 import co.ke.xently.feature.ui.stringRes
 import co.ke.xently.products.shared.*
 import co.ke.xently.shoppinglist.R
 
+internal data class ShoppingListItemScreenFunction(
+    val navigationIcon: () -> Unit = {},
+    val measurementUnitQueryChanged: (String) -> Unit = {},
+    val brandQueryChanged: (String) -> Unit = {},
+    val attributeQueryChanged: (AttributeQuery) -> Unit = {},
+    val detailsSubmitted: (ShoppingListItem) -> Unit = {},
+)
 
 @Composable
 internal fun ShoppingListItemScreen(
     id: Long?,
-    modifier: Modifier = Modifier,
+    modifier: Modifier,
+    function: ShoppingListItemScreenFunction,
     viewModel: ShoppingListItemViewModel = hiltViewModel(),
-    onNavigationIconClicked: () -> Unit = {},
 ) {
     val isDefault by remember(id) {
         mutableStateOf(id == null || id == Product.default().id)
@@ -52,21 +60,22 @@ internal fun ShoppingListItemScreen(
     val permitReAddition = isDefault && result.getOrNull() != null
 
     ShoppingListItemScreen(
-        modifier,
-        if (permitReAddition) {
+        modifier = modifier,
+        result = if (permitReAddition) {
             TaskResult.Success(null)
         } else {
             result
         },
-        permitReAddition,
-        brands,
-        attributes,
-        measurementUnits,
-        onNavigationIconClicked,
-        viewModel::setMeasurementUnitQuery,
-        viewModel::setBrandQuery,
-        viewModel::setAttributeQuery,
-        viewModel::addOrUpdate,
+        permitReAddition = permitReAddition,
+        brandSuggestions = brands,
+        attributeSuggestions = attributes,
+        measurementUnits = measurementUnits,
+        function = function.copy(
+            detailsSubmitted = viewModel::addOrUpdate,
+            brandQueryChanged = viewModel::setBrandQuery,
+            attributeQueryChanged = viewModel::setAttributeQuery,
+            measurementUnitQueryChanged = viewModel::setMeasurementUnitQuery,
+        ),
     )
 }
 
@@ -79,11 +88,7 @@ private fun ShoppingListItemScreen(
     brandSuggestions: List<Product.Brand> = emptyList(),
     attributeSuggestions: List<Product.Attribute> = emptyList(),
     measurementUnits: List<MeasurementUnit> = emptyList(),
-    onNavigationIconClicked: () -> Unit = {},
-    onMeasurementUnitQueryChanged: (String) -> Unit = {},
-    onBrandQueryChanged: (String) -> Unit = {},
-    onAttributeQueryChanged: (AttributeQuery) -> Unit = {},
-    onDetailsSubmitted: (ShoppingListItem) -> Unit = {},
+    function: ShoppingListItemScreenFunction = ShoppingListItemScreenFunction(),
 ) {
     val item = result.getOrNull() ?: ShoppingListItem.default()
 
@@ -127,9 +132,11 @@ private fun ShoppingListItemScreen(
     Scaffold(
         scaffoldState = scaffoldState,
         topBar = {
-            ToolbarWithProgressbar(toolbarTitle,
-                onNavigationIconClicked,
-                showProgress = result is Loading)
+            ToolbarWithProgressbar(
+                title = toolbarTitle,
+                showProgress = result is Loading,
+                onNavigationIconClicked = function.navigationIcon,
+            )
         },
     ) { paddingValues ->
         Column(
@@ -137,7 +144,7 @@ private fun ShoppingListItemScreen(
                 .padding(paddingValues)
                 .verticalScroll(scrollState),
         ) {
-            Spacer(modifier = Modifier.padding(top = 16.dp))
+            Spacer(modifier = Modifier.padding(top = VIEW_SPACE))
             val name = productNameTextField(
                 name = item.name,
                 error = nameError,
@@ -150,7 +157,7 @@ private fun ShoppingListItemScreen(
                 error = unitError,
                 clearField = permitReAddition,
                 suggestions = measurementUnits,
-                onQueryChanged = onMeasurementUnitQueryChanged,
+                onQueryChanged = function.measurementUnitQueryChanged,
             )
             Spacer(modifier = Modifier.padding(vertical = 8.dp))
 
@@ -173,14 +180,14 @@ private fun ShoppingListItemScreen(
             val brands = productBrandsView(
                 clearFields = permitReAddition,
                 suggestions = brandSuggestions,
-                onQueryChanged = onBrandQueryChanged,
+                onQueryChanged = function.brandQueryChanged,
             )
             Spacer(modifier = Modifier.padding(vertical = 8.dp))
 
             val attributes = productAttributesView(
                 clearFields = permitReAddition,
                 suggestions = attributeSuggestions,
-                onQueryChanged = onAttributeQueryChanged,
+                onQueryChanged = function.attributeQueryChanged,
             )
             Spacer(modifier = Modifier.padding(vertical = 8.dp))
             Button(
@@ -189,23 +196,25 @@ private fun ShoppingListItemScreen(
                     name,
                     unitQuantity,
                     purchaseQuantity,
-                ).all { it.text.isNotBlank() },
-                modifier = VerticalLayoutModifier.padding(bottom = 16.dp),
+                ).all { it.text.isNotBlank() } && result !is Loading,
+                modifier = VerticalLayoutModifier.padding(bottom = VIEW_SPACE),
                 onClick = {
                     focusManager.clearFocus()
-                    onDetailsSubmitted(item.copy(
-                        name = name.text,
-                        unit = unit.text,
-                        unitQuantity = unitQuantity.text.toFloat(),
-                        purchaseQuantity = purchaseQuantity.text.toFloat(),
-                        brands = brands.filterNot { it.isDefault }.map {
-                            ShoppingListItem.Brand(name = it.name)
-                        },
-                        attributes = attributes.filterNot { it.name.isBlank() or it.value.isBlank() }
-                            .map {
-                                Attribute(name = it.name, value = it.value, values = it.values)
+                    function.detailsSubmitted.invoke(
+                        item.copy(
+                            name = name.text,
+                            unit = unit.text,
+                            unitQuantity = unitQuantity.text.toFloat(),
+                            purchaseQuantity = purchaseQuantity.text.toFloat(),
+                            brands = brands.filterNot { it.isDefault }.map {
+                                ShoppingListItem.Brand(name = it.name)
                             },
-                    ))
+                            attributes = attributes.filterNot { it.name.isBlank() or it.value.isBlank() }
+                                .map {
+                                    Attribute(name = it.name, value = it.value, values = it.values)
+                                },
+                        ),
+                    )
                 }
             ) { Text(toolbarTitle.uppercase()) }
         }

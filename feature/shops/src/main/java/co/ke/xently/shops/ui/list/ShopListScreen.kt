@@ -21,22 +21,23 @@ import co.ke.xently.feature.ui.stringRes
 import co.ke.xently.shops.R
 import co.ke.xently.shops.ui.list.item.MenuItem
 import co.ke.xently.shops.ui.list.item.ShopListItem
+import co.ke.xently.shops.ui.list.item.ShopListItemFunction
 
-internal data class Click(
-    val add: () -> Unit = {},
-    val navigationIcon: () -> Unit = {},
-    val click: co.ke.xently.shops.ui.list.item.Click = co.ke.xently.shops.ui.list.item.Click(),
+internal data class ShopListScreenFunction(
+    val onAddFabClicked: () -> Unit = {},
+    val onNavigationIcon: () -> Unit = {},
+    val function: ShopListItemFunction = ShopListItemFunction(),
 )
 
 @Composable
 internal fun ShopListScreen(
-    click: Click,
+    function: ShopListScreenFunction,
     modifier: Modifier,
     menuItems: @Composable (Shop) -> List<MenuItem>,
     viewModel: ShopListViewModel = hiltViewModel(),
 ) {
     ShopListScreen(
-        click = click,
+        function = function,
         modifier = modifier,
         menuItems = menuItems,
         items = viewModel.pagingData.collectAsLazyPagingItems(),
@@ -45,7 +46,7 @@ internal fun ShopListScreen(
 
 @Composable
 private fun ShopListScreen(
-    click: Click,
+    function: ShopListScreenFunction,
     modifier: Modifier,
     items: LazyPagingItems<Shop>,
     menuItems: @Composable (Shop) -> List<MenuItem>,
@@ -55,11 +56,11 @@ private fun ShopListScreen(
         topBar = {
             ToolbarWithProgressbar(
                 title = stringResource(R.string.title_activity_shops),
-                onNavigationIconClicked = click.navigationIcon,
+                onNavigationIconClicked = function.onNavigationIcon,
             )
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = click.add) {
+            FloatingActionButton(onClick = function.onAddFabClicked) {
                 Icon(Icons.Default.Add, stringRes(R.string.fs_add_shop_toolbar_title, R.string.add))
             }
         },
@@ -73,7 +74,7 @@ private fun ShopListScreen(
             ShopListItem(
                 shop = shop,
                 modifier = Modifier.fillMaxWidth(),
-                click = click.click,
+                function = function.function,
                 menuItems = menuItems,
             )
         }

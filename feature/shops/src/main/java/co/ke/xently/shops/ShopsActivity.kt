@@ -24,9 +24,14 @@ import androidx.navigation.navDeepLink
 import co.ke.xently.data.Shop
 import co.ke.xently.feature.theme.XentlyTheme
 import co.ke.xently.shops.ui.detail.ShopDetailScreen
+import co.ke.xently.shops.ui.detail.ShopDetailScreenFunction
 import co.ke.xently.shops.ui.list.ShopListScreen
+import co.ke.xently.shops.ui.list.ShopListScreenFunction
 import co.ke.xently.shops.ui.list.addresses.AddressListScreen
+import co.ke.xently.shops.ui.list.addresses.AddressListScreenFunction
+import co.ke.xently.shops.ui.list.addresses.item.AddressListItemFunction
 import co.ke.xently.shops.ui.list.item.MenuItem
+import co.ke.xently.shops.ui.list.item.ShopListItemFunction
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -107,13 +112,13 @@ internal fun ShopsNavHost(
                         }
                     }
                 },
-                click = co.ke.xently.shops.ui.list.Click(
-                    add = {
+                function = ShopListScreenFunction(
+                    onAddFabClicked = {
                         navController.navigate("shops/${Shop.default().id}")
                     },
-                    navigationIcon = onNavigationIconClicked,
-                    click = co.ke.xently.shops.ui.list.item.Click(
-                        base = {},
+                    onNavigationIcon = onNavigationIconClicked,
+                    function = ShopListItemFunction(
+                        onItemClicked = {},
                     ),
                 ),
             )
@@ -129,7 +134,10 @@ internal fun ShopsNavHost(
         ) {
             ShopDetailScreen(
                 modifier = Modifier.fillMaxSize(),
-                id = it.arguments?.getLong("id")
+                id = it.arguments?.getLong("id"),
+                function = ShopDetailScreenFunction(
+                    onNavigationIconClicked = onNavigationIconClicked,
+                ),
             )
         }
         composable(
@@ -148,9 +156,9 @@ internal fun ShopsNavHost(
             AddressListScreen(
                 modifier = Modifier.fillMaxSize(),
                 shopId = it.arguments!!.getLong("id"),
-                click = co.ke.xently.shops.ui.list.addresses.Click(
-                    navigationIcon = onNavigationIconClicked,
-                    click = co.ke.xently.shops.ui.list.addresses.item.Click(base = {}),
+                function = AddressListScreenFunction(
+                    onNavigationIcon = onNavigationIconClicked,
+                    function = AddressListItemFunction(onItemClick = {}),
                 ),
             )
         }

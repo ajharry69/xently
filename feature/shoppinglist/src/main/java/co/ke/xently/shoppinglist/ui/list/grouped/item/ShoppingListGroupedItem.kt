@@ -22,9 +22,9 @@ import co.ke.xently.shoppinglist.ui.list.item.MenuItem
 import co.ke.xently.shoppinglist.ui.list.item.ShoppingListItemCard
 import java.util.*
 
-internal data class Click(
-    val seeAll: (group: Any) -> Unit = {},
-    val item: (ShoppingListItem) -> Unit = {},
+internal data class GroupedShoppingListCardFunction(
+    val onSeeAllClicked: (group: Any) -> Unit = {},
+    val onItemClicked: (ShoppingListItem) -> Unit = {},
 )
 
 internal data class GroupMenuItem(
@@ -41,7 +41,7 @@ internal fun GroupedShoppingListCard(
     showPlaceholder: Boolean = false,
     menuItems: List<MenuItem> = emptyList(),
     groupMenuItems: List<GroupMenuItem> = emptyList(),
-    click: Click = Click(),
+    function: GroupedShoppingListCardFunction = GroupedShoppingListCardFunction(),
 ) {
     val itemsPerCard = 3
     var showDropDownMenu by remember { mutableStateOf(false) }
@@ -111,7 +111,7 @@ internal fun GroupedShoppingListCard(
                 for (item in groupList.shoppingList.take(itemsPerCard)) {
                     ShoppingListItemCard(
                         item = item,
-                        onClick = click.item,
+                        onClick = function.onItemClicked,
                         menuItems = menuItems,
                         showPlaceholder = showPlaceholder,
                         modifier = Modifier.fillMaxWidth(),
@@ -120,7 +120,7 @@ internal fun GroupedShoppingListCard(
             }
             if (numberOfItems > itemsPerCard) {
                 OutlinedButton(
-                    onClick = { click.seeAll.invoke(groupList.group) },
+                    onClick = { function.onSeeAllClicked.invoke(groupList.group) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .shimmerPlaceholder(showPlaceholder)
