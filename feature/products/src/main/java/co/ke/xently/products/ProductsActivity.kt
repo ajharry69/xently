@@ -9,12 +9,14 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.navigation.*
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import co.ke.xently.data.Product
 import co.ke.xently.feature.theme.XentlyTheme
+import co.ke.xently.feature.ui.OptionMenu
 import co.ke.xently.products.ui.detail.ProductDetailScreen
 import co.ke.xently.products.ui.detail.ProductDetailScreenFunction
 import co.ke.xently.products.ui.list.ProductListScreen
@@ -63,7 +65,6 @@ internal fun ProductsNavHost(
                     },
                     onNavigationIconClicked = onNavigationIconClicked,
                 ),
-                modifier = Modifier.fillMaxSize(),
                 menuItems = listOf(
                     MenuItem(R.string.update) {
                         navController.navigate("products/${it.id}") {
@@ -73,6 +74,10 @@ internal fun ProductsNavHost(
                     MenuItem(R.string.delete) {
                         // TODO: Handle delete...
                     },
+                ),
+                modifier = Modifier.fillMaxSize(),
+                optionsMenu = listOf(
+                    OptionMenu(title = stringResource(R.string.refresh)),
                 ),
             )
         }
