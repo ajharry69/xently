@@ -20,6 +20,7 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -30,16 +31,22 @@ import co.ke.xently.data.ShoppingListItem
 import co.ke.xently.feature.LocationService
 import co.ke.xently.feature.theme.XentlyTheme
 import co.ke.xently.feature.ui.NavMenuItem
+import co.ke.xently.feature.ui.OptionMenu
 import co.ke.xently.feature.viewmodels.LocationPermissionViewModel
 import co.ke.xently.shoppinglist.Recommend.From
 import co.ke.xently.shoppinglist.ui.detail.ShoppingListItemScreen
+import co.ke.xently.shoppinglist.ui.detail.ShoppingListItemScreenFunction
 import co.ke.xently.shoppinglist.ui.list.ShoppingListScreen
+import co.ke.xently.shoppinglist.ui.list.ShoppingListScreenFunction
 import co.ke.xently.shoppinglist.ui.list.grouped.GroupedShoppingListScreen
-import co.ke.xently.shoppinglist.ui.list.grouped.item.Click
+import co.ke.xently.shoppinglist.ui.list.grouped.GroupedShoppingListScreenFunction
 import co.ke.xently.shoppinglist.ui.list.grouped.item.GroupMenuItem
+import co.ke.xently.shoppinglist.ui.list.grouped.item.GroupedShoppingListCardFunction
 import co.ke.xently.shoppinglist.ui.list.item.MenuItem
-import co.ke.xently.shoppinglist.ui.list.recommendation.RecommendationCardItemClick
+import co.ke.xently.shoppinglist.ui.list.recommendation.RecommendationCardItemFunction
+import co.ke.xently.shoppinglist.ui.list.recommendation.RecommendationCardItemMenuItem
 import co.ke.xently.shoppinglist.ui.list.recommendation.ShoppingListRecommendationScreen
+import co.ke.xently.shoppinglist.ui.list.recommendation.ShoppingListRecommendationScreenFunction
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -148,6 +155,7 @@ internal fun ShoppingListNavHost(
         )
         composable("shopping-list-grouped") {
             GroupedShoppingListScreen(
+                modifier = Modifier.fillMaxSize(),
                 drawerItems = listOf(
                     NavMenuItem(
                         context = context,
@@ -182,6 +190,9 @@ internal fun ShoppingListNavHost(
                     ),
                 ),
                 menuItems = shoppingListItemMenuItems,
+                optionsMenu = listOf(
+                    OptionMenu(title = stringResource(R.string.refresh)),
+                ),
                 groupMenuItems = listOf(
                     GroupMenuItem(R.string.fsl_group_menu_recommend) {
                         navController.navigate("shopping-list/recommendations/${it}")
@@ -193,29 +204,37 @@ internal fun ShoppingListNavHost(
 
                     },
                 ),
-                click = co.ke.xently.shoppinglist.ui.list.grouped.Click(
-                    add = onAddShoppingListItemClicked,
-                    click = Click(
-                        item = {
+                function = GroupedShoppingListScreenFunction(
+                    onAddFabClicked = onAddShoppingListItemClicked,
+                    function = GroupedShoppingListCardFunction(
+                        onItemClicked = {
                             // TODO: ...
                         },
-                        seeAll = {
+                        onSeeAllClicked = {
                             navController.navigate("shopping-list")
                         },
                     ),
                 ),
-                modifier = Modifier.fillMaxSize(),
             )
         }
         composable("shopping-list") {
             ShoppingListScreen(
                 modifier = Modifier.fillMaxSize(),
                 menuItems = shoppingListItemMenuItems,
-                click = co.ke.xently.shoppinglist.ui.list.Click(
-                    add = onAddShoppingListItemClicked,
-                    navigationIcon = onNavigationIconClicked,
-                    item = {},
-                )
+                function = ShoppingListScreenFunction(
+                    onAddClicked = onAddShoppingListItemClicked,
+                    onNavigationIconClicked = onNavigationIconClicked,
+                    onItemClicked = {},
+                ),
+                optionsMenu = listOf(
+                    OptionMenu(
+                        title = stringResource(R.string.fsl_group_menu_recommend),
+                        onClick = {
+                            // TODO: Rethink implementation...
+                            // onRecommendOptionsMenuClicked(shoppingListResult.getOrNull())
+                        },
+                    ),
+                ),
             )
         }
         composable(
@@ -225,29 +244,29 @@ internal fun ShoppingListNavHost(
             })
         ) {
             ShoppingListRecommendationScreen(
-                click = co.ke.xently.shoppinglist.ui.list.recommendation.Click(
-                    item = {},
-                    navigationIcon = onNavigationIconClicked,
-                    recommendationItemClick = RecommendationCardItemClick(
-                        base = {
+                function = ShoppingListRecommendationScreenFunction(
+                    onItemClicked = {},
+                    onNavigationIconClicked = onNavigationIconClicked,
+                    function = RecommendationCardItemFunction(
+                        onItemClicked = {
                             // TODO: ...
                         },
                     ),
                 ),
                 menuItems = listOf(
-                    co.ke.xently.shoppinglist.ui.list.recommendation.MenuItem(
+                    RecommendationCardItemMenuItem(
                         label = R.string.fsl_recommendation_directions,
                         onClick = {
 
                         },
                     ),
-                    co.ke.xently.shoppinglist.ui.list.recommendation.MenuItem(
+                    RecommendationCardItemMenuItem(
                         label = R.string.fsl_recommendation_hits,
                         onClick = {
 
                         },
                     ),
-                    co.ke.xently.shoppinglist.ui.list.recommendation.MenuItem(
+                    RecommendationCardItemMenuItem(
                         label = R.string.fsl_recommendation_details,
                         onClick = {
 
@@ -270,9 +289,11 @@ internal fun ShoppingListNavHost(
             ),
         ) {
             ShoppingListItemScreen(
-                it.arguments?.getLong("id"),
                 modifier = Modifier.fillMaxSize(),
-                onNavigationIconClicked = onNavigationIconClicked,
+                id = it.arguments?.getLong("id") ?: ShoppingListItem.default().id,
+                function = ShoppingListItemScreenFunction(
+                    navigationIcon = onNavigationIconClicked,
+                ),
             )
         }
     }

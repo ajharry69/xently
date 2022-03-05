@@ -33,51 +33,75 @@ import co.ke.xently.products.shared.*
 import com.google.android.material.datepicker.CalendarConstraints
 import com.google.android.material.datepicker.DateValidatorPointBackward
 
+internal data class ProductDetailScreenFunction(
+    val onNavigationIconClicked: () -> Unit = {},
+    val onShopQueryChanged: (String) -> Unit = {},
+    val onMeasurementUnitQueryChanged: (String) -> Unit = {},
+    val onBrandQueryChanged: (String) -> Unit = {},
+    val onAttributeQueryChanged: (AttributeQuery) -> Unit = {},
+    val onDetailsSubmitted: (Product) -> Unit = {},
+)
+
 @Composable
 internal fun ProductDetailScreen(
-    id: Long?,
-    modifier: Modifier = Modifier,
+    id: Long,
+    modifier: Modifier,
+    function: ProductDetailScreenFunction,
     viewModel: ProductDetailViewModel = hiltViewModel(),
-    onNavigationIconClicked: () -> Unit = {},
 ) {
-    val isDefault by remember(id) {
-        mutableStateOf(id == null || id == Product.default().id)
-    }
-
-    val fetch by rememberUpdatedState { viewModel.get(id!!) }
-    LaunchedEffect(true) {
-        if (!isDefault) fetch()
-    }
-
     val scope = rememberCoroutineScope()
-    val shops by viewModel.shopsResult.collectAsState(scope.coroutineContext)
-    val result by viewModel.result.collectAsState(scope.coroutineContext)
+    val result by viewModel.result.collectAsState(
+        initial = Success(null),
+        context = scope.coroutineContext,
+    )
+    val addResult by viewModel.addResult.collectAsState(
+        initial = Success(null),
+        context = scope.coroutineContext,
+    )
     // TODO: Fix case where searching on either measurement units or shops clears fields
-    val measurementUnits by viewModel.measurementUnitsResult.collectAsState(scope.coroutineContext)
-    val brands by viewModel.brandsResult.collectAsState(scope.coroutineContext)
-    val attributes by viewModel.attributesResult.collectAsState(scope.coroutineContext)
+    val shops by viewModel.shopsResult.collectAsState(
+        initial = emptyList(),
+        context = scope.coroutineContext,
+    )
+    val measurementUnits by viewModel.measurementUnitsResult.collectAsState(
+        initial = emptyList(),
+        context = scope.coroutineContext,
+    )
+    val brands by viewModel.brandsResult.collectAsState(
+        initial = emptyList(),
+        context = scope.coroutineContext,
+    )
+    val attributes by viewModel.attributesResult.collectAsState(
+        initial = emptyList(),
+        context = scope.coroutineContext,
+    )
 
+    LaunchedEffect(id) {
+        viewModel.get(id)
+    }
     // Allow addition of more items if the screen was initially for adding.
-    val permitReAddition = isDefault && result.getOrNull() != null
+    val permitReAddition = id == Product.default().id && addResult.getOrNull() != null
 
     ProductDetailScreen(
-        modifier,
-        if (permitReAddition) {
+        modifier = modifier,
+        result = if (permitReAddition) {
             Success(null)
         } else {
             result
         },
-        permitReAddition,
-        shops,
-        brands,
-        attributes,
-        measurementUnits,
-        onNavigationIconClicked,
-        viewModel::setShopQuery,
-        viewModel::setMeasurementUnitQuery,
-        viewModel::setBrandQuery,
-        viewModel::setAttributeQuery,
-        viewModel::addOrUpdate,
+        addResult = addResult,
+        permitReAddition = permitReAddition,
+        shops = shops,
+        brandSuggestions = brands,
+        attributeSuggestions = attributes,
+        measurementUnits = measurementUnits,
+        function = function.copy(
+            onShopQueryChanged = viewModel::setShopQuery,
+            onMeasurementUnitQueryChanged = viewModel::setMeasurementUnitQuery,
+            onBrandQueryChanged = viewModel::setBrandQuery,
+            onAttributeQueryChanged = viewModel::setAttributeQuery,
+            onDetailsSubmitted = viewModel::addOrUpdate,
+        ),
     )
 }
 
@@ -85,17 +109,13 @@ internal fun ProductDetailScreen(
 private fun ProductDetailScreen(
     modifier: Modifier,
     result: TaskResult<Product?>,
+    addResult: TaskResult<Product?>,
     permitReAddition: Boolean = false,
     shops: List<Shop> = emptyList(),
     brandSuggestions: List<Product.Brand> = emptyList(),
     attributeSuggestions: List<Product.Attribute> = emptyList(),
     measurementUnits: List<MeasurementUnit> = emptyList(),
-    onNavigationIconClicked: () -> Unit = {},
-    onShopQueryChanged: (String) -> Unit = {},
-    onMeasurementUnitQueryChanged: (String) -> Unit = {},
-    onBrandQueryChanged: (String) -> Unit = {},
-    onAttributeQueryChanged: (AttributeQuery) -> Unit = {},
-    onDetailsSubmitted: (Product) -> Unit = {},
+    function: ProductDetailScreenFunction = ProductDetailScreenFunction(),
 ) {
     val product = result.getOrNull() ?: Product.default()
 
@@ -118,19 +138,19 @@ private fun ProductDetailScreen(
     var shopError by remember { mutableStateOf("") }
     var datePurchasedError by remember { mutableStateOf("") }
 
-    if (result is TaskResult.Error) {
-        val exception = result.error as? ProductHttpException
-        shopError = exception.error.shop
-        nameError = exception.error.name
-        unitError = exception.error.unit
-        unitQuantityError = exception.error.unitQuantity
-        unitPriceError = exception.error.unitPrice
-        purchasedQuantityError = exception.error.purchasedQuantity
-        datePurchasedError = exception.error.datePurchased
+    if (addResult is TaskResult.Error) {
+        val exception = addResult.error as? ProductHttpException
+        shopError = exception?.shop?.joinToString("\n") ?: ""
+        nameError = exception?.name?.joinToString("\n") ?: ""
+        unitError = exception?.unit?.joinToString("\n") ?: ""
+        unitQuantityError = exception?.unitQuantity?.joinToString("\n") ?: ""
+        unitPriceError = exception?.unitPrice?.joinToString("\n") ?: ""
+        purchasedQuantityError = exception?.purchasedQuantity?.joinToString("\n") ?: ""
+        datePurchasedError = exception?.datePurchased?.joinToString("\n") ?: ""
 
         if (exception?.hasFieldErrors() != true) {
-            val message = result.errorMessage ?: stringResource(R.string.generic_error_message)
-            LaunchedEffect(result, message) {
+            val message = addResult.errorMessage ?: stringResource(R.string.generic_error_message)
+            LaunchedEffect(addResult, message) {
                 scaffoldState.snackbarHostState.showSnackbar(message)
             }
         }
@@ -142,12 +162,15 @@ private fun ProductDetailScreen(
     }
     val focusManager = LocalFocusManager.current
 
+    val isTaskLoading = arrayOf(result, addResult).any { it is Loading }
     Scaffold(
         scaffoldState = scaffoldState,
         topBar = {
-            ToolbarWithProgressbar(toolbarTitle,
-                onNavigationIconClicked,
-                showProgress = result is Loading)
+            ToolbarWithProgressbar(
+                title = toolbarTitle,
+                showProgress = isTaskLoading,
+                onNavigationIconClicked = function.onNavigationIconClicked,
+            )
         },
     ) { paddingValues ->
         Column(
@@ -169,8 +192,7 @@ private fun ProductDetailScreen(
                 value = shop,
                 isError = isShopError,
                 error = shopError,
-                modifier = VerticalLayoutModifier
-                    .padding(top = 16.dp),
+                modifier = VerticalLayoutModifier.padding(top = VIEW_SPACE),
                 label = stringResource(R.string.fp_product_detail_shop_label),
                 keyboardOptions = KeyboardOptions.Default.copy(
                     imeAction = ImeAction.Next,
@@ -179,7 +201,7 @@ private fun ProductDetailScreen(
                 onValueChange = {
                     shop = it
                     isShopError = false
-                    onShopQueryChanged(it.text)
+                    function.onShopQueryChanged.invoke(it.text)
                 },
                 onOptionSelected = { s ->
                     shop = TextFieldValue(s.toString())
@@ -202,7 +224,7 @@ private fun ProductDetailScreen(
                 error = unitError,
                 clearField = permitReAddition,
                 suggestions = measurementUnits,
-                onQueryChanged = onMeasurementUnitQueryChanged,
+                onQueryChanged = function.onMeasurementUnitQueryChanged,
             )
             Spacer(modifier = Modifier.padding(vertical = 8.dp))
 
@@ -315,14 +337,14 @@ private fun ProductDetailScreen(
             val brands = productBrandsView(
                 clearFields = permitReAddition,
                 suggestions = brandSuggestions,
-                onQueryChanged = onBrandQueryChanged,
+                onQueryChanged = function.onBrandQueryChanged,
             )
             Spacer(modifier = Modifier.padding(vertical = 8.dp))
 
             val attributes = productAttributesView(
                 clearFields = permitReAddition,
                 suggestions = attributeSuggestions,
-                onQueryChanged = onAttributeQueryChanged,
+                onQueryChanged = function.onAttributeQueryChanged,
             )
 
             Spacer(modifier = Modifier.padding(vertical = 8.dp))
@@ -335,22 +357,24 @@ private fun ProductDetailScreen(
                     unitPrice,
                     dateOfPurchase,
                     timeOfPurchase,
-                ).all { it.text.isNotBlank() } && savableShop != Product.default().shopId,
+                ).all { it.text.isNotBlank() } && savableShop != Product.default().shopId && !isTaskLoading,
                 modifier = VerticalLayoutModifier,
                 onClick = {
                     focusManager.clearFocus()
-                    onDetailsSubmitted(product.copy(
-                        shopId = savableShop,
-                        name = name.text.trim(),
-                        unit = unit.text.trim(),
-                        unitQuantity = unitQuantity.text.toFloat(),
-                        purchasedQuantity = purchasedQuantity.text.toFloat(),
-                        unitPrice = unitPrice.text.toFloat(),
-                        datePurchased = DEFAULT_LOCAL_DATE_TIME_FORMAT.parse("${dateOfPurchase.text} ${timeOfPurchase.text}")
-                            ?: error("Invalid date and/or time format"),
-                        brands = brands.filterNot { it.isDefault },
-                        attributes = attributes.filterNot { it.name.isBlank() or it.value.isBlank() },
-                    ))
+                    function.onDetailsSubmitted.invoke(
+                        product.copy(
+                            shopId = savableShop,
+                            name = name.text.trim(),
+                            unit = unit.text.trim(),
+                            unitQuantity = unitQuantity.text.toFloat(),
+                            purchasedQuantity = purchasedQuantity.text.toFloat(),
+                            unitPrice = unitPrice.text.toFloat(),
+                            datePurchased = DEFAULT_LOCAL_DATE_TIME_FORMAT.parse("${dateOfPurchase.text} ${timeOfPurchase.text}")
+                                ?: error("Invalid date and/or time format"),
+                            brands = brands.filterNot { it.isDefault },
+                            attributes = attributes.filterNot { it.name.isBlank() or it.value.isBlank() },
+                        ),
+                    )
                 }
             ) { Text(toolbarTitle.uppercase()) }
         }
@@ -364,6 +388,7 @@ fun ProductDetailPreview() {
         ProductDetailScreen(
             modifier = Modifier.fillMaxSize(),
             result = Success(Product.default()),
+            addResult = Success(Product.default()),
         )
     }
 }
@@ -372,6 +397,10 @@ fun ProductDetailPreview() {
 @Composable
 fun ProductDetailOnNullPreview() {
     XentlyTheme {
-        ProductDetailScreen(modifier = Modifier.fillMaxSize(), result = Success(null))
+        ProductDetailScreen(
+            result = Success(null),
+            addResult = Success(null),
+            modifier = Modifier.fillMaxSize(),
+        )
     }
 }

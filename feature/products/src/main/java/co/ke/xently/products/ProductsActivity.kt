@@ -9,15 +9,18 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.navigation.*
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import co.ke.xently.data.Product
 import co.ke.xently.feature.theme.XentlyTheme
+import co.ke.xently.feature.ui.OptionMenu
 import co.ke.xently.products.ui.detail.ProductDetailScreen
+import co.ke.xently.products.ui.detail.ProductDetailScreenFunction
 import co.ke.xently.products.ui.list.ProductListScreen
-import co.ke.xently.products.ui.list.ProductListScreenClick
+import co.ke.xently.products.ui.list.ProductListScreenFunction
 import co.ke.xently.products.ui.list.item.MenuItem
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -54,15 +57,14 @@ internal fun ProductsNavHost(
         val productList: @Composable (NavBackStackEntry) -> Unit = { backStackEntry ->
             ProductListScreen(
                 shopId = backStackEntry.arguments?.getLong("shopId"),
-                click = ProductListScreenClick(
-                    add = {
+                function = ProductListScreenFunction(
+                    onAddFabClicked = {
                         navController.navigate("products/${Product.default().id}") {
                             launchSingleTop = true
                         }
                     },
-                    navigationIcon = onNavigationIconClicked,
+                    onNavigationIconClicked = onNavigationIconClicked,
                 ),
-                modifier = Modifier.fillMaxSize(),
                 menuItems = listOf(
                     MenuItem(R.string.update) {
                         navController.navigate("products/${it.id}") {
@@ -72,6 +74,10 @@ internal fun ProductsNavHost(
                     MenuItem(R.string.delete) {
                         // TODO: Handle delete...
                     },
+                ),
+                modifier = Modifier.fillMaxSize(),
+                optionsMenu = listOf(
+                    OptionMenu(title = stringResource(R.string.refresh)),
                 ),
             )
         }
@@ -99,9 +105,11 @@ internal fun ProductsNavHost(
             ),
         ) {
             ProductDetailScreen(
-                id = it.arguments?.getLong("id"),
                 modifier = Modifier.fillMaxSize(),
-                onNavigationIconClicked = onNavigationIconClicked,
+                id = it.arguments?.getLong("id") ?: Product.default().id,
+                function = ProductDetailScreenFunction(
+                    onNavigationIconClicked = onNavigationIconClicked,
+                ),
             )
         }
     }

@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 
 @HiltViewModel
+@OptIn(ExperimentalCoroutinesApi::class)
 internal class ProductListViewModel @Inject constructor(
     private val repository: IProductsRepository,
 ) : AbstractPagedListViewModel() {
@@ -20,7 +21,6 @@ internal class ProductListViewModel @Inject constructor(
         _shopId.value = id
     }
 
-    @OptIn(ExperimentalCoroutinesApi::class)
     val shopName = shopId.flatMapLatest {
         if (it != null) {
             repository.getShopName(it)

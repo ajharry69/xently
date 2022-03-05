@@ -2,42 +2,51 @@ package co.ke.xently.shoppinglist.ui.list
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.*
+import androidx.compose.material.FloatingActionButton
+import androidx.compose.material.Icon
+import androidx.compose.material.Scaffold
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.runtime.*
+import androidx.compose.material.rememberScaffoldState
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import co.ke.xently.data.ShoppingListItem
-import co.ke.xently.feature.ui.PagedDataScreen
-import co.ke.xently.feature.ui.ToolbarWithProgressbar
-import co.ke.xently.feature.ui.stringRes
+import co.ke.xently.feature.ui.*
 import co.ke.xently.shoppinglist.R
 import co.ke.xently.shoppinglist.ui.list.item.MenuItem
 import co.ke.xently.shoppinglist.ui.list.item.ShoppingListItemCard
 
-internal data class Click(
-    val add: () -> Unit = {},
-    val navigationIcon: () -> Unit = {},
-    val item: (ShoppingListItem) -> Unit = {},
+internal data class ShoppingListScreenFunction(
+    val onAddClicked: () -> Unit = {},
+    val onNavigationIconClicked: () -> Unit = {},
+    val onItemClicked: (ShoppingListItem) -> Unit = {},
 )
 
 @Composable
 internal fun ShoppingListScreen(
+    modifier: Modifier,
     menuItems: List<MenuItem>,
-    click: Click,
-    modifier: Modifier = Modifier,
+    function: ShoppingListScreenFunction,
+    optionsMenu: List<OptionMenu>,
     viewModel: ShoppingListViewModel = hiltViewModel(),
 ) {
+    val items = viewModel.pagingData.collectAsLazyPagingItems()
     ShoppingListScreen(
-        click = click,
+        items = items,
+        function = function,
         modifier = modifier,
         menuItems = menuItems,
-        items = viewModel.pagingData.collectAsLazyPagingItems(),
+        optionsMenu = optionsMenu.map { menu ->
+            if (menu.title == stringResource(R.string.refresh)) {
+                menu.copy(onClick = items::refresh)
+            } else {
+                menu
+            }
+        },
     )
 }
 
@@ -46,39 +55,25 @@ private fun ShoppingListScreen(
     modifier: Modifier,
     items: LazyPagingItems<ShoppingListItem>,
     menuItems: List<MenuItem>,
-    click: Click,
+    optionsMenu: List<OptionMenu>,
+    function: ShoppingListScreenFunction,
 ) {
     val scaffoldState = rememberScaffoldState()
-    var showOptionsMenu by remember { mutableStateOf(false) }
     Scaffold(
         scaffoldState = scaffoldState,
         topBar = {
             ToolbarWithProgressbar(
                 title = stringResource(R.string.fsl_toolbar_title),
-                onNavigationIconClicked = click.navigationIcon,
+                onNavigationIconClicked = function.onNavigationIconClicked,
             ) {
-                IconButton(onClick = { showOptionsMenu = !showOptionsMenu }) {
-                    Icon(
-                        Icons.Default.MoreVert,
-                        contentDescription = "More shopping list screen options menu",
-                    )
-                }
-                DropdownMenu(
-                    expanded = showOptionsMenu,
-                    onDismissRequest = { showOptionsMenu = false },
-                ) {
-                    DropdownMenuItem(onClick = {
-                        showOptionsMenu = false
-                        // TODO: Rethink implementation...
-                        // onRecommendOptionsMenuClicked(shoppingListResult.getOrNull())
-                    }) {
-                        Text(stringResource(R.string.fsl_group_menu_recommend))
-                    }
-                }
+                OverflowOptionMenu(
+                    menu = optionsMenu,
+                    contentDescription = stringResource(R.string.fsl_shopping_list_overflow_menu_description),
+                )
             }
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = click.add) {
+            FloatingActionButton(onClick = function.onAddClicked) {
                 Icon(Icons.Default.Add,
                     stringRes(R.string.fsl_detail_screen_toolbar_title, R.string.add))
             }
@@ -94,7 +89,7 @@ private fun ShoppingListScreen(
             ShoppingListItemCard(
                 item = item,
                 menuItems = menuItems,
-                onClick = click.item,
+                onClick = function.onItemClicked,
                 modifier = Modifier.fillMaxWidth(),
             )
         }

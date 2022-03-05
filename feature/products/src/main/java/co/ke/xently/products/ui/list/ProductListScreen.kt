@@ -8,47 +8,53 @@ import androidx.compose.material.Scaffold
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.rememberScaffoldState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import co.ke.xently.data.Product
-import co.ke.xently.feature.ui.PagedDataScreen
-import co.ke.xently.feature.ui.ToolbarWithProgressbar
-import co.ke.xently.feature.ui.stringRes
+import co.ke.xently.feature.ui.*
 import co.ke.xently.products.R
 import co.ke.xently.products.ui.list.item.MenuItem
 import co.ke.xently.products.ui.list.item.ProductListItem
 
-internal data class ProductListScreenClick(
-    val add: () -> Unit = {},
-    val navigationIcon: () -> Unit = {},
+internal data class ProductListScreenFunction(
+    val onAddFabClicked: () -> Unit = {},
+    val onNavigationIconClicked: () -> Unit = {},
 )
 
 @Composable
 internal fun ProductListScreen(
     shopId: Long?,
-    click: ProductListScreenClick,
+    modifier: Modifier,
+    function: ProductListScreenFunction,
     menuItems: List<MenuItem>,
-    modifier: Modifier = Modifier,
+    optionsMenu: List<OptionMenu>,
     viewModel: ProductListViewModel = hiltViewModel(),
 ) {
-    val items = viewModel.pagingData.collectAsLazyPagingItems()
-    val shopName by viewModel.shopName.collectAsState()
+    val scope = rememberCoroutineScope()
+    val shopName by viewModel.shopName.collectAsState(
+        context = scope.coroutineContext,
+    )
     LaunchedEffect(shopId) {
         viewModel.setShopId(shopId)
     }
+    val items = viewModel.pagingData.collectAsLazyPagingItems()
     ProductListScreen(
+        items = items,
         modifier = modifier,
         shopName = shopName,
-        click = click,
-        items = items,
+        function = function,
         menuItems = menuItems,
+        optionsMenu = optionsMenu.map { menu ->
+            if (menu.title == stringResource(R.string.refresh)) {
+                menu.copy(onClick = items::refresh)
+            } else {
+                menu
+            }
+        },
     )
 }
 
@@ -56,9 +62,10 @@ internal fun ProductListScreen(
 private fun ProductListScreen(
     modifier: Modifier,
     shopName: String?,
-    click: ProductListScreenClick,
+    function: ProductListScreenFunction,
     items: LazyPagingItems<Product>,
     menuItems: List<MenuItem>,
+    optionsMenu: List<OptionMenu>,
 ) {
     val scaffoldState = rememberScaffoldState()
     Scaffold(
@@ -66,12 +73,17 @@ private fun ProductListScreen(
         topBar = {
             ToolbarWithProgressbar(
                 title = stringResource(R.string.title_activity_products),
-                onNavigationIconClicked = click.navigationIcon,
+                onNavigationIconClicked = function.onNavigationIconClicked,
                 subTitle = shopName,
-            )
+            ) {
+                OverflowOptionMenu(
+                    menu = optionsMenu,
+                    contentDescription = stringResource(R.string.fp_product_list_overflow_menu_description),
+                )
+            }
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = click.add) {
+            FloatingActionButton(onClick = function.onAddFabClicked) {
                 Icon(Icons.Default.Add,
                     stringRes(R.string.fp_add_product_toolbar_title, R.string.add))
             }

@@ -5,42 +5,55 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Scaffold
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import co.ke.xently.data.Address
+import co.ke.xently.feature.ui.OptionMenu
+import co.ke.xently.feature.ui.OverflowOptionMenu
 import co.ke.xently.feature.ui.PagedDataScreen
 import co.ke.xently.feature.ui.ToolbarWithProgressbar
 import co.ke.xently.shops.R
 import co.ke.xently.shops.ui.list.addresses.item.AddressListItem
+import co.ke.xently.shops.ui.list.addresses.item.AddressListItemFunction
 
-internal data class Click(
-    val navigationIcon: () -> Unit = {},
-    val click: co.ke.xently.shops.ui.list.addresses.item.Click = co.ke.xently.shops.ui.list.addresses.item.Click(),
+internal data class AddressListScreenFunction(
+    val onNavigationIcon: () -> Unit = {},
+    val function: AddressListItemFunction = AddressListItemFunction(),
 )
 
 @Composable
 internal fun AddressListScreen(
     shopId: Long,
-    click: Click,
     modifier: Modifier,
+    optionsMenu: List<OptionMenu>,
+    function: AddressListScreenFunction,
     viewModel: AddressListViewModel = hiltViewModel(),
 ) {
-    LaunchedEffect(shopId) {
-        viewModel.setShopId(shopId)
-    }
+    viewModel.setShopId(shopId)
 
-    val shopName by viewModel.shopName.collectAsState()
+    val scope = rememberCoroutineScope()
+    val shopName by viewModel.shopName.collectAsState(
+        context = scope.coroutineContext,
+    )
+    val items = viewModel.pagingData.collectAsLazyPagingItems()
     AddressListScreen(
-        click = click,
+        items = items,
+        function = function,
         shopName = shopName,
         modifier = modifier,
-        items = viewModel.pagingData.collectAsLazyPagingItems(),
+        optionsMenu = optionsMenu.map { menu ->
+            if (menu.title == stringResource(R.string.refresh)) {
+                menu.copy(onClick = items::refresh)
+            } else {
+                menu
+            }
+        },
     )
 }
 
@@ -49,17 +62,23 @@ private fun AddressListScreen(
     modifier: Modifier = Modifier,
     items: LazyPagingItems<Address>,
     shopName: String?,
-    click: Click,
+    function: AddressListScreenFunction,
+    optionsMenu: List<OptionMenu>,
 ) {
     val scaffoldState = rememberScaffoldState()
     Scaffold(
         scaffoldState = scaffoldState,
         topBar = {
             ToolbarWithProgressbar(
-                title = stringResource(R.string.fs_toolbar_title_addresses),
-                onNavigationIconClicked = click.navigationIcon,
                 subTitle = shopName,
-            )
+                onNavigationIconClicked = function.onNavigationIcon,
+                title = stringResource(R.string.fs_toolbar_title_addresses),
+            ) {
+                OverflowOptionMenu(
+                    menu = optionsMenu,
+                    contentDescription = stringResource(R.string.fs_address_list_overflow_menu_description),
+                )
+            }
         },
     ) {
         PagedDataScreen(
@@ -70,7 +89,7 @@ private fun AddressListScreen(
         ) { address ->
             AddressListItem(
                 address = address,
-                click = click.click,
+                function = function.function,
                 modifier = Modifier.fillMaxWidth(),
             )
         }

@@ -15,39 +15,48 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import co.ke.xently.data.Shop
-import co.ke.xently.feature.ui.PagedDataScreen
-import co.ke.xently.feature.ui.ToolbarWithProgressbar
-import co.ke.xently.feature.ui.stringRes
+import co.ke.xently.feature.ui.*
 import co.ke.xently.shops.R
 import co.ke.xently.shops.ui.list.item.MenuItem
 import co.ke.xently.shops.ui.list.item.ShopListItem
+import co.ke.xently.shops.ui.list.item.ShopListItemFunction
 
-internal data class Click(
-    val add: () -> Unit = {},
-    val navigationIcon: () -> Unit = {},
-    val click: co.ke.xently.shops.ui.list.item.Click = co.ke.xently.shops.ui.list.item.Click(),
+internal data class ShopListScreenFunction(
+    val onAddFabClicked: () -> Unit = {},
+    val onNavigationIcon: () -> Unit = {},
+    val function: ShopListItemFunction = ShopListItemFunction(),
 )
 
 @Composable
 internal fun ShopListScreen(
-    click: Click,
     modifier: Modifier,
+    optionsMenu: List<OptionMenu>,
+    function: ShopListScreenFunction,
     menuItems: @Composable (Shop) -> List<MenuItem>,
     viewModel: ShopListViewModel = hiltViewModel(),
 ) {
+    val items = viewModel.pagingData.collectAsLazyPagingItems()
     ShopListScreen(
-        click = click,
+        items = items,
+        function = function,
         modifier = modifier,
         menuItems = menuItems,
-        items = viewModel.pagingData.collectAsLazyPagingItems(),
+        optionsMenu = optionsMenu.map { menu ->
+            if (menu.title == stringResource(R.string.refresh)) {
+                menu.copy(onClick = items::refresh)
+            } else {
+                menu
+            }
+        },
     )
 }
 
 @Composable
 private fun ShopListScreen(
-    click: Click,
+    function: ShopListScreenFunction,
     modifier: Modifier,
     items: LazyPagingItems<Shop>,
+    optionsMenu: List<OptionMenu>,
     menuItems: @Composable (Shop) -> List<MenuItem>,
 ) {
     val scaffoldState = rememberScaffoldState()
@@ -55,11 +64,16 @@ private fun ShopListScreen(
         topBar = {
             ToolbarWithProgressbar(
                 title = stringResource(R.string.title_activity_shops),
-                onNavigationIconClicked = click.navigationIcon,
-            )
+                onNavigationIconClicked = function.onNavigationIcon,
+            ) {
+                OverflowOptionMenu(
+                    menu = optionsMenu,
+                    contentDescription = stringResource(R.string.fs_shop_list_overflow_menu_description),
+                )
+            }
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = click.add) {
+            FloatingActionButton(onClick = function.onAddFabClicked) {
                 Icon(Icons.Default.Add, stringRes(R.string.fs_add_shop_toolbar_title, R.string.add))
             }
         },
@@ -73,7 +87,7 @@ private fun ShopListScreen(
             ShopListItem(
                 shop = shop,
                 modifier = Modifier.fillMaxWidth(),
-                click = click.click,
+                function = function.function,
                 menuItems = menuItems,
             )
         }

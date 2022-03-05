@@ -31,49 +31,46 @@ import co.ke.xently.feature.utils.MAP_HEIGHT
 import co.ke.xently.shops.R
 import com.google.android.libraries.maps.model.LatLng
 import com.google.android.libraries.maps.model.MarkerOptions
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.launch
+
+internal data class ShopDetailScreenFunction(
+    val onAddShopClicked: (Shop) -> Unit = {},
+    val onNavigationIconClicked: () -> Unit = {},
+    val onLocationPermissionChanged: (Boolean) -> Unit = {},
+)
 
 @Composable
 internal fun ShopDetailScreen(
-    id: Long?,
-    modifier: Modifier = Modifier,
+    id: Long,
+    modifier: Modifier,
+    function: ShopDetailScreenFunction,
     viewModel: ShopDetailViewModel = hiltViewModel(),
-    onNavigationIconClicked: () -> Unit = {},
 ) {
-    val isDefault by remember(id) {
-        mutableStateOf(id == null || id == Shop.default().id)
-    }
-    var result by remember {
-        mutableStateOf<TaskResult<Shop?>>(Success(null))
-    }
-    LaunchedEffect(id) {
-        if (!isDefault) {
-            viewModel.get(id!!).collectLatest {
-                result = it
-            }
-        }
-    }
-    // Allow addition of more items if the screen was initially for adding.
-    val permitReAddition = isDefault && result.getOrNull() != null
     val scope = rememberCoroutineScope()
+    val result by viewModel.result.collectAsState(
+        initial = Success(null),
+        context = scope.coroutineContext,
+    )
+    val addResult by viewModel.addResult.collectAsState(
+        initial = Success(null),
+        context = scope.coroutineContext,
+    )
+    LaunchedEffect(id) {
+        viewModel.get(id)
+    }
+    val permitReAddition = id == Shop.default().id && addResult.getOrNull() != null
     ShopDetailScreen(
-        modifier,
-        if (permitReAddition) {
+        modifier = modifier,
+        result = if (permitReAddition) {
             Success(null)
         } else {
             result
         },
-        permitReAddition,
-        onNavigationIconClicked,
-        viewModel::setLocationPermissionGranted,
-        onAddShopClicked = {
-            scope.launch {
-                viewModel.addOrUpdate(it).collectLatest {
-                    result = it
-                }
-            }
-        },
+        addResult = addResult,
+        permitReAddition = permitReAddition,
+        function = function.copy(
+            onAddShopClicked = viewModel::addOrUpdate,
+            onLocationPermissionChanged = viewModel::setLocationPermissionGranted,
+        ),
     )
 }
 
@@ -81,30 +78,34 @@ internal fun ShopDetailScreen(
 private fun ShopDetailScreen(
     modifier: Modifier,
     result: TaskResult<Shop?>,
+    addResult: TaskResult<Shop?>,
     permitReAddition: Boolean = false,
-    onNavigationIconClicked: () -> Unit = {},
-    onLocationPermissionChanged: (Boolean) -> Unit = {},
-    onAddShopClicked: (Shop) -> Unit = {},
+    function: ShopDetailScreenFunction = ShopDetailScreenFunction(),
 ) {
     val shop = result.getOrNull() ?: Shop.default()
     val toolbarTitle = stringRes(
         R.string.fs_add_shop_toolbar_title,
-        if (shop.isDefault) R.string.add else R.string.update,
+        if (shop.isDefault) {
+            R.string.add
+        } else {
+            R.string.update
+        },
     )
     val scaffoldState = rememberScaffoldState()
     var nameError by remember { mutableStateOf("") }
     var taxPinError by remember { mutableStateOf("") }
     var addressesError by remember { mutableStateOf("") }
 
-    if (result is TaskResult.Error) {
-        val exception = result.error as? ShopHttpException
-        nameError = exception.error.name
-        taxPinError = exception.error.taxPin
-        addressesError = exception.error.addresses
+    if (addResult is TaskResult.Error) {
+        val exception = addResult.error as? ShopHttpException
+        nameError = exception?.name?.joinToString("\n") ?: ""
+        taxPinError = exception?.taxPin?.joinToString("\n") ?: ""
+        addressesError = exception?.addresses?.joinToString("\n") ?: ""
 
         if (exception?.hasFieldErrors() != true) {
-            val errorMessage = result.errorMessage ?: stringResource(R.string.generic_error_message)
-            LaunchedEffect(shop.id, result, errorMessage) {
+            val errorMessage =
+                addResult.errorMessage ?: stringResource(R.string.generic_error_message)
+            LaunchedEffect(shop.id, addResult, errorMessage) {
                 scaffoldState.snackbarHostState.showSnackbar(errorMessage)
             }
         }
@@ -141,7 +142,7 @@ private fun ShopDetailScreen(
                             )
                         }
                     },
-                    onLocationPermissionChanged = onLocationPermissionChanged,
+                    onLocationPermissionChanged = function.onLocationPermissionChanged,
                 ) {
                     setOnMapClickListener {
                         val address = Address(location = DEFAULT_LOCATION.apply {
@@ -188,7 +189,7 @@ private fun ShopDetailScreen(
                             modifier = Modifier
                                 .fillMaxHeight()
                                 .width(68.dp),
-                            onClick = onNavigationIconClicked,
+                            onClick = function.onNavigationIconClicked,
                         ) {
                             Icon(Icons.Default.ArrowBack, stringResource(R.string.move_back))
                         }
@@ -199,7 +200,8 @@ private fun ShopDetailScreen(
         }
     ) { paddingValues ->
         Column(modifier = modifier.padding(paddingValues)) {
-            if (result is TaskResult.Loading) {
+            val isTaskLoading = arrayOf(result, addResult).any { it is TaskResult.Loading }
+            if (isTaskLoading) {
                 LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
             }
             Column(
@@ -208,7 +210,7 @@ private fun ShopDetailScreen(
                     .verticalScroll(rememberScrollState()),
             ) {
                 var name by remember(shop.id, shop.name, permitReAddition) {
-                    mutableStateOf(TextFieldValue(shop.name))
+                    mutableStateOf(TextFieldValue(if (!shop.isDefault) shop.name else ""))
                 }
                 var isNameError by remember {
                     mutableStateOf(nameError.isNotBlank())
@@ -221,7 +223,7 @@ private fun ShopDetailScreen(
                         name = it
                         isNameError = false
                     },
-                    modifier = VerticalLayoutModifier.padding(top = 16.dp),
+                    modifier = VerticalLayoutModifier.padding(top = VIEW_SPACE),
                     label = stringResource(R.string.fs_shop_item_detail_name_label),
                     keyboardOptions = KeyboardOptions.Default.copy(
                         imeAction = ImeAction.Next,
@@ -231,7 +233,7 @@ private fun ShopDetailScreen(
                 )
                 Spacer(modifier = Modifier.padding(vertical = 8.dp))
                 var taxPin by remember(shop.id, shop.taxPin, permitReAddition) {
-                    mutableStateOf(TextFieldValue(shop.taxPin))
+                    mutableStateOf(TextFieldValue(if (!shop.isDefault) shop.taxPin else ""))
                 }
                 var isTaxPinError by remember {
                     mutableStateOf(taxPinError.isNotBlank())
@@ -282,15 +284,17 @@ private fun ShopDetailScreen(
                     enabled = arrayOf(
                         name,
                         taxPin,
-                    ).all { it.text.isNotBlank() } && result !is TaskResult.Loading,
+                    ).all { it.text.isNotBlank() } && !isTaskLoading,
                     modifier = VerticalLayoutModifier,
                     onClick = {
                         focusManager.clearFocus()
-                        onAddShopClicked(shop.copy(
-                            name = name.text.trim(),
-                            taxPin = taxPin.text.trim(),
-                            addresses = addresses,
-                        ))
+                        function.onAddShopClicked.invoke(
+                            shop.copy(
+                                name = name.text.trim(),
+                                taxPin = taxPin.text.trim(),
+                                addresses = addresses,
+                            ),
+                        )
                     }
                 ) {
                     Text(toolbarTitle.uppercase())
@@ -307,6 +311,7 @@ fun ShopDetailPreview() {
         ShopDetailScreen(
             modifier = Modifier.fillMaxSize(),
             result = Success(Shop(name = "Shop #1000", taxPin = "P000111222B")),
+            addResult = Success(Shop(name = "Shop #1000", taxPin = "P000111222B")),
         )
     }
 }
@@ -315,6 +320,10 @@ fun ShopDetailPreview() {
 @Composable
 fun ShopDetailOnNullPreview() {
     XentlyTheme {
-        ShopDetailScreen(modifier = Modifier.fillMaxSize(), result = Success(null))
+        ShopDetailScreen(
+            result = Success(null),
+            addResult = Success(null),
+            modifier = Modifier.fillMaxSize(),
+        )
     }
 }
