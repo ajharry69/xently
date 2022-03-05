@@ -16,15 +16,15 @@ import co.ke.xently.feature.ui.ListItemSurface
 import co.ke.xently.feature.ui.NEGLIGIBLE_SPACE
 import co.ke.xently.feature.ui.shimmerPlaceholder
 
-internal data class Click(val base: (Address) -> Unit = {})
+internal data class AddressListItemFunction(val onItemClick: (Address) -> Unit = {})
 
 @Composable
 internal fun AddressListItem(
     address: Address,
     modifier: Modifier = Modifier,
-    click: Click = Click(),
+    function: AddressListItemFunction = AddressListItemFunction(),
 ) {
-    ListItemSurface(modifier = modifier, onClick = { click.base.invoke(address) }) {
+    ListItemSurface(modifier = modifier, onClick = { function.onItemClick.invoke(address) }) {
         Column(
             modifier = Modifier.weight(1f),
             verticalArrangement = Arrangement.spacedBy(NEGLIGIBLE_SPACE),

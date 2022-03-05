@@ -34,12 +34,18 @@ import com.google.android.libraries.maps.model.MarkerOptions
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
+internal data class ShopDetailScreenFunction(
+    val onNavigationIconClicked: () -> Unit = {},
+    val onLocationPermissionChanged: (Boolean) -> Unit = {},
+    val onAddShopClicked: (Shop) -> Unit = {},
+)
+
 @Composable
 internal fun ShopDetailScreen(
     id: Long?,
-    modifier: Modifier = Modifier,
+    modifier: Modifier,
+    function: ShopDetailScreenFunction,
     viewModel: ShopDetailViewModel = hiltViewModel(),
-    onNavigationIconClicked: () -> Unit = {},
 ) {
     val isDefault by remember(id) {
         mutableStateOf(id == null || id == Shop.default().id)
@@ -58,22 +64,23 @@ internal fun ShopDetailScreen(
     val permitReAddition = isDefault && result.getOrNull() != null
     val scope = rememberCoroutineScope()
     ShopDetailScreen(
-        modifier,
-        if (permitReAddition) {
+        modifier = modifier,
+        result = if (permitReAddition) {
             Success(null)
         } else {
             result
         },
-        permitReAddition,
-        onNavigationIconClicked,
-        viewModel::setLocationPermissionGranted,
-        onAddShopClicked = {
-            scope.launch {
-                viewModel.addOrUpdate(it).collectLatest {
-                    result = it
+        permitReAddition = permitReAddition,
+        function = function.copy(
+            onLocationPermissionChanged = viewModel::setLocationPermissionGranted,
+            onAddShopClicked = {
+                scope.launch {
+                    viewModel.addOrUpdate(it).collectLatest {
+                        result = it
+                    }
                 }
-            }
-        },
+            },
+        ),
     )
 }
 
@@ -82,9 +89,7 @@ private fun ShopDetailScreen(
     modifier: Modifier,
     result: TaskResult<Shop?>,
     permitReAddition: Boolean = false,
-    onNavigationIconClicked: () -> Unit = {},
-    onLocationPermissionChanged: (Boolean) -> Unit = {},
-    onAddShopClicked: (Shop) -> Unit = {},
+    function: ShopDetailScreenFunction = ShopDetailScreenFunction(),
 ) {
     val shop = result.getOrNull() ?: Shop.default()
     val toolbarTitle = stringRes(
@@ -141,7 +146,7 @@ private fun ShopDetailScreen(
                             )
                         }
                     },
-                    onLocationPermissionChanged = onLocationPermissionChanged,
+                    onLocationPermissionChanged = function.onLocationPermissionChanged,
                 ) {
                     setOnMapClickListener {
                         val address = Address(location = DEFAULT_LOCATION.apply {
@@ -188,7 +193,7 @@ private fun ShopDetailScreen(
                             modifier = Modifier
                                 .fillMaxHeight()
                                 .width(68.dp),
-                            onClick = onNavigationIconClicked,
+                            onClick = function.onNavigationIconClicked,
                         ) {
                             Icon(Icons.Default.ArrowBack, stringResource(R.string.move_back))
                         }
@@ -221,7 +226,7 @@ private fun ShopDetailScreen(
                         name = it
                         isNameError = false
                     },
-                    modifier = VerticalLayoutModifier.padding(top = 16.dp),
+                    modifier = VerticalLayoutModifier.padding(top = VIEW_SPACE),
                     label = stringResource(R.string.fs_shop_item_detail_name_label),
                     keyboardOptions = KeyboardOptions.Default.copy(
                         imeAction = ImeAction.Next,
@@ -286,11 +291,13 @@ private fun ShopDetailScreen(
                     modifier = VerticalLayoutModifier,
                     onClick = {
                         focusManager.clearFocus()
-                        onAddShopClicked(shop.copy(
-                            name = name.text.trim(),
-                            taxPin = taxPin.text.trim(),
-                            addresses = addresses,
-                        ))
+                        function.onAddShopClicked.invoke(
+                            shop.copy(
+                                name = name.text.trim(),
+                                taxPin = taxPin.text.trim(),
+                                addresses = addresses,
+                            ),
+                        )
                     }
                 ) {
                     Text(toolbarTitle.uppercase())

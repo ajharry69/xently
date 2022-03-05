@@ -17,7 +17,7 @@ import co.ke.xently.feature.ui.shimmerPlaceholder
 import co.ke.xently.shops.R
 import kotlin.random.Random
 
-internal data class Click(val base: (Shop) -> Unit = {})
+internal data class ShopListItemFunction(val onItemClicked: (Shop) -> Unit = {})
 
 internal data class MenuItem(val label: String, val onClick: (Shop) -> Unit = {})
 
@@ -26,11 +26,11 @@ internal fun ShopListItem(
     shop: Shop,
     modifier: Modifier = Modifier,
     showPopupMenu: Boolean = false,
-    click: Click = Click(),
+    function: ShopListItemFunction = ShopListItemFunction(),
     menuItems: @Composable (Shop) -> List<MenuItem> = { emptyList() },
 ) {
     var showDropMenu by remember { mutableStateOf(showPopupMenu) }
-    ListItemSurface(modifier = modifier, onClick = { click.base.invoke(shop) }) {
+    ListItemSurface(modifier = modifier, onClick = { function.onItemClicked.invoke(shop) }) {
         Column(
             modifier = Modifier.weight(1f),
             verticalArrangement = Arrangement.spacedBy(NEGLIGIBLE_SPACE),

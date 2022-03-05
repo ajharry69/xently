@@ -33,12 +33,21 @@ import co.ke.xently.products.shared.*
 import com.google.android.material.datepicker.CalendarConstraints
 import com.google.android.material.datepicker.DateValidatorPointBackward
 
+internal data class ProductDetailScreenFunction(
+    val onNavigationIconClicked: () -> Unit = {},
+    val onShopQueryChanged: (String) -> Unit = {},
+    val onMeasurementUnitQueryChanged: (String) -> Unit = {},
+    val onBrandQueryChanged: (String) -> Unit = {},
+    val onAttributeQueryChanged: (AttributeQuery) -> Unit = {},
+    val onDetailsSubmitted: (Product) -> Unit = {},
+)
+
 @Composable
 internal fun ProductDetailScreen(
     id: Long?,
-    modifier: Modifier = Modifier,
+    modifier: Modifier,
+    function: ProductDetailScreenFunction,
     viewModel: ProductDetailViewModel = hiltViewModel(),
-    onNavigationIconClicked: () -> Unit = {},
 ) {
     val isDefault by remember(id) {
         mutableStateOf(id == null || id == Product.default().id)
@@ -61,23 +70,24 @@ internal fun ProductDetailScreen(
     val permitReAddition = isDefault && result.getOrNull() != null
 
     ProductDetailScreen(
-        modifier,
-        if (permitReAddition) {
+        modifier = modifier,
+        result = if (permitReAddition) {
             Success(null)
         } else {
             result
         },
-        permitReAddition,
-        shops,
-        brands,
-        attributes,
-        measurementUnits,
-        onNavigationIconClicked,
-        viewModel::setShopQuery,
-        viewModel::setMeasurementUnitQuery,
-        viewModel::setBrandQuery,
-        viewModel::setAttributeQuery,
-        viewModel::addOrUpdate,
+        permitReAddition = permitReAddition,
+        shops = shops,
+        brandSuggestions = brands,
+        attributeSuggestions = attributes,
+        measurementUnits = measurementUnits,
+        function = function.copy(
+            onShopQueryChanged = viewModel::setShopQuery,
+            onMeasurementUnitQueryChanged = viewModel::setMeasurementUnitQuery,
+            onBrandQueryChanged = viewModel::setBrandQuery,
+            onAttributeQueryChanged = viewModel::setAttributeQuery,
+            onDetailsSubmitted = viewModel::addOrUpdate,
+        ),
     )
 }
 
@@ -90,12 +100,7 @@ private fun ProductDetailScreen(
     brandSuggestions: List<Product.Brand> = emptyList(),
     attributeSuggestions: List<Product.Attribute> = emptyList(),
     measurementUnits: List<MeasurementUnit> = emptyList(),
-    onNavigationIconClicked: () -> Unit = {},
-    onShopQueryChanged: (String) -> Unit = {},
-    onMeasurementUnitQueryChanged: (String) -> Unit = {},
-    onBrandQueryChanged: (String) -> Unit = {},
-    onAttributeQueryChanged: (AttributeQuery) -> Unit = {},
-    onDetailsSubmitted: (Product) -> Unit = {},
+    function: ProductDetailScreenFunction = ProductDetailScreenFunction(),
 ) {
     val product = result.getOrNull() ?: Product.default()
 
@@ -145,9 +150,11 @@ private fun ProductDetailScreen(
     Scaffold(
         scaffoldState = scaffoldState,
         topBar = {
-            ToolbarWithProgressbar(toolbarTitle,
-                onNavigationIconClicked,
-                showProgress = result is Loading)
+            ToolbarWithProgressbar(
+                title = toolbarTitle,
+                showProgress = result is Loading,
+                onNavigationIconClicked = function.onNavigationIconClicked,
+            )
         },
     ) { paddingValues ->
         Column(
@@ -169,8 +176,7 @@ private fun ProductDetailScreen(
                 value = shop,
                 isError = isShopError,
                 error = shopError,
-                modifier = VerticalLayoutModifier
-                    .padding(top = 16.dp),
+                modifier = VerticalLayoutModifier.padding(top = VIEW_SPACE),
                 label = stringResource(R.string.fp_product_detail_shop_label),
                 keyboardOptions = KeyboardOptions.Default.copy(
                     imeAction = ImeAction.Next,
@@ -179,7 +185,7 @@ private fun ProductDetailScreen(
                 onValueChange = {
                     shop = it
                     isShopError = false
-                    onShopQueryChanged(it.text)
+                    function.onShopQueryChanged.invoke(it.text)
                 },
                 onOptionSelected = { s ->
                     shop = TextFieldValue(s.toString())
@@ -202,7 +208,7 @@ private fun ProductDetailScreen(
                 error = unitError,
                 clearField = permitReAddition,
                 suggestions = measurementUnits,
-                onQueryChanged = onMeasurementUnitQueryChanged,
+                onQueryChanged = function.onMeasurementUnitQueryChanged,
             )
             Spacer(modifier = Modifier.padding(vertical = 8.dp))
 
@@ -315,14 +321,14 @@ private fun ProductDetailScreen(
             val brands = productBrandsView(
                 clearFields = permitReAddition,
                 suggestions = brandSuggestions,
-                onQueryChanged = onBrandQueryChanged,
+                onQueryChanged = function.onBrandQueryChanged,
             )
             Spacer(modifier = Modifier.padding(vertical = 8.dp))
 
             val attributes = productAttributesView(
                 clearFields = permitReAddition,
                 suggestions = attributeSuggestions,
-                onQueryChanged = onAttributeQueryChanged,
+                onQueryChanged = function.onAttributeQueryChanged,
             )
 
             Spacer(modifier = Modifier.padding(vertical = 8.dp))
@@ -335,22 +341,24 @@ private fun ProductDetailScreen(
                     unitPrice,
                     dateOfPurchase,
                     timeOfPurchase,
-                ).all { it.text.isNotBlank() } && savableShop != Product.default().shopId,
+                ).all { it.text.isNotBlank() } && savableShop != Product.default().shopId && result !is Loading,
                 modifier = VerticalLayoutModifier,
                 onClick = {
                     focusManager.clearFocus()
-                    onDetailsSubmitted(product.copy(
-                        shopId = savableShop,
-                        name = name.text.trim(),
-                        unit = unit.text.trim(),
-                        unitQuantity = unitQuantity.text.toFloat(),
-                        purchasedQuantity = purchasedQuantity.text.toFloat(),
-                        unitPrice = unitPrice.text.toFloat(),
-                        datePurchased = DEFAULT_LOCAL_DATE_TIME_FORMAT.parse("${dateOfPurchase.text} ${timeOfPurchase.text}")
-                            ?: error("Invalid date and/or time format"),
-                        brands = brands.filterNot { it.isDefault },
-                        attributes = attributes.filterNot { it.name.isBlank() or it.value.isBlank() },
-                    ))
+                    function.onDetailsSubmitted.invoke(
+                        product.copy(
+                            shopId = savableShop,
+                            name = name.text.trim(),
+                            unit = unit.text.trim(),
+                            unitQuantity = unitQuantity.text.toFloat(),
+                            purchasedQuantity = purchasedQuantity.text.toFloat(),
+                            unitPrice = unitPrice.text.toFloat(),
+                            datePurchased = DEFAULT_LOCAL_DATE_TIME_FORMAT.parse("${dateOfPurchase.text} ${timeOfPurchase.text}")
+                                ?: error("Invalid date and/or time format"),
+                            brands = brands.filterNot { it.isDefault },
+                            attributes = attributes.filterNot { it.name.isBlank() or it.value.isBlank() },
+                        ),
+                    )
                 }
             ) { Text(toolbarTitle.uppercase()) }
         }

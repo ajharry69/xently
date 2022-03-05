@@ -28,33 +28,38 @@ import com.google.android.libraries.maps.model.LatLng
 import com.google.android.libraries.maps.model.MarkerOptions
 import java.text.DecimalFormat
 
-internal data class RecommendationCardItemClick(
-    val base: (Recommendation) -> Unit = {},
+internal data class RecommendationCardItemFunction(
+    val onItemClicked: (Recommendation) -> Unit = {},
 )
 
-internal data class Click(
-    val navigationIcon: () -> Unit = {},
-    val item: (ShoppingListItem) -> Unit = {},
-    val recommendationItemClick: RecommendationCardItemClick = RecommendationCardItemClick(),
+internal data class ShoppingListRecommendationScreenFunction(
+    val onNavigationIconClicked: () -> Unit = {},
+    val onItemClicked: (ShoppingListItem) -> Unit = {},
+    val onLocationPermissionChanged: (Boolean) -> Unit = {},
+    val function: RecommendationCardItemFunction = RecommendationCardItemFunction(),
 )
 
 @Composable
 internal fun ShoppingListRecommendationScreen(
-    click: Click,
-    menuItems: List<MenuItem>,
-    modifier: Modifier = Modifier,
+    modifier: Modifier,
+    menuItems: List<RecommendationCardItemMenuItem>,
+    function: ShoppingListRecommendationScreenFunction,
     recommend: Recommend = Recommend(),
     viewModel: ShoppingListRecommendationViewModel = hiltViewModel(),
 ) {
     viewModel.setRecommend(recommend)
-    val recommendationReportResult by viewModel.recommendationReportResult.collectAsState()
+    val scope = rememberCoroutineScope()
+    val recommendationReportResult by viewModel.recommendationReportResult.collectAsState(
+        context = scope.coroutineContext,
+    )
 
     ShoppingListRecommendationScreen(
-        modifier,
-        recommendationReportResult,
-        click,
-        viewModel::setLocationPermissionGranted,
-        menuItems,
+        modifier = modifier,
+        menuItems = menuItems,
+        result = recommendationReportResult,
+        function = function.copy(
+            onLocationPermissionChanged = viewModel::setLocationPermissionGranted,
+        ),
     )
 }
 
@@ -62,9 +67,8 @@ internal fun ShoppingListRecommendationScreen(
 private fun ShoppingListRecommendationScreen(
     modifier: Modifier,
     result: TaskResult<RecommendationReport>,
-    click: Click,
-    onLocationPermissionChanged: (Boolean) -> Unit,
-    menuItems: List<MenuItem>,
+    function: ShoppingListRecommendationScreenFunction,
+    menuItems: List<RecommendationCardItemMenuItem>,
 ) {
     val scaffoldState = rememberScaffoldState()
     Scaffold(
@@ -73,7 +77,7 @@ private fun ShoppingListRecommendationScreen(
             if (result !is TaskResult.Success) {
                 ToolbarWithProgressbar(
                     title = stringResource(R.string.fsl_recommendations_toolbar_title),
-                    onNavigationIconClicked = click.navigationIcon,
+                    onNavigationIconClicked = function.onNavigationIconClicked,
                 )
             }
         }
@@ -115,11 +119,11 @@ private fun ShoppingListRecommendationScreen(
                                         }
                                     }
                                 },
-                                onLocationPermissionChanged = onLocationPermissionChanged,
+                                onLocationPermissionChanged = function.onLocationPermissionChanged,
                             )
                             ToolbarWithProgressbar(
                                 title = stringResource(R.string.fsl_recommendations_toolbar_title),
-                                onNavigationIconClicked = click.navigationIcon,
+                                onNavigationIconClicked = function.onNavigationIconClicked,
                                 backgroundColor = Color.Transparent,
                                 elevation = 0.dp
                             )
@@ -150,7 +154,7 @@ private fun ShoppingListRecommendationScreen(
                                             menuItems = menuItems,
                                             recommendation = recommendation,
                                             modifier = Modifier.fillMaxWidth(),
-                                            click = click.recommendationItemClick,
+                                            function = function.function,
                                         )
                                     }
                                 }
@@ -166,7 +170,7 @@ private fun ShoppingListRecommendationScreen(
                                 report.missedItems.forEach { item ->
                                     ShoppingListItemCard(
                                         item = item,
-                                        onClick = click.item,
+                                        onClick = function.onItemClicked,
                                         modifier = Modifier.fillMaxWidth(),
                                     )
                                 }
@@ -234,7 +238,7 @@ private fun RecommendationReportSynopsisCard(
     }
 }
 
-internal data class MenuItem(
+internal data class RecommendationCardItemMenuItem(
     val label: Int,
     val onClick: (Recommendation) -> Unit = {},
 )
@@ -242,12 +246,13 @@ internal data class MenuItem(
 @Composable
 private fun RecommendationCardItem(
     recommendation: Recommendation,
-    menuItems: List<MenuItem>,
-    click: RecommendationCardItemClick,
+    menuItems: List<RecommendationCardItemMenuItem>,
+    function: RecommendationCardItemFunction,
     modifier: Modifier = Modifier,
 ) {
     var showMenu by remember { mutableStateOf(false) }
-    ListItemSurface(modifier = modifier, onClick = { click.base.invoke(recommendation) }) {
+    ListItemSurface(modifier = modifier,
+        onClick = { function.onItemClicked.invoke(recommendation) }) {
         Column {
             Text(text = recommendation.name, style = MaterialTheme.typography.body1)
             Text(

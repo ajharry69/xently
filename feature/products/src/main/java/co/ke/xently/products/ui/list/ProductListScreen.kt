@@ -9,9 +9,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -25,30 +25,30 @@ import co.ke.xently.products.R
 import co.ke.xently.products.ui.list.item.MenuItem
 import co.ke.xently.products.ui.list.item.ProductListItem
 
-internal data class ProductListScreenClick(
-    val add: () -> Unit = {},
-    val navigationIcon: () -> Unit = {},
+internal data class ProductListScreenFunction(
+    val onAddFabClicked: () -> Unit = {},
+    val onNavigationIconClicked: () -> Unit = {},
 )
 
 @Composable
 internal fun ProductListScreen(
     shopId: Long?,
-    click: ProductListScreenClick,
+    function: ProductListScreenFunction,
     menuItems: List<MenuItem>,
     modifier: Modifier = Modifier,
     viewModel: ProductListViewModel = hiltViewModel(),
 ) {
-    val items = viewModel.pagingData.collectAsLazyPagingItems()
-    val shopName by viewModel.shopName.collectAsState()
-    LaunchedEffect(shopId) {
-        viewModel.setShopId(shopId)
-    }
+    val scope = rememberCoroutineScope()
+    val shopName by viewModel.shopName.collectAsState(
+        context = scope.coroutineContext,
+    )
+    viewModel.setShopId(shopId)
     ProductListScreen(
         modifier = modifier,
         shopName = shopName,
-        click = click,
-        items = items,
+        function = function,
         menuItems = menuItems,
+        items = viewModel.pagingData.collectAsLazyPagingItems(),
     )
 }
 
@@ -56,7 +56,7 @@ internal fun ProductListScreen(
 private fun ProductListScreen(
     modifier: Modifier,
     shopName: String?,
-    click: ProductListScreenClick,
+    function: ProductListScreenFunction,
     items: LazyPagingItems<Product>,
     menuItems: List<MenuItem>,
 ) {
@@ -66,12 +66,12 @@ private fun ProductListScreen(
         topBar = {
             ToolbarWithProgressbar(
                 title = stringResource(R.string.title_activity_products),
-                onNavigationIconClicked = click.navigationIcon,
+                onNavigationIconClicked = function.onNavigationIconClicked,
                 subTitle = shopName,
             )
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = click.add) {
+            FloatingActionButton(onClick = function.onAddFabClicked) {
                 Icon(Icons.Default.Add,
                     stringRes(R.string.fp_add_product_toolbar_title, R.string.add))
             }

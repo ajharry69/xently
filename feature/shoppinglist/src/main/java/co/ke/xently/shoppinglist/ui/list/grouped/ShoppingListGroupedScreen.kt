@@ -23,37 +23,48 @@ import co.ke.xently.feature.ui.*
 import co.ke.xently.shoppinglist.R
 import co.ke.xently.shoppinglist.ui.list.grouped.item.GroupMenuItem
 import co.ke.xently.shoppinglist.ui.list.grouped.item.GroupedShoppingListCard
+import co.ke.xently.shoppinglist.ui.list.grouped.item.GroupedShoppingListCardFunction
 import co.ke.xently.shoppinglist.ui.list.item.MenuItem
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import kotlinx.coroutines.launch
 
-internal data class Click(
-    val add: () -> Unit = {},
-    val help: () -> Unit = {},
-    val feedback: () -> Unit = {},
+internal data class GroupedShoppingListScreenFunction(
+    val onRefresh: () -> Unit = {},
     val signInOrOut: () -> Unit = {},
-    val click: co.ke.xently.shoppinglist.ui.list.grouped.item.Click = co.ke.xently.shoppinglist.ui.list.grouped.item.Click(),
+    val onHelpClicked: () -> Unit = {},
+    val onAddFabClicked: () -> Unit = {},
+    val onFeedbackClicked: () -> Unit = {},
+    val function: GroupedShoppingListCardFunction = GroupedShoppingListCardFunction(),
 )
 
 @Composable
 internal fun GroupedShoppingListScreen(
+    modifier: Modifier,
     drawerItems: List<NavMenuItem>,
     menuItems: List<MenuItem>,
     groupMenuItems: List<GroupMenuItem>,
-    click: Click,
-    modifier: Modifier = Modifier,
+    function: GroupedShoppingListScreenFunction,
     viewModel: ShoppingListGroupedViewModel = hiltViewModel(),
 ) {
     val scope = rememberCoroutineScope()
-    val result by viewModel.shoppingListResult.collectAsState(scope.coroutineContext)
-    val shoppingListCount by viewModel.shoppingListCount.collectAsState(scope.coroutineContext)
-    val user by viewModel.currentlyActiveUser.collectAsState(null, scope.coroutineContext)
+    val result by viewModel.shoppingListResult.collectAsState(
+        context = scope.coroutineContext,
+    )
+    val shoppingListCount by viewModel.shoppingListCount.collectAsState(
+        context = scope.coroutineContext,
+    )
+    val user by viewModel.currentlyActiveUser.collectAsState(
+        initial = null,
+        context = scope.coroutineContext,
+    )
     val signOutResult by viewModel.signOutResult.collectAsState(
         initial = TaskResult.Success(Unit),
         context = scope.coroutineContext,
     )
-    val isRefreshing by viewModel.isRefreshing.collectAsState(scope.coroutineContext)
+    val isRefreshing by viewModel.isRefreshing.collectAsState(
+        context = scope.coroutineContext,
+    )
 
     val context = LocalContext.current
     GroupedShoppingListScreen(
@@ -65,9 +76,9 @@ internal fun GroupedShoppingListScreen(
         isRefreshing = isRefreshing,
         signOutResult = signOutResult,
         groupCount = shoppingListCount,
-        onRefresh = viewModel::refresh,
         groupMenuItems = groupMenuItems,
-        click = click.copy(
+        function = function.copy(
+            onRefresh = viewModel::refresh,
             signInOrOut = {
                 if (user == null) {
                     navigateToSignInScreen.invoke(context)
@@ -82,7 +93,7 @@ internal fun GroupedShoppingListScreen(
 @Composable
 private fun GroupedShoppingListScreen(
     user: User?,
-    click: Click,
+    function: GroupedShoppingListScreenFunction,
     modifier: Modifier,
     menuItems: List<MenuItem>,
     drawerItems: List<NavMenuItem>,
@@ -91,7 +102,6 @@ private fun GroupedShoppingListScreen(
     signOutResult: TaskResult<Unit>,
     result: TaskResult<List<GroupedShoppingList>>,
     isRefreshing: Boolean,
-    onRefresh: () -> Unit,
 ) {
     val scaffoldState = rememberScaffoldState()
     val coroutineScope = rememberCoroutineScope()
@@ -99,7 +109,7 @@ private fun GroupedShoppingListScreen(
         scaffoldState = scaffoldState,
         floatingActionButton = {
             if (user != null && !(result is TaskResult.Error && result.error.isAuthError())) {
-                FloatingActionButton(onClick = click.add) {
+                FloatingActionButton(onClick = function.onAddFabClicked) {
                     Icon(Icons.Default.Add,
                         stringRes(R.string.fsl_detail_screen_toolbar_title, R.string.add))
                 }
@@ -150,17 +160,17 @@ private fun GroupedShoppingListScreen(
                         title = stringResource(R.string.fsl_navigation_drawer_other_menu),
                         items = listOf(
                             NavMenuItem(
-                                onClick = click.feedback,
+                                onClick = function.onFeedbackClicked,
                                 icon = Icons.Default.Feedback,
                                 label = stringResource(R.string.fsl_drawer_menu_feedback),
                             ),
                             NavMenuItem(
-                                onClick = click.help,
+                                onClick = function.onHelpClicked,
                                 icon = Icons.Default.Help,
                                 label = stringResource(R.string.fsl_drawer_menu_help),
                             ),
                             NavMenuItem(
-                                onClick = click.signInOrOut,
+                                onClick = function.signInOrOut,
                                 icon = Icons.Default.ExitToApp,
                                 label = stringResource(
                                     if (user == null) {
@@ -184,7 +194,7 @@ private fun GroupedShoppingListScreen(
     ) { paddingValues ->
         val itemContent: @Composable (LazyItemScope.(GroupedShoppingList) -> Unit) = { groupList ->
             GroupedShoppingListCard(
-                click = click.click,
+                function = function.function,
                 groupList = groupList,
                 menuItems = menuItems,
                 listCount = groupCount,
@@ -213,9 +223,9 @@ private fun GroupedShoppingListScreen(
                     )
                 } else {
                     SwipeRefresh(
+                        onRefresh = function.onRefresh,
                         modifier = modifier.padding(paddingValues),
                         state = rememberSwipeRefreshState(isRefreshing),
-                        onRefresh = onRefresh,
                     ) {
                         LazyColumn(modifier = modifier.padding(paddingValues)) {
                             items(groupedShoppingList, itemContent = itemContent)

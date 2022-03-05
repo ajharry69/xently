@@ -16,8 +16,9 @@ import androidx.navigation.compose.rememberNavController
 import co.ke.xently.data.Product
 import co.ke.xently.feature.theme.XentlyTheme
 import co.ke.xently.products.ui.detail.ProductDetailScreen
+import co.ke.xently.products.ui.detail.ProductDetailScreenFunction
 import co.ke.xently.products.ui.list.ProductListScreen
-import co.ke.xently.products.ui.list.ProductListScreenClick
+import co.ke.xently.products.ui.list.ProductListScreenFunction
 import co.ke.xently.products.ui.list.item.MenuItem
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -54,13 +55,13 @@ internal fun ProductsNavHost(
         val productList: @Composable (NavBackStackEntry) -> Unit = { backStackEntry ->
             ProductListScreen(
                 shopId = backStackEntry.arguments?.getLong("shopId"),
-                click = ProductListScreenClick(
-                    add = {
+                function = ProductListScreenFunction(
+                    onAddFabClicked = {
                         navController.navigate("products/${Product.default().id}") {
                             launchSingleTop = true
                         }
                     },
-                    navigationIcon = onNavigationIconClicked,
+                    onNavigationIconClicked = onNavigationIconClicked,
                 ),
                 modifier = Modifier.fillMaxSize(),
                 menuItems = listOf(
@@ -99,9 +100,11 @@ internal fun ProductsNavHost(
             ),
         ) {
             ProductDetailScreen(
-                id = it.arguments?.getLong("id"),
                 modifier = Modifier.fillMaxSize(),
-                onNavigationIconClicked = onNavigationIconClicked,
+                id = it.arguments?.getLong("id"),
+                function = ProductDetailScreenFunction(
+                    onNavigationIconClicked = onNavigationIconClicked,
+                ),
             )
         }
     }
