@@ -101,7 +101,7 @@ internal fun ProductsNavHost(
         ) {
             ProductDetailScreen(
                 modifier = Modifier.fillMaxSize(),
-                id = it.arguments?.getLong("id"),
+                id = it.arguments?.getLong("id") ?: Product.default().id,
                 function = ProductDetailScreenFunction(
                     onNavigationIconClicked = onNavigationIconClicked,
                 ),

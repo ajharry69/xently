@@ -134,7 +134,7 @@ internal fun ShopsNavHost(
         ) {
             ShopDetailScreen(
                 modifier = Modifier.fillMaxSize(),
-                id = it.arguments?.getLong("id"),
+                id = it.arguments?.getLong("id") ?: Shop.default().id,
                 function = ShopDetailScreenFunction(
                     onNavigationIconClicked = onNavigationIconClicked,
                 ),
