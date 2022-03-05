@@ -17,7 +17,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import co.ke.xently.data.*
 import co.ke.xently.data.ShoppingListItem.Attribute
-import co.ke.xently.data.TaskResult.Loading
 import co.ke.xently.feature.ui.ToolbarWithProgressbar
 import co.ke.xently.feature.ui.VIEW_SPACE
 import co.ke.xently.feature.ui.VerticalLayoutModifier
@@ -35,29 +34,36 @@ internal data class ShoppingListItemScreenFunction(
 
 @Composable
 internal fun ShoppingListItemScreen(
-    id: Long?,
+    id: Long,
     modifier: Modifier,
     function: ShoppingListItemScreenFunction,
     viewModel: ShoppingListItemViewModel = hiltViewModel(),
 ) {
-    val isDefault by remember(id) {
-        mutableStateOf(id == null || id == Product.default().id)
-    }
-
-    val fetch by rememberUpdatedState { viewModel.get(id!!) }
-    LaunchedEffect(true) {
-        if (!isDefault) fetch()
-    }
-
     val scope = rememberCoroutineScope()
-    val result by viewModel.result.collectAsState(scope.coroutineContext)
+    val result by viewModel.result.collectAsState(
+        context = scope.coroutineContext,
+        initial = TaskResult.Success(null),
+    )
+    val addResult by viewModel.addResult.collectAsState(
+        context = scope.coroutineContext,
+        initial = TaskResult.Success(null),
+    )
     // TODO: Fix case where searching on either measurement units or shops clears fields
-    val measurementUnits by viewModel.measurementUnitsResult.collectAsState(scope.coroutineContext)
-    val brands by viewModel.brandsResult.collectAsState(scope.coroutineContext)
-    val attributes by viewModel.attributesResult.collectAsState(scope.coroutineContext)
+    val measurementUnits by viewModel.measurementUnitsResult.collectAsState(
+        context = scope.coroutineContext,
+    )
+    val brands by viewModel.brandsResult.collectAsState(
+        context = scope.coroutineContext,
+    )
+    val attributes by viewModel.attributesResult.collectAsState(
+        context = scope.coroutineContext
+    )
 
+    LaunchedEffect(id) {
+        viewModel.get(id)
+    }
     // Allow addition of more items if the screen was initially for adding.
-    val permitReAddition = isDefault && result.getOrNull() != null
+    val permitReAddition = id == ShoppingListItem.default().id && addResult.getOrNull() != null
 
     ShoppingListItemScreen(
         modifier = modifier,
@@ -66,6 +72,7 @@ internal fun ShoppingListItemScreen(
         } else {
             result
         },
+        addResult = addResult,
         permitReAddition = permitReAddition,
         brandSuggestions = brands,
         attributeSuggestions = attributes,
@@ -84,6 +91,7 @@ internal fun ShoppingListItemScreen(
 private fun ShoppingListItemScreen(
     modifier: Modifier,
     result: TaskResult<ShoppingListItem?>,
+    addResult: TaskResult<ShoppingListItem?>,
     permitReAddition: Boolean = false,
     brandSuggestions: List<Product.Brand> = emptyList(),
     attributeSuggestions: List<Product.Attribute> = emptyList(),
@@ -108,16 +116,16 @@ private fun ShoppingListItemScreen(
     var unitQuantityError by remember { mutableStateOf("") }
     var purchaseQuantityError by remember { mutableStateOf("") }
 
-    if (result is TaskResult.Error) {
-        val exception = result.error as? ShoppingListItemHttpException
-        nameError = exception.error.name
-        unitError = exception.error.unit
-        unitQuantityError = exception.error.unitQuantity
-        purchaseQuantityError = exception.error.purchaseQuantity
+    if (addResult is TaskResult.Error) {
+        val exception = addResult.error as? ShoppingListItemHttpException
+        nameError = exception?.name?.joinToString("\n") ?: ""
+        unitError = exception?.unit?.joinToString("\n") ?: ""
+        unitQuantityError = exception?.unitQuantity?.joinToString("\n") ?: ""
+        purchaseQuantityError = exception?.purchaseQuantity?.joinToString("\n") ?: ""
 
         if (exception?.hasFieldErrors() != true) {
-            val message = result.errorMessage ?: stringResource(R.string.generic_error_message)
-            LaunchedEffect(result, message) {
+            val message = addResult.errorMessage ?: stringResource(R.string.generic_error_message)
+            LaunchedEffect(addResult, message) {
                 scaffoldState.snackbarHostState.showSnackbar(message)
             }
         }
@@ -129,12 +137,13 @@ private fun ShoppingListItemScreen(
     }
     val focusManager = LocalFocusManager.current
 
+    val isTaskLoading = arrayOf(result, addResult).any { it is TaskResult.Loading }
     Scaffold(
         scaffoldState = scaffoldState,
         topBar = {
             ToolbarWithProgressbar(
                 title = toolbarTitle,
-                showProgress = result is Loading,
+                showProgress = isTaskLoading,
                 onNavigationIconClicked = function.navigationIcon,
             )
         },
@@ -196,7 +205,7 @@ private fun ShoppingListItemScreen(
                     name,
                     unitQuantity,
                     purchaseQuantity,
-                ).all { it.text.isNotBlank() } && result !is Loading,
+                ).all { it.text.isNotBlank() } && !isTaskLoading,
                 modifier = VerticalLayoutModifier.padding(bottom = VIEW_SPACE),
                 onClick = {
                     focusManager.clearFocus()
