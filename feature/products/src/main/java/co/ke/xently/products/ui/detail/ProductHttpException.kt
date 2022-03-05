@@ -15,18 +15,6 @@ class ProductHttpException(
     val brands: List<BrandHttpException> = emptyList(),
     val attributes: List<AttributeHttpException> = emptyList(),
 ) : HttpException() {
-    data class Error(
-        val shop: String,
-        val name: String,
-        val unit: String,
-        val unitQuantity: String,
-        val purchasedQuantity: String,
-        val unitPrice: String,
-        val datePurchased: String,
-        val brands: String,
-        val attributes: String,
-    )
-
     override fun hasFieldErrors() = listOf(
         shop,
         name,
@@ -39,19 +27,3 @@ class ProductHttpException(
         attributes,
     ).any { it.isNotEmpty() }
 }
-
-
-internal val ProductHttpException?.error: ProductHttpException.Error
-    get() {
-        return ProductHttpException.Error(
-            this?.shop?.joinToString("\n") ?: "",
-            this?.name?.joinToString("\n") ?: "",
-            this?.unit?.joinToString("\n") ?: "",
-            this?.unitQuantity?.joinToString("\n") ?: "",
-            this?.purchasedQuantity?.joinToString("\n") ?: "",
-            this?.unitPrice?.joinToString("\n") ?: "",
-            this?.datePurchased?.joinToString("\n") ?: "",
-            this?.brands?.flatMap { it.name }?.joinToString("\n") ?: "",
-            this?.attributes?.joinToString("\n") ?: "",
-        )
-    }
