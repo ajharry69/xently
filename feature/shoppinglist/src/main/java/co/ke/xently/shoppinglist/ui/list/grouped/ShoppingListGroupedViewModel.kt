@@ -3,16 +3,17 @@ package co.ke.xently.shoppinglist.ui.list.grouped
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import co.ke.xently.data.TaskResult
-import co.ke.xently.feature.viewmodels.AbstractAuthViewModel
 import co.ke.xently.feature.repository.IAuthRepository
 import co.ke.xently.feature.utils.DEFAULT_SHARING_STARTED
 import co.ke.xently.feature.utils.flagLoadingOnStart
+import co.ke.xently.feature.viewmodels.AbstractAuthViewModel
 import co.ke.xently.shoppinglist.GroupBy
 import co.ke.xently.shoppinglist.repository.IShoppingListRepository
 import co.ke.xently.source.remote.CacheControl
 import co.ke.xently.source.remote.getOrThrow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
@@ -33,7 +34,12 @@ internal class ShoppingListGroupedViewModel @Inject constructor(
         started = DEFAULT_SHARING_STARTED,
     )
 
-    private val groupBy = MutableStateFlow(GroupBy.DateAdded)
+    private val groupBy = MutableSharedFlow<GroupBy>()
+    fun setGroupBy(by: GroupBy) {
+        viewModelScope.launch {
+            this@ShoppingListGroupedViewModel.groupBy.emit(by)
+        }
+    }
 
     val shoppingListResult =
         combineTransform(currentlyActiveUser, groupBy, cacheControl) { _, by, cacheCtrl ->

@@ -9,10 +9,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -20,6 +17,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import co.ke.xently.data.*
 import co.ke.xently.feature.ui.*
+import co.ke.xently.shoppinglist.GroupBy
 import co.ke.xently.shoppinglist.R
 import co.ke.xently.shoppinglist.ui.list.grouped.item.GroupMenuItem
 import co.ke.xently.shoppinglist.ui.list.grouped.item.GroupedShoppingListCard
@@ -35,6 +33,7 @@ internal data class GroupedShoppingListScreenFunction(
     val onHelpClicked: () -> Unit = {},
     val onAddFabClicked: () -> Unit = {},
     val onFeedbackClicked: () -> Unit = {},
+    val onRetryClicked: (Throwable) -> Unit = {},
     val function: GroupedShoppingListCardFunction = GroupedShoppingListCardFunction(),
 )
 
@@ -66,6 +65,13 @@ internal fun GroupedShoppingListScreen(
         context = scope.coroutineContext,
     )
 
+    var groupBy by remember {
+        mutableStateOf(GroupBy.DateAdded)
+    }
+    LaunchedEffect(true) {
+        viewModel.setGroupBy(groupBy)
+    }
+
     val context = LocalContext.current
     GroupedShoppingListScreen(
         user = user,
@@ -85,6 +91,9 @@ internal fun GroupedShoppingListScreen(
                 } else {
                     viewModel.signOut()
                 }
+            },
+            onRetryClicked = {
+                groupBy = GroupBy.DateAdded
             },
         ),
     )
@@ -204,7 +213,11 @@ private fun GroupedShoppingListScreen(
         }
         when (result) {
             is TaskResult.Error -> {
-                FullscreenError(modifier = modifier.padding(paddingValues), error = result.error)
+                FullscreenError(
+                    error = result.error,
+                    modifier = modifier.padding(paddingValues),
+                    click = HttpErrorButtonClick(retryAble = function.onRetryClicked),
+                )
             }
             TaskResult -> {
                 FullscreenLoading(
