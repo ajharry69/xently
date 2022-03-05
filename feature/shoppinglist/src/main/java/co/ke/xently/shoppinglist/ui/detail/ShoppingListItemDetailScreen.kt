@@ -50,13 +50,16 @@ internal fun ShoppingListItemScreen(
     )
     // TODO: Fix case where searching on either measurement units or shops clears fields
     val measurementUnits by viewModel.measurementUnitsResult.collectAsState(
+        initial= emptyList(),
         context = scope.coroutineContext,
     )
     val brands by viewModel.brandsResult.collectAsState(
+        initial= emptyList(),
         context = scope.coroutineContext,
     )
     val attributes by viewModel.attributesResult.collectAsState(
-        context = scope.coroutineContext
+        initial= emptyList(),
+        context = scope.coroutineContext,
     )
 
     LaunchedEffect(id) {

@@ -50,7 +50,6 @@ internal fun ProductDetailScreen(
     viewModel: ProductDetailViewModel = hiltViewModel(),
 ) {
     val scope = rememberCoroutineScope()
-    val shops by viewModel.shopsResult.collectAsState(context = scope.coroutineContext)
     val result by viewModel.result.collectAsState(
         initial = Success(null),
         context = scope.coroutineContext,
@@ -60,13 +59,20 @@ internal fun ProductDetailScreen(
         context = scope.coroutineContext,
     )
     // TODO: Fix case where searching on either measurement units or shops clears fields
+    val shops by viewModel.shopsResult.collectAsState(
+        initial = emptyList(),
+        context = scope.coroutineContext,
+    )
     val measurementUnits by viewModel.measurementUnitsResult.collectAsState(
+        initial = emptyList(),
         context = scope.coroutineContext,
     )
     val brands by viewModel.brandsResult.collectAsState(
+        initial = emptyList(),
         context = scope.coroutineContext,
     )
     val attributes by viewModel.attributesResult.collectAsState(
+        initial = emptyList(),
         context = scope.coroutineContext,
     )
 
