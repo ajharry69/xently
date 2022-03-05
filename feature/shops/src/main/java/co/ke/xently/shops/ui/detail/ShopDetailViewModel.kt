@@ -4,31 +4,55 @@ import android.content.Context
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import co.ke.xently.data.Shop
-import co.ke.xently.data.TaskResult.Success
-import co.ke.xently.feature.viewmodels.LocationPermissionViewModel
+import co.ke.xently.data.TaskResult
+import co.ke.xently.feature.utils.DEFAULT_SHARING_STARTED
 import co.ke.xently.feature.utils.flagLoadingOnStart
+import co.ke.xently.feature.viewmodels.LocationPermissionViewModel
 import co.ke.xently.shops.repository.IShopsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.shareIn
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
+@OptIn(ExperimentalCoroutinesApi::class)
 internal class ShopDetailViewModel @Inject constructor(
     @ApplicationContext context: Context,
     savedStateHandle: SavedStateHandle,
     private val repository: IShopsRepository,
 ) : LocationPermissionViewModel(context, savedStateHandle) {
-    fun addOrUpdate(shop: Shop) = if (shop.isDefault) {
-        repository.add(shop)
-    } else {
-        repository.update(shop)
-    }.flagLoadingOnStart()
-        .shareIn(viewModelScope, SharingStarted.WhileSubscribed())
+    private val shop = MutableSharedFlow<Shop>()
+    val addResult = shop.flatMapLatest {
+        if (it.isDefault) {
+            repository.add(it)
+        } else {
+            repository.update(it)
+        }.flagLoadingOnStart()
+    }.shareIn(viewModelScope, DEFAULT_SHARING_STARTED)
 
-    fun get(id: Long) = repository.get(id)
-        .flagLoadingOnStart()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), Success(Shop.default()))
+    fun addOrUpdate(shop: Shop) {
+        viewModelScope.launch {
+            this@ShopDetailViewModel.shop.emit(shop)
+        }
+    }
+
+    private val shopId = MutableSharedFlow<Long>()
+    val result = shopId.flatMapLatest {
+        if (it == Shop.default().id) {
+            flowOf(TaskResult.Success(Shop.default()))
+        } else {
+            repository.get(it).flagLoadingOnStart()
+        }
+    }.shareIn(viewModelScope, DEFAULT_SHARING_STARTED, 1)
+
+    fun get(shopId: Long) {
+        viewModelScope.launch {
+            this@ShopDetailViewModel.shopId.emit(shopId)
+        }
+    }
 }

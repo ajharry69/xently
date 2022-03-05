@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.ke.xently.data.*
 import co.ke.xently.feature.utils.flagLoadingOnStart
-import co.ke.xently.feature.utils.setCleansedQuery
 import co.ke.xently.products.shared.repository.ISearchableRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
@@ -69,5 +68,13 @@ open class SearchableViewModel(private val repository: ISearchableRepository) : 
 
     fun setAttributeQuery(query: AttributeQuery) {
         attributeQuery.value = query
+    }
+
+    private fun MutableStateFlow<String>.setCleansedQuery(query: String) {
+        query.trim().also {
+            if (it.isNotBlank()) {
+                this.value = query
+            }
+        }
     }
 }
