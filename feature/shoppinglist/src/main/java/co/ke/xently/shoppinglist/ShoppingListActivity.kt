@@ -234,6 +234,7 @@ internal fun ShoppingListNavHost(
                             // onRecommendOptionsMenuClicked(shoppingListResult.getOrNull())
                         },
                     ),
+                    OptionMenu(title = stringResource(R.string.refresh)),
                 ),
             )
         }
