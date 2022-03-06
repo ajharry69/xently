@@ -9,6 +9,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -17,6 +18,7 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import co.ke.xently.data.ShoppingListItem
 import co.ke.xently.feature.ui.*
 import co.ke.xently.shoppinglist.R
+import co.ke.xently.shoppinglist.repository.ShoppingListGroup
 import co.ke.xently.shoppinglist.ui.list.item.MenuItem
 import co.ke.xently.shoppinglist.ui.list.item.ShoppingListItemCard
 
@@ -32,11 +34,16 @@ internal fun ShoppingListScreen(
     menuItems: List<MenuItem>,
     function: ShoppingListScreenFunction,
     optionsMenu: List<OptionMenu>,
+    group: ShoppingListGroup? = null,
     viewModel: ShoppingListViewModel = hiltViewModel(),
 ) {
     val items = viewModel.pagingData.collectAsLazyPagingItems()
+    LaunchedEffect(group) {
+        viewModel.setGroup(group)
+    }
     ShoppingListScreen(
         items = items,
+        group = group,
         function = function,
         modifier = modifier,
         menuItems = menuItems,
@@ -53,16 +60,18 @@ internal fun ShoppingListScreen(
 @Composable
 private fun ShoppingListScreen(
     modifier: Modifier,
-    items: LazyPagingItems<ShoppingListItem>,
+    group: ShoppingListGroup?,
     menuItems: List<MenuItem>,
     optionsMenu: List<OptionMenu>,
     function: ShoppingListScreenFunction,
+    items: LazyPagingItems<ShoppingListItem>,
 ) {
     val scaffoldState = rememberScaffoldState()
     Scaffold(
         scaffoldState = scaffoldState,
         topBar = {
             ToolbarWithProgressbar(
+                subTitle = group?.group?.toString(),
                 title = stringResource(R.string.fsl_toolbar_title),
                 onNavigationIconClicked = function.onNavigationIconClicked,
             ) {

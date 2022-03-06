@@ -8,10 +8,12 @@ import co.ke.xently.data.ShoppingListItem
 import co.ke.xently.data.getOrThrow
 import co.ke.xently.feature.repository.Dependencies
 import co.ke.xently.feature.utils.getMediatorResultsOrThrow
+import co.ke.xently.shoppinglist.repository.ShoppingListGroup
 import co.ke.xently.source.remote.CacheControl
 import co.ke.xently.source.remote.sendRequest
 
 internal class ShoppingListRemoteMediator(
+    private val group: ShoppingListGroup?,
     private val dependencies: Dependencies,
 ) : RemoteMediator<Int, ShoppingListItem.WithRelated>() {
     override suspend fun load(

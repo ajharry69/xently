@@ -125,9 +125,9 @@ internal class ShoppingListRepository @Inject constructor(private val dependenci
         }.retryCatch(this).flowOn(dependencies.dispatcher.io)
     }
 
-    override fun get(config: PagingConfig) = Pager(
+    override fun get(config: PagingConfig, group: ShoppingListGroup?) = Pager(
         config = config,
-        remoteMediator = ShoppingListRemoteMediator(dependencies),
+        remoteMediator = ShoppingListRemoteMediator(group,dependencies),
         pagingSourceFactory = dependencies.database.shoppingListDao::get,
     ).flow.map { data ->
         data.map { it.item }

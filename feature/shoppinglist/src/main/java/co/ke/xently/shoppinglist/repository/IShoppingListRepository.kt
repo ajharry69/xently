@@ -26,5 +26,5 @@ interface IShoppingListRepository : ISearchableRepository {
 
     fun get(recommend: Recommend): Flow<TaskResult<RecommendationReport>>
 
-    fun get(config: PagingConfig): Flow<PagingData<ShoppingListItem>>
+    fun get(config: PagingConfig, group: ShoppingListGroup?): Flow<PagingData<ShoppingListItem>>
 }
