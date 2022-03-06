@@ -1,7 +1,9 @@
 package co.ke.xently.accounts.ui.signup
 
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -13,7 +15,6 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.*
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import co.ke.xently.accounts.R
 import co.ke.xently.accounts.ui.signin.SignUpHttpException
@@ -21,30 +22,32 @@ import co.ke.xently.data.TaskResult
 import co.ke.xently.data.User
 import co.ke.xently.data.errorMessage
 import co.ke.xently.data.getOrNull
-import co.ke.xently.feature.ui.PasswordVisibilityToggle
-import co.ke.xently.feature.ui.TextInputLayout
-import co.ke.xently.feature.ui.ToolbarWithProgressbar
+import co.ke.xently.feature.ui.*
+
+internal data class SignUpScreenFunction(
+    val signUp: (User) -> Unit = {},
+    val navigationIcon: () -> Unit = {},
+    val signUpSuccess: (User) -> Unit = {},
+    val signIn: (User.BasicAuth) -> Unit = { },
+)
 
 @Composable
 internal fun SignUpScreen(
-    modifier: Modifier = Modifier,
-    username: String = "",
-    password: String = "",
+    modifier: Modifier,
+    auth: User.BasicAuth,
+    function: SignUpScreenFunction,
     viewModel: SignUpViewModel = hiltViewModel(),
-    onNavigationIconClicked: () -> Unit = {},
-    onSuccessfulSignUp: (User) -> Unit = {},
-    onSignInButtonClicked: (String, String) -> Unit = { _, _ -> },
 ) {
-    val result by viewModel.signUpResult.collectAsState()
+    val scope = rememberCoroutineScope()
+    val result by viewModel.result.collectAsState(
+        context = scope.coroutineContext,
+        initial = TaskResult.Success(null),
+    )
     SignUpScreen(
-        modifier,
-        result,
-        username,
-        password,
-        onNavigationIconClicked,
-        onSuccessfulSignUp,
-        onSignInButtonClicked,
-        viewModel::signUp,
+        auth = auth,
+        result = result,
+        modifier = modifier,
+        function = function.copy(signUp = viewModel::signUp),
     )
 }
 
@@ -52,39 +55,28 @@ internal fun SignUpScreen(
 private fun SignUpScreen(
     modifier: Modifier,
     result: TaskResult<User?>,
-    username: String = "",
-    password: String = "",
-    onNavigationIconClicked: () -> Unit = {},
-    onSuccessfulSignUp: (User) -> Unit = {},
-    onSignInButtonClicked: (String, String) -> Unit = { _, _ -> },
-    onSignUpClicked: (User) -> Unit = {},
+    auth: User.BasicAuth = User.BasicAuth("", ""),
+    function: SignUpScreenFunction = SignUpScreenFunction(),
 ) {
     val user = result.getOrNull() ?: User.default()
-    var uname by remember(user.id, user.email, username) {
-        mutableStateOf(TextFieldValue(user.email.ifBlank { username }))
+    var uname by remember(auth.username) {
+        mutableStateOf(TextFieldValue(user.email.ifBlank { auth.username }))
     }
-    var pword by remember(user.id, user.password, password) {
-        mutableStateOf(TextFieldValue(user.password ?: password))
+    var pword by remember(auth.password) {
+        mutableStateOf(TextFieldValue(user.password ?: auth.password))
     }
-    var usernameError by remember { mutableStateOf("") }
-    var isUsernameError by remember { mutableStateOf(false) }
-    var passwordError by remember { mutableStateOf("") }
-    var isPasswordError by remember { mutableStateOf(false) }
     var isPasswordVisible by remember { mutableStateOf(false) }
 
     val scaffoldState = rememberScaffoldState()
 
+    var usernameError by remember { mutableStateOf("") }
+    var passwordError by remember { mutableStateOf("") }
     if (result is TaskResult.Error) {
-        usernameError =
-            ((result.error as? SignUpHttpException)?.email?.joinToString("\n") ?: "").also {
-                isUsernameError = it.isNotBlank()
-            }
-        passwordError =
-            ((result.error as? SignUpHttpException)?.password?.joinToString("\n") ?: "").also {
-                isPasswordError = it.isNotBlank()
-            }
+        val exception = result.error as? SignUpHttpException
+        usernameError = exception?.email?.joinToString("\n") ?: ""
+        passwordError = exception?.password?.joinToString("\n") ?: ""
 
-        if (setOf(isUsernameError, isPasswordError).all { false }) {
+        if (exception?.hasFieldErrors() != true) {
             val errorMessage =
                 result.errorMessage ?: stringResource(R.string.generic_error_message)
             LaunchedEffect(result, errorMessage) {
@@ -93,9 +85,7 @@ private fun SignUpScreen(
         }
     } else if (result is TaskResult.Success && result.data != null) {
         SideEffect {
-            uname = TextFieldValue()
-            pword = TextFieldValue()
-            onSuccessfulSignUp(result.data!!)
+            function.signUpSuccess.invoke(result.data!!)
         }
     }
     val focusManager = LocalFocusManager.current
@@ -105,37 +95,42 @@ private fun SignUpScreen(
         scaffoldState = scaffoldState,
         topBar = {
             ToolbarWithProgressbar(
-                toolbarTitle,
-                onNavigationIconClicked,
+                title = toolbarTitle,
                 showProgress = result is TaskResult.Loading,
+                onNavigationIconClicked = function.navigationIcon,
             )
         },
     ) { paddingValues ->
         Column(modifier = modifier.padding(paddingValues)) {
-            Column(modifier = Modifier
-                .verticalScroll(rememberScrollState())
-                .weight(1f)) {
+            Column(
+                modifier = Modifier
+                    .verticalScroll(rememberScrollState())
+                    .weight(1f),
+            ) {
+                var isUsernameError by remember(usernameError) {
+                    mutableStateOf(usernameError.isNotBlank())
+                }
                 TextInputLayout(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp)
-                        .padding(top = 16.dp),
+                    modifier = VerticalLayoutModifier.padding(top = VIEW_SPACE),
                     value = uname,
                     isError = isUsernameError,
                     error = usernameError,
-                    keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Email,
-                        imeAction = ImeAction.Next),
+                    keyboardOptions = KeyboardOptions.Default.copy(
+                        imeAction = ImeAction.Next,
+                        keyboardType = KeyboardType.Email,
+                    ),
                     onValueChange = {
                         uname = it
                         isUsernameError = false
                     },
                     label = stringResource(R.string.fa_signup_username_label),
                 )
-                Spacer(modifier = Modifier.padding(vertical = 8.dp))
+                Spacer(modifier = Modifier.padding(vertical = VIEW_SPACE_HALVED))
+                var isPasswordError by remember(passwordError) {
+                    mutableStateOf(passwordError.isNotBlank())
+                }
                 TextInputLayout(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
+                    modifier = VerticalLayoutModifier,
                     value = pword,
                     isError = isPasswordError,
                     error = passwordError,
@@ -144,8 +139,10 @@ private fun SignUpScreen(
                         isPasswordError = false
                     },
                     label = stringResource(R.string.fa_signup_password_label),
-                    keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Password,
-                        imeAction = ImeAction.Done),
+                    keyboardOptions = KeyboardOptions.Default.copy(
+                        imeAction = ImeAction.Done,
+                        keyboardType = KeyboardType.Password,
+                    ),
                     keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
                     visualTransformation = if (isPasswordVisible) {
                         VisualTransformation.None
@@ -158,27 +155,31 @@ private fun SignUpScreen(
                         }
                     }
                 )
-                Spacer(modifier = Modifier.padding(vertical = 8.dp))
+                Spacer(modifier = Modifier.padding(vertical = VIEW_SPACE_HALVED))
                 Button(
-                    enabled = arrayOf(uname, pword).all { it.text.isNotBlank() },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
+                    enabled = arrayOf(
+                        uname,
+                        pword,
+                    ).all { it.text.isNotBlank() } && result !is TaskResult.Loading,
+                    modifier = VerticalLayoutModifier,
                     onClick = {
                         focusManager.clearFocus()
-                        onSignUpClicked(user.copy(email = uname.text, password = pword.text))
+                        function.signUp.invoke(user.copy(email = uname.text, password = pword.text))
                     }
                 ) {
                     Text(toolbarTitle.uppercase())
                 }
             }
-            TextButton(
-                { onSignInButtonClicked(uname.text, pword.text) },
-                modifier = Modifier
-                    .padding(16.dp)
-                    .fillMaxWidth(),
-                border = BorderStroke(1.dp,
-                    MaterialTheme.colors.onBackground.copy(alpha = 0.2f)),
+            OutlinedButton(
+                modifier = VerticalLayoutModifier,
+                onClick = {
+                    function.signIn.invoke(
+                        auth.copy(
+                            username = uname.text,
+                            password = pword.text,
+                        ),
+                    )
+                },
             ) {
                 Text(stringResource(R.string.fa_signup_signin_button_label))
             }
@@ -189,19 +190,14 @@ private fun SignUpScreen(
 @Preview
 @Composable
 private fun SignUpScreenLoadingPreview() {
-    SignUpScreen(Modifier.fillMaxSize(), TaskResult)
-}
-
-@Preview
-@Composable
-private fun SignUpScreenErrorPreview() {
-    SignUpScreen(Modifier.fillMaxSize(),
-        TaskResult.Error("Sorry, uname already exists"))
+    SignUpScreen(modifier = Modifier.fillMaxSize(), result = TaskResult.Loading)
 }
 
 @Preview
 @Composable
 private fun SignUpScreenSuccessPreview() {
-    SignUpScreen(Modifier.fillMaxSize(),
-        TaskResult.Success(User.default()))
+    SignUpScreen(
+        modifier = Modifier.fillMaxSize(),
+        result = TaskResult.Success(User.default()),
+    )
 }

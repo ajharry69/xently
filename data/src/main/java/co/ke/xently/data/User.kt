@@ -31,6 +31,11 @@ data class User(
     @Exclude
     val isDefault: Boolean = false,
 ) {
+    data class BasicAuth(
+        val username: String,
+        val password: String,
+    )
+
     data class ResetPassword(
         val oldPassword: String,
         val newPassword: String,

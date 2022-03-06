@@ -1,6 +1,9 @@
 package co.ke.xently.accounts.ui.password_reset.request
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -17,31 +20,36 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import co.ke.xently.accounts.R
 import co.ke.xently.data.TaskResult
 import co.ke.xently.data.User
 import co.ke.xently.data.errorMessage
-import co.ke.xently.feature.ui.TextInputLayout
-import co.ke.xently.feature.ui.ToolbarWithProgressbar
+import co.ke.xently.feature.ui.*
+
+internal data class PasswordResetRequestScreenFunction(
+    val navigationIcon: () -> Unit = {},
+    val request: (String) -> Unit = {},
+    val requestSuccess: (User) -> Unit = {},
+)
 
 @Composable
 internal fun PasswordResetRequestScreen(
-    modifier: Modifier = Modifier,
-    email: String = "",
+    modifier: Modifier,
+    email: String,
+    function: PasswordResetRequestScreenFunction,
     viewModel: PasswordResetRequestViewModel = hiltViewModel(),
-    onSuccessfulRequest: (User) -> Unit = {},
-    onNavigationIconClicked: () -> Unit = {},
 ) {
-    val result by viewModel.taskResult.collectAsState()
+    val scope = rememberCoroutineScope()
+    val result by viewModel.result.collectAsState(
+        context = scope.coroutineContext,
+        initial = TaskResult.Success(null),
+    )
     PasswordResetRequestScreen(
-        modifier,
-        result,
-        email,
-        onSuccessfulRequest,
-        onNavigationIconClicked,
-        viewModel::requestTemporaryPassword,
+        email = email,
+        result = result,
+        modifier = modifier,
+        function = function.copy(request = viewModel::requestTemporaryPassword)
     )
 }
 
@@ -50,25 +58,19 @@ private fun PasswordResetRequestScreen(
     modifier: Modifier,
     result: TaskResult<User?>,
     email: String = "",
-    onSuccessfulRequest: (User) -> Unit = {},
-    onNavigationIconClicked: () -> Unit = {},
-    onRequestClicked: (String) -> Unit = {},
+    function: PasswordResetRequestScreenFunction = PasswordResetRequestScreenFunction(),
 ) {
     var emailAddress by remember(email) {
         mutableStateOf(TextFieldValue(email))
     }
-    var emailError by remember { mutableStateOf("") }
-    var isEmailError by remember { mutableStateOf(false) }
     val scaffoldState = rememberScaffoldState()
 
+    var emailError by remember { mutableStateOf("") }
     if (result is TaskResult.Error) {
-        emailError =
-            ((result.error as? PasswordResetRequestHttpException)?.email?.joinToString("\n")
-                ?: "").also {
-                isEmailError = it.isNotBlank()
-            }
+        val exception = result.error as? PasswordResetRequestHttpException
+        emailError = exception?.email?.joinToString("\n") ?: ""
 
-        if (!isEmailError) {
+        if (exception?.hasFieldErrors() != true) {
             val errorMessage =
                 result.errorMessage ?: stringResource(R.string.generic_error_message)
             LaunchedEffect(result, errorMessage) {
@@ -77,8 +79,7 @@ private fun PasswordResetRequestScreen(
         }
     } else if (result is TaskResult.Success && result.data != null) {
         SideEffect {
-            emailAddress = TextFieldValue()
-            onSuccessfulRequest(result.data!!)
+            function.requestSuccess.invoke(result.data!!)
         }
     }
     val focusManager = LocalFocusManager.current
@@ -88,9 +89,9 @@ private fun PasswordResetRequestScreen(
         scaffoldState = scaffoldState,
         topBar = {
             ToolbarWithProgressbar(
-                toolbarTitle,
-                onNavigationIconClicked,
+                title = toolbarTitle,
                 showProgress = result is TaskResult.Loading,
+                onNavigationIconClicked = function.navigationIcon,
             )
         },
     ) { paddingValues ->
@@ -99,11 +100,11 @@ private fun PasswordResetRequestScreen(
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState()),
         ) {
+            var isEmailError by remember(emailError) {
+                mutableStateOf(emailError.isNotBlank())
+            }
             TextInputLayout(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-                    .padding(top = 16.dp),
+                modifier = VerticalLayoutModifier.padding(top = VIEW_SPACE),
                 value = emailAddress,
                 isError = isEmailError,
                 error = emailError,
@@ -112,19 +113,19 @@ private fun PasswordResetRequestScreen(
                     isEmailError = false
                 },
                 label = stringResource(R.string.fa_request_password_reset_email_label),
-                keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Email,
-                    imeAction = ImeAction.Done),
+                keyboardOptions = KeyboardOptions.Default.copy(
+                    imeAction = ImeAction.Done,
+                    keyboardType = KeyboardType.Email,
+                ),
                 keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
             )
-            Spacer(modifier = Modifier.padding(vertical = 8.dp))
+            Spacer(modifier = Modifier.padding(vertical = VIEW_SPACE_HALVED))
             Button(
-                enabled = emailAddress.text.isNotBlank(),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
+                enabled = emailAddress.text.isNotBlank() && result !is TaskResult.Loading,
+                modifier = VerticalLayoutModifier,
                 onClick = {
                     focusManager.clearFocus()
-                    onRequestClicked(emailAddress.text)
+                    function.request.invoke(emailAddress.text)
                 }
             ) {
                 Text(toolbarTitle.uppercase())
@@ -136,17 +137,14 @@ private fun PasswordResetRequestScreen(
 @Preview
 @Composable
 private fun PasswordResetRequestLoadingPreview() {
-    PasswordResetRequestScreen(Modifier.fillMaxSize(), TaskResult.Loading)
-}
-
-@Preview
-@Composable
-private fun PasswordResetRequestErrorPreview() {
-    PasswordResetRequestScreen(Modifier.fillMaxSize(), TaskResult.Error("Error message"))
+    PasswordResetRequestScreen(modifier = Modifier.fillMaxSize(), result = TaskResult.Loading)
 }
 
 @Preview
 @Composable
 private fun PasswordResetRequestSuccessPreview() {
-    PasswordResetRequestScreen(Modifier.fillMaxSize(), TaskResult.Success(User.default()))
+    PasswordResetRequestScreen(
+        modifier = Modifier.fillMaxSize(),
+        result = TaskResult.Success(User.default()),
+    )
 }

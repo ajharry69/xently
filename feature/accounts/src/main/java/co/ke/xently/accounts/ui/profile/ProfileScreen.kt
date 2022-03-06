@@ -20,6 +20,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import co.ke.xently.accounts.R
 import co.ke.xently.common.KENYA
 import co.ke.xently.data.TaskResult
+import co.ke.xently.data.TaskResult.Loading
 import co.ke.xently.data.User
 import co.ke.xently.data.errorMessage
 import co.ke.xently.data.getOrNull
@@ -40,11 +41,18 @@ internal fun ProfileScreen(
     userId: Long? = null,
     viewModel: ProfileViewModel = hiltViewModel(),
 ) {
-    val fetchResult by viewModel.result.collectAsState()
+    val scope = rememberCoroutineScope()
+    val fetchResult by viewModel.fetchResult.collectAsState(
+        initial = Loading,
+        context = scope.coroutineContext,
+    )
     val updateResult by viewModel.updateResult.collectAsState(
+        context = scope.coroutineContext,
         initial = TaskResult.Success(null),
     )
-    viewModel.setUserID(userId)
+    LaunchedEffect(userId) {
+        viewModel.setUserId(userId)
+    }
     ProfileScreen(
         modifier = modifier,
         fetchResult = fetchResult,
@@ -87,7 +95,7 @@ private fun ProfileScreen(
         scaffoldState = scaffoldState,
         topBar = {
             ToolbarWithProgressbar(
-                showProgress = fetchResult is TaskResult.Loading || updateResult is TaskResult.Loading,
+                showProgress = fetchResult is Loading || updateResult is Loading,
                 onNavigationIconClicked = click.navigationIcon,
                 title = stringResource(R.string.fa_account_profile_screen_title),
             ) {
@@ -121,7 +129,7 @@ private fun ProfileScreen(
             }
             TextInputLayout(
                 value = email,
-                readOnly = !isEditMode, // TODO: Mark account as unverified if changed
+                readOnly = !isEditMode,
                 error = emailError,
                 isError = isEmailError,
                 onValueChange = {
@@ -132,12 +140,14 @@ private fun ProfileScreen(
                 helpText = stringResource(R.string.fa_profile_email_help_text),
                 modifier = VerticalLayoutModifier.padding(
                     top = VIEW_SPACE,
-                    bottom = VIEW_SPACE / 2,
+                    bottom = VIEW_SPACE_HALVED,
                 ),
             )
             Button(
-                enabled = arrayOf(email).all { it.text.isNotBlank() },
-                modifier = VerticalLayoutModifier.padding(top = VIEW_SPACE / 2),
+                enabled = arrayOf(
+                    email,
+                ).all { it.text.isNotBlank() } && updateResult !is Loading,
+                modifier = VerticalLayoutModifier.padding(top = VIEW_SPACE_HALVED),
                 onClick = { click.update.invoke(user!!) },
             ) {
                 Text(

@@ -27,16 +27,7 @@ fun stringRes(@StringRes string: Int, @StringRes vararg args: Int): String {
     }.toTypedArray())
 }
 
-@Deprecated("Unnecessary abstraction", ReplaceWith("TextInputLayout", "co.ke.xently.feature.ui"))
-@Composable
-fun TextFieldErrorText(error: String, modifier: Modifier = Modifier) {
-    Text(
-        error,
-        modifier = modifier.padding(start = 16.dp, end = 12.dp),
-        color = MaterialTheme.colors.error,
-        style = MaterialTheme.typography.caption,
-    )
-}
+val DefaultKeyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next)
 
 @Composable
 fun TextInputLayout(
@@ -47,7 +38,7 @@ fun TextInputLayout(
     isError: Boolean = false,
     error: String = "",
     helpText: String? = null,
-    keyboardOptions: KeyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
+    keyboardOptions: KeyboardOptions = DefaultKeyboardOptions,
     keyboardActions: KeyboardActions = KeyboardActions(),
     onValueChange: (TextFieldValue) -> Unit,
     trailingIcon: @Composable (() -> Unit)? = null,
@@ -73,7 +64,7 @@ fun TextInputLayout(
                 text = error,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 16.dp, end = 12.dp),
+                    .padding(start = VIEW_SPACE, end = 12.dp),
                 color = MaterialTheme.colors.error,
                 style = MaterialTheme.typography.caption,
             )
@@ -82,7 +73,7 @@ fun TextInputLayout(
                 text = helpText,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 16.dp, end = 12.dp),
+                    .padding(start = VIEW_SPACE, end = 12.dp),
                 color = MaterialTheme.colors.onSurface.copy(alpha = .6f),
                 style = MaterialTheme.typography.caption,
             )

@@ -3,13 +3,14 @@ package co.ke.xently.accounts.ui.signup
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.ke.xently.accounts.repository.IAccountRepository
-import co.ke.xently.data.TaskResult
 import co.ke.xently.data.User
+import co.ke.xently.feature.utils.DEFAULT_SHARING_STARTED
 import co.ke.xently.feature.utils.flagLoadingOnStart
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -17,17 +18,16 @@ import javax.inject.Inject
 internal class SignUpViewModel @Inject constructor(
     private val repository: IAccountRepository,
 ) : ViewModel() {
-    private val _signUpResult: MutableStateFlow<TaskResult<User?>> =
-        MutableStateFlow(TaskResult.Success(null))
-    val signUpResult: StateFlow<TaskResult<User?>>
-        get() = _signUpResult
+    private val user = MutableSharedFlow<User>()
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val result = user.flatMapLatest {
+        repository.signUp(it).flagLoadingOnStart()
+    }.shareIn(viewModelScope, DEFAULT_SHARING_STARTED)
 
     fun signUp(user: User) {
         viewModelScope.launch {
-            repository.signUp(user)
-                .flagLoadingOnStart().collectLatest {
-                    _signUpResult.value = it
-                }
+            this@SignUpViewModel.user.emit(user)
         }
     }
 }

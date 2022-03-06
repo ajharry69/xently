@@ -55,7 +55,7 @@ internal class ShoppingListGroupedViewModel @Inject constructor(
     }.stateIn(
         scope = viewModelScope,
         started = DEFAULT_SHARING_STARTED,
-        initialValue = TaskResult.Success(emptyList()),
+        initialValue = TaskResult.Loading,
     )
 
     val shoppingListCount = groupBy.flatMapLatest(repository::getCount).stateIn(

@@ -4,4 +4,8 @@ import co.ke.xently.source.remote.HttpException
 
 internal class PasswordResetRequestHttpException(
     val email: List<String> = emptyList(),
-) : HttpException()
+) : HttpException() {
+    override fun hasFieldErrors(): Boolean {
+        return email.isNotEmpty()
+    }
+}
