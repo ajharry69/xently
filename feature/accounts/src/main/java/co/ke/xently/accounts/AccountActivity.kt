@@ -96,7 +96,9 @@ internal fun ProductsNavHost(
                 function = SignInScreenFunction(
                     navigationIcon = onNavigationIconClicked,
                     forgotPassword = {
-                        navController.navigate("request-password-reset")
+                        navController.navigate("request-password-reset") {
+                            launchSingleTop = true
+                        }
                     },
                     signInSuccess = { user ->
                         if (user.isVerified) {
@@ -191,7 +193,9 @@ internal fun ProductsNavHost(
                 function = PasswordResetRequestScreenFunction(
                     navigationIcon = onNavigationIconClicked,
                     requestSuccess = {
-                        navController.navigate("reset-password")
+                        navController.navigate("reset-password") {
+                            launchSingleTop = true
+                        }
                     },
                 ),
             )
