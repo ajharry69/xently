@@ -42,6 +42,8 @@ internal data class VerificationScreenFunction(
     val verify: (String) -> Unit = {},
 )
 
+private const val VERIFICATION_CODE_LENGTH = 6
+
 @Composable
 internal fun VerificationScreen(
     modifier: Modifier,
@@ -61,10 +63,15 @@ internal fun VerificationScreen(
     val resendCountDownSecond by viewModel.resendCountDownSecond.collectAsState(
         context = scope.coroutineContext,
     )
+    val isTimerOnHold by viewModel.isTimerOnHold.collectAsState(
+        context = scope.coroutineContext,
+        initial = VerificationViewModel.DEFAULT_TIMER_ON_HOLD,
+    )
     VerificationScreen(
         modifier = modifier,
         verifyResult = verifyResult,
         resendResult = resendResult,
+        isTimerOnHold = isTimerOnHold,
         verificationCode = verificationCode,
         resendCountDownSecond = resendCountDownSecond,
         function = function.copy(
@@ -81,6 +88,7 @@ private fun VerificationScreen(
     verifyResult: TaskResult<User?>,
     resendResult: TaskResult<User?>,
     resendCountDownSecond: Int = 60,
+    isTimerOnHold: Boolean = VerificationViewModel.DEFAULT_TIMER_ON_HOLD,
     verificationCode: String = "",
     function: VerificationScreenFunction = VerificationScreenFunction(),
 ) {
@@ -110,12 +118,14 @@ private fun VerificationScreen(
 
     val toolbarTitle = stringResource(R.string.fa_verify_account_toolbar_title)
 
+    val isTaskLoading = arrayOf(resendResult, verifyResult).any { it is TaskResult.Loading }
+
     Scaffold(
         scaffoldState = scaffoldState,
         topBar = {
             ToolbarWithProgressbar(
                 title = toolbarTitle,
-                showProgress = arrayOf(resendResult, verifyResult).any { it is TaskResult.Loading },
+                showProgress = isTaskLoading,
                 onNavigationIconClicked = function.navigationIcon,
             )
         },
@@ -137,13 +147,13 @@ private fun VerificationScreen(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
-                    for (i in 0..5) {
+                    for (i in 0 until VERIFICATION_CODE_LENGTH) {
                         TextField(
-                            colors = TextFieldDefaults.textFieldColors(cursorColor = Color.Transparent),
-                            enabled = resendResult !is TaskResult.Loading,
-                            value = code.getOrNull(i)?.toString() ?: "",
                             singleLine = true,
                             isError = isCodeError,
+                            enabled = !isTaskLoading,
+                            value = code.getOrNull(i)?.toString() ?: "",
+                            colors = TextFieldDefaults.textFieldColors(cursorColor = Color.Transparent),
                             textStyle = MaterialTheme.typography.h5.copy(textAlign = TextAlign.Center),
                             modifier = Modifier
                                 .weight(1f)
@@ -151,7 +161,9 @@ private fun VerificationScreen(
                                     (keyEvent.key == Key.Backspace).also {
                                         if (it) {
                                             focusManager.moveFocus(FocusDirection.Previous)
-                                            if (i > 0) code = code.take(i - 1)
+                                            if (i > 0) {
+                                                code = code.take(i - 1)
+                                            }
                                         }
                                     }
                                 }
@@ -181,9 +193,9 @@ private fun VerificationScreen(
                                 }
                                 isCodeError = false
                                 if (it.isNotEmpty()) {
-                                    if (i != 5) {
+                                    if (i != VERIFICATION_CODE_LENGTH - 1) {
                                         focusManager.moveFocus(FocusDirection.Next)
-                                    } else if (code.length == 6) {
+                                    } else if (code.length == VERIFICATION_CODE_LENGTH) {
                                         // The sixth code should trigger verification
                                         onCodeEntryFinished()
                                     }
@@ -191,7 +203,7 @@ private fun VerificationScreen(
                             },
                             keyboardOptions = KeyboardOptions.Default.copy(
                                 keyboardType = KeyboardType.NumberPassword,
-                                imeAction = if (i == 5) {
+                                imeAction = if (i == VERIFICATION_CODE_LENGTH - 1) {
                                     ImeAction.Done
                                 } else {
                                     ImeAction.Next
@@ -208,7 +220,7 @@ private fun VerificationScreen(
                         style = MaterialTheme.typography.caption,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(start = 16.dp, end = 12.dp),
+                            .padding(start = VIEW_SPACE, end = 12.dp),
                     )
                 }
             }
@@ -218,15 +230,15 @@ private fun VerificationScreen(
                 horizontalArrangement = Arrangement.spacedBy(VIEW_SPACE),
             ) {
                 Button(
-                    enabled = resendCountDownSecond == 0 && resendResult !is TaskResult.Loading,
                     modifier = Modifier.weight(1f),
                     colors = ButtonDefaults.buttonColors(MaterialTheme.colors.secondary),
+                    enabled = resendCountDownSecond == 0 && !isTimerOnHold && !isTaskLoading,
                     onClick = {
                         focusManager.clearFocus()
                         function.resendCode.invoke()
                     },
                 ) {
-                    val resendButtonLabel = if (resendCountDownSecond > 0) {
+                    val resendButtonLabel = if (resendCountDownSecond > 0 && !isTimerOnHold) {
                         // Show seconds counting down to when resend button will be enabled
                         stringResource(
                             R.string.fa_verify_account_resend_code_count_down_label,
@@ -238,7 +250,7 @@ private fun VerificationScreen(
                     Text(resendButtonLabel)
                 }
                 Button(
-                    enabled = code.length == 6 && verifyResult !is TaskResult.Loading,
+                    enabled = code.length == VERIFICATION_CODE_LENGTH && !isTaskLoading,
                     modifier = Modifier.weight(1f),
                     onClick = onCodeEntryFinished,
                 ) {

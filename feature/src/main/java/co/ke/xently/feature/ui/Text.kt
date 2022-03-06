@@ -64,7 +64,7 @@ fun TextInputLayout(
                 text = error,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 16.dp, end = 12.dp),
+                    .padding(start = VIEW_SPACE, end = 12.dp),
                 color = MaterialTheme.colors.error,
                 style = MaterialTheme.typography.caption,
             )
@@ -73,7 +73,7 @@ fun TextInputLayout(
                 text = helpText,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 16.dp, end = 12.dp),
+                    .padding(start = VIEW_SPACE, end = 12.dp),
                 color = MaterialTheme.colors.onSurface.copy(alpha = .6f),
                 style = MaterialTheme.typography.caption,
             )

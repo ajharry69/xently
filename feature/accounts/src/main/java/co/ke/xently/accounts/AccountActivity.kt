@@ -1,6 +1,7 @@
 package co.ke.xently.accounts
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
@@ -8,6 +9,7 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -33,6 +35,10 @@ import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class AccountActivity : ComponentActivity() {
+    companion object {
+        val TAG: String = AccountActivity::class.java.simpleName
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -55,6 +61,7 @@ internal fun ProductsNavHost(
     navController: NavHostController,
     onNavigationIconClicked: () -> Unit,
 ) {
+    val context = LocalContext.current
     NavHost(modifier = modifier, navController = navController, startDestination = "profile") {
         composable("profile") {
             ProfileScreen(
@@ -93,10 +100,11 @@ internal fun ProductsNavHost(
                     },
                     signInSuccess = { user ->
                         if (user.isVerified) {
-                            // TODO: Navigate to home screen...
-                            onNavigationIconClicked()
+                            (context as ComponentActivity).finish()
                         } else {
-                            navController.navigate("verify-account")
+                            navController.navigate("verify-account") {
+                                launchSingleTop = true
+                            }
                         }
                     },
                     createAccount = {
@@ -128,10 +136,11 @@ internal fun ProductsNavHost(
                     navigationIcon = onNavigationIconClicked,
                     signUpSuccess = { user ->
                         if (user.isVerified) {
-                            // TODO: Navigate to home screen...
-                            onNavigationIconClicked()
+                            (context as ComponentActivity).finish()
                         } else {
-                            navController.navigate("verify-account")
+                            navController.navigate("verify-account") {
+                                launchSingleTop = true
+                            }
                         }
                     },
                     signIn = {
@@ -155,15 +164,19 @@ internal fun ProductsNavHost(
         composable(
             "verify-account?code={code}",
             listOf(navArgument("code") { defaultValue = "" }),
-        ) {
+        ) { navBackStackEntry ->
             VerificationScreen(
                 modifier = Modifier.fillMaxSize(),
-                verificationCode = it.arguments?.getString("code") ?: "",
+                verificationCode = navBackStackEntry.arguments?.getString("code") ?: "",
                 function = VerificationScreenFunction(
                     navigationIcon = onNavigationIconClicked,
                     verificationSuccess = {
-//                    navController.navigate("reset-password")
-                        // TODO: Navigate to home page... Above code may not be necessary if the `this` activity is finished when starting a new activity
+                        if (it.isVerified) {
+                            (context as ComponentActivity).finish()
+                        } else {
+                            Log.d(AccountActivity.TAG,
+                                "ProductsNavHost: User account not verified successfully")
+                        }
                     }
                 ),
             )
@@ -198,8 +211,7 @@ internal fun ProductsNavHost(
                 function = PasswordResetScreenFunction(
                     navigationIcon = onNavigationIconClicked,
                     resetSuccess = {
-                        navController.popBackStack("reset-password", true)
-                        // TODO: Navigate to home page... Above code may not be necessary if the `this` activity is finished when starting a new activity
+                        (context as ComponentActivity).finish()
                     },
                 ),
             )
