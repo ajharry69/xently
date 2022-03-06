@@ -22,16 +22,16 @@ internal class ProfileViewModel @Inject constructor(repository: IAuthRepository)
         repository.getUser(it).flagLoadingOnStart()
     }.shareIn(viewModelScope, DEFAULT_SHARING_STARTED)
 
-    fun setUserID(id: Long?) {
-        viewModelScope.launch {
-            userId.emit(id)
-        }
-    }
-
     private val user = MutableSharedFlow<User>()
     val updateResult = user.flatMapLatest {
         repository.update(it).flagLoadingOnStart()
     }.shareIn(viewModelScope, DEFAULT_SHARING_STARTED)
+
+    fun setUserId(id: Long?) {
+        viewModelScope.launch {
+            userId.emit(id)
+        }
+    }
 
     fun update(user: User) {
         viewModelScope.launch {

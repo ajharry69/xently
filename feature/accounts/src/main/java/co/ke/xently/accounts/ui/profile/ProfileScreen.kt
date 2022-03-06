@@ -50,7 +50,9 @@ internal fun ProfileScreen(
         context = scope.coroutineContext,
         initial = TaskResult.Success(null),
     )
-    viewModel.setUserID(userId)
+    LaunchedEffect(userId) {
+        viewModel.setUserId(userId)
+    }
     ProfileScreen(
         modifier = modifier,
         fetchResult = fetchResult,
@@ -127,7 +129,7 @@ private fun ProfileScreen(
             }
             TextInputLayout(
                 value = email,
-                readOnly = !isEditMode, // TODO: Mark account as unverified if changed
+                readOnly = !isEditMode,
                 error = emailError,
                 isError = isEmailError,
                 onValueChange = {
