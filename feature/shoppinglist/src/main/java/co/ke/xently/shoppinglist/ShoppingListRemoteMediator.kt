@@ -16,6 +16,17 @@ internal class ShoppingListRemoteMediator(
     private val group: ShoppingListGroup?,
     private val dependencies: Dependencies,
 ) : RemoteMediator<Int, ShoppingListItem.WithRelated>() {
+    private val queries = buildMap {
+        if (group != null && group.groupBy == GroupBy.DateAdded) {
+            put("date_added", group.group.toString())
+        }
+    }
+    private val remoteKeyEndpoint = if (group == null) {
+        "/api/shopping-list/"
+    } else {
+        "/api/shopping-list/?${queries.map { it.key + "=" + it.value }.joinToString("&")}"
+    }
+
     override suspend fun load(
         loadType: LoadType,
         state: PagingState<Int, ShoppingListItem.WithRelated>,
@@ -28,7 +39,7 @@ internal class ShoppingListRemoteMediator(
             }
             LoadType.APPEND -> return MediatorResult.Success(endOfPaginationReached = true)
             LoadType.PREPEND -> dependencies.database.withTransaction {
-                dependencies.database.remoteKeyDao.get(REMOTE_KEY_ENDPOINT)
+                dependencies.database.remoteKeyDao.get(remoteKeyEndpoint)
             }?.nextPage ?: return MediatorResult.Success(endOfPaginationReached = true)
         }
 
@@ -36,18 +47,19 @@ internal class ShoppingListRemoteMediator(
             val response = sendRequest {
                 dependencies.service.shoppingList.get(
                     page = page,
+                    queries = queries,
                     size = state.config.initialLoadSize,
                     cacheControl = cacheControl.toString(),
                 )
             }
             dependencies.database.withTransaction {
                 if (loadType == LoadType.REFRESH) {
-                    dependencies.database.remoteKeyDao.delete(REMOTE_KEY_ENDPOINT)
+                    dependencies.database.remoteKeyDao.delete(remoteKeyEndpoint)
                     dependencies.database.shoppingListDao.deleteAll()
                 }
 
                 response.getOrThrow().run {
-                    dependencies.database.remoteKeyDao.save(toRemoteKey(REMOTE_KEY_ENDPOINT))
+                    dependencies.database.remoteKeyDao.save(toRemoteKey(remoteKeyEndpoint))
                     results.run {
                         saveLocallyWithAttributes(dependencies)
                         MediatorResult.Success(endOfPaginationReached = isEmpty())
@@ -57,9 +69,5 @@ internal class ShoppingListRemoteMediator(
         } catch (ex: Exception) {
             getMediatorResultsOrThrow(ex)
         }
-    }
-
-    private companion object {
-        private const val REMOTE_KEY_ENDPOINT = "/api/shopping-list/"
     }
 }
