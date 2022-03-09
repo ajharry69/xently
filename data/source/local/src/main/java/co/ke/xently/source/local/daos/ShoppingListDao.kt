@@ -5,6 +5,7 @@ import androidx.room.*
 import co.ke.xently.data.GroupedShoppingListCount
 import co.ke.xently.data.ShoppingListItem
 import kotlinx.coroutines.flow.Flow
+import java.util.*
 
 @Dao
 interface ShoppingListDao {
@@ -21,6 +22,10 @@ interface ShoppingListDao {
     @Transaction
     @Query("SELECT * FROM shoppinglist ORDER BY name")
     fun get(): PagingSource<Int, ShoppingListItem.WithRelated>
+
+    @Transaction
+    @Query("SELECT * FROM shoppinglist WHERE dateAdded = :group ORDER BY name")
+    fun get(group: Date): PagingSource<Int, ShoppingListItem.WithRelated>
 
     @Query("SELECT dateAdded AS `group`, COUNT(dateAdded) AS numberOfItems FROM shoppinglist GROUP BY dateAdded")
     fun getCountGroupedByDateAdded(): Flow<List<GroupedShoppingListCount>>

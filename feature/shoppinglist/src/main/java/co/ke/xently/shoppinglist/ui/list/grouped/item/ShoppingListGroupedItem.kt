@@ -14,17 +14,19 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import co.ke.xently.data.GroupedShoppingList
 import co.ke.xently.data.ShoppingListItem
-import co.ke.xently.feature.ui.VIEW_SPACE
 import co.ke.xently.feature.ui.NEGLIGIBLE_SPACE
+import co.ke.xently.feature.ui.VIEW_SPACE
 import co.ke.xently.feature.ui.VIEW_SPACE_HALVED
 import co.ke.xently.feature.ui.shimmerPlaceholder
+import co.ke.xently.shoppinglist.GroupBy
 import co.ke.xently.shoppinglist.R
+import co.ke.xently.shoppinglist.repository.ShoppingListGroup
 import co.ke.xently.shoppinglist.ui.list.item.MenuItem
 import co.ke.xently.shoppinglist.ui.list.item.ShoppingListItemCard
 import java.util.*
 
 internal data class GroupedShoppingListCardFunction(
-    val onSeeAllClicked: (group: Any) -> Unit = {},
+    val onSeeAllClicked: (ShoppingListGroup) -> Unit = {},
     val onItemClicked: (ShoppingListItem) -> Unit = {},
 )
 
@@ -40,6 +42,7 @@ internal fun GroupedShoppingListCard(
     listCount: Map<Any, Int>,
     modifier: Modifier = Modifier,
     showPlaceholder: Boolean = false,
+    groupBy: GroupBy = GroupBy.DateAdded,
     menuItems: List<MenuItem> = emptyList(),
     groupMenuItems: List<GroupMenuItem> = emptyList(),
     function: GroupedShoppingListCardFunction = GroupedShoppingListCardFunction(),
@@ -121,7 +124,14 @@ internal fun GroupedShoppingListCard(
             }
             if (numberOfItems > itemsPerCard) {
                 OutlinedButton(
-                    onClick = { function.onSeeAllClicked.invoke(groupList.group) },
+                    onClick = {
+                        function.onSeeAllClicked.invoke(
+                            ShoppingListGroup(
+                                groupBy = groupBy,
+                                group = groupList.group,
+                            ),
+                        )
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .shimmerPlaceholder(showPlaceholder)

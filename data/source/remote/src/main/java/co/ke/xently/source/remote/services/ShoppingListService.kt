@@ -26,6 +26,8 @@ interface ShoppingListService {
         size: Int? = null,
         @Header("Cache-Control")
         cacheControl: String = "only-if-cached",
+        @QueryMap
+        queries: Map<String, String> = emptyMap(),
     ): Response<PagedData<ShoppingListItem>>
 
     @GET("shopping-list/grouped/")

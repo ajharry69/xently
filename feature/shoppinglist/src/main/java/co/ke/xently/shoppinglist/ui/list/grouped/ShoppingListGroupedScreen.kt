@@ -75,6 +75,7 @@ internal fun GroupedShoppingListScreen(
     GroupedShoppingListScreen(
         user = user,
         result = result,
+        groupBy = groupBy,
         modifier = modifier,
         menuItems = menuItems,
         drawerItems = drawerItems,
@@ -108,16 +109,17 @@ internal fun GroupedShoppingListScreen(
 @Composable
 private fun GroupedShoppingListScreen(
     user: User?,
-    function: GroupedShoppingListScreenFunction,
+    groupBy: GroupBy,
     modifier: Modifier,
-    menuItems: List<MenuItem>,
-    drawerItems: List<NavMenuItem>,
-    groupMenuItems: List<GroupMenuItem>,
-    groupCount: Map<Any, Int>,
-    signOutResult: TaskResult<Unit>,
-    result: TaskResult<List<GroupedShoppingList>>,
     isRefreshing: Boolean,
+    menuItems: List<MenuItem>,
+    groupCount: Map<Any, Int>,
     optionsMenu: List<OptionMenu>,
+    drawerItems: List<NavMenuItem>,
+    signOutResult: TaskResult<Unit>,
+    groupMenuItems: List<GroupMenuItem>,
+    function: GroupedShoppingListScreenFunction,
+    result: TaskResult<List<GroupedShoppingList>>,
 ) {
     val scaffoldState = rememberScaffoldState()
     val coroutineScope = rememberCoroutineScope()
@@ -214,10 +216,11 @@ private fun GroupedShoppingListScreen(
     ) { paddingValues ->
         val itemContent: @Composable (LazyItemScope.(GroupedShoppingList) -> Unit) = { groupList ->
             GroupedShoppingListCard(
-                function = function.function,
+                groupBy = groupBy,
                 groupList = groupList,
                 menuItems = menuItems,
                 listCount = groupCount,
+                function = function.function,
                 groupMenuItems = groupMenuItems,
                 showPlaceholder = groupList.isDefault,
             )

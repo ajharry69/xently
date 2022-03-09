@@ -3,6 +3,7 @@ package co.ke.xently.shoppinglist.repository
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.map
+import co.ke.xently.common.DEFAULT_SERVER_DATE_FORMAT
 import co.ke.xently.common.Retry
 import co.ke.xently.data.*
 import co.ke.xently.feature.repository.Dependencies
@@ -125,10 +126,18 @@ internal class ShoppingListRepository @Inject constructor(private val dependenci
         }.retryCatch(this).flowOn(dependencies.dispatcher.io)
     }
 
-    override fun get(config: PagingConfig) = Pager(
+    override fun get(config: PagingConfig, group: ShoppingListGroup?) = Pager(
         config = config,
-        remoteMediator = ShoppingListRemoteMediator(dependencies),
-        pagingSourceFactory = dependencies.database.shoppingListDao::get,
+        remoteMediator = ShoppingListRemoteMediator(group, dependencies),
+        pagingSourceFactory = {
+            if (group != null && group.groupBy == DateAdded) {
+                dependencies.database.shoppingListDao.get(
+                    DEFAULT_SERVER_DATE_FORMAT.parse(group.group.toString())!!,
+                )
+            } else {
+                dependencies.database.shoppingListDao.get()
+            }
+        },
     ).flow.map { data ->
         data.map { it.item }
     }

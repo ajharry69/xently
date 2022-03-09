@@ -36,6 +36,7 @@ import co.ke.xently.feature.viewmodels.LocationPermissionViewModel
 import co.ke.xently.shoppinglist.Recommend.From
 import co.ke.xently.shoppinglist.ui.detail.ShoppingListItemScreen
 import co.ke.xently.shoppinglist.ui.detail.ShoppingListItemScreenFunction
+import co.ke.xently.shoppinglist.repository.ShoppingListGroup
 import co.ke.xently.shoppinglist.ui.list.ShoppingListScreen
 import co.ke.xently.shoppinglist.ui.list.ShoppingListScreenFunction
 import co.ke.xently.shoppinglist.ui.list.grouped.GroupedShoppingListScreen
@@ -211,16 +212,35 @@ internal fun ShoppingListNavHost(
                             // TODO: ...
                         },
                         onSeeAllClicked = {
-                            navController.navigate("shopping-list")
+                            navController.navigate("shopping-list?group=${it.group}&groupBy=${it.groupBy}")
                         },
                     ),
                 ),
             )
         }
-        composable("shopping-list") {
+        composable(
+            route = "shopping-list?group={group}&groupBy={groupBy}",
+            arguments = listOf(
+                navArgument("group") {
+                    nullable = true
+                },
+                navArgument("groupBy") {
+                    defaultValue = GroupBy.DateAdded.name
+                },
+            ),
+        ) {
             ShoppingListScreen(
                 modifier = Modifier.fillMaxSize(),
                 menuItems = shoppingListItemMenuItems,
+                group = if (it.arguments?.get("group") == null) {
+                    null
+                } else {
+                    ShoppingListGroup(
+                        group = it.arguments!!.get("group")!!,
+                        groupBy = it.arguments?.getString("groupBy")
+                            ?.let { it1 -> GroupBy.valueOf(it1) } ?: GroupBy.DateAdded,
+                    )
+                },
                 function = ShoppingListScreenFunction(
                     onAddClicked = onAddShoppingListItemClicked,
                     onNavigationIconClicked = onNavigationIconClicked,
@@ -234,6 +254,7 @@ internal fun ShoppingListNavHost(
                             // onRecommendOptionsMenuClicked(shoppingListResult.getOrNull())
                         },
                     ),
+                    OptionMenu(title = stringResource(R.string.refresh)),
                 ),
             )
         }
