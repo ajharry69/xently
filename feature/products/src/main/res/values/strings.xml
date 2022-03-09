@@ -11,4 +11,5 @@
     <string name="fp_product_detail_shop_label">Shop</string>
     <string name="fp_success_adding_product">Product successfully added</string>
     <string name="fp_product_list_overflow_menu_description">More options for product list.</string>
+    <string name="fp_product_detail_shop_query_help_text">Click + to add a new shop</string>
 </resources>
