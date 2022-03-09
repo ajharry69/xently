@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "259891d9771409b7dcc1e33b965cc0a9",
+    "identityHash": "11f92943b74145173e01633fc4c07337",
     "entities": [
       {
         "tableName": "shops",
@@ -334,7 +334,7 @@
       },
       {
         "tableName": "measurement_units",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `name` TEXT NOT NULL, `synonym` INTEGER, `isDefault` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `name` TEXT NOT NULL, `synonym` INTEGER, PRIMARY KEY(`id`))",
         "fields": [
           {
             "fieldPath": "id",
@@ -353,12 +353,6 @@
             "columnName": "synonym",
             "affinity": "INTEGER",
             "notNull": false
-          },
-          {
-            "fieldPath": "isDefault",
-            "columnName": "isDefault",
-            "affinity": "INTEGER",
-            "notNull": true
           }
         ],
         "primaryKey": {
@@ -613,7 +607,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '259891d9771409b7dcc1e33b965cc0a9')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '11f92943b74145173e01633fc4c07337')"
     ]
   }
 }
