@@ -44,6 +44,7 @@ fun measurementUnitTextField(
         value = value,
         isError = isError,
         error = error,
+        helpText = stringResource(R.string.fps_measurement_unit_recommendation_help_text),
         label = stringResource(R.string.fsp_product_detail_unit_label),
         keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
         onValueChange = {
@@ -56,7 +57,10 @@ fun measurementUnitTextField(
         },
         suggestions = suggestions,
     ) {
-        Text(it.toString(), style = MaterialTheme.typography.body1)
+        Text(
+            style = MaterialTheme.typography.body1,
+            text = "${it}${if (it.synonym == null) "*" else ""}",
+        )
     }
     return value
 }

@@ -1,6 +1,7 @@
 package co.ke.xently.data
 
 import androidx.room.Entity
+import androidx.room.Ignore
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import co.ke.xently.common.Exclude
@@ -14,9 +15,10 @@ import co.ke.xently.common.Exclude
 )
 data class MeasurementUnit(
     @PrimaryKey(autoGenerate = false)
-    val id: Long = -1,
-    val name: String = "",
-    val synonym: Long? = null,
+    var id: Long = -1,
+    var name: String = "",
+    var synonym: Long? = null,
+    @Ignore
     @Exclude
     val isDefault: Boolean = false,
 ) {
