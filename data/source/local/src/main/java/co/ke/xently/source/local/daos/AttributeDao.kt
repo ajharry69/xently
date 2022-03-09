@@ -22,6 +22,6 @@ interface AttributeDao {
     @Query("SELECT * FROM product_attributes WHERE value LIKE :query GROUP BY value ORDER BY value")
     fun getByValue(query: String): Flow<List<Product.Attribute>>
 
-    @Query("SELECT * FROM product_attributes WHERE name LIKE :nameQuery AND value LIKE :valueQuery ORDER BY name, value")
+    @Query("SELECT * FROM product_attributes WHERE name LIKE :nameQuery AND value LIKE :valueQuery GROUP BY name, value ORDER BY name, value")
     fun get(nameQuery: String, valueQuery: String): Flow<List<Product.Attribute>>
 }

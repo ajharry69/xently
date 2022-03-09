@@ -16,6 +16,6 @@ interface BrandDao {
     @Insert(onConflict = REPLACE)
     suspend fun save(brands: List<ShoppingListItem.Brand>)
 
-    @Query("SELECT * FROM product_brands WHERE name LIKE :query ORDER BY name")
+    @Query("SELECT * FROM product_brands WHERE name LIKE :query GROUP BY name ORDER BY name")
     fun get(query: String): Flow<List<Product.Brand>>
 }
