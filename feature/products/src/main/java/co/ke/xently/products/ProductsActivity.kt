@@ -1,5 +1,6 @@
 package co.ke.xently.products
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.compose.setContent
@@ -9,12 +10,15 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.core.net.toUri
 import androidx.navigation.*
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import co.ke.xently.data.Product
+import co.ke.xently.data.Shop
 import co.ke.xently.feature.theme.XentlyTheme
 import co.ke.xently.feature.ui.OptionMenu
 import co.ke.xently.products.ui.detail.ProductDetailScreen
@@ -51,6 +55,7 @@ internal fun ProductsNavHost(
     navController: NavHostController,
     onNavigationIconClicked: () -> Unit,
 ) {
+    val context = LocalContext.current
     NavHost(modifier = modifier,
         navController = navController,
         startDestination = startDestination) {
@@ -103,12 +108,16 @@ internal fun ProductsNavHost(
                     type = NavType.LongType
                 },
             ),
-        ) {
+        ) { navBackStackEntry ->
             ProductDetailScreen(
                 modifier = Modifier.fillMaxSize(),
-                id = it.arguments?.getLong("id") ?: Product.default().id,
+                id = navBackStackEntry.arguments?.getLong("id") ?: Product.default().id,
                 function = ProductDetailScreenFunction(
                     onNavigationIconClicked = onNavigationIconClicked,
+                    onAddNewShop = {
+                        context.startActivity(Intent(Intent.ACTION_VIEW,
+                            "xently://shops/${Shop.default().id}/?name=${it}&moveBack=1".toUri()))
+                    },
                 ),
             )
         }

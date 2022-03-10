@@ -9,8 +9,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTime
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
@@ -36,10 +38,11 @@ import com.google.android.material.datepicker.DateValidatorPointBackward
 internal data class ProductDetailScreenFunction(
     val onNavigationIconClicked: () -> Unit = {},
     val onShopQueryChanged: (String) -> Unit = {},
-    val onMeasurementUnitQueryChanged: (String) -> Unit = {},
     val onBrandQueryChanged: (String) -> Unit = {},
-    val onAttributeQueryChanged: (AttributeQuery) -> Unit = {},
     val onDetailsSubmitted: (Product) -> Unit = {},
+    val onAddNewShop: (shopName: String) -> Unit = {},
+    val onMeasurementUnitQueryChanged: (String) -> Unit = {},
+    val onAttributeQueryChanged: (AttributeQuery) -> Unit = {},
 )
 
 @Composable
@@ -178,7 +181,12 @@ private fun ProductDetailScreen(
                 .padding(paddingValues)
                 .verticalScroll(scrollState),
         ) {
-            var isShopError by remember { mutableStateOf(shopError.isNotBlank()) }
+            var isShopError by remember {
+                mutableStateOf(shopError.isNotBlank())
+            }
+            var savableShop by remember(product.shopId) {
+                mutableStateOf(product.shopId)
+            }
             var shop by remember(product.shop) {
                 val value = if (product.isDefault) {
                     ""
@@ -187,11 +195,15 @@ private fun ProductDetailScreen(
                 }
                 mutableStateOf(TextFieldValue(value))
             }
-            var savableShop by remember(product.shopId) { mutableStateOf(product.shopId) }
+            val showAddShopIcon by rememberSaveable(shop.text, savableShop) {
+                mutableStateOf(savableShop == Shop.default().id && shop.text.isNotBlank())
+            }
+            // TODO: Auto-search after adding a new shop has succeeded
             AutoCompleteTextField(
                 value = shop,
-                isError = isShopError,
                 error = shopError,
+                suggestions = shops,
+                isError = isShopError,
                 modifier = VerticalLayoutModifier.padding(top = VIEW_SPACE),
                 label = stringResource(R.string.fp_product_detail_shop_label),
                 keyboardOptions = KeyboardOptions.Default.copy(
@@ -207,7 +219,25 @@ private fun ProductDetailScreen(
                     shop = TextFieldValue(s.toString())
                     savableShop = s.id
                 },
-                suggestions = shops,
+                helpText = if (showAddShopIcon) {
+                    stringResource(R.string.fp_product_detail_shop_query_help_text)
+                } else {
+                    null
+                },
+                trailingIcon = if (showAddShopIcon) {
+                    {
+                        IconButton(
+                            onClick = {
+                                focusManager.clearFocus()
+                                function.onAddNewShop.invoke(shop.text)
+                            },
+                        ) {
+                            Icon(Icons.Default.Add, contentDescription = null)
+                        }
+                    }
+                } else {
+                    null
+                },
             ) {
                 Column(modifier = Modifier.fillMaxWidth()) {
                     Text(it.name, style = MaterialTheme.typography.body1)

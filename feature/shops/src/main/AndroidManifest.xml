@@ -22,7 +22,17 @@
 
                 <data
                     android:host="shops"
-                    android:pathPattern="/..*/addresses/*"
+                    android:pathPattern="/..*/addresses/.*"
+                    android:scheme="xently" />
+
+                <!--
+                The following should support:
+                    1. xently://shops/1/
+                    2. xently://shops/1/?name=Test
+                 -->
+                <data
+                    android:host="shops"
+                    android:pathPattern="/..*/.*"
                     android:scheme="xently" />
             </intent-filter>
         </activity>

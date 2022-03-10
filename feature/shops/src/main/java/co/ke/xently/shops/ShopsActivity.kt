@@ -25,6 +25,7 @@ import co.ke.xently.data.Shop
 import co.ke.xently.feature.theme.XentlyTheme
 import co.ke.xently.feature.ui.OptionMenu
 import co.ke.xently.shops.ui.detail.ShopDetailScreen
+import co.ke.xently.shops.ui.detail.ShopDetailScreenArgs
 import co.ke.xently.shops.ui.detail.ShopDetailScreenFunction
 import co.ke.xently.shops.ui.list.ShopListScreen
 import co.ke.xently.shops.ui.list.ShopListScreenFunction
@@ -45,7 +46,7 @@ class ShopsActivity : ComponentActivity() {
                 Surface(color = MaterialTheme.colors.background) {
                     val navController = rememberNavController()
                     ShopsNavHost(navController = navController) {
-                        if (!navController.navigateUp()) onBackPressed()
+                        onBackPressed()
                     }
                 }
             }
@@ -74,7 +75,7 @@ internal fun ShopsNavHost(
                             MenuItem(
                                 label = stringResource(R.string.update),
                                 onClick = {
-                                    navController.navigate("shops/${it.id}")
+                                    navController.navigate("shops/${it.id}/")
                                 },
                             ),
                         )
@@ -127,18 +128,35 @@ internal fun ShopsNavHost(
                 ),
             )
         }
+        val shopDetailRoute = "shops/{id}/?name={name}&moveBack={moveBack}"
         composable(
-            "shops/{id}",
+            route = shopDetailRoute,
             arguments = listOf(
                 navArgument("id") {
                     nullable = false
                     type = NavType.LongType
+                },
+                navArgument("name") {
+                    defaultValue = ""
+                },
+                navArgument("moveBack") {
+                    defaultValue = 0
+                    type = NavType.LongType
+                },
+            ),
+            deepLinks = listOf(
+                navDeepLink {
+                    uriPattern = "xently://$shopDetailRoute"
                 },
             ),
         ) {
             ShopDetailScreen(
                 modifier = Modifier.fillMaxSize(),
                 id = it.arguments?.getLong("id") ?: Shop.default().id,
+                args = ShopDetailScreenArgs(
+                    name = it.arguments?.getString("name") ?: "",
+                    moveBack = it.arguments?.getLong("moveBack") == 1L,
+                ),
                 function = ShopDetailScreenFunction(
                     onNavigationIconClicked = onNavigationIconClicked,
                 ),

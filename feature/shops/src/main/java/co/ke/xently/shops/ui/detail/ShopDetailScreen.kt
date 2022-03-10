@@ -32,6 +32,11 @@ import co.ke.xently.shops.R
 import com.google.android.libraries.maps.model.LatLng
 import com.google.android.libraries.maps.model.MarkerOptions
 
+internal data class ShopDetailScreenArgs(
+    val name: String = "",
+    val moveBack: Boolean = false,
+)
+
 internal data class ShopDetailScreenFunction(
     val onAddShopClicked: (Shop) -> Unit = {},
     val onNavigationIconClicked: () -> Unit = {},
@@ -42,6 +47,7 @@ internal data class ShopDetailScreenFunction(
 internal fun ShopDetailScreen(
     id: Long,
     modifier: Modifier,
+    args: ShopDetailScreenArgs,
     function: ShopDetailScreenFunction,
     viewModel: ShopDetailViewModel = hiltViewModel(),
 ) {
@@ -58,7 +64,12 @@ internal fun ShopDetailScreen(
         viewModel.get(id)
     }
     val permitReAddition = id == Shop.default().id && addResult.getOrNull() != null
+    if (permitReAddition && args.moveBack) {
+        SideEffect(function.onNavigationIconClicked)
+    }
+
     ShopDetailScreen(
+        args = args,
         modifier = modifier,
         result = if (permitReAddition) {
             Success(null)
@@ -80,9 +91,10 @@ private fun ShopDetailScreen(
     result: TaskResult<Shop?>,
     addResult: TaskResult<Shop?>,
     permitReAddition: Boolean = false,
+    args: ShopDetailScreenArgs = ShopDetailScreenArgs(),
     function: ShopDetailScreenFunction = ShopDetailScreenFunction(),
 ) {
-    val shop = result.getOrNull() ?: Shop.default()
+    val shop = result.getOrNull() ?: Shop.default().copy(name = args.name)
     val toolbarTitle = stringRes(
         R.string.fs_add_shop_toolbar_title,
         if (shop.isDefault) {
@@ -210,7 +222,7 @@ private fun ShopDetailScreen(
                     .verticalScroll(rememberScrollState()),
             ) {
                 var name by remember(shop.id, shop.name, permitReAddition) {
-                    mutableStateOf(TextFieldValue(if (!shop.isDefault) shop.name else ""))
+                    mutableStateOf(TextFieldValue(if (!shop.isDefault) shop.name else args.name))
                 }
                 var isNameError by remember {
                     mutableStateOf(nameError.isNotBlank())
