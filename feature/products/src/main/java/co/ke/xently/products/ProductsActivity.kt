@@ -2,7 +2,6 @@ package co.ke.xently.products
 
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.fillMaxSize
@@ -21,6 +20,8 @@ import co.ke.xently.data.Product
 import co.ke.xently.data.Shop
 import co.ke.xently.feature.theme.XentlyTheme
 import co.ke.xently.feature.ui.OptionMenu
+import co.ke.xently.feature.utils.Routes
+import co.ke.xently.feature.utils.buildRoute
 import co.ke.xently.products.ui.detail.ProductDetailScreen
 import co.ke.xently.products.ui.detail.ProductDetailScreenFunction
 import co.ke.xently.products.ui.list.ProductListScreen
@@ -32,15 +33,13 @@ import dagger.hilt.android.AndroidEntryPoint
 class ProductsActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        Log.d(ProductsActivity::class.simpleName,
-            "onCreate: <${intent.extras}>, Action: <${intent.action}>, Uri: <${intent.data}>")
         setContent {
             XentlyTheme {
                 // A surface container using the 'background' color from the theme
                 Surface(color = MaterialTheme.colors.background) {
                     val navController = rememberNavController()
-                    ProductsNavHost("products", navController = navController) {
-                        if (!navController.navigateUp()) onBackPressed()
+                    ProductsNavHost(Routes.Products.START, navController = navController) {
+                        onBackPressed()
                     }
                 }
             }
@@ -64,7 +63,7 @@ internal fun ProductsNavHost(
                 shopId = backStackEntry.arguments?.getLong("shopId"),
                 function = ProductListScreenFunction(
                     onAddFabClicked = {
-                        navController.navigate("products/${Product.default().id}") {
+                        navController.navigate(Routes.Products.DETAIL.buildRoute("id" to Product.default().id)) {
                             launchSingleTop = true
                         }
                     },
@@ -72,7 +71,7 @@ internal fun ProductsNavHost(
                 ),
                 menuItems = listOf(
                     MenuItem(R.string.update) {
-                        navController.navigate("products/${it.id}") {
+                        navController.navigate(Routes.Products.DETAIL.buildRoute("id" to it.id)) {
                             launchSingleTop = true
                         }
                     },
@@ -86,9 +85,9 @@ internal fun ProductsNavHost(
                 ),
             )
         }
-        composable("products", content = productList)
+        composable(Routes.Products.START, content = productList)
         composable(
-            "shops/{shopId}/products",
+            route = Routes.Products.FILTERED_BY_SHOP,
             content = productList,
             arguments = listOf(
                 navArgument("shopId") {
@@ -97,13 +96,13 @@ internal fun ProductsNavHost(
             ),
             deepLinks = listOf(
                 navDeepLink {
-                    uriPattern = "xently://shops/{shopId}/products/"
+                    uriPattern = Routes.Products.Deeplinks.FILTERED_BY_SHOP
                 },
             ),
         )
         composable(
-            "products/{id}",
-            listOf(
+            route = Routes.Products.DETAIL,
+            arguments = listOf(
                 navArgument("id") {
                     type = NavType.LongType
                 },
@@ -115,8 +114,12 @@ internal fun ProductsNavHost(
                 function = ProductDetailScreenFunction(
                     onNavigationIconClicked = onNavigationIconClicked,
                     onAddNewShop = {
-                        context.startActivity(Intent(Intent.ACTION_VIEW,
-                            "xently://shops/${Shop.default().id}/?name=${it}&moveBack=1".toUri()))
+                        val route = Routes.Shops.Deeplinks.DETAIL.buildRoute(
+                            "name" to it,
+                            "moveBack" to 1,
+                            "id" to Shop.default().id,
+                        )
+                        context.startActivity(Intent(Intent.ACTION_VIEW, route.toUri()))
                     },
                 ),
             )
