@@ -1,18 +1,13 @@
 package co.ke.xently.shops.ui.detail
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
@@ -20,14 +15,12 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import co.ke.xently.common.DEFAULT_LOCATION
 import co.ke.xently.data.*
 import co.ke.xently.data.TaskResult.Success
 import co.ke.xently.feature.theme.XentlyTheme
 import co.ke.xently.feature.ui.*
-import co.ke.xently.feature.utils.MAP_HEIGHT
 import co.ke.xently.shops.R
 import com.google.android.libraries.maps.model.LatLng
 import com.google.android.libraries.maps.model.MarkerOptions
@@ -85,6 +78,7 @@ internal fun ShopDetailScreen(
     )
 }
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 private fun ShopDetailScreen(
     modifier: Modifier,
@@ -103,7 +97,7 @@ private fun ShopDetailScreen(
             R.string.update
         },
     )
-    val scaffoldState = rememberScaffoldState()
+    val scaffoldState = rememberBackdropScaffoldState(BackdropValue.Revealed)
     var nameError by remember { mutableStateOf("") }
     var taxPinError by remember { mutableStateOf("") }
     var addressesError by remember { mutableStateOf("") }
@@ -131,19 +125,42 @@ private fun ShopDetailScreen(
     var isAddressError by remember { mutableStateOf(addressesError.isNotBlank()) }
     val addresses =
         remember(permitReAddition) { mutableStateListOf(*shop.addresses.toTypedArray()) }
-    val focusManager = LocalFocusManager.current
-    Scaffold(
+    val isTaskLoading = arrayOf(result, addResult).any { it is TaskResult.Loading }
+    BackdropScaffold(
+        modifier = modifier,
         scaffoldState = scaffoldState,
-        topBar = {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(IntrinsicSize.Min),
-            ) {
+        frontLayerScrimColor = Color.Unspecified,
+        backLayerBackgroundColor = MaterialTheme.colors.background,
+        appBar = {
+            ToolbarWithProgressbar(
+                title = toolbarTitle,
+                showProgress = isTaskLoading,
+                onNavigationIconClicked = function.onNavigationIconClicked,
+            )
+        },
+        backLayerContent = {
+            ShopDetailEntry(
+                shop = shop,
+                args = args,
+                function = function,
+                addresses = addresses,
+                nameError = nameError,
+                taxPinError = taxPinError,
+                toolbarTitle = toolbarTitle,
+                isTaskLoading = isTaskLoading,
+                isAddressError = isAddressError,
+                addressesError = addressesError,
+                permitReAddition = permitReAddition,
+                onAddressRemoved = {
+                    isAddressError = false
+                    // TODO: Remove marker from map...
+                },
+            )
+        },
+        frontLayerContent = {
+            Column(modifier = Modifier.fillMaxSize()) {
                 GoogleMapView(
-                    modifier = Modifier
-                        .height(MAP_HEIGHT)
-                        .fillMaxWidth(),
+                    modifier = Modifier.fillMaxSize(),
                     markerPositions = addresses.map {
                         MarkerOptions().apply {
                             position(
@@ -186,139 +203,127 @@ private fun ShopDetailScreen(
                         true
                     }
                 }
-                Surface(
-                    shape = RectangleShape,
-                    color = Color.Transparent,
-                    modifier = Modifier
-                        .height(56.dp)
-                        .padding(AppBarDefaults.ContentPadding),
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxHeight(),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        IconButton(
-                            modifier = Modifier
-                                .fillMaxHeight()
-                                .width(68.dp),
-                            onClick = function.onNavigationIconClicked,
-                        ) {
-                            Icon(Icons.Default.ArrowBack, stringResource(R.string.move_back))
-                        }
-                        Text(toolbarTitle, style = MaterialTheme.typography.h6)
-                    }
+
+                Spacer(modifier = Modifier.navigationBarsPadding())
+            }
+        },
+    )
+}
+
+@Composable
+private fun ShopDetailEntry(
+    modifier: Modifier = Modifier,
+    shop: Shop,
+    nameError: String,
+    taxPinError: String,
+    toolbarTitle: String,
+    addressesError: String,
+    isTaskLoading: Boolean,
+    isAddressError: Boolean,
+    permitReAddition: Boolean,
+    args: ShopDetailScreenArgs,
+    function: ShopDetailScreenFunction,
+    addresses: SnapshotStateList<Address>,
+    onAddressRemoved: (Address) -> Unit,
+) {
+    val focusManager = LocalFocusManager.current
+    Column(modifier = modifier) {
+        var name by remember(shop.id, shop.name, permitReAddition) {
+            mutableStateOf(TextFieldValue(if (!shop.isDefault) shop.name else args.name))
+        }
+        var isNameError by remember {
+            mutableStateOf(nameError.isNotBlank())
+        }
+        TextInputLayout(
+            value = name,
+            error = nameError,
+            isError = isNameError,
+            onValueChange = {
+                name = it
+                isNameError = false
+            },
+            modifier = VerticalLayoutModifier.padding(top = VIEW_SPACE),
+            label = stringResource(R.string.fs_shop_item_detail_name_label),
+            keyboardOptions = KeyboardOptions.Default.copy(
+                imeAction = ImeAction.Next,
+                keyboardType = KeyboardType.Text,
+                capitalization = KeyboardCapitalization.Sentences,
+            ),
+        )
+        Spacer(modifier = Modifier.padding(vertical = VIEW_SPACE_HALVED))
+        var taxPin by remember(shop.id, shop.taxPin, permitReAddition) {
+            mutableStateOf(TextFieldValue(if (!shop.isDefault) shop.taxPin else ""))
+        }
+        var isTaxPinError by remember {
+            mutableStateOf(taxPinError.isNotBlank())
+        }
+        TextInputLayout(
+            value = taxPin,
+            error = taxPinError,
+            isError = isTaxPinError,
+            onValueChange = {
+                taxPin = it
+                isTaxPinError = false
+            },
+            modifier = VerticalLayoutModifier,
+            label = stringResource(R.string.fs_shop_item_detail_tax_pin_label),
+            keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
+            keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
+        )
+        if (addresses.isNotEmpty()) {
+            Spacer(modifier = Modifier.padding(vertical = VIEW_SPACE_HALVED))
+            Text(
+                stringRes(R.string.fs_shop_item_detail_addresses_label),
+                style = MaterialTheme.typography.h5,
+                modifier = VerticalLayoutModifier,
+            )
+            Spacer(modifier = Modifier.padding(vertical = VIEW_SPACE_HALVED))
+            ChipGroup(
+                modifier = VerticalLayoutModifier,
+                isSingleLine = false,
+                chipItems = addresses,
+            ) { i, address ->
+                Chip(address.toString()) {
+                    addresses.removeAt(i)
+                    onAddressRemoved.invoke(address)
                 }
             }
         }
-    ) { paddingValues ->
-        Column(modifier = modifier.padding(paddingValues)) {
-            val isTaskLoading = arrayOf(result, addResult).any { it is TaskResult.Loading }
-            if (isTaskLoading) {
-                LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
-            }
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState()),
-            ) {
-                var name by remember(shop.id, shop.name, permitReAddition) {
-                    mutableStateOf(TextFieldValue(if (!shop.isDefault) shop.name else args.name))
-                }
-                var isNameError by remember {
-                    mutableStateOf(nameError.isNotBlank())
-                }
-                TextInputLayout(
-                    value = name,
-                    error = nameError,
-                    isError = isNameError,
-                    onValueChange = {
-                        name = it
-                        isNameError = false
-                    },
-                    modifier = VerticalLayoutModifier.padding(top = VIEW_SPACE),
-                    label = stringResource(R.string.fs_shop_item_detail_name_label),
-                    keyboardOptions = KeyboardOptions.Default.copy(
-                        imeAction = ImeAction.Next,
-                        keyboardType = KeyboardType.Text,
-                        capitalization = KeyboardCapitalization.Sentences,
+        Spacer(modifier = Modifier.padding(vertical = VIEW_SPACE_HALVED))
+        if (isAddressError) {
+            Text(
+                text = addressesError,
+                modifier = VerticalLayoutModifier,
+                style = MaterialTheme.typography.caption.copy(color = MaterialTheme.colors.error),
+            )
+            Spacer(modifier = Modifier.padding(vertical = VIEW_SPACE_HALVED))
+        }
+        Button(
+            enabled = arrayOf(
+                name,
+                taxPin,
+            ).all { it.text.isNotBlank() } && !isTaskLoading,
+            modifier = VerticalLayoutModifier,
+            onClick = {
+                focusManager.clearFocus()
+                function.onAddShopClicked.invoke(
+                    shop.copy(
+                        name = name.text.trim(),
+                        taxPin = taxPin.text.trim(),
+                        addresses = addresses,
                     ),
                 )
-                Spacer(modifier = Modifier.padding(vertical = 8.dp))
-                var taxPin by remember(shop.id, shop.taxPin, permitReAddition) {
-                    mutableStateOf(TextFieldValue(if (!shop.isDefault) shop.taxPin else ""))
-                }
-                var isTaxPinError by remember {
-                    mutableStateOf(taxPinError.isNotBlank())
-                }
-                TextInputLayout(
-                    value = taxPin,
-                    error = taxPinError,
-                    isError = isTaxPinError,
-                    onValueChange = {
-                        taxPin = it
-                        isTaxPinError = false
-                    },
-                    modifier = VerticalLayoutModifier,
-                    label = stringResource(R.string.fs_shop_item_detail_tax_pin_label),
-                    keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
-                    keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
-                )
-                if (addresses.isNotEmpty()) {
-                    Spacer(modifier = Modifier.padding(vertical = 8.dp))
-                    Text(
-                        stringRes(R.string.fs_shop_item_detail_addresses_label),
-                        style = MaterialTheme.typography.h5,
-                        modifier = VerticalLayoutModifier,
-                    )
-                    Spacer(modifier = Modifier.padding(vertical = 8.dp))
-                    ChipGroup(
-                        modifier = VerticalLayoutModifier,
-                        isSingleLine = false,
-                        chipItems = addresses,
-                    ) { i, address ->
-                        Chip(address.toString()) {
-                            addresses.removeAt(i)
-                            isAddressError = false
-                            // TODO: Remove marker from map...
-                        }
-                    }
-                }
-                Spacer(modifier = Modifier.padding(vertical = 8.dp))
-                if (isAddressError) {
-                    Text(
-                        text = addressesError,
-                        modifier = VerticalLayoutModifier,
-                        style = MaterialTheme.typography.caption.copy(color = MaterialTheme.colors.error),
-                    )
-                    Spacer(modifier = Modifier.padding(vertical = 8.dp))
-                }
-                Button(
-                    enabled = arrayOf(
-                        name,
-                        taxPin,
-                    ).all { it.text.isNotBlank() } && !isTaskLoading,
-                    modifier = VerticalLayoutModifier,
-                    onClick = {
-                        focusManager.clearFocus()
-                        function.onAddShopClicked.invoke(
-                            shop.copy(
-                                name = name.text.trim(),
-                                taxPin = taxPin.text.trim(),
-                                addresses = addresses,
-                            ),
-                        )
-                    }
-                ) {
-                    Text(toolbarTitle.uppercase())
-                }
             }
+        ) {
+            Text(toolbarTitle.uppercase())
         }
+        Spacer(modifier = Modifier.navigationBarsPadding())
     }
 }
 
 @Preview(name = "Shop detail", showBackground = true)
 @Composable
-fun ShopDetailPreview() {
+private fun ShopDetailPreview() {
     XentlyTheme {
         ShopDetailScreen(
             modifier = Modifier.fillMaxSize(),
@@ -330,7 +335,7 @@ fun ShopDetailPreview() {
 
 @Preview(name = "Shop detail showing progress bar", showBackground = true)
 @Composable
-fun ShopDetailOnNullPreview() {
+private fun ShopDetailOnNullPreview() {
     XentlyTheme {
         ShopDetailScreen(
             result = Success(null),
