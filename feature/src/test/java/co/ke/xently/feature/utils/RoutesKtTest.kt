@@ -1,9 +1,7 @@
 package co.ke.xently.feature.utils
 
-import co.ke.xently.data.Product
 import junit.framework.TestCase
 import org.junit.Assert
-
 import org.junit.Test
 
 class RoutesKtTest : TestCase() {
@@ -13,7 +11,6 @@ class RoutesKtTest : TestCase() {
         Assert.assertEquals("path/", "path/".buildRoute())
         Assert.assertEquals("path//", "path/{id}/".buildRoute())
         Assert.assertEquals("path/1/", "path/{id}/".buildRoute("id" to 1))
-        Assert.assertEquals("products/-1", Routes.Products.DETAIL.buildRoute("id" to Product.default().id))
     }
 
     @Test
