@@ -2,6 +2,7 @@ package co.ke.xently.products.ui.list
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.FloatingActionButton
 import androidx.compose.material.Icon
 import androidx.compose.material.Scaffold
@@ -67,6 +68,7 @@ private fun ProductListScreen(
     menuItems: List<MenuItem>,
     optionsMenu: List<OptionMenu>,
 ) {
+    val listState = rememberLazyListState()
     val scaffoldState = rememberScaffoldState()
     Scaffold(
         scaffoldState = scaffoldState,
@@ -83,14 +85,17 @@ private fun ProductListScreen(
             }
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = function.onAddFabClicked) {
-                Icon(Icons.Default.Add,
-                    stringRes(R.string.fp_add_product_toolbar_title, R.string.add))
+            if (!listState.isScrollInProgress) {
+                FloatingActionButton(onClick = function.onAddFabClicked) {
+                    Icon(Icons.Default.Add,
+                        stringRes(R.string.fp_add_product_toolbar_title, R.string.add))
+                }
             }
         }
     ) {
         PagedDataScreen(
             items = items,
+            listState = listState,
             scaffoldState = scaffoldState,
             modifier = modifier.padding(it),
             placeholder = { Product.default() },

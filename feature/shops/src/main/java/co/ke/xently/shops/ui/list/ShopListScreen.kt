@@ -2,6 +2,7 @@ package co.ke.xently.shops.ui.list
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.FloatingActionButton
 import androidx.compose.material.Icon
 import androidx.compose.material.Scaffold
@@ -59,6 +60,7 @@ private fun ShopListScreen(
     optionsMenu: List<OptionMenu>,
     menuItems: @Composable (Shop) -> List<MenuItem>,
 ) {
+    val listState = rememberLazyListState()
     val scaffoldState = rememberScaffoldState()
     Scaffold(
         topBar = {
@@ -73,16 +75,20 @@ private fun ShopListScreen(
             }
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = function.onAddFabClicked) {
-                Icon(Icons.Default.Add, stringRes(R.string.fs_add_shop_toolbar_title, R.string.add))
+            if (!listState.isScrollInProgress) {
+                FloatingActionButton(onClick = function.onAddFabClicked) {
+                    Icon(Icons.Default.Add,
+                        stringRes(R.string.fs_add_shop_toolbar_title, R.string.add))
+                }
             }
         },
     ) {
         PagedDataScreen(
             items = items,
-            placeholder = { Shop.default() },
+            listState = listState,
             scaffoldState = scaffoldState,
             modifier = modifier.padding(it),
+            placeholder = { Shop.default() },
         ) { shop ->
             ShopListItem(
                 shop = shop,

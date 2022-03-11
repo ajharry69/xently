@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -121,12 +122,13 @@ private fun GroupedShoppingListScreen(
     function: GroupedShoppingListScreenFunction,
     result: TaskResult<List<GroupedShoppingList>>,
 ) {
+    val listState = rememberLazyListState()
     val scaffoldState = rememberScaffoldState()
     val coroutineScope = rememberCoroutineScope()
     Scaffold(
         scaffoldState = scaffoldState,
         floatingActionButton = {
-            if (user != null && !(result is TaskResult.Error && result.error.isAuthError())) {
+            if (!listState.isScrollInProgress && user != null && !(result is TaskResult.Error && result.error.isAuthError())) {
                 FloatingActionButton(onClick = function.onAddFabClicked) {
                     Icon(Icons.Default.Add,
                         stringRes(R.string.fsl_detail_screen_toolbar_title, R.string.add))
@@ -254,7 +256,7 @@ private fun GroupedShoppingListScreen(
                         modifier = modifier.padding(paddingValues),
                         state = rememberSwipeRefreshState(isRefreshing),
                     ) {
-                        LazyColumn(modifier = modifier.padding(paddingValues)) {
+                        LazyColumn(state = listState, modifier = modifier.padding(paddingValues)) {
                             items(groupedShoppingList, itemContent = itemContent)
                         }
                     }

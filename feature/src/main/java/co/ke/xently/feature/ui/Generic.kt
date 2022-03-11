@@ -8,6 +8,7 @@ import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyItemScope
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
@@ -251,6 +252,7 @@ private fun FullscreenEmptyListPreview() {
 @Composable
 inline fun <reified T : Any> PagedDataScreen(
     modifier: Modifier,
+    listState: LazyListState,
     items: LazyPagingItems<T>,
     scaffoldState: ScaffoldState,
     noinline placeholder: (() -> T)?,
@@ -292,7 +294,7 @@ inline fun <reified T : Any> PagedDataScreen(
                     state = refreshState,
                     onRefresh = items::refresh,
                 ) {
-                    LazyColumn(modifier = Modifier.fillMaxSize()) {
+                    LazyColumn(state = listState, modifier = Modifier.fillMaxSize()) {
                         items(items) { item ->
                             if (item == null) {
                                 if (placeholder != null) {
