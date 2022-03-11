@@ -38,7 +38,7 @@ class ProductsActivity : AppCompatActivity() {
                 // A surface container using the 'background' color from the theme
                 Surface(color = MaterialTheme.colors.background) {
                     val navController = rememberNavController()
-                    ProductsNavHost(Routes.Products.START, navController = navController) {
+                    ProductsNavHost(Routes.Products.LIST, navController = navController) {
                         onBackPressed()
                     }
                 }
@@ -85,7 +85,7 @@ internal fun ProductsNavHost(
                 ),
             )
         }
-        composable(Routes.Products.START, content = productList)
+        composable(Routes.Products.LIST, content = productList)
         composable(
             route = Routes.Products.FILTERED_BY_SHOP,
             content = productList,

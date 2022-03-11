@@ -26,8 +26,8 @@ fun String.buildRoute(vararg args: Pair<String, Any>): String {
 
 object Routes {
     object Products {
-        const val START = "products"
-        const val DETAIL = "products/{id}"
+        const val LIST = "products/"
+        const val DETAIL = "products/{id}/"
         const val FILTERED_BY_SHOP = "products/shops/{shopId}/"
 
         object Deeplinks {
@@ -36,7 +36,7 @@ object Routes {
     }
 
     object Shops {
-        const val START = "shops"
+        const val LIST = "shops/"
         const val DETAIL = "shops/{id}/?name={name}&moveBack={moveBack}"
         const val ADDRESSES = "shops/{id}/addresses/"
 
@@ -47,12 +47,12 @@ object Routes {
     }
 
     object Account {
-        const val PROFILE = "profile"
-        const val SIGN_IN = "signin?username={username}&password={password}"
-        const val SIGN_UP = "signup?username={username}&password={password}"
-        const val PASSWORD_RESET_REQUEST = "request-password-reset?email={email}"
-        const val RESET_PASSWORD = "reset-password?isChange={isChange}"
-        const val VERIFY = "verify-account?code={code}"
+        const val PROFILE = "profile/"
+        const val SIGN_IN = "signin/?username={username}&password={password}"
+        const val SIGN_UP = "signup/?username={username}&password={password}"
+        const val PASSWORD_RESET_REQUEST = "request-password-reset/?email={email}"
+        const val RESET_PASSWORD = "reset-password/?isChange={isChange}"
+        const val VERIFY = "verify-account/?code={code}"
 
         object Deeplinks {
             const val SIGN_IN = "xently://accounts/signin/"
@@ -61,9 +61,9 @@ object Routes {
     }
 
     object ShoppingList {
-        const val GROUPED = "shopping-list-grouped"
-        const val LIST = "shopping-list?group={group}&groupBy={groupBy}"
-        const val DETAIL = "shopping-list/{id}"
-        const val RECOMMENDATION = "shopping-list/recommendations/{recommendBy}?from={from}"
+        const val GROUPED = "shopping-list-grouped/"
+        const val LIST = "shopping-list/?group={group}&groupBy={groupBy}"
+        const val DETAIL = "shopping-list/{id}/"
+        const val RECOMMENDATION = "shopping-list/recommendations/{recommendBy}/?from={from}"
     }
 }

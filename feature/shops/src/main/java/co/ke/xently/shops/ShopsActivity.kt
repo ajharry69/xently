@@ -64,10 +64,12 @@ internal fun ShopsNavHost(
 ) {
     val context = LocalContext.current
     val resources = context.resources
-    NavHost(modifier = modifier,
+    NavHost(
+        modifier = modifier,
         navController = navController,
-        startDestination = Routes.Shops.START) {
-        composable(Routes.Shops.START) {
+        startDestination = Routes.Shops.LIST,
+    ) {
+        composable(Routes.Shops.LIST) {
             ShopListScreen(
                 modifier = Modifier.fillMaxSize(),
                 optionsMenu = listOf(
