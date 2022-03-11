@@ -2,6 +2,7 @@ package co.ke.xently.shoppinglist.ui.list
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.FloatingActionButton
 import androidx.compose.material.Icon
 import androidx.compose.material.Scaffold
@@ -66,6 +67,7 @@ private fun ShoppingListScreen(
     function: ShoppingListScreenFunction,
     items: LazyPagingItems<ShoppingListItem>,
 ) {
+    val listState = rememberLazyListState()
     val scaffoldState = rememberScaffoldState()
     Scaffold(
         scaffoldState = scaffoldState,
@@ -82,17 +84,20 @@ private fun ShoppingListScreen(
             }
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = function.onAddClicked) {
-                Icon(Icons.Default.Add,
-                    stringRes(R.string.fsl_detail_screen_toolbar_title, R.string.add))
+            if (!listState.isScrollInProgress){
+                FloatingActionButton(onClick = function.onAddClicked) {
+                    Icon(Icons.Default.Add,
+                        stringRes(R.string.fsl_detail_screen_toolbar_title, R.string.add))
+                }
             }
         },
     ) {
         PagedDataScreen(
+            items = items,
+            listState=listState,
+            scaffoldState = scaffoldState,
             modifier = modifier.padding(it),
             placeholder = { ShoppingListItem.default() },
-            items = items,
-            scaffoldState = scaffoldState,
             emptyListMessage = R.string.fsl_empty_shopping_list,
         ) { item ->
             ShoppingListItemCard(

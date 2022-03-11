@@ -2,6 +2,7 @@ package co.ke.xently.shops.ui.list.addresses
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.Scaffold
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
@@ -82,10 +83,11 @@ private fun AddressListScreen(
         },
     ) {
         PagedDataScreen(
-            modifier = modifier.padding(it),
-            placeholder = { Address.default() },
             items = items,
             scaffoldState = scaffoldState,
+            modifier = modifier.padding(it),
+            listState = rememberLazyListState(),
+            placeholder = { Address.default() },
         ) { address ->
             AddressListItem(
                 address = address,
