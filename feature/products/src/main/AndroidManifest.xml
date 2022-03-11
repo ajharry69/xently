@@ -23,8 +23,8 @@
                 <category android:name="android.intent.category.DEFAULT" />
 
                 <data
-                    android:host="shops"
-                    android:pathPattern="/..*/products/*"
+                    android:host="products"
+                    android:pathPattern="/shops/..*/"
                     android:scheme="xently" />
             </intent-filter>
         </activity>

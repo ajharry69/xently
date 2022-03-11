@@ -31,6 +31,8 @@ import co.ke.xently.accounts.ui.verification.VerificationScreen
 import co.ke.xently.accounts.ui.verification.VerificationScreenFunction
 import co.ke.xently.data.User
 import co.ke.xently.feature.theme.XentlyTheme
+import co.ke.xently.feature.utils.Routes
+import co.ke.xently.feature.utils.buildRoute
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -62,8 +64,12 @@ internal fun ProductsNavHost(
     onNavigationIconClicked: () -> Unit,
 ) {
     val context = LocalContext.current
-    NavHost(modifier = modifier, navController = navController, startDestination = "profile") {
-        composable("profile") {
+    NavHost(
+        modifier = modifier,
+        navController = navController,
+        startDestination = Routes.Account.PROFILE,
+    ) {
+        composable(Routes.Account.PROFILE) {
             ProfileScreen(
                 modifier = Modifier.fillMaxSize(),
                 click = ProfileScreenClick(
@@ -72,7 +78,7 @@ internal fun ProductsNavHost(
             )
         }
         composable(
-            "signin?username={username}&password={password}",
+            route = Routes.Account.SIGN_IN,
             arguments = listOf(
                 navArgument("username") {
                     defaultValue = ""
@@ -83,8 +89,8 @@ internal fun ProductsNavHost(
             ),
             deepLinks = listOf(
                 navDeepLink {
-                    uriPattern = "xently://accounts/signin/"
-                }
+                    uriPattern = Routes.Account.Deeplinks.SIGN_IN
+                },
             ),
         ) { navBackStackEntry ->
             SignInScreen(
@@ -96,7 +102,7 @@ internal fun ProductsNavHost(
                 function = SignInScreenFunction(
                     navigationIcon = onNavigationIconClicked,
                     forgotPassword = {
-                        navController.navigate("request-password-reset") {
+                        navController.navigate(Routes.Account.PASSWORD_RESET_REQUEST.buildRoute("email" to it)) {
                             launchSingleTop = true
                         }
                     },
@@ -104,13 +110,14 @@ internal fun ProductsNavHost(
                         if (user.isVerified) {
                             (context as ComponentActivity).finish()
                         } else {
-                            navController.navigate("verify-account") {
+                            navController.navigate(Routes.Account.VERIFY) {
                                 launchSingleTop = true
                             }
                         }
                     },
                     createAccount = {
-                        navController.navigate("signup?username=${it.username}&password=${it.password}") {
+                        navController.navigate(Routes.Account.SIGN_UP.buildRoute("username" to it.username,
+                            "password" to it.password)) {
                             launchSingleTop = true
                         }
                     },
@@ -118,8 +125,8 @@ internal fun ProductsNavHost(
             )
         }
         composable(
-            "signup?username={username}&password={password}",
-            listOf(
+            route = Routes.Account.SIGN_UP,
+            arguments = listOf(
                 navArgument("username") {
                     defaultValue = ""
                 },
@@ -129,8 +136,8 @@ internal fun ProductsNavHost(
             ),
             deepLinks = listOf(
                 navDeepLink {
-                    uriPattern = "xently://accounts/signup/"
-                }
+                    uriPattern = Routes.Account.Deeplinks.SIGN_UP
+                },
             ),
         ) { navBackStackEntry ->
             SignUpScreen(
@@ -140,13 +147,14 @@ internal fun ProductsNavHost(
                         if (user.isVerified) {
                             (context as ComponentActivity).finish()
                         } else {
-                            navController.navigate("verify-account") {
+                            navController.navigate(Routes.Account.VERIFY) {
                                 launchSingleTop = true
                             }
                         }
                     },
                     signIn = {
-                        "signin?username=${it.username}&password=${it.password}".also { route ->
+                        Routes.Account.SIGN_IN.buildRoute("username" to it.username,
+                            "password" to it.password).also { route ->
                             navController.navigate(route) {
                                 launchSingleTop = true
                                 popUpTo(route.substringBefore("?")) {
@@ -164,8 +172,12 @@ internal fun ProductsNavHost(
             )
         }
         composable(
-            "verify-account?code={code}",
-            listOf(navArgument("code") { defaultValue = "" }),
+            route = Routes.Account.VERIFY,
+            arguments = listOf(
+                navArgument("code") {
+                    defaultValue = ""
+                },
+            ),
         ) { navBackStackEntry ->
             VerificationScreen(
                 modifier = Modifier.fillMaxSize(),
@@ -184,8 +196,12 @@ internal fun ProductsNavHost(
             )
         }
         composable(
-            "request-password-reset?email={email}",
-            listOf(navArgument("email") { defaultValue = "" }),
+            route = Routes.Account.PASSWORD_RESET_REQUEST,
+            arguments = listOf(
+                navArgument("email") {
+                    defaultValue = ""
+                },
+            ),
         ) {
             PasswordResetRequestScreen(
                 modifier = Modifier.fillMaxSize(),
@@ -193,7 +209,7 @@ internal fun ProductsNavHost(
                 function = PasswordResetRequestScreenFunction(
                     navigationIcon = onNavigationIconClicked,
                     requestSuccess = {
-                        navController.navigate("reset-password") {
+                        navController.navigate(Routes.Account.RESET_PASSWORD) {
                             launchSingleTop = true
                         }
                     },
@@ -201,8 +217,8 @@ internal fun ProductsNavHost(
             )
         }
         composable(
-            "reset-password?isChange={isChange}",
-            listOf(
+            route = Routes.Account.RESET_PASSWORD,
+            arguments = listOf(
                 navArgument("isChange") {
                     defaultValue = false
                     type = NavType.BoolType

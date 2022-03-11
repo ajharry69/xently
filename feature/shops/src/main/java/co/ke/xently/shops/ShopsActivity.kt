@@ -24,6 +24,8 @@ import androidx.navigation.navDeepLink
 import co.ke.xently.data.Shop
 import co.ke.xently.feature.theme.XentlyTheme
 import co.ke.xently.feature.ui.OptionMenu
+import co.ke.xently.feature.utils.Routes
+import co.ke.xently.feature.utils.buildRoute
 import co.ke.xently.shops.ui.detail.ShopDetailScreen
 import co.ke.xently.shops.ui.detail.ShopDetailScreenArgs
 import co.ke.xently.shops.ui.detail.ShopDetailScreenFunction
@@ -62,8 +64,12 @@ internal fun ShopsNavHost(
 ) {
     val context = LocalContext.current
     val resources = context.resources
-    NavHost(modifier = modifier, navController = navController, startDestination = "shops") {
-        composable("shops") {
+    NavHost(
+        modifier = modifier,
+        navController = navController,
+        startDestination = Routes.Shops.LIST,
+    ) {
+        composable(Routes.Shops.LIST) {
             ShopListScreen(
                 modifier = Modifier.fillMaxSize(),
                 optionsMenu = listOf(
@@ -75,7 +81,7 @@ internal fun ShopsNavHost(
                             MenuItem(
                                 label = stringResource(R.string.update),
                                 onClick = {
-                                    navController.navigate("shops/${it.id}/")
+                                    navController.navigate(Routes.Shops.DETAIL.buildRoute("id" to it.id))
                                 },
                             ),
                         )
@@ -88,8 +94,11 @@ internal fun ShopsNavHost(
                                         it.productsCount,
                                     ),
                                     onClick = {
-                                        val intent = Intent(Intent.ACTION_VIEW,
-                                            "xently://shops/${it.id}/products/".toUri())
+                                        val intent = Intent(
+                                            Intent.ACTION_VIEW,
+                                            Routes.Products.Deeplinks.FILTERED_BY_SHOP.buildRoute("shopId" to it.id)
+                                                .toUri(),
+                                        )
                                         try {
                                             context.startActivity(intent)
                                         } catch (ex: ActivityNotFoundException) {
@@ -110,7 +119,7 @@ internal fun ShopsNavHost(
                                         it.addressesCount,
                                     ),
                                     onClick = {
-                                        navController.navigate("shops/${it.id}/addresses")
+                                        navController.navigate(Routes.Shops.ADDRESSES.buildRoute("id" to it.id))
                                     },
                                 ),
                             )
@@ -119,7 +128,7 @@ internal fun ShopsNavHost(
                 },
                 function = ShopListScreenFunction(
                     onAddFabClicked = {
-                        navController.navigate("shops/${Shop.default().id}")
+                        navController.navigate(Routes.Shops.DETAIL.buildRoute("id" to Shop.default().id))
                     },
                     onNavigationIcon = onNavigationIconClicked,
                     function = ShopListItemFunction(
@@ -128,9 +137,8 @@ internal fun ShopsNavHost(
                 ),
             )
         }
-        val shopDetailRoute = "shops/{id}/?name={name}&moveBack={moveBack}"
         composable(
-            route = shopDetailRoute,
+            route = Routes.Shops.DETAIL,
             arguments = listOf(
                 navArgument("id") {
                     nullable = false
@@ -146,7 +154,7 @@ internal fun ShopsNavHost(
             ),
             deepLinks = listOf(
                 navDeepLink {
-                    uriPattern = "xently://$shopDetailRoute"
+                    uriPattern = Routes.Shops.Deeplinks.DETAIL
                 },
             ),
         ) {
@@ -163,7 +171,7 @@ internal fun ShopsNavHost(
             )
         }
         composable(
-            "shops/{id}/addresses",
+            route = Routes.Shops.ADDRESSES,
             arguments = listOf(
                 navArgument("id") {
                     type = NavType.LongType
@@ -171,7 +179,7 @@ internal fun ShopsNavHost(
             ),
             deepLinks = listOf(
                 navDeepLink {
-                    uriPattern = "xently://shops/{id}/addresses/"
+                    uriPattern = Routes.Shops.Deeplinks.ADDRESSES
                 },
             ),
         ) {

@@ -32,11 +32,13 @@ import co.ke.xently.feature.LocationService
 import co.ke.xently.feature.theme.XentlyTheme
 import co.ke.xently.feature.ui.NavMenuItem
 import co.ke.xently.feature.ui.OptionMenu
+import co.ke.xently.feature.utils.Routes
+import co.ke.xently.feature.utils.buildRoute
 import co.ke.xently.feature.viewmodels.LocationPermissionViewModel
 import co.ke.xently.shoppinglist.Recommend.From
+import co.ke.xently.shoppinglist.repository.ShoppingListGroup
 import co.ke.xently.shoppinglist.ui.detail.ShoppingListItemScreen
 import co.ke.xently.shoppinglist.ui.detail.ShoppingListItemScreenFunction
-import co.ke.xently.shoppinglist.repository.ShoppingListGroup
 import co.ke.xently.shoppinglist.ui.list.ShoppingListScreen
 import co.ke.xently.shoppinglist.ui.list.ShoppingListScreenFunction
 import co.ke.xently.shoppinglist.ui.list.grouped.GroupedShoppingListScreen
@@ -96,7 +98,7 @@ class ShoppingListActivity : AppCompatActivity() {
                             }
                         },
                     ) {
-                        if (!navController.navigateUp()) onBackPressed()
+                        onBackPressed()
                     }
                 }
             }
@@ -138,23 +140,24 @@ internal fun ShoppingListNavHost(
     NavHost(
         modifier = modifier,
         navController = navController,
-        startDestination = "shopping-list-grouped",
+        startDestination = Routes.ShoppingList.GROUPED,
     ) {
         val onShoppingListItemRecommendClicked: (id: Long) -> Unit = {
-            navController.navigate("shopping-list/recommendations/${it}?from=${From.Item}")
+            navController.navigate(Routes.ShoppingList.RECOMMENDATION.buildRoute("recommendBy" to it,
+                "from" to From.Item))
         }
         val onShoppingListItemClicked: (id: Long) -> Unit = {
-            navController.navigate("shopping-list/${it}")
+            navController.navigate(Routes.ShoppingList.DETAIL.buildRoute("id" to it))
         }
         val onAddShoppingListItemClicked = {
-            navController.navigate("shopping-list/${ShoppingListItem.default().id}")
+            navController.navigate(Routes.ShoppingList.DETAIL.buildRoute("id" to ShoppingListItem.default().id))
         }
         val shoppingListItemMenuItems = listOf(
             MenuItem(R.string.fsl_group_menu_recommend, onShoppingListItemRecommendClicked),
             MenuItem(R.string.update, onShoppingListItemClicked),
             MenuItem(R.string.delete),
         )
-        composable("shopping-list-grouped") {
+        composable(Routes.ShoppingList.GROUPED) {
             GroupedShoppingListScreen(
                 modifier = Modifier.fillMaxSize(),
                 drawerItems = listOf(
@@ -163,8 +166,8 @@ internal fun ShoppingListNavHost(
                         label = R.string.drawer_menu_shopping_list,
                         icon = Icons.Default.List,
                         onClick = {
-                            if (navController.currentDestination?.route != "shopping-list-grouped") {
-                                navController.navigate("shopping-list-grouped") {
+                            if (navController.currentDestination?.route != Routes.ShoppingList.GROUPED) {
+                                navController.navigate(Routes.ShoppingList.GROUPED.buildRoute()) {
                                     launchSingleTop = true
                                 }
                             }
@@ -196,7 +199,7 @@ internal fun ShoppingListNavHost(
                 ),
                 groupMenuItems = listOf(
                     GroupMenuItem(R.string.fsl_group_menu_recommend) {
-                        navController.navigate("shopping-list/recommendations/${it}")
+                        navController.navigate(Routes.ShoppingList.RECOMMENDATION.buildRoute("recommendBy" to it))
                     },
                     GroupMenuItem(R.string.fsl_group_menu_duplicate) {
 
@@ -212,14 +215,15 @@ internal fun ShoppingListNavHost(
                             // TODO: ...
                         },
                         onSeeAllClicked = {
-                            navController.navigate("shopping-list?group=${it.group}&groupBy=${it.groupBy}")
+                            navController.navigate(Routes.ShoppingList.LIST.buildRoute("group" to it.group,
+                                "groupBy" to it.groupBy))
                         },
                     ),
                 ),
             )
         }
         composable(
-            route = "shopping-list?group={group}&groupBy={groupBy}",
+            route = Routes.ShoppingList.LIST,
             arguments = listOf(
                 navArgument("group") {
                     nullable = true
@@ -259,10 +263,13 @@ internal fun ShoppingListNavHost(
             )
         }
         composable(
-            "shopping-list/recommendations/{recommendBy}?from={from}",
-            listOf(navArgument("recommendBy") {}, navArgument("from") {
-                defaultValue = From.GroupedList.name
-            })
+            route = Routes.ShoppingList.RECOMMENDATION,
+            arguments = listOf(
+                navArgument("recommendBy") {},
+                navArgument("from") {
+                    defaultValue = From.GroupedList.name
+                },
+            ),
         ) {
             ShoppingListRecommendationScreen(
                 function = ShoppingListRecommendationScreenFunction(
@@ -302,8 +309,8 @@ internal fun ShoppingListNavHost(
             )
         }
         composable(
-            "shopping-list/{id}",
-            listOf(
+            route = Routes.ShoppingList.DETAIL,
+            arguments = listOf(
                 navArgument("id") {
                     type = NavType.LongType
                 },

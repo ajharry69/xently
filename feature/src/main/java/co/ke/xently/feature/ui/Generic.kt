@@ -36,6 +36,7 @@ import co.ke.xently.common.KENYA
 import co.ke.xently.common.TAG
 import co.ke.xently.feature.R
 import co.ke.xently.feature.theme.XentlyTheme
+import co.ke.xently.feature.utils.Routes
 import co.ke.xently.source.remote.HttpException
 import co.ke.xently.source.remote.RETRY_ABLE_ERROR_CLASSES
 import com.google.accompanist.swiperefresh.SwipeRefresh
@@ -121,7 +122,7 @@ fun ToolbarWithProgressbar(
 }
 
 val navigateToSignInScreen: (Context) -> Unit = {
-    val intent = Intent(Intent.ACTION_VIEW, "xently://accounts/signin/".toUri())
+    val intent = Intent(Intent.ACTION_VIEW, Routes.Account.Deeplinks.SIGN_IN.toUri())
     try {
         it.startActivity(intent)
     } catch (ex: ActivityNotFoundException) {

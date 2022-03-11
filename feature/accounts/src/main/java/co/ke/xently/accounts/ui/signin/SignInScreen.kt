@@ -21,8 +21,8 @@ import co.ke.xently.feature.ui.*
 
 internal data class SignInScreenFunction(
     val navigationIcon: () -> Unit = {},
-    val forgotPassword: () -> Unit = {},
     val signInSuccess: (User) -> Unit = {},
+    val forgotPassword: (String) -> Unit = {},
     val signIn: (User.BasicAuth) -> Unit = { },
     val createAccount: (User.BasicAuth) -> Unit = { },
 )
@@ -128,7 +128,7 @@ private fun SignInScreen(
                 Spacer(modifier = Modifier.padding(vertical = VIEW_SPACE_HALVED))
                 Row(modifier = Modifier.padding(horizontal = VIEW_SPACE)) {
                     Spacer(modifier = Modifier.weight(1f))
-                    TextButton(function.forgotPassword) {
+                    TextButton(onClick = { function.forgotPassword.invoke(uname.text) }) {
                         Text(stringResource(R.string.fa_signin_forgot_password_button_label))
                     }
                 }
