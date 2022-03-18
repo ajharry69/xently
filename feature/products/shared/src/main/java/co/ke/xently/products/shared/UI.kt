@@ -20,6 +20,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import co.ke.xently.data.MeasurementUnit
 import co.ke.xently.data.Product
@@ -73,6 +74,7 @@ fun productNameTextField(
     clearField: Boolean,
     suggestions: List<Product> = emptyList(),
     onQueryChanged: (String) -> Unit = {},
+    onOptionSelected: (Product) -> Unit = {},
 ): TextFieldValue {
     var value by remember(name, clearField) {
         mutableStateOf(TextFieldValue(name))
@@ -96,12 +98,30 @@ fun productNameTextField(
         suggestions = suggestions,
         onOptionSelected = {
             value = TextFieldValue(it.name)
+            onOptionSelected(it)
         },
     ) {
-        Text(
-            style = MaterialTheme.typography.body1,
-            text = it.toString(),
-        )
+        Column {
+            Text(style = MaterialTheme.typography.body1, text = it.toString())
+            Text(
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                style = MaterialTheme.typography.caption,
+                text = stringResource(
+                    R.string.fps_product_suggestion_brands,
+                    it.brands.joinToString(", ").ifBlank { stringResource(R.string.none) },
+                ),
+            )
+            Text(
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                style = MaterialTheme.typography.caption,
+                text = stringResource(
+                    R.string.fps_product_suggestion_attributes,
+                    it.attributes.joinToString(", ").ifBlank { stringResource(R.string.none) },
+                ),
+            )
+        }
     }
     return value
 }
