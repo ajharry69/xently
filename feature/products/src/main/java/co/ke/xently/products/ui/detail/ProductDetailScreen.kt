@@ -41,6 +41,7 @@ internal data class ProductDetailScreenFunction(
     val onBrandQueryChanged: (String) -> Unit = {},
     val onDetailsSubmitted: (Product) -> Unit = {},
     val onAddNewShop: (shopName: String) -> Unit = {},
+    val onProductQueryChanged: (String) -> Unit = {},
     val onMeasurementUnitQueryChanged: (String) -> Unit = {},
     val onAttributeQueryChanged: (AttributeQuery) -> Unit = {},
 )
@@ -74,6 +75,10 @@ internal fun ProductDetailScreen(
         initial = emptyList(),
         context = scope.coroutineContext,
     )
+    val products by viewModel.productsResult.collectAsState(
+        initial = emptyList(),
+        context = scope.coroutineContext,
+    )
     val attributes by viewModel.attributesResult.collectAsState(
         initial = emptyList(),
         context = scope.coroutineContext,
@@ -94,16 +99,18 @@ internal fun ProductDetailScreen(
         },
         addResult = addResult,
         permitReAddition = permitReAddition,
-        shops = shops,
+        shopSuggestions = shops,
         brandSuggestions = brands,
+        productSuggestions = products,
         attributeSuggestions = attributes,
         measurementUnits = measurementUnits,
         function = function.copy(
-            onShopQueryChanged = viewModel::setShopQuery,
-            onMeasurementUnitQueryChanged = viewModel::setMeasurementUnitQuery,
-            onBrandQueryChanged = viewModel::setBrandQuery,
-            onAttributeQueryChanged = viewModel::setAttributeQuery,
             onDetailsSubmitted = viewModel::addOrUpdate,
+            onShopQueryChanged = viewModel::setShopQuery,
+            onBrandQueryChanged = viewModel::setBrandQuery,
+            onProductQueryChanged = viewModel::setProductQuery,
+            onAttributeQueryChanged = viewModel::setAttributeQuery,
+            onMeasurementUnitQueryChanged = viewModel::setMeasurementUnitQuery,
         ),
     )
 }
@@ -114,7 +121,8 @@ private fun ProductDetailScreen(
     result: TaskResult<Product?>,
     addResult: TaskResult<Product?>,
     permitReAddition: Boolean = false,
-    shops: List<Shop> = emptyList(),
+    shopSuggestions: List<Shop> = emptyList(),
+    productSuggestions: List<Product> = emptyList(),
     brandSuggestions: List<Product.Brand> = emptyList(),
     attributeSuggestions: List<Product.Attribute> = emptyList(),
     measurementUnits: List<MeasurementUnit> = emptyList(),
@@ -202,7 +210,7 @@ private fun ProductDetailScreen(
             AutoCompleteTextField(
                 value = shop,
                 error = shopError,
-                suggestions = shops,
+                suggestions = shopSuggestions,
                 isError = isShopError,
                 modifier = VerticalLayoutModifier.padding(top = VIEW_SPACE),
                 label = stringResource(R.string.fp_product_detail_shop_label),
@@ -246,7 +254,13 @@ private fun ProductDetailScreen(
             }
             Spacer(modifier = Modifier.padding(vertical = 8.dp))
 
-            val name = productNameTextField(product.name, nameError, permitReAddition)
+            val name = productNameTextField(
+                name = product.name,
+                error = nameError,
+                clearField = permitReAddition,
+                suggestions = productSuggestions,
+                onQueryChanged = function.onProductQueryChanged,
+            )
             Spacer(modifier = Modifier.padding(vertical = 8.dp))
 
             val unit = measurementUnitTextField(

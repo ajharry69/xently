@@ -55,6 +55,15 @@ open class SearchableViewModel(private val repository: ISearchableRepository) : 
         }
     }.searchStateFlow()
 
+    private val productQuery = MutableSharedFlow<String>()
+    val productsResult = productQuery.flatMapLatest {
+        if (it.isBlank()) {
+            emptyFlow()
+        } else {
+            repository.getProducts(it).flagLoadingOnStart()
+        }
+    }.searchStateFlow()
+
     private fun MutableSharedFlow<String>.setCleansedQuery(query: String) {
         query.trim().also {
             if (it.isNotBlank()) {
@@ -68,6 +77,8 @@ open class SearchableViewModel(private val repository: ISearchableRepository) : 
     fun setShopQuery(query: String) = shopQuery.setCleansedQuery(query)
 
     fun setBrandQuery(query: String) = brandQuery.setCleansedQuery(query)
+
+    fun setProductQuery(query: String) = productQuery.setCleansedQuery(query)
 
     fun setMeasurementUnitQuery(query: String) = measurementUnitQuery.setCleansedQuery(query)
 

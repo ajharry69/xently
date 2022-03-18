@@ -22,6 +22,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import co.ke.xently.data.MeasurementUnit
+import co.ke.xently.data.Product
 import co.ke.xently.data.Product.Attribute
 import co.ke.xently.data.Product.Brand
 import co.ke.xently.feature.ui.*
@@ -66,24 +67,42 @@ fun measurementUnitTextField(
 }
 
 @Composable
-fun productNameTextField(name: String, error: String, clearField: Boolean): TextFieldValue {
+fun productNameTextField(
+    name: String,
+    error: String,
+    clearField: Boolean,
+    suggestions: List<Product> = emptyList(),
+    onQueryChanged: (String) -> Unit = {},
+): TextFieldValue {
     var value by remember(name, clearField) {
         mutableStateOf(TextFieldValue(name))
     }
     var isError by remember { mutableStateOf(error.isNotBlank()) }
-    TextInputLayout(
+    AutoCompleteTextField(
         modifier = VerticalLayoutModifier,
         value = value,
         isError = isError,
         error = error,
-        keyboardOptions = KeyboardOptions.Default.copy(capitalization = KeyboardCapitalization.Sentences,
-            imeAction = ImeAction.Next),
+        keyboardOptions = KeyboardOptions.Default.copy(
+            capitalization = KeyboardCapitalization.Sentences,
+            imeAction = ImeAction.Next
+        ),
         onValueChange = {
             value = it
             isError = false
+            onQueryChanged(it.text)
         },
         label = stringResource(R.string.fsp_product_detail_name_label),
-    )
+        suggestions = suggestions,
+        onOptionSelected = {
+            value = TextFieldValue(it.name)
+        },
+    ) {
+        Text(
+            style = MaterialTheme.typography.body1,
+            text = it.toString(),
+        )
+    }
     return value
 }
 
@@ -103,8 +122,10 @@ fun numberTextField(
         value = value,
         isError = isError,
         error = error,
-        keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number,
-            imeAction = ImeAction.Next),
+        keyboardOptions = KeyboardOptions.Default.copy(
+            keyboardType = KeyboardType.Number,
+            imeAction = ImeAction.Next
+        ),
         onValueChange = {
             value = it
             isError = false
@@ -213,7 +234,8 @@ fun productAttributesView(
         val addAttributeValue: (Attribute) -> Unit = {
             // Only override name if the attr.value was added without an attr.name
             attributes.add(0,
-                it.copy(name = it.name.ifBlank { attributeNameQuery.text.trim() }))
+                it.copy(name = it.name.ifBlank { attributeNameQuery.text.trim() })
+            )
             attributeValueQuery = TextFieldValue() // Reset search
         }
         // TODO: Show checkbox to enable reusing previously added attribute name when `attributeNameQuery` is blank
