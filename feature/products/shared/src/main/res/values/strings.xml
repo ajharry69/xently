@@ -10,4 +10,6 @@
     <string name="fsp_product_detail_attribute_name_query_label">Attribute name</string>
     <string name="fsp_product_detail_attribute_value_query_label">Attribute value</string>
     <string name="fps_measurement_unit_recommendation_help_text">Suggestions with * are recommended choices</string>
+    <string name="fps_product_suggestion_brands">Brands: %1$s</string>
+    <string name="fps_product_suggestion_attributes">Attributes: %1$s</string>
 </resources>

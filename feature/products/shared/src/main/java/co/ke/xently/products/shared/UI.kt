@@ -20,8 +20,10 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import co.ke.xently.data.MeasurementUnit
+import co.ke.xently.data.Product
 import co.ke.xently.data.Product.Attribute
 import co.ke.xently.data.Product.Brand
 import co.ke.xently.feature.ui.*
@@ -66,36 +68,75 @@ fun measurementUnitTextField(
 }
 
 @Composable
-fun productNameTextField(name: String, error: String, clearField: Boolean): TextFieldValue {
-    var value by remember(name, clearField) {
-        mutableStateOf(TextFieldValue(name))
+fun productNameTextField(
+    initial: String,
+    error: String,
+    clearField: Boolean,
+    suggestions: List<Product> = emptyList(),
+    onQueryChanged: (String) -> Unit = {},
+    onOptionSelected: (Product) -> Unit = {},
+): TextFieldValue {
+    var value by remember(initial, clearField) {
+        mutableStateOf(TextFieldValue(initial))
     }
-    var isError by remember { mutableStateOf(error.isNotBlank()) }
-    TextInputLayout(
+    var isError by remember {
+        mutableStateOf(error.isNotBlank())
+    }
+    AutoCompleteTextField(
         modifier = VerticalLayoutModifier,
         value = value,
         isError = isError,
         error = error,
-        keyboardOptions = KeyboardOptions.Default.copy(capitalization = KeyboardCapitalization.Sentences,
-            imeAction = ImeAction.Next),
+        keyboardOptions = KeyboardOptions.Default.copy(
+            capitalization = KeyboardCapitalization.Sentences,
+            imeAction = ImeAction.Next
+        ),
         onValueChange = {
             value = it
             isError = false
+            onQueryChanged(it.text)
         },
         label = stringResource(R.string.fsp_product_detail_name_label),
-    )
+        suggestions = suggestions,
+        onOptionSelected = {
+            value = TextFieldValue(it.name)
+            onOptionSelected(it)
+        },
+    ) {
+        Column {
+            Text(style = MaterialTheme.typography.body1, text = it.toString())
+            Text(
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                style = MaterialTheme.typography.caption,
+                text = stringResource(
+                    R.string.fps_product_suggestion_brands,
+                    it.brands.joinToString(", ").ifBlank { stringResource(R.string.none) },
+                ),
+            )
+            Text(
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                style = MaterialTheme.typography.caption,
+                text = stringResource(
+                    R.string.fps_product_suggestion_attributes,
+                    it.attributes.joinToString(", ").ifBlank { stringResource(R.string.none) },
+                ),
+            )
+        }
+    }
     return value
 }
 
 @Composable
 fun numberTextField(
-    number: Number,
+    initial: Number,
     error: String,
     clearField: Boolean,
     @StringRes label: Int,
 ): TextFieldValue {
-    var value by remember(number, clearField) {
-        mutableStateOf(TextFieldValue(number.toString()))
+    var value by remember(initial, clearField) {
+        mutableStateOf(TextFieldValue(initial.toString()))
     }
     var isError by remember { mutableStateOf(error.isNotBlank()) }
     TextInputLayout(
@@ -103,8 +144,10 @@ fun numberTextField(
         value = value,
         isError = isError,
         error = error,
-        keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number,
-            imeAction = ImeAction.Next),
+        keyboardOptions = KeyboardOptions.Default.copy(
+            keyboardType = KeyboardType.Number,
+            imeAction = ImeAction.Next
+        ),
         onValueChange = {
             value = it
             isError = false
@@ -119,9 +162,14 @@ fun productBrandsView(
     clearFields: Boolean,
     suggestions: List<Brand>,
     onQueryChanged: (String) -> Unit,
+    initial: List<Brand> = emptyList(),
 ): SnapshotStateList<Brand> {
-    val brands = remember(clearFields) { mutableStateListOf<Brand>() }
-    var brandQuery by remember(clearFields) { mutableStateOf(TextFieldValue("")) }
+    val brands = remember(initial, clearFields) {
+        mutableStateListOf(*initial.toTypedArray())
+    }
+    var brandQuery by remember(clearFields) {
+        mutableStateOf(TextFieldValue(""))
+    }
 
     var showAddBrandIcon by remember { mutableStateOf(false) }
     val addBrand: (Brand) -> Unit = {
@@ -184,10 +232,17 @@ fun productAttributesView(
     clearFields: Boolean,
     suggestions: List<Attribute>,
     onQueryChanged: (AttributeQuery) -> Unit,
+    initial: List<Attribute> = emptyList(),
 ): SnapshotStateList<Attribute> {
-    val attributes = remember(clearFields) { mutableStateListOf<Attribute>() }
-    var attributeNameQuery by remember(clearFields) { mutableStateOf(TextFieldValue("")) }
-    var attributeValueQuery by remember(clearFields) { mutableStateOf(TextFieldValue("")) }
+    val attributes = remember(initial, clearFields) {
+        mutableStateListOf(*initial.toTypedArray())
+    }
+    var attributeNameQuery by remember(clearFields) {
+        mutableStateOf(TextFieldValue(""))
+    }
+    var attributeValueQuery by remember(clearFields) {
+        mutableStateOf(TextFieldValue(""))
+    }
 
     LaunchedEffect(attributeNameQuery, attributeValueQuery) {
         onQueryChanged(AttributeQuery(attributeNameQuery.text, attributeValueQuery.text))
@@ -213,7 +268,8 @@ fun productAttributesView(
         val addAttributeValue: (Attribute) -> Unit = {
             // Only override name if the attr.value was added without an attr.name
             attributes.add(0,
-                it.copy(name = it.name.ifBlank { attributeNameQuery.text.trim() }))
+                it.copy(name = it.name.ifBlank { attributeNameQuery.text.trim() })
+            )
             attributeValueQuery = TextFieldValue() // Reset search
         }
         // TODO: Show checkbox to enable reusing previously added attribute name when `attributeNameQuery` is blank

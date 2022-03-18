@@ -32,6 +32,21 @@ open class SearchableRepository(private val dependencies: Dependencies) : ISearc
         }.cancellable().retryCatch(this).flowOn(dependencies.dispatcher.io)
     }
 
+    override fun getProducts(query: String) = Retry().run {
+        dependencies.database.productDao.getProducts("%${query}%").mapLatest { products ->
+            if (products.isEmpty()) {
+                delay(SEARCH_DELAY)
+                sendRequest { dependencies.service.product.get(query, size = 30) }
+                    .mapCatching { data ->
+                        data.results.also {
+                            dependencies.database.productDao.save(it)
+                        }
+                    }
+            }
+            TaskResult.Success(products.map { it.product }.take(5))
+        }.cancellable().retryCatch(this).flowOn(dependencies.dispatcher.io)
+    }
+
     override fun getBrands(query: String) = Retry().run {
         dependencies.database.brandDao.get("%${query}%").mapLatest { brands ->
             if (brands.isEmpty()) {

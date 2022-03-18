@@ -24,4 +24,5 @@
     <string name="show">Show</string>
     <string name="hide">Hide</string>
     <string name="refresh">Refresh</string>
+    <string name="none">None</string>
 </resources>
