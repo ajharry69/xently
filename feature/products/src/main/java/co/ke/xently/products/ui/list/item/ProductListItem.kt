@@ -17,14 +17,19 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.ExperimentalUnitApi
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.TextUnitType
-import androidx.compose.ui.unit.dp
 import co.ke.xently.data.Product
+import co.ke.xently.data.Shop
 import co.ke.xently.feature.theme.XentlyTheme
 import co.ke.xently.feature.ui.ListItemSurface
 import co.ke.xently.feature.ui.NEGLIGIBLE_SPACE
+import co.ke.xently.feature.ui.VIEW_SPACE_HALVED
 import co.ke.xently.feature.ui.shimmerPlaceholder
 import co.ke.xently.feature.utils.descriptive
 import co.ke.xently.products.R
+
+internal data class ProductListItemFunction(
+    val onItemClicked: (Product) -> Unit = {},
+)
 
 internal data class MenuItem(
     @StringRes val label: Int,
@@ -38,9 +43,13 @@ internal fun ProductListItem(
     modifier: Modifier = Modifier,
     showPopupMenu: Boolean = false,
     menuItems: List<MenuItem> = emptyList(),
+    function: ProductListItemFunction = ProductListItemFunction(),
 ) {
     var showDropMenu by remember(showPopupMenu) { mutableStateOf(showPopupMenu) }
-    ListItemSurface(modifier = modifier) {
+    ListItemSurface(
+        modifier = modifier,
+        onClick = { if (!product.isDefault) function.onItemClicked.invoke(product) },
+    ) {
         Column(
             modifier = Modifier.weight(1f),
             verticalArrangement = Arrangement.spacedBy(NEGLIGIBLE_SPACE),
@@ -65,7 +74,7 @@ internal fun ProductListItem(
         Row(
             modifier = Modifier
                 .width(IntrinsicSize.Min)
-                .padding(start = 8.dp),
+                .padding(start = VIEW_SPACE_HALVED),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
@@ -76,7 +85,7 @@ internal fun ProductListItem(
                 modifier = Modifier.shimmerPlaceholder(product.isDefault),
             )
             Box {
-                IconButton(onClick = { showDropMenu = !showDropMenu }) {
+                IconButton(onClick = { if (!product.isDefault) showDropMenu = !showDropMenu }) {
                     Icon(
                         imageVector = if (showDropMenu) {
                             Icons.Default.KeyboardArrowDown

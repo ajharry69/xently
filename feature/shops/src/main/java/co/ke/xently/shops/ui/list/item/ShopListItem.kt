@@ -30,7 +30,10 @@ internal fun ShopListItem(
     menuItems: @Composable (Shop) -> List<MenuItem> = { emptyList() },
 ) {
     var showDropMenu by remember { mutableStateOf(showPopupMenu) }
-    ListItemSurface(modifier = modifier, onClick = { function.onItemClicked.invoke(shop) }) {
+    ListItemSurface(
+        modifier = modifier,
+        onClick = { if (!shop.isDefault) function.onItemClicked.invoke(shop) },
+    ) {
         Column(
             modifier = Modifier.weight(1f),
             verticalArrangement = Arrangement.spacedBy(NEGLIGIBLE_SPACE),
@@ -50,7 +53,7 @@ internal fun ShopListItem(
             )
         }
         Box(modifier = Modifier.width(IntrinsicSize.Min)) {
-            IconButton(onClick = { showDropMenu = true }) {
+            IconButton(onClick = { showDropMenu = !shop.isDefault }) {
                 Icon(
                     imageVector = if (showDropMenu) {
                         Icons.Default.KeyboardArrowDown

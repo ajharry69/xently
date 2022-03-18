@@ -20,10 +20,12 @@ import co.ke.xently.feature.ui.*
 import co.ke.xently.products.R
 import co.ke.xently.products.ui.list.item.MenuItem
 import co.ke.xently.products.ui.list.item.ProductListItem
+import co.ke.xently.products.ui.list.item.ProductListItemFunction
 
 internal data class ProductListScreenFunction(
     val onAddFabClicked: () -> Unit = {},
     val onNavigationIconClicked: () -> Unit = {},
+    val function: ProductListItemFunction = ProductListItemFunction(),
 )
 
 @Composable
@@ -87,8 +89,10 @@ private fun ProductListScreen(
         floatingActionButton = {
             if (!listState.isScrollInProgress) {
                 FloatingActionButton(onClick = function.onAddFabClicked) {
-                    Icon(Icons.Default.Add,
-                        stringRes(R.string.fp_add_product_toolbar_title, R.string.add))
+                    Icon(
+                        Icons.Default.Add,
+                        stringRes(R.string.fp_add_product_toolbar_title, R.string.add)
+                    )
                 }
             }
         }
@@ -103,6 +107,7 @@ private fun ProductListScreen(
             ProductListItem(
                 product = product,
                 menuItems = menuItems,
+                function = function.function,
                 modifier = Modifier.fillMaxWidth(),
             )
         }

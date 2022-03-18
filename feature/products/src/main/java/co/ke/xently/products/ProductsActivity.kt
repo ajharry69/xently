@@ -55,9 +55,11 @@ internal fun ProductsNavHost(
     onNavigationIconClicked: () -> Unit,
 ) {
     val context = LocalContext.current
-    NavHost(modifier = modifier,
+    NavHost(
+        modifier = modifier,
         navController = navController,
-        startDestination = startDestination) {
+        startDestination = startDestination,
+    ) {
         val productList: @Composable (NavBackStackEntry) -> Unit = { backStackEntry ->
             ProductListScreen(
                 shopId = backStackEntry.arguments?.getLong("shopId"),

@@ -82,7 +82,7 @@ internal fun GroupedShoppingListCard(
                     )
                 }
                 Box(modifier = Modifier.align(Alignment.Top)) {
-                    IconButton(onClick = { showDropDownMenu = true }) {
+                    IconButton(onClick = { showDropDownMenu = !showPlaceholder }) {
                         Icon(
                             imageVector = Icons.Filled.MoreVert,
                             contentDescription = stringResource(R.string.fsl_group_card_menu_content_desc_more),
@@ -125,12 +125,14 @@ internal fun GroupedShoppingListCard(
             if (numberOfItems > itemsPerCard) {
                 OutlinedButton(
                     onClick = {
-                        function.onSeeAllClicked.invoke(
-                            ShoppingListGroup(
-                                groupBy = groupBy,
-                                group = groupList.group,
-                            ),
-                        )
+                        if (!showPlaceholder) {
+                            function.onSeeAllClicked.invoke(
+                                ShoppingListGroup(
+                                    groupBy = groupBy,
+                                    group = groupList.group,
+                                ),
+                            )
+                        }
                     },
                     modifier = Modifier
                         .fillMaxWidth()
