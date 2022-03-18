@@ -47,19 +47,19 @@ internal fun ShoppingListItemScreen(
     )
     // TODO: Fix case where searching on either measurement units or shops clears fields
     val measurementUnits by viewModel.measurementUnitsResult.collectAsState(
-        initial= emptyList(),
+        initial = emptyList(),
         context = scope.coroutineContext,
     )
     val brands by viewModel.brandsResult.collectAsState(
-        initial= emptyList(),
+        initial = emptyList(),
         context = scope.coroutineContext,
     )
     val products by viewModel.productsResult.collectAsState(
-        initial= emptyList(),
+        initial = emptyList(),
         context = scope.coroutineContext,
     )
     val attributes by viewModel.attributesResult.collectAsState(
-        initial= emptyList(),
+        initial = emptyList(),
         context = scope.coroutineContext,
     )
 
@@ -162,7 +162,13 @@ private fun ShoppingListItemScreen(
         ) {
             Spacer(modifier = Modifier.padding(top = VIEW_SPACE))
             var initialMeasurementUnit by remember {
-                mutableStateOf(item.unit)
+                mutableStateOf(
+                    if (item.isDefault) {
+                        ""
+                    } else {
+                        item.unit
+                    }
+                )
             }
             var initialMeasurementUnitQuantity by remember {
                 mutableStateOf(item.unitQuantity)
@@ -171,10 +177,20 @@ private fun ShoppingListItemScreen(
                 mutableStateOf(item.brands.map { Product.Brand(it.name) })
             }
             var initialAttributes by remember {
-                mutableStateOf(item.attributes.map { Product.Attribute(it.name, it.value, values=it.values) })
+                mutableStateOf(item.attributes.map {
+                    Product.Attribute(
+                        it.name,
+                        it.value,
+                        values = it.values
+                    )
+                })
             }
             val name = productNameTextField(
-                initial = item.name,
+                initial = if (item.isDefault) {
+                    ""
+                } else {
+                    item.name
+                },
                 error = nameError,
                 clearField = permitReAddition,
                 suggestions = productSuggestions,

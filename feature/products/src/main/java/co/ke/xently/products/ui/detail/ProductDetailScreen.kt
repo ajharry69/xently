@@ -254,7 +254,13 @@ private fun ProductDetailScreen(
             Spacer(modifier = Modifier.padding(vertical = VIEW_SPACE_HALVED))
 
             var initialMeasurementUnit by remember {
-                mutableStateOf(product.unit)
+                mutableStateOf(
+                    if (product.isDefault) {
+                        ""
+                    } else {
+                        product.unit
+                    }
+                )
             }
             var initialMeasurementUnitQuantity by remember {
                 mutableStateOf(product.unitQuantity)
@@ -266,7 +272,11 @@ private fun ProductDetailScreen(
                 mutableStateOf(product.attributes)
             }
             val name = productNameTextField(
-                initial = product.name,
+                initial = if (product.isDefault) {
+                    ""
+                } else {
+                    product.name
+                },
                 error = nameError,
                 clearField = permitReAddition,
                 suggestions = productSuggestions,
@@ -306,7 +316,11 @@ private fun ProductDetailScreen(
             Spacer(modifier = Modifier.padding(vertical = VIEW_SPACE_HALVED))
 
             val unitPrice = numberTextField(
-                initial = product.unitPrice,
+                initial = if (product.isDefault) {
+                    0
+                } else {
+                    product.unitPrice
+                },
                 error = unitPriceError,
                 clearField = permitReAddition,
                 label = R.string.fp_product_detail_unit_price_label,
@@ -347,14 +361,17 @@ private fun ProductDetailScreen(
                     trailingIcon = {
                         IconButton(
                             onClick = {
-                                dateOfPurchasePicker.show(fragmentManager,
-                                    "ProductDetailDateOfPurchase")
+                                dateOfPurchasePicker.show(
+                                    fragmentManager,
+                                    "ProductDetailDateOfPurchase"
+                                )
                             },
                         ) {
                             Icon(
                                 Icons.Default.DateRange,
                                 contentDescription = stringResource(
-                                    R.string.fp_product_detail_date_of_purchase_content_desc),
+                                    R.string.fp_product_detail_date_of_purchase_content_desc
+                                ),
                             )
                         }
                     },
@@ -380,14 +397,17 @@ private fun ProductDetailScreen(
                     trailingIcon = {
                         IconButton(
                             onClick = {
-                                timeOfPurchasePicker.show(fragmentManager,
-                                    "ProductDetailTimeOfPurchase")
+                                timeOfPurchasePicker.show(
+                                    fragmentManager,
+                                    "ProductDetailTimeOfPurchase"
+                                )
                             },
                         ) {
                             Icon(
                                 Icons.Default.AccessTime,
                                 stringResource(
-                                    R.string.fp_product_detail_time_of_purchase_content_desc),
+                                    R.string.fp_product_detail_time_of_purchase_content_desc
+                                ),
                             )
                         }
                     },
