@@ -25,11 +25,12 @@ import co.ke.xently.products.shared.*
 import co.ke.xently.shoppinglist.R
 
 internal data class ShoppingListItemScreenFunction(
-    val navigationIcon: () -> Unit = {},
-    val measurementUnitQueryChanged: (String) -> Unit = {},
-    val brandQueryChanged: (String) -> Unit = {},
-    val attributeQueryChanged: (AttributeQuery) -> Unit = {},
-    val detailsSubmitted: (ShoppingListItem) -> Unit = {},
+    val onNavigationIconClicked: () -> Unit = {},
+    val onProductQueryChanged: (String) -> Unit = {},
+    val onMeasurementUnitQueryChanged: (String) -> Unit = {},
+    val onBrandQueryChanged: (String) -> Unit = {},
+    val onAttributeQueryChanged: (AttributeQuery) -> Unit = {},
+    val onDetailsSubmitted: (ShoppingListItem) -> Unit = {},
 )
 
 @Composable
@@ -57,6 +58,10 @@ internal fun ShoppingListItemScreen(
         initial= emptyList(),
         context = scope.coroutineContext,
     )
+    val products by viewModel.productsResult.collectAsState(
+        initial= emptyList(),
+        context = scope.coroutineContext,
+    )
     val attributes by viewModel.attributesResult.collectAsState(
         initial= emptyList(),
         context = scope.coroutineContext,
@@ -78,13 +83,15 @@ internal fun ShoppingListItemScreen(
         addResult = addResult,
         permitReAddition = permitReAddition,
         brandSuggestions = brands,
+        productSuggestions = products,
         attributeSuggestions = attributes,
-        measurementUnits = measurementUnits,
+        measurementUnitSuggestions = measurementUnits,
         function = function.copy(
-            detailsSubmitted = viewModel::addOrUpdate,
-            brandQueryChanged = viewModel::setBrandQuery,
-            attributeQueryChanged = viewModel::setAttributeQuery,
-            measurementUnitQueryChanged = viewModel::setMeasurementUnitQuery,
+            onDetailsSubmitted = viewModel::addOrUpdate,
+            onBrandQueryChanged = viewModel::setBrandQuery,
+            onProductQueryChanged = viewModel::setProductQuery,
+            onAttributeQueryChanged = viewModel::setAttributeQuery,
+            onMeasurementUnitQueryChanged = viewModel::setMeasurementUnitQuery,
         ),
     )
 }
@@ -96,9 +103,10 @@ private fun ShoppingListItemScreen(
     result: TaskResult<ShoppingListItem?>,
     addResult: TaskResult<ShoppingListItem?>,
     permitReAddition: Boolean = false,
+    productSuggestions: List<Product> = emptyList(),
     brandSuggestions: List<Product.Brand> = emptyList(),
     attributeSuggestions: List<Product.Attribute> = emptyList(),
-    measurementUnits: List<MeasurementUnit> = emptyList(),
+    measurementUnitSuggestions: List<MeasurementUnit> = emptyList(),
     function: ShoppingListItemScreenFunction = ShoppingListItemScreenFunction(),
 ) {
     val item = result.getOrNull() ?: ShoppingListItem.default()
@@ -147,7 +155,7 @@ private fun ShoppingListItemScreen(
             ToolbarWithProgressbar(
                 title = toolbarTitle,
                 showProgress = isTaskLoading,
-                onNavigationIconClicked = function.navigationIcon,
+                onNavigationIconClicked = function.onNavigationIconClicked,
             )
         },
     ) { paddingValues ->
@@ -161,6 +169,8 @@ private fun ShoppingListItemScreen(
                 name = item.name,
                 error = nameError,
                 clearField = permitReAddition,
+                suggestions = productSuggestions,
+                onQueryChanged = function.onProductQueryChanged,
             )
             Spacer(modifier = Modifier.padding(vertical = 8.dp))
 
@@ -168,8 +178,8 @@ private fun ShoppingListItemScreen(
                 unit = item.unit,
                 error = unitError,
                 clearField = permitReAddition,
-                suggestions = measurementUnits,
-                onQueryChanged = function.measurementUnitQueryChanged,
+                suggestions = measurementUnitSuggestions,
+                onQueryChanged = function.onMeasurementUnitQueryChanged,
             )
             Spacer(modifier = Modifier.padding(vertical = 8.dp))
 
@@ -192,14 +202,14 @@ private fun ShoppingListItemScreen(
             val brands = productBrandsView(
                 clearFields = permitReAddition,
                 suggestions = brandSuggestions,
-                onQueryChanged = function.brandQueryChanged,
+                onQueryChanged = function.onBrandQueryChanged,
             )
             Spacer(modifier = Modifier.padding(vertical = 8.dp))
 
             val attributes = productAttributesView(
                 clearFields = permitReAddition,
                 suggestions = attributeSuggestions,
-                onQueryChanged = function.attributeQueryChanged,
+                onQueryChanged = function.onAttributeQueryChanged,
             )
             Spacer(modifier = Modifier.padding(vertical = 8.dp))
             Button(
@@ -212,7 +222,7 @@ private fun ShoppingListItemScreen(
                 modifier = VerticalLayoutModifier.padding(bottom = VIEW_SPACE),
                 onClick = {
                     focusManager.clearFocus()
-                    function.detailsSubmitted.invoke(
+                    function.onDetailsSubmitted.invoke(
                         item.copy(
                             name = name.text,
                             unit = unit.text,

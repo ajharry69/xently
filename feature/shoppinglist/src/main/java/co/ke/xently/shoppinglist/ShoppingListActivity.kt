@@ -320,7 +320,7 @@ internal fun ShoppingListNavHost(
                 modifier = Modifier.fillMaxSize(),
                 id = it.arguments?.getLong("id") ?: ShoppingListItem.default().id,
                 function = ShoppingListItemScreenFunction(
-                    navigationIcon = onNavigationIconClicked,
+                    onNavigationIconClicked = onNavigationIconClicked,
                 ),
             )
         }
