@@ -20,7 +20,6 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import co.ke.xently.common.DEFAULT_LOCAL_DATE_FORMAT
 import co.ke.xently.common.DEFAULT_LOCAL_DATE_TIME_FORMAT
@@ -252,49 +251,67 @@ private fun ProductDetailScreen(
                     Text(it.taxPin, style = MaterialTheme.typography.subtitle1)
                 }
             }
-            Spacer(modifier = Modifier.padding(vertical = 8.dp))
+            Spacer(modifier = Modifier.padding(vertical = VIEW_SPACE_HALVED))
 
+            var initialMeasurementUnit by remember {
+                mutableStateOf(product.unit)
+            }
+            var initialMeasurementUnitQuantity by remember {
+                mutableStateOf(product.unitQuantity)
+            }
+            var initialBrands by remember {
+                mutableStateOf(product.brands)
+            }
+            var initialAttributes by remember {
+                mutableStateOf(product.attributes)
+            }
             val name = productNameTextField(
-                name = product.name,
+                initial = product.name,
                 error = nameError,
                 clearField = permitReAddition,
                 suggestions = productSuggestions,
                 onQueryChanged = function.onProductQueryChanged,
+                onOptionSelected = {
+                    initialBrands = it.brands
+                    initialMeasurementUnit = it.unit
+                    initialAttributes = it.attributes
+                    initialMeasurementUnitQuantity = it.unitQuantity
+                },
             )
-            Spacer(modifier = Modifier.padding(vertical = 8.dp))
+            Spacer(modifier = Modifier.padding(vertical = VIEW_SPACE_HALVED))
 
             val unit = measurementUnitTextField(
-                unit = product.unit,
                 error = unitError,
+                unit = initialMeasurementUnit,
                 clearField = permitReAddition,
                 suggestions = measurementUnits,
                 onQueryChanged = function.onMeasurementUnitQueryChanged,
             )
-            Spacer(modifier = Modifier.padding(vertical = 8.dp))
+            Spacer(modifier = Modifier.padding(vertical = VIEW_SPACE_HALVED))
 
             val unitQuantity = numberTextField(
-                number = product.unitQuantity,
                 error = unitQuantityError,
                 clearField = permitReAddition,
+                initial = initialMeasurementUnitQuantity,
                 label = R.string.fsp_product_detail_unit_quantity_label,
             )
-            Spacer(modifier = Modifier.padding(vertical = 8.dp))
+            Spacer(modifier = Modifier.padding(vertical = VIEW_SPACE_HALVED))
 
             val purchasedQuantity = numberTextField(
-                number = product.purchasedQuantity,
+                initial = product.purchasedQuantity,
                 error = purchasedQuantityError,
                 clearField = permitReAddition,
                 label = R.string.fp_product_detail_purchased_quantity_label,
             )
-            Spacer(modifier = Modifier.padding(vertical = 8.dp))
+            Spacer(modifier = Modifier.padding(vertical = VIEW_SPACE_HALVED))
 
             val unitPrice = numberTextField(
-                number = product.unitPrice,
+                initial = product.unitPrice,
                 error = unitPriceError,
                 clearField = permitReAddition,
                 label = R.string.fp_product_detail_unit_price_label,
             )
-            Spacer(modifier = Modifier.padding(vertical = 8.dp))
+            Spacer(modifier = Modifier.padding(vertical = VIEW_SPACE_HALVED))
 
             var dateOfPurchase by remember {
                 mutableStateOf(TextFieldValue(DEFAULT_LOCAL_DATE_FORMAT.format(product.datePurchased)))
@@ -376,22 +393,24 @@ private fun ProductDetailScreen(
                     },
                 )
             }
-            Spacer(modifier = Modifier.padding(vertical = 8.dp))
+            Spacer(modifier = Modifier.padding(vertical = VIEW_SPACE_HALVED))
 
             val brands = productBrandsView(
+                initial = initialBrands,
                 clearFields = permitReAddition,
                 suggestions = brandSuggestions,
                 onQueryChanged = function.onBrandQueryChanged,
             )
-            Spacer(modifier = Modifier.padding(vertical = 8.dp))
+            Spacer(modifier = Modifier.padding(vertical = VIEW_SPACE_HALVED))
 
             val attributes = productAttributesView(
+                initial = initialAttributes,
                 clearFields = permitReAddition,
                 suggestions = attributeSuggestions,
                 onQueryChanged = function.onAttributeQueryChanged,
             )
 
-            Spacer(modifier = Modifier.padding(vertical = 8.dp))
+            Spacer(modifier = Modifier.padding(vertical = VIEW_SPACE_HALVED))
             Button(
                 enabled = arrayOf(
                     unit,

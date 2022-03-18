@@ -13,14 +13,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import co.ke.xently.data.*
 import co.ke.xently.data.ShoppingListItem.Attribute
-import co.ke.xently.feature.ui.ToolbarWithProgressbar
-import co.ke.xently.feature.ui.VIEW_SPACE
-import co.ke.xently.feature.ui.VerticalLayoutModifier
-import co.ke.xently.feature.ui.stringRes
+import co.ke.xently.feature.ui.*
 import co.ke.xently.products.shared.*
 import co.ke.xently.shoppinglist.R
 
@@ -165,53 +161,73 @@ private fun ShoppingListItemScreen(
                 .verticalScroll(scrollState),
         ) {
             Spacer(modifier = Modifier.padding(top = VIEW_SPACE))
+            var initialMeasurementUnit by remember {
+                mutableStateOf(item.unit)
+            }
+            var initialMeasurementUnitQuantity by remember {
+                mutableStateOf(item.unitQuantity)
+            }
+            var initialBrands by remember {
+                mutableStateOf(item.brands.map { Product.Brand(it.name) })
+            }
+            var initialAttributes by remember {
+                mutableStateOf(item.attributes.map { Product.Attribute(it.name, it.value, values=it.values) })
+            }
             val name = productNameTextField(
-                name = item.name,
+                initial = item.name,
                 error = nameError,
                 clearField = permitReAddition,
                 suggestions = productSuggestions,
                 onQueryChanged = function.onProductQueryChanged,
+                onOptionSelected = {
+                    initialBrands = it.brands
+                    initialMeasurementUnit = it.unit
+                    initialAttributes = it.attributes
+                    initialMeasurementUnitQuantity = it.unitQuantity
+                },
             )
-            Spacer(modifier = Modifier.padding(vertical = 8.dp))
+            Spacer(modifier = Modifier.padding(vertical = VIEW_SPACE_HALVED))
 
             val unit = measurementUnitTextField(
-                unit = item.unit,
                 error = unitError,
+                unit = initialMeasurementUnit,
                 clearField = permitReAddition,
                 suggestions = measurementUnitSuggestions,
                 onQueryChanged = function.onMeasurementUnitQueryChanged,
             )
-            Spacer(modifier = Modifier.padding(vertical = 8.dp))
+            Spacer(modifier = Modifier.padding(vertical = VIEW_SPACE_HALVED))
 
             val unitQuantity = numberTextField(
-                number = item.unitQuantity,
                 error = unitQuantityError,
                 clearField = permitReAddition,
+                initial = initialMeasurementUnitQuantity,
                 label = R.string.fsp_product_detail_unit_quantity_label,
             )
-            Spacer(modifier = Modifier.padding(vertical = 8.dp))
+            Spacer(modifier = Modifier.padding(vertical = VIEW_SPACE_HALVED))
 
             val purchaseQuantity = numberTextField(
-                number = item.purchaseQuantity,
+                initial = item.purchaseQuantity,
                 error = purchaseQuantityError,
                 clearField = permitReAddition,
                 label = R.string.fsl_text_field_label_purchase_quantity,
             )
-            Spacer(modifier = Modifier.padding(vertical = 8.dp))
+            Spacer(modifier = Modifier.padding(vertical = VIEW_SPACE_HALVED))
 
             val brands = productBrandsView(
+                initial = initialBrands,
                 clearFields = permitReAddition,
                 suggestions = brandSuggestions,
                 onQueryChanged = function.onBrandQueryChanged,
             )
-            Spacer(modifier = Modifier.padding(vertical = 8.dp))
+            Spacer(modifier = Modifier.padding(vertical = VIEW_SPACE_HALVED))
 
             val attributes = productAttributesView(
+                initial = initialAttributes,
                 clearFields = permitReAddition,
                 suggestions = attributeSuggestions,
                 onQueryChanged = function.onAttributeQueryChanged,
             )
-            Spacer(modifier = Modifier.padding(vertical = 8.dp))
+            Spacer(modifier = Modifier.padding(vertical = VIEW_SPACE_HALVED))
             Button(
                 enabled = arrayOf(
                     unit,

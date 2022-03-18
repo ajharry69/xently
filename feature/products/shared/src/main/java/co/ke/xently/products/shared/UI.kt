@@ -69,17 +69,19 @@ fun measurementUnitTextField(
 
 @Composable
 fun productNameTextField(
-    name: String,
+    initial: String,
     error: String,
     clearField: Boolean,
     suggestions: List<Product> = emptyList(),
     onQueryChanged: (String) -> Unit = {},
     onOptionSelected: (Product) -> Unit = {},
 ): TextFieldValue {
-    var value by remember(name, clearField) {
-        mutableStateOf(TextFieldValue(name))
+    var value by remember(initial, clearField) {
+        mutableStateOf(TextFieldValue(initial))
     }
-    var isError by remember { mutableStateOf(error.isNotBlank()) }
+    var isError by remember {
+        mutableStateOf(error.isNotBlank())
+    }
     AutoCompleteTextField(
         modifier = VerticalLayoutModifier,
         value = value,
@@ -128,13 +130,13 @@ fun productNameTextField(
 
 @Composable
 fun numberTextField(
-    number: Number,
+    initial: Number,
     error: String,
     clearField: Boolean,
     @StringRes label: Int,
 ): TextFieldValue {
-    var value by remember(number, clearField) {
-        mutableStateOf(TextFieldValue(number.toString()))
+    var value by remember(initial, clearField) {
+        mutableStateOf(TextFieldValue(initial.toString()))
     }
     var isError by remember { mutableStateOf(error.isNotBlank()) }
     TextInputLayout(
@@ -160,9 +162,14 @@ fun productBrandsView(
     clearFields: Boolean,
     suggestions: List<Brand>,
     onQueryChanged: (String) -> Unit,
+    initial: List<Brand> = emptyList(),
 ): SnapshotStateList<Brand> {
-    val brands = remember(clearFields) { mutableStateListOf<Brand>() }
-    var brandQuery by remember(clearFields) { mutableStateOf(TextFieldValue("")) }
+    val brands = remember(initial, clearFields) {
+        mutableStateListOf(*initial.toTypedArray())
+    }
+    var brandQuery by remember(clearFields) {
+        mutableStateOf(TextFieldValue(""))
+    }
 
     var showAddBrandIcon by remember { mutableStateOf(false) }
     val addBrand: (Brand) -> Unit = {
@@ -225,10 +232,17 @@ fun productAttributesView(
     clearFields: Boolean,
     suggestions: List<Attribute>,
     onQueryChanged: (AttributeQuery) -> Unit,
+    initial: List<Attribute> = emptyList(),
 ): SnapshotStateList<Attribute> {
-    val attributes = remember(clearFields) { mutableStateListOf<Attribute>() }
-    var attributeNameQuery by remember(clearFields) { mutableStateOf(TextFieldValue("")) }
-    var attributeValueQuery by remember(clearFields) { mutableStateOf(TextFieldValue("")) }
+    val attributes = remember(initial, clearFields) {
+        mutableStateListOf(*initial.toTypedArray())
+    }
+    var attributeNameQuery by remember(clearFields) {
+        mutableStateOf(TextFieldValue(""))
+    }
+    var attributeValueQuery by remember(clearFields) {
+        mutableStateOf(TextFieldValue(""))
+    }
 
     LaunchedEffect(attributeNameQuery, attributeValueQuery) {
         onQueryChanged(AttributeQuery(attributeNameQuery.text, attributeValueQuery.text))
