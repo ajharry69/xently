@@ -30,31 +30,34 @@ internal fun ShoppingListItemCard(
     menuItems: List<MenuItem> = emptyList(),
     onClick: (ShoppingListItem) -> Unit,
 ) {
-    val placeholderVisible = showPlaceholder || item.isDefault
+    val isPlaceholderVisible = showPlaceholder || item.isDefault
     var showDropMenu by remember { mutableStateOf(false) }
-    ListItemSurface(modifier = modifier, onClick = { onClick.invoke(item) }) {
+    ListItemSurface(
+        modifier = modifier,
+        onClick = { if (!isPlaceholderVisible) onClick.invoke(item) },
+    ) {
         Column(verticalArrangement = Arrangement.spacedBy(NEGLIGIBLE_SPACE)) {
             Text(
                 text = item.name,
                 style = MaterialTheme.typography.body1,
                 modifier = Modifier
                     .wrapContentWidth()
-                    .shimmerPlaceholder(placeholderVisible),
+                    .shimmerPlaceholder(isPlaceholderVisible),
             )
             Text(
                 text = "${item.unitQuantity} ${item.unit}",
                 style = MaterialTheme.typography.caption,
-                modifier = Modifier.shimmerPlaceholder(placeholderVisible),
+                modifier = Modifier.shimmerPlaceholder(isPlaceholderVisible),
             )
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
                 text = "${item.purchaseQuantity}",
                 style = MaterialTheme.typography.h6,
-                modifier = Modifier.shimmerPlaceholder(placeholderVisible),
+                modifier = Modifier.shimmerPlaceholder(isPlaceholderVisible),
             )
             Box {
-                IconButton(onClick = { showDropMenu = true }) {
+                IconButton(onClick = { showDropMenu = !isPlaceholderVisible }) {
                     Icon(
                         imageVector = if (showDropMenu) {
                             Icons.Default.KeyboardArrowDown
@@ -65,7 +68,7 @@ internal fun ShoppingListItemCard(
                             R.string.fsl_detail_more_actions_content_description,
                             item.name,
                         ),
-                        modifier = Modifier.shimmerPlaceholder(placeholderVisible),
+                        modifier = Modifier.shimmerPlaceholder(isPlaceholderVisible),
                     )
                 }
                 DropdownMenu(expanded = showDropMenu, onDismissRequest = { showDropMenu = false }) {

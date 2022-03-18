@@ -24,7 +24,10 @@ internal fun AddressListItem(
     modifier: Modifier = Modifier,
     function: AddressListItemFunction = AddressListItemFunction(),
 ) {
-    ListItemSurface(modifier = modifier, onClick = { function.onItemClick.invoke(address) }) {
+    ListItemSurface(
+        modifier = modifier,
+        onClick = { if (!address.isDefault) function.onItemClick.invoke(address) },
+    ) {
         Column(
             modifier = Modifier.weight(1f),
             verticalArrangement = Arrangement.spacedBy(NEGLIGIBLE_SPACE),
@@ -52,7 +55,7 @@ internal fun AddressListItem(
 
 @Preview(showBackground = true)
 @Composable
-fun AddressListItem() {
+private fun AddressListItem() {
     XentlyTheme {
         AddressListItem(Address(town = "Westlands, Nairobi"), Modifier.fillMaxSize())
     }
