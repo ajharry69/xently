@@ -14,11 +14,14 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusEvent
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.PopupProperties
+import co.ke.xently.feature.R
 
 @Composable
 fun stringRes(@StringRes string: Int, @StringRes vararg args: Int): String {
@@ -46,18 +49,23 @@ fun TextInputLayout(
     visualTransformation: VisualTransformation = VisualTransformation.None,
 ) {
     Column(modifier = modifier) {
+        val description = stringResource(R.string.text_field_content_description, label ?: "")
+            .removeSuffix("*")
+            .trimStart()
         TextField(
             value = value,
             readOnly = readOnly,
             singleLine = singleLine,
             isError = isError,
             onValueChange = onValueChange,
-            modifier = Modifier.fillMaxWidth(),
             label = label?.let { { Text(it) } },
             trailingIcon = trailingIcon,
             keyboardOptions = keyboardOptions,
             keyboardActions = keyboardActions,
             visualTransformation = visualTransformation,
+            modifier = Modifier
+                .fillMaxWidth()
+                .semantics { contentDescription = description },
         )
         if (isError) {
             Text(

@@ -1,5 +1,6 @@
 package co.ke.xently.accounts.ui.signin
 
+import androidx.annotation.VisibleForTesting
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
@@ -10,16 +11,19 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.input.*
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
 import co.ke.xently.accounts.R
+import co.ke.xently.common.KENYA
 import co.ke.xently.data.TaskResult
 import co.ke.xently.data.User
 import co.ke.xently.data.errorMessage
 import co.ke.xently.feature.ui.*
 
-internal data class SignInScreenFunction(
+data class SignInScreenFunction(
     val navigationIcon: () -> Unit = {},
     val signInSuccess: (User) -> Unit = {},
     val forgotPassword: (String) -> Unit = {},
@@ -48,7 +52,8 @@ internal fun SignInScreen(
 }
 
 @Composable
-private fun SignInScreen(
+@VisibleForTesting
+fun SignInScreen(
     modifier: Modifier,
     result: TaskResult<User?>,
     auth: User.BasicAuth = User.BasicAuth("", ""),
@@ -89,9 +94,11 @@ private fun SignInScreen(
         },
     ) { paddingValues ->
         Column(modifier = modifier.padding(paddingValues)) {
-            Column(modifier = Modifier
-                .verticalScroll(rememberScrollState())
-                .weight(1f)) {
+            Column(
+                modifier = Modifier
+                    .verticalScroll(rememberScrollState())
+                    .weight(1f)
+            ) {
                 TextInputLayout(
                     value = uname,
                     onValueChange = { uname = it },
@@ -138,7 +145,9 @@ private fun SignInScreen(
                         uname,
                         pword,
                     ).all { it.text.isNotBlank() } && result !is TaskResult.Loading,
-                    modifier = VerticalLayoutModifier,
+                    modifier = VerticalLayoutModifier.semantics {
+                        testTag = toolbarTitle
+                    },
                     onClick = {
                         focusManager.clearFocus()
                         function.signIn.invoke(
@@ -149,7 +158,7 @@ private fun SignInScreen(
                         )
                     }
                 ) {
-                    Text(toolbarTitle.uppercase())
+                    Text(toolbarTitle.uppercase(KENYA))
                 }
             }
             OutlinedButton(
