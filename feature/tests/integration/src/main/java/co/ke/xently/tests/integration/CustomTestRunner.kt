@@ -1,4 +1,4 @@
-package co.ke.xently.accounts
+package co.ke.xently.tests.integration
 
 import android.app.Application
 import android.content.Context
