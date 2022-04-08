@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.SnackbarDuration
 import androidx.compose.material.SnackbarHostState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusManager
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -16,6 +17,7 @@ import co.ke.xently.feature.theme.XentlyTheme
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.hamcrest.MatcherAssert.assertThat
+import org.hamcrest.Matchers
 import org.hamcrest.Matchers.emptyString
 import org.hamcrest.Matchers.equalTo
 import org.junit.Ignore
@@ -77,7 +79,7 @@ class SignInScreenTest {
     }
 
     @Test
-    @Ignore("Research on how to implement this effectively")
+    @Ignore("Research on implementation.")
     fun taskResultWithAnErrorShowsSnackbar() = runTest {
         val snackbarHostStateMock: SnackbarHostState = mock()
         composeTestRule.setContent {
@@ -241,7 +243,7 @@ class SignInScreenTest {
     }
 
     @Test
-    @Ignore("Research on how to implement this test. Besides, it may also need isolation.")
+    @Ignore("Research on implementation.")
     fun passwordFieldCanBeToggledToShowUnmaskedPassword() {
         val password = "use a safe password"
         composeTestRule.setContent {
@@ -281,6 +283,27 @@ class SignInScreenTest {
         composeTestRule.onNodeWithContentDescription(usernameTextFieldDescription)
             .performTextClearance()
         composeTestRule.onNodeWithText(signInButtonLabel).assertIsNotEnabled()
+    }
+
+    @Test
+    @Ignore("Research on implementation.")
+    fun clickingOnSignInButtonHidesKeyboardThroughFocusManager() {
+        val focusManagerMock: FocusManager = mock()
+        composeTestRule.setContent {
+            XentlyTheme {
+                SignInScreen(
+                    modifier = Modifier.fillMaxSize(),
+                    result = TaskResult.Success(null),
+                    auth = User.BasicAuth("user@example.org", "password"),
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithText(signInButtonLabel).performClick()
+        with(argumentCaptor<Boolean> { }) {
+            verify(focusManagerMock).clearFocus(capture())
+            assertThat(firstValue, Matchers.`is`(false))
+        }
     }
 
     @Test
