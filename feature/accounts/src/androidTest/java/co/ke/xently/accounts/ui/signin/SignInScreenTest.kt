@@ -34,8 +34,6 @@ class SignInScreenTest {
     val composeTestRule = createAndroidComposeRule<ComponentActivity>()
 
     private val activity by lazy { composeTestRule.activity }
-    private val usernameLabel by lazy { activity.getString(R.string.fa_signin_username_label) }
-    private val passwordLabel by lazy { activity.getString(R.string.fa_signin_password_label) }
     private val forgotPasswordLabel by lazy { activity.getString(R.string.fa_signin_forgot_password_button_label) }
     private val signInButtonLabel by lazy {
         activity.getString(R.string.fa_signin_toolbar_title).uppercase(KENYA)
@@ -44,10 +42,16 @@ class SignInScreenTest {
         activity.getString(R.string.fa_signin_signup_button_label)
     }
     private val usernameTextFieldDescription by lazy {
-        activity.getString(R.string.text_field_content_description, usernameLabel)
+        activity.getString(
+            R.string.text_field_content_description,
+            activity.getString(R.string.fa_signin_username_label),
+        )
     }
     private val passwordTextFieldDescription by lazy {
-        activity.getString(R.string.text_field_content_description, passwordLabel)
+        activity.getString(
+            R.string.text_field_content_description,
+            activity.getString(R.string.fa_signin_password_label),
+        )
     }
     private val progressbarDescription by lazy {
         activity.getString(R.string.progress_bar_content_description)
@@ -186,7 +190,8 @@ class SignInScreenTest {
                 )
             }
         }
-        composeTestRule.onNodeWithText(usernameLabel).assert(hasText(""))
+        composeTestRule.onNodeWithContentDescription(usernameTextFieldDescription)
+            .assert(hasText(""))
     }
 
     @Test
@@ -279,7 +284,7 @@ class SignInScreenTest {
     }
 
     @Test
-    fun clickingOnSignInButtonCallsSigInFunctionWithRequiredArguments() {
+    fun clickingOnSignInButtonCallsSignInFunctionWithRequiredArguments() {
         val signInCallback: (User.BasicAuth) -> Unit = mock()
         composeTestRule.setContent {
             XentlyTheme {
