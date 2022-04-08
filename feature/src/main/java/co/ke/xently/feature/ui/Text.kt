@@ -16,12 +16,16 @@ import androidx.compose.ui.focus.onFocusEvent
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.PopupProperties
 import co.ke.xently.feature.R
+
+const val TEST_TAG_TEXT_FIELD_ERROR = "Text field error"
+const val TEST_TAG_TEXT_FIELD_HELP_TEXT = "Text field help text"
 
 @Composable
 fun stringRes(@StringRes string: Int, @StringRes vararg args: Int): String {
@@ -72,7 +76,10 @@ fun TextInputLayout(
                 text = error,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = VIEW_SPACE, end = 12.dp),
+                    .padding(start = VIEW_SPACE, end = 12.dp)
+                    .semantics {
+                        testTag = TEST_TAG_TEXT_FIELD_ERROR
+                    },
                 color = MaterialTheme.colors.error,
                 style = MaterialTheme.typography.caption,
             )
@@ -81,7 +88,10 @@ fun TextInputLayout(
                 text = helpText,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = VIEW_SPACE, end = 12.dp),
+                    .padding(start = VIEW_SPACE, end = 12.dp)
+                    .semantics {
+                        testTag = TEST_TAG_TEXT_FIELD_HELP_TEXT
+                    },
                 color = MaterialTheme.colors.onSurface.copy(alpha = .6f),
                 style = MaterialTheme.typography.caption,
             )
