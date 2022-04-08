@@ -88,5 +88,6 @@ dependencies {
     api "androidx.compose.material:material-icons-extended:$compose_version"
     api "androidx.compose.ui:ui-tooling-preview:$compose_version"
     debugApi "androidx.compose.ui:ui-tooling:$compose_version"
-    testImplementation 'junit:junit:4.13.2'
+
+    testImplementation project(path: ':feature:tests:unit')
 }

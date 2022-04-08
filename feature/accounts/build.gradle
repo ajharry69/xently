@@ -61,7 +61,7 @@ dependencies {
     implementation "com.google.dagger:hilt-android:$hilt_version"
     kapt "com.google.dagger:hilt-compiler:$hilt_version"
 
-    testImplementation 'junit:junit:4.13.2'
+    testImplementation project(path: ':feature:tests:unit')
     androidTestImplementation project(path: ':feature:tests:integration')
     kaptAndroidTest "com.google.dagger:hilt-compiler:$hilt_version"
 }
