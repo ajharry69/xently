@@ -30,11 +30,8 @@ android {
 }
 
 dependencies {
-    api project(path: ':tests:integration')
-    // Test rules and transitive dependencies:
-    api "androidx.compose.ui:ui-test-junit4:$compose_version"
-    // Needed for createComposeRule, but not createAndroidComposeRule:
-    api "androidx.compose.ui:ui-test-manifest:$compose_version"
-    api "com.google.dagger:hilt-android:$hilt_version"
-    api "com.google.dagger:hilt-android-testing:$hilt_version"
+    api "junit:junit:4.13.2"
+    api 'org.hamcrest:hamcrest:2.2'
+    api 'org.hamcrest:hamcrest-library:2.2'
+    api "org.jetbrains.kotlinx:kotlinx-coroutines-test:$coroutine_version"
 }

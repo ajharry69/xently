@@ -1,9 +1,11 @@
-package co.ke.xently.source.local
+package co.ke.xently.source.local.daos
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import app.cash.turbine.test
 import co.ke.xently.data.Product
+import co.ke.xently.source.local.Database
+import co.ke.xently.source.local.RoomDatabaseRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.hamcrest.MatcherAssert.assertThat
