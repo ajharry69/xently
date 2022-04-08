@@ -2,6 +2,8 @@ package co.ke.xently.accounts.ui.signin
 
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material.SnackbarDuration
+import androidx.compose.material.SnackbarHostState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
@@ -11,9 +13,12 @@ import co.ke.xently.common.KENYA
 import co.ke.xently.data.TaskResult
 import co.ke.xently.data.User
 import co.ke.xently.feature.theme.XentlyTheme
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runTest
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.emptyString
 import org.hamcrest.Matchers.equalTo
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mockito.internal.verification.VerificationModeFactory.atMostOnce
@@ -23,6 +28,7 @@ import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class SignInScreenTest {
     @get:Rule(order = 1)
     val composeTestRule = createAndroidComposeRule<ComponentActivity>()
@@ -45,6 +51,62 @@ class SignInScreenTest {
     }
     private val progressbarDescription by lazy {
         activity.getString(R.string.progress_bar_content_description)
+    }
+
+    @Test
+    fun clickingOnNavigationIcon() {
+        val navigationIconClickMock: () -> Unit = mock()
+
+        composeTestRule.setContent {
+            XentlyTheme {
+                SignInScreen(
+                    modifier = Modifier.fillMaxSize(),
+                    result = TaskResult.Success(null),
+                    function = SignInScreenFunction(navigationIcon = navigationIconClickMock),
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithContentDescription(activity.getString(R.string.move_back))
+            .performClick()
+        verify(navigationIconClickMock, atMostOnce()).invoke()
+    }
+
+    @Test
+    @Ignore("Research on how to implement this effectively")
+    fun taskResultWithAnErrorShowsSnackbar() = runTest {
+        val snackbarHostStateMock: SnackbarHostState = mock()
+        composeTestRule.setContent {
+            XentlyTheme {
+                SignInScreen(
+                    modifier = Modifier.fillMaxSize(),
+                    result = TaskResult.Error("Error encountered"),
+                )
+            }
+        }
+
+        with(argumentCaptor<String> { }) {
+            argumentCaptor<SnackbarDuration> { }.also { duration ->
+                verify(snackbarHostStateMock).showSnackbar(capture(), duration = duration.capture())
+                assertThat(firstValue, equalTo("Error encountered"))
+                assertThat(duration.firstValue, equalTo(SnackbarDuration.Long))
+            }
+        }
+    }
+
+    @Test
+    fun toolbarTitleIsSameAsSignInButtonLabel() {
+        composeTestRule.setContent {
+            XentlyTheme {
+                SignInScreen(
+                    modifier = Modifier.fillMaxSize(),
+                    result = TaskResult.Success(null),
+                )
+            }
+        }
+
+        composeTestRule.onAllNodesWithText(signInButtonLabel, ignoreCase = true)
+            .assertCountEquals(2)
     }
 
     @Test
@@ -174,6 +236,7 @@ class SignInScreenTest {
     }
 
     @Test
+    @Ignore("Research on how to implement this test. Besides, it may also need isolation.")
     fun passwordFieldCanBeToggledToShowUnmaskedPassword() {
         val password = "use a safe password"
         composeTestRule.setContent {
@@ -371,7 +434,7 @@ class SignInScreenTest {
             }
         }
 
-        with(argumentCaptor<User> {  }){
+        with(argumentCaptor<User> { }) {
             verify(signInSuccessCallback, atMostOnce()).invoke(capture())
             assertThat(firstValue.id, equalTo(1))
             assertThat(firstValue.email, equalTo("user@example.com"))
