@@ -54,7 +54,6 @@ fun TextInputLayout(
 ) {
     Column(modifier = modifier) {
         val description = stringResource(R.string.text_field_content_description, label ?: "")
-            .removeSuffix("*")
             .trimStart()
         TextField(
             value = value,
