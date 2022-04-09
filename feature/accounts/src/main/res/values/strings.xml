@@ -25,4 +25,5 @@
     <string name="edit">Edit</string>
     <string name="view">View</string>
     <string name="fa_profile_email_help_text">Change will require verification</string>
+    <string name="fa_verify_account_entry_field_description">Code entry field - %1$d</string>
 </resources>

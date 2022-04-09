@@ -1,6 +1,7 @@
 package co.ke.xently.accounts.ui.verification
 
 import android.util.Log
+import androidx.annotation.VisibleForTesting
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
@@ -18,6 +19,9 @@ import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -30,12 +34,9 @@ import co.ke.xently.common.replaceAt
 import co.ke.xently.data.TaskResult
 import co.ke.xently.data.User
 import co.ke.xently.data.errorMessage
-import co.ke.xently.feature.ui.ToolbarWithProgressbar
-import co.ke.xently.feature.ui.VIEW_SPACE
-import co.ke.xently.feature.ui.VIEW_SPACE_HALVED
-import co.ke.xently.feature.ui.VerticalLayoutModifier
+import co.ke.xently.feature.ui.*
 
-internal data class VerificationScreenFunction(
+data class VerificationScreenFunction(
     val navigationIcon: () -> Unit = {},
     val verificationSuccess: (User) -> Unit = {},
     val resendCode: () -> Unit = {},
@@ -43,6 +44,9 @@ internal data class VerificationScreenFunction(
 )
 
 private const val VERIFICATION_CODE_LENGTH = 6
+
+@VisibleForTesting
+const val TEST_TAG_VERIFICATION_CODE_ENTRY = "TEST_TAG_VERIFICATION_CODE_ENTRY"
 
 @Composable
 internal fun VerificationScreen(
@@ -81,9 +85,10 @@ internal fun VerificationScreen(
     )
 }
 
-@OptIn(ExperimentalComposeUiApi::class)
 @Composable
-private fun VerificationScreen(
+@VisibleForTesting
+@OptIn(ExperimentalComposeUiApi::class)
+fun VerificationScreen(
     modifier: Modifier,
     verifyResult: TaskResult<User?>,
     resendResult: TaskResult<User?>,
@@ -109,9 +114,9 @@ private fun VerificationScreen(
             }
         }
         code = ""  // Reset code...
-    } else if (resendResult is TaskResult.Success && resendResult.data != null) {
+    } else if (verifyResult is TaskResult.Success && verifyResult.data != null) {
         SideEffect {
-            function.verificationSuccess.invoke(resendResult.data!!)
+            function.verificationSuccess.invoke(verifyResult.data!!)
         }
     }
     val focusManager = LocalFocusManager.current
@@ -148,6 +153,7 @@ private fun VerificationScreen(
                     horizontalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
                     for (i in 0 until VERIFICATION_CODE_LENGTH) {
+                        val codeEntryDescription = stringResource(R.string.fa_verify_account_entry_field_description, i + 1)
                         TextField(
                             singleLine = true,
                             isError = isCodeError,
@@ -157,6 +163,10 @@ private fun VerificationScreen(
                             textStyle = MaterialTheme.typography.h5.copy(textAlign = TextAlign.Center),
                             modifier = Modifier
                                 .weight(1f)
+                                .semantics {
+                                    testTag = TEST_TAG_VERIFICATION_CODE_ENTRY
+                                    contentDescription = codeEntryDescription
+                                }
                                 .onKeyEvent { keyEvent ->
                                     (keyEvent.key == Key.Backspace).also {
                                         if (it) {
@@ -174,13 +184,17 @@ private fun VerificationScreen(
                                         try {
                                             focusManager.moveFocus(FocusDirection.Previous)
                                         } catch (ex: IllegalStateException) {
-                                            Log.e(TAG,
+                                            Log.e(
+                                                TAG,
                                                 "VerificationScreen: very weird error!",
-                                                ex)
+                                                ex
+                                            )
                                         } catch (ex: IllegalArgumentException) {
-                                            Log.e(TAG,
+                                            Log.e(
+                                                TAG,
                                                 "VerificationScreen: very weird error!",
-                                                ex)
+                                                ex
+                                            )
                                         }
                                     }
                                 },
@@ -220,7 +234,10 @@ private fun VerificationScreen(
                         style = MaterialTheme.typography.caption,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(start = VIEW_SPACE, end = 12.dp),
+                            .padding(start = VIEW_SPACE, end = 12.dp)
+                            .semantics {
+                                testTag = TEST_TAG_TEXT_FIELD_ERROR
+                            },
                     )
                 }
             }
