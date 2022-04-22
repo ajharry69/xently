@@ -20,3 +20,12 @@ fun Number.descriptive(): String {
 }
 
 val SEARCH_DELAY = 200.milliseconds
+
+val Number.forDisplay: String
+    get() = toString().let {
+        if (it.endsWith(".0")) {
+            it.replace(".0", "")
+        } else {
+            it
+        }
+    }

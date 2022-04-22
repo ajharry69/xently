@@ -1,6 +1,7 @@
 package co.ke.xently.products.ui.detail
 
 
+import androidx.annotation.VisibleForTesting
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
@@ -16,10 +17,14 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.fragment.app.FragmentManager
 import androidx.hilt.navigation.compose.hiltViewModel
 import co.ke.xently.common.DEFAULT_LOCAL_DATE_FORMAT
 import co.ke.xently.common.DEFAULT_LOCAL_DATE_TIME_FORMAT
@@ -34,7 +39,9 @@ import co.ke.xently.products.shared.*
 import com.google.android.material.datepicker.CalendarConstraints
 import com.google.android.material.datepicker.DateValidatorPointBackward
 
-internal data class ProductDetailScreenFunction(
+const val TEST_TAG_PRODUCT_DETAIL_BODY_CONTAINER = "TEST_TAG_PRODUCT_DETAIL_BODY_CONTAINER"
+
+data class ProductDetailScreenFunction(
     val onNavigationIconClicked: () -> Unit = {},
     val onShopQueryChanged: (String) -> Unit = {},
     val onBrandQueryChanged: (String) -> Unit = {},
@@ -103,6 +110,7 @@ internal fun ProductDetailScreen(
         productSuggestions = products,
         attributeSuggestions = attributes,
         measurementUnits = measurementUnits,
+        fragmentManager = rememberFragmentManager(),
         function = function.copy(
             onDetailsSubmitted = viewModel::addOrUpdate,
             onShopQueryChanged = viewModel::setShopQuery,
@@ -115,7 +123,8 @@ internal fun ProductDetailScreen(
 }
 
 @Composable
-private fun ProductDetailScreen(
+@VisibleForTesting
+fun ProductDetailScreen(
     modifier: Modifier,
     result: TaskResult<Product?>,
     addResult: TaskResult<Product?>,
@@ -125,12 +134,13 @@ private fun ProductDetailScreen(
     brandSuggestions: List<Product.Brand> = emptyList(),
     attributeSuggestions: List<Product.Attribute> = emptyList(),
     measurementUnits: List<MeasurementUnit> = emptyList(),
+    fragmentManager: FragmentManager? = null,
     function: ProductDetailScreenFunction = ProductDetailScreenFunction(),
 ) {
     val product = result.getOrNull() ?: Product.default()
 
     val toolbarTitle = stringRes(
-        R.string.fp_add_product_toolbar_title,
+        R.string.fp_detail_toolbar_title,
         if (product.isDefault) {
             R.string.add
         } else {
@@ -186,7 +196,8 @@ private fun ProductDetailScreen(
         Column(
             modifier = modifier
                 .padding(paddingValues)
-                .verticalScroll(scrollState),
+                .verticalScroll(scrollState)
+                .semantics { testTag = TEST_TAG_PRODUCT_DETAIL_BODY_CONTAINER },
         ) {
             var isShopError by remember {
                 mutableStateOf(shopError.isNotBlank())
@@ -233,11 +244,14 @@ private fun ProductDetailScreen(
                 },
                 trailingIcon = if (showAddShopIcon) {
                     {
+                        val description =
+                            stringResource(R.string.fp_product_detail_shop_add_icon_description)
                         IconButton(
                             onClick = {
                                 focusManager.clearFocus()
                                 function.onAddNewShop.invoke(shop.text)
                             },
+                            modifier = Modifier.semantics { contentDescription = description },
                         ) {
                             Icon(Icons.Default.Add, contentDescription = null)
                         }
@@ -339,8 +353,6 @@ private fun ProductDetailScreen(
                 isError = isDatePurchasedError,
                 error = datePurchasedError,
             ) { fieldModifier ->
-                val fragmentManager = rememberFragmentManager()
-
                 val dateOfPurchasePicker = rememberDatePickerDialog(
                     select = DEFAULT_LOCAL_DATE_FORMAT.parse(dateOfPurchase.text),
                     title = R.string.fp_product_detail_date_of_purchased_label,
@@ -361,10 +373,12 @@ private fun ProductDetailScreen(
                     trailingIcon = {
                         IconButton(
                             onClick = {
-                                dateOfPurchasePicker.show(
-                                    fragmentManager,
-                                    "ProductDetailDateOfPurchase"
-                                )
+                                fragmentManager?.let {
+                                    dateOfPurchasePicker.show(
+                                        it,
+                                        "ProductDetailDateOfPurchase"
+                                    )
+                                }
                             },
                         ) {
                             Icon(
@@ -397,10 +411,12 @@ private fun ProductDetailScreen(
                     trailingIcon = {
                         IconButton(
                             onClick = {
-                                timeOfPurchasePicker.show(
-                                    fragmentManager,
-                                    "ProductDetailTimeOfPurchase"
-                                )
+                                fragmentManager?.let {
+                                    timeOfPurchasePicker.show(
+                                        it,
+                                        "ProductDetailTimeOfPurchase"
+                                    )
+                                }
                             },
                         ) {
                             Icon(

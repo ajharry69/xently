@@ -62,7 +62,7 @@ class PasswordResetRequestScreenTest {
     }
 
     @Test
-    fun toolbarTitleIsSameAsSignUpButtonLabel() {
+    fun toolbarTitleIsSameAsResetRequestButtonLabel() {
         composeTestRule.setContent {
             XentlyTheme {
                 PasswordResetRequestScreen(

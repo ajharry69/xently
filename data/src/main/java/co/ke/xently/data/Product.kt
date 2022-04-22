@@ -21,7 +21,7 @@ data class Product(
     @Ignore
     val shop: Shop = Shop.default(),
     @SerializedName("shop")
-    var shopId: Long = -1L,
+    var shopId: Long = shop.id,
     var unitPrice: Float = 0f,
     var datePurchased: Date = Date(),
     @Exclude(Exclude.During.SERIALIZATION)

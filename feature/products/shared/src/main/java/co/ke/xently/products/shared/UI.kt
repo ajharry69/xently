@@ -16,17 +16,19 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import co.ke.xently.data.MeasurementUnit
 import co.ke.xently.data.Product
 import co.ke.xently.data.Product.Attribute
 import co.ke.xently.data.Product.Brand
 import co.ke.xently.feature.ui.*
+import co.ke.xently.feature.utils.forDisplay
 
 
 @Composable
@@ -136,7 +138,7 @@ fun numberTextField(
     @StringRes label: Int,
 ): TextFieldValue {
     var value by remember(initial, clearField) {
-        mutableStateOf(TextFieldValue(initial.toString()))
+        mutableStateOf(TextFieldValue(if (initial == 0) "" else initial.forDisplay))
     }
     var isError by remember { mutableStateOf(error.isNotBlank()) }
     TextInputLayout(
@@ -192,7 +194,12 @@ fun productBrandsView(
         },
         trailingIcon = if (showAddBrandIcon) {
             {
-                IconButton(onClick = { addBrand(Brand(name = brandQuery.text.trim())) }) {
+                val description =
+                    stringResource(R.string.fsp_product_detail_brand_add_icon_description)
+                IconButton(
+                    onClick = { addBrand(Brand(name = brandQuery.text.trim())) },
+                    modifier = Modifier.semantics { contentDescription = description },
+                ) {
                     Icon(Icons.Default.Add, contentDescription = null)
                 }
             }
@@ -208,13 +215,13 @@ fun productBrandsView(
         Text(it.toString(), style = MaterialTheme.typography.body1)
     }
     if (brands.isNotEmpty()) {
-        Spacer(modifier = Modifier.padding(vertical = 8.dp))
+        Spacer(modifier = Modifier.padding(vertical = VIEW_SPACE_HALVED))
         Text(
             stringRes(R.string.fsp_product_detail_brands_title),
             style = MaterialTheme.typography.h5,
             modifier = VerticalLayoutModifier,
         )
-        Spacer(modifier = Modifier.padding(vertical = 8.dp))
+        Spacer(modifier = Modifier.padding(vertical = VIEW_SPACE_HALVED))
         ChipGroup(
             modifier = VerticalLayoutModifier,
             isSingleLine = false, chipItems = brands,
@@ -267,7 +274,8 @@ fun productAttributesView(
         var showAddAttributeValueIcon by remember { mutableStateOf(false) }
         val addAttributeValue: (Attribute) -> Unit = {
             // Only override name if the attr.value was added without an attr.name
-            attributes.add(0,
+            attributes.add(
+                0,
                 it.copy(name = it.name.ifBlank { attributeNameQuery.text.trim() })
             )
             attributeValueQuery = TextFieldValue() // Reset search
@@ -306,13 +314,13 @@ fun productAttributesView(
         }
     }
     if (attributes.isNotEmpty()) {
-        Spacer(modifier = Modifier.padding(vertical = 8.dp))
+        Spacer(modifier = Modifier.padding(vertical = VIEW_SPACE_HALVED))
         Text(
             stringRes(R.string.fsp_product_detail_attributes_title),
             style = MaterialTheme.typography.h5,
             modifier = VerticalLayoutModifier,
         )
-        Spacer(modifier = Modifier.padding(vertical = 8.dp))
+        Spacer(modifier = Modifier.padding(vertical = VIEW_SPACE_HALVED))
         ChipGroup(
             modifier = VerticalLayoutModifier,
             isSingleLine = false, chipItems = attributes,

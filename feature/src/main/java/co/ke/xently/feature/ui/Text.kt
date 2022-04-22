@@ -26,6 +26,8 @@ import co.ke.xently.feature.R
 
 const val TEST_TAG_TEXT_FIELD_ERROR = "Text field error"
 const val TEST_TAG_TEXT_FIELD_HELP_TEXT = "Text field help text"
+const val TEST_TAG_AUTOCOMPLETE_TEXT_FIELD_SUGGESTIONS =
+    "TEST_TAG_AUTOCOMPLETE_TEXT_FIELD_SUGGESTIONS"
 
 @Composable
 fun stringRes(@StringRes string: Int, @StringRes vararg args: Int): String {
@@ -154,7 +156,9 @@ fun <T> AutoCompleteTextField(
             onDismissRequest = {
                 showDropdownMenu = false
             },
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .semantics { testTag = TEST_TAG_AUTOCOMPLETE_TEXT_FIELD_SUGGESTIONS },
             properties = PopupProperties(focusable = false),
         ) {
             suggestions.forEach {
