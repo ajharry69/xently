@@ -199,6 +199,23 @@ class ProductDetailScreenTest {
     }
 
     @Test
+    fun addOrUpdateProductButtonIsDisabledByDefault() {
+        composeTestRule.setContent {
+            XentlyTheme {
+                ProductDetailScreen(
+                    modifier = Modifier.fillMaxSize(),
+                    result = TaskResult.Success(null),
+                    addResult = TaskResult.Success(null),
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithTag(TEST_TAG_PRODUCT_DETAIL_BODY_CONTAINER)
+            .performScrollToNode(hasText(addProductButtonLabel.uppercase()))
+        composeTestRule.onNodeWithText(addProductButtonLabel.uppercase()).assertIsNotEnabled()
+    }
+
+    @Test
     fun shopFieldDefaultsToBlankWhenAddingNewProduct() {
         composeTestRule.setContent {
             XentlyTheme {

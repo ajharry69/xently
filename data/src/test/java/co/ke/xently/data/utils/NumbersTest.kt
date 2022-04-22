@@ -1,10 +1,10 @@
-package co.ke.xently.feature.utils
+package co.ke.xently.data.utils
 
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.equalTo
 import org.junit.Test
 
-class NumbersKtTest {
+class NumbersTest {
 
     @Test
     fun floatForDisplay() {

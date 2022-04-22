@@ -27,8 +27,8 @@ import co.ke.xently.data.MeasurementUnit
 import co.ke.xently.data.Product
 import co.ke.xently.data.Product.Attribute
 import co.ke.xently.data.Product.Brand
+import co.ke.xently.data.utils.forDisplay
 import co.ke.xently.feature.ui.*
-import co.ke.xently.feature.utils.forDisplay
 
 
 @Composable

@@ -1,7 +1,6 @@
 package co.ke.xently.products.ui.detail
 
 
-import androidx.annotation.VisibleForTesting
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
@@ -41,7 +40,7 @@ import com.google.android.material.datepicker.DateValidatorPointBackward
 
 const val TEST_TAG_PRODUCT_DETAIL_BODY_CONTAINER = "TEST_TAG_PRODUCT_DETAIL_BODY_CONTAINER"
 
-data class ProductDetailScreenFunction(
+internal data class ProductDetailScreenFunction(
     val onNavigationIconClicked: () -> Unit = {},
     val onShopQueryChanged: (String) -> Unit = {},
     val onBrandQueryChanged: (String) -> Unit = {},
@@ -123,8 +122,7 @@ internal fun ProductDetailScreen(
 }
 
 @Composable
-@VisibleForTesting
-fun ProductDetailScreen(
+internal fun ProductDetailScreen(
     modifier: Modifier,
     result: TaskResult<Product?>,
     addResult: TaskResult<Product?>,
@@ -482,7 +480,7 @@ fun ProductDetailScreen(
 
 @Preview(name = "Product detail", showBackground = true)
 @Composable
-fun ProductDetailPreview() {
+private fun ProductDetailPreview() {
     XentlyTheme {
         ProductDetailScreen(
             modifier = Modifier.fillMaxSize(),
@@ -494,7 +492,7 @@ fun ProductDetailPreview() {
 
 @Preview(name = "Product detail showing progress bar", showBackground = true)
 @Composable
-fun ProductDetailOnNullPreview() {
+private fun ProductDetailOnNullPreview() {
     XentlyTheme {
         ProductDetailScreen(
             result = Success(null),

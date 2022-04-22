@@ -2,6 +2,7 @@ package co.ke.xently.data
 
 import androidx.room.*
 import co.ke.xently.common.Exclude
+import co.ke.xently.data.utils.forDisplay
 import com.google.gson.annotations.SerializedName
 import java.util.*
 
@@ -100,7 +101,7 @@ data class Product(
     }
 
     override fun toString(): String {
-        return "${name}, $unitQuantity $unit"
+        return "${name}, ${unitQuantity.forDisplay} $unit"
     }
 
     companion object {
