@@ -14,11 +14,20 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusEvent
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.PopupProperties
+import co.ke.xently.feature.R
+
+const val TEST_TAG_TEXT_FIELD_ERROR = "Text field error"
+const val TEST_TAG_TEXT_FIELD_HELP_TEXT = "Text field help text"
+const val TEST_TAG_AUTOCOMPLETE_TEXT_FIELD_SUGGESTIONS =
+    "TEST_TAG_AUTOCOMPLETE_TEXT_FIELD_SUGGESTIONS"
 
 @Composable
 fun stringRes(@StringRes string: Int, @StringRes vararg args: Int): String {
@@ -46,25 +55,32 @@ fun TextInputLayout(
     visualTransformation: VisualTransformation = VisualTransformation.None,
 ) {
     Column(modifier = modifier) {
+        val description = stringResource(R.string.text_field_content_description, label ?: "")
+            .trimStart()
         TextField(
             value = value,
             readOnly = readOnly,
             singleLine = singleLine,
             isError = isError,
             onValueChange = onValueChange,
-            modifier = Modifier.fillMaxWidth(),
             label = label?.let { { Text(it) } },
             trailingIcon = trailingIcon,
             keyboardOptions = keyboardOptions,
             keyboardActions = keyboardActions,
             visualTransformation = visualTransformation,
+            modifier = Modifier
+                .fillMaxWidth()
+                .semantics { contentDescription = description },
         )
         if (isError) {
             Text(
                 text = error,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = VIEW_SPACE, end = 12.dp),
+                    .padding(start = VIEW_SPACE, end = 12.dp)
+                    .semantics {
+                        testTag = TEST_TAG_TEXT_FIELD_ERROR
+                    },
                 color = MaterialTheme.colors.error,
                 style = MaterialTheme.typography.caption,
             )
@@ -73,7 +89,10 @@ fun TextInputLayout(
                 text = helpText,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = VIEW_SPACE, end = 12.dp),
+                    .padding(start = VIEW_SPACE, end = 12.dp)
+                    .semantics {
+                        testTag = TEST_TAG_TEXT_FIELD_HELP_TEXT
+                    },
                 color = MaterialTheme.colors.onSurface.copy(alpha = .6f),
                 style = MaterialTheme.typography.caption,
             )
@@ -137,7 +156,9 @@ fun <T> AutoCompleteTextField(
             onDismissRequest = {
                 showDropdownMenu = false
             },
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .semantics { testTag = TEST_TAG_AUTOCOMPLETE_TEXT_FIELD_SUGGESTIONS },
             properties = PopupProperties(focusable = false),
         ) {
             suggestions.forEach {

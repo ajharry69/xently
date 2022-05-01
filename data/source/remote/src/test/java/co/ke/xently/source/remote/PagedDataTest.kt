@@ -1,6 +1,9 @@
 package co.ke.xently.source.remote
 
 import junit.framework.TestCase
+import org.hamcrest.MatcherAssert.assertThat
+import org.hamcrest.Matchers.equalTo
+import org.hamcrest.Matchers.nullValue
 import org.junit.Assert
 
 
@@ -15,10 +18,10 @@ class PagedDataTest : TestCase() {
         )
         val remoteKey = data.toRemoteKey()
 
-        assertEquals(remoteKey.endpoint, "/api/data/")
-        assertEquals(remoteKey.nextPage, 2)
-        assertNull(remoteKey.prevPage)
-        assertEquals(remoteKey.totalItems, 0)
+        assertThat(remoteKey.endpoint, equalTo("/api/data/"))
+        assertThat(remoteKey.nextPage, equalTo(2))
+        assertThat(remoteKey.prevPage, nullValue())
+        assertThat(remoteKey.totalItems, equalTo(0))
     }
 
     fun `test to remote key for paged data with only previous`() {
@@ -27,10 +30,10 @@ class PagedDataTest : TestCase() {
         )
         val remoteKey = data.toRemoteKey()
 
-        assertEquals(remoteKey.endpoint, "/api/data/")
-        assertNull(remoteKey.nextPage)
-        assertEquals(remoteKey.prevPage, 1)
-        assertEquals(remoteKey.totalItems, 0)
+        assertThat(remoteKey.endpoint, equalTo("/api/data/"))
+        assertThat(remoteKey.nextPage, nullValue())
+        assertThat(remoteKey.prevPage, equalTo(1))
+        assertThat(remoteKey.totalItems, equalTo(0))
     }
 
     fun `test to remote key for paged data with both next and previous`() {
@@ -40,10 +43,10 @@ class PagedDataTest : TestCase() {
         )
         val remoteKey = data.toRemoteKey()
 
-        assertEquals(remoteKey.endpoint, "/api/data/")
-        assertEquals(remoteKey.nextPage, 3)
-        assertEquals(remoteKey.prevPage, 1)
-        assertEquals(remoteKey.totalItems, 0)
+        assertThat(remoteKey.endpoint, equalTo("/api/data/"))
+        assertThat(remoteKey.nextPage, equalTo(3))
+        assertThat(remoteKey.prevPage, equalTo(1))
+        assertThat(remoteKey.totalItems, equalTo(0))
     }
 
     fun `test to remote key for paged data with multiple both next and previous`() {
@@ -53,9 +56,9 @@ class PagedDataTest : TestCase() {
         )
         val remoteKey = data.toRemoteKey()
 
-        assertEquals(remoteKey.endpoint, "/api/data/")
-        assertEquals(remoteKey.nextPage, 6)
-        assertEquals(remoteKey.prevPage, 3)
-        assertEquals(remoteKey.totalItems, 0)
+        assertThat(remoteKey.endpoint, equalTo("/api/data/"))
+        assertThat(remoteKey.nextPage, equalTo(6))
+        assertThat(remoteKey.prevPage, equalTo(3))
+        assertThat(remoteKey.totalItems, equalTo(0))
     }
 }

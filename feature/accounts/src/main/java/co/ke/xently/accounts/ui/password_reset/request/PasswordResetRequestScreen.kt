@@ -1,5 +1,6 @@
 package co.ke.xently.accounts.ui.password_reset.request
 
+import androidx.annotation.VisibleForTesting
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -27,7 +28,7 @@ import co.ke.xently.data.User
 import co.ke.xently.data.errorMessage
 import co.ke.xently.feature.ui.*
 
-internal data class PasswordResetRequestScreenFunction(
+data class PasswordResetRequestScreenFunction(
     val navigationIcon: () -> Unit = {},
     val request: (String) -> Unit = {},
     val requestSuccess: (User) -> Unit = {},
@@ -54,7 +55,8 @@ internal fun PasswordResetRequestScreen(
 }
 
 @Composable
-private fun PasswordResetRequestScreen(
+@VisibleForTesting
+fun PasswordResetRequestScreen(
     modifier: Modifier,
     result: TaskResult<User?>,
     email: String = "",

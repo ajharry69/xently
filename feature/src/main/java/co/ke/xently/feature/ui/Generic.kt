@@ -23,6 +23,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -63,21 +66,22 @@ fun rememberFragmentManager(): FragmentManager {
 
 @Composable
 fun PasswordVisibilityToggle(isVisible: Boolean, onClick: () -> Unit) {
-    IconButton(onClick) {
+    val description = stringResource(
+        R.string.toggle_password_visibility,
+        if (isVisible) {
+            R.string.hide
+        } else {
+            R.string.show
+        },
+    )
+    IconButton(onClick, modifier = Modifier.semantics { testTag = description }) {
         Icon(
             if (isVisible) {
                 Icons.Default.VisibilityOff
             } else {
                 Icons.Default.Visibility
             },
-            stringResource(
-                R.string.toggle_password_visibility,
-                if (isVisible) {
-                    R.string.hide
-                } else {
-                    R.string.show
-                },
-            ),
+            contentDescription = description,
         )
     }
 }
@@ -117,7 +121,12 @@ fun ToolbarWithProgressbar(
             },
         )
         if (showProgress) {
-            LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+            val progressbarDescription = stringResource(R.string.progress_bar_content_description)
+            LinearProgressIndicator(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .semantics { contentDescription = progressbarDescription },
+            )
         }
     }
 }
@@ -235,7 +244,8 @@ inline fun <reified T : Any> FullscreenEmptyList(
             } else {
                 stringResource(R.string.empty_list,
                     T::class.java.simpleName.mapIndexed { i, c -> if (i != 0 && c.isUpperCase()) " $c" else "$c" }
-                        .joinToString("") { it }.lowercase())
+                        .joinToString("") { it }.lowercase()
+                )
             },
         )
     }
@@ -349,7 +359,9 @@ fun MultipleTextFieldRow(
                 text = error,
                 color = MaterialTheme.colors.error,
                 style = MaterialTheme.typography.caption,
-                modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 12.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 16.dp, end = 12.dp),
             )
         }
     }

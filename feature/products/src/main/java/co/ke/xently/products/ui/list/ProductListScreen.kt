@@ -91,7 +91,7 @@ private fun ProductListScreen(
                 FloatingActionButton(onClick = function.onAddFabClicked) {
                     Icon(
                         Icons.Default.Add,
-                        stringRes(R.string.fp_add_product_toolbar_title, R.string.add)
+                        stringRes(R.string.fp_detail_toolbar_title, R.string.add)
                     )
                 }
             }

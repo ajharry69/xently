@@ -12,13 +12,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.ExperimentalUnitApi
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.TextUnitType
 import co.ke.xently.data.Product
-import co.ke.xently.data.Shop
 import co.ke.xently.feature.theme.XentlyTheme
 import co.ke.xently.feature.ui.ListItemSurface
 import co.ke.xently.feature.ui.NEGLIGIBLE_SPACE
@@ -30,6 +31,8 @@ import co.ke.xently.products.R
 internal data class ProductListItemFunction(
     val onItemClicked: (Product) -> Unit = {},
 )
+
+internal const val PRODUCT_LIST_ITEM_CONTAINER = "PRODUCT_LIST_ITEM_CONTAINER"
 
 internal data class MenuItem(
     @StringRes val label: Int,
@@ -47,7 +50,7 @@ internal fun ProductListItem(
 ) {
     var showDropMenu by remember(showPopupMenu) { mutableStateOf(showPopupMenu) }
     ListItemSurface(
-        modifier = modifier,
+        modifier = modifier.semantics { testTag = PRODUCT_LIST_ITEM_CONTAINER },
         onClick = { if (!product.isDefault) function.onItemClicked.invoke(product) },
     ) {
         Column(
@@ -85,17 +88,21 @@ internal fun ProductListItem(
                 modifier = Modifier.shimmerPlaceholder(product.isDefault),
             )
             Box {
-                IconButton(onClick = { if (!product.isDefault) showDropMenu = !showDropMenu }) {
+                val description = stringResource(
+                    R.string.fp_product_item_menu_content_description,
+                    product.name,
+                )
+                IconButton(
+                    onClick = { if (!product.isDefault) showDropMenu = !showDropMenu },
+                    modifier = Modifier.semantics { testTag = description },
+                ) {
                     Icon(
                         imageVector = if (showDropMenu) {
                             Icons.Default.KeyboardArrowDown
                         } else {
                             Icons.Default.KeyboardArrowRight
                         },
-                        contentDescription = stringResource(
-                            R.string.fp_product_item_menu_content_description,
-                            product.name,
-                        ),
+                        contentDescription = description,
                         modifier = Modifier.shimmerPlaceholder(product.isDefault),
                     )
                 }

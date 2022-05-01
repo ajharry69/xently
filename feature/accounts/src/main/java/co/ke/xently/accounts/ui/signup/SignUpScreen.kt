@@ -1,5 +1,6 @@
 package co.ke.xently.accounts.ui.signup
 
+import androidx.annotation.VisibleForTesting
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -24,7 +25,7 @@ import co.ke.xently.data.errorMessage
 import co.ke.xently.data.getOrNull
 import co.ke.xently.feature.ui.*
 
-internal data class SignUpScreenFunction(
+data class SignUpScreenFunction(
     val signUp: (User) -> Unit = {},
     val navigationIcon: () -> Unit = {},
     val signUpSuccess: (User) -> Unit = {},
@@ -52,7 +53,8 @@ internal fun SignUpScreen(
 }
 
 @Composable
-private fun SignUpScreen(
+@VisibleForTesting
+fun SignUpScreen(
     modifier: Modifier,
     result: TaskResult<User?>,
     auth: User.BasicAuth = User.BasicAuth("", ""),
