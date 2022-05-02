@@ -46,10 +46,10 @@ import co.ke.xently.shoppinglist.ui.list.grouped.GroupedShoppingListScreenFuncti
 import co.ke.xently.shoppinglist.ui.list.grouped.item.GroupMenuItem
 import co.ke.xently.shoppinglist.ui.list.grouped.item.GroupedShoppingListCardFunction
 import co.ke.xently.shoppinglist.ui.list.item.MenuItem
-import co.ke.xently.shoppinglist.ui.list.recommendation.RecommendationCardItemFunction
-import co.ke.xently.shoppinglist.ui.list.recommendation.RecommendationCardItemMenuItem
 import co.ke.xently.shoppinglist.ui.list.recommendation.ShoppingListRecommendationScreen
 import co.ke.xently.shoppinglist.ui.list.recommendation.ShoppingListRecommendationScreenFunction
+import co.ke.xently.shoppinglist.ui.list.recommendation.item.RecommendationCardItemFunction
+import co.ke.xently.shoppinglist.ui.list.recommendation.item.RecommendationCardItemMenuItem
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -143,8 +143,12 @@ internal fun ShoppingListNavHost(
         startDestination = Routes.ShoppingList.GROUPED,
     ) {
         val onShoppingListItemRecommendClicked: (id: Long) -> Unit = {
-            navController.navigate(Routes.ShoppingList.RECOMMENDATION.buildRoute("recommendBy" to it,
-                "from" to From.Item))
+            navController.navigate(
+                Routes.ShoppingList.RECOMMENDATION.buildRoute(
+                    "recommendBy" to it,
+                    "from" to From.Item
+                )
+            )
         }
         val onShoppingListItemClicked: (id: Long) -> Unit = {
             navController.navigate(Routes.ShoppingList.DETAIL.buildRoute("id" to it))
@@ -215,8 +219,12 @@ internal fun ShoppingListNavHost(
                             // TODO: ...
                         },
                         onSeeAllClicked = {
-                            navController.navigate(Routes.ShoppingList.LIST.buildRoute("group" to it.group,
-                                "groupBy" to it.groupBy))
+                            navController.navigate(
+                                Routes.ShoppingList.LIST.buildRoute(
+                                    "group" to it.group,
+                                    "groupBy" to it.groupBy
+                                )
+                            )
                         },
                     ),
                 ),
@@ -284,12 +292,6 @@ internal fun ShoppingListNavHost(
                 menuItems = listOf(
                     RecommendationCardItemMenuItem(
                         label = R.string.fsl_recommendation_directions,
-                        onClick = {
-
-                        },
-                    ),
-                    RecommendationCardItemMenuItem(
-                        label = R.string.fsl_recommendation_hits,
                         onClick = {
 
                         },

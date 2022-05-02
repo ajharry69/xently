@@ -38,11 +38,9 @@ object Routes {
     object Shops {
         const val LIST = "shops/"
         const val DETAIL = "shops/{id}/?name={name}&moveBack={moveBack}"
-        const val ADDRESSES = "shops/{id}/addresses/"
 
         object Deeplinks {
             const val DETAIL = "xently://${Routes.Shops.DETAIL}"
-            const val ADDRESSES = "xently://${Routes.Shops.ADDRESSES}"
         }
     }
 

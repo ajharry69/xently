@@ -31,9 +31,6 @@ import co.ke.xently.shops.ui.detail.ShopDetailScreenArgs
 import co.ke.xently.shops.ui.detail.ShopDetailScreenFunction
 import co.ke.xently.shops.ui.list.ShopListScreen
 import co.ke.xently.shops.ui.list.ShopListScreenFunction
-import co.ke.xently.shops.ui.list.addresses.AddressListScreen
-import co.ke.xently.shops.ui.list.addresses.AddressListScreenFunction
-import co.ke.xently.shops.ui.list.addresses.item.AddressListItemFunction
 import co.ke.xently.shops.ui.list.item.MenuItem
 import co.ke.xently.shops.ui.list.item.ShopListItemFunction
 import dagger.hilt.android.AndroidEntryPoint
@@ -110,20 +107,6 @@ internal fun ShopsNavHost(
                                 ),
                             )
                         }
-                        if (it.addressesCount > 0) {
-                            add(
-                                MenuItem(
-                                    label = resources.getQuantityString(
-                                        R.plurals.fs_shop_item_menu_addresses,
-                                        it.addressesCount,
-                                        it.addressesCount,
-                                    ),
-                                    onClick = {
-                                        navController.navigate(Routes.Shops.ADDRESSES.buildRoute("id" to it.id))
-                                    },
-                                ),
-                            )
-                        }
                     }
                 },
                 function = ShopListScreenFunction(
@@ -167,31 +150,6 @@ internal fun ShopsNavHost(
                 ),
                 function = ShopDetailScreenFunction(
                     onNavigationIconClicked = onNavigationIconClicked,
-                ),
-            )
-        }
-        composable(
-            route = Routes.Shops.ADDRESSES,
-            arguments = listOf(
-                navArgument("id") {
-                    type = NavType.LongType
-                },
-            ),
-            deepLinks = listOf(
-                navDeepLink {
-                    uriPattern = Routes.Shops.Deeplinks.ADDRESSES
-                },
-            ),
-        ) {
-            AddressListScreen(
-                modifier = Modifier.fillMaxSize(),
-                shopId = it.arguments!!.getLong("id"),
-                optionsMenu = listOf(
-                    OptionMenu(title = stringResource(R.string.refresh)),
-                ),
-                function = AddressListScreenFunction(
-                    onNavigationIcon = onNavigationIconClicked,
-                    function = AddressListItemFunction(onItemClick = {}),
                 ),
             )
         }

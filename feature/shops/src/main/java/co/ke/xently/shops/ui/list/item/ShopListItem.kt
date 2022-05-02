@@ -89,10 +89,10 @@ private fun ShopListItem() {
             ShopListItem(
                 modifier = Modifier.fillMaxWidth(),
                 shop = Shop(
-                    name = "Shop #1000",
+                    name = "Quickmart",
                     taxPin = "P000111222B",
+                    town = "Westlands, Nairobi",
                     productsCount = Random.nextInt(0, 500),
-                    addressesCount = Random.nextInt(0, 50),
                 ),
             )
 
@@ -100,10 +100,10 @@ private fun ShopListItem() {
                 modifier = Modifier.fillMaxWidth(),
                 showPopupMenu = true,
                 shop = Shop(
-                    name = "Shop #1001",
+                    name = "Naivas",
                     taxPin = "P000111222C",
+                    town = "Mountain view mall, Waiyaki way, Westlands, Nairobi",
                     productsCount = Random.nextInt(0, 500),
-                    addressesCount = Random.nextInt(0, 50),
                 ),
             )
         }

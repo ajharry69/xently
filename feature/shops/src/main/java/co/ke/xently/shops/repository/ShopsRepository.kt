@@ -2,13 +2,11 @@ package co.ke.xently.shops.repository
 
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
-import androidx.paging.map
 import co.ke.xently.common.Retry
 import co.ke.xently.data.Shop
 import co.ke.xently.data.TaskResult
 import co.ke.xently.data.getOrNull
 import co.ke.xently.feature.repository.Dependencies
-import co.ke.xently.shops.mediators.AddressesRemoteMediator
 import co.ke.xently.shops.mediators.ShopsRemoteMediator
 import co.ke.xently.source.remote.retryCatch
 import co.ke.xently.source.remote.sendRequest
@@ -47,7 +45,7 @@ internal class ShopsRepository @Inject constructor(private val dependencies: Dep
                     }
                 }
             } else {
-                TaskResult.Success(shop.shop)
+                TaskResult.Success(shop)
             }
         }.retryCatch(this).flowOn(dependencies.dispatcher.io)
     }
@@ -64,15 +62,6 @@ internal class ShopsRepository @Inject constructor(private val dependencies: Dep
             }
         }
     }.flow
-
-    override fun getAddresses(shopId: Long, config: PagingConfig, query: String) = Pager(
-        config = config,
-        remoteMediator = AddressesRemoteMediator(shopId, dependencies, query),
-    ) {
-        dependencies.database.addressDao.get(shopId)
-    }.flow.map { data ->
-        data.map { it.address }
-    }
 
     override fun getShopName(shopId: Long) = dependencies.database.shopDao.getShopName(shopId)
 }
