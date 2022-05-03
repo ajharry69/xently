@@ -19,16 +19,18 @@ import kotlinx.coroutines.flow.mapLatest
 @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
 open class SearchableRepository(private val dependencies: Dependencies) : ISearchableRepository {
     override fun getShops(query: String) = flow {
+        delay(SEARCH_DELAY)
         val shopsResult = sendRequest { dependencies.service.shop.get(query, size = 30) }
             .mapCatching { data ->
                 data.results.also {
                     dependencies.database.shopDao.add(it)
-                }
+                }.take(5)
             }
         emit(shopsResult)
     }.flowOn(dependencies.dispatcher.io)
 
     override fun getProducts(query: String) = flow {
+        delay(SEARCH_DELAY)
         val productsResult = sendRequest { dependencies.service.product.get(query, size = 5) }
             .mapCatching { data ->
                 data.results.also {

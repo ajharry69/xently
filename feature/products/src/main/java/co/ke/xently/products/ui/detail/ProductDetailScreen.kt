@@ -258,9 +258,13 @@ internal fun ProductDetailScreen(
                     null
                 },
             ) {
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    Text(it.name, style = MaterialTheme.typography.body1)
-                    Text(it.taxPin, style = MaterialTheme.typography.subtitle1)
+                if (it.descriptiveName.isBlank()) {
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        Text(it.name, style = MaterialTheme.typography.body1)
+                        Text(it.taxPin, style = MaterialTheme.typography.subtitle1)
+                    }
+                } else {
+                    Text(it.descriptiveName, style = MaterialTheme.typography.body1)
                 }
             }
             Spacer(modifier = Modifier.padding(vertical = VIEW_SPACE_HALVED))
