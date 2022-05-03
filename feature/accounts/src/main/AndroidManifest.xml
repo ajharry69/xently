@@ -1,35 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="co.ke.xently.accounts">
-
-    <uses-permission android:name="android.permission.INTERNET" />
-
-    <application>
-        <activity
-            android:name=".AccountActivity"
-            android:exported="false"
-            android:windowSoftInputMode="adjustResize">
-            <intent-filter>
-                <action android:name="co.ke.xently.action.ACCOUNTS" />
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-
-                <category android:name="android.intent.category.BROWSABLE" />
-                <category android:name="android.intent.category.DEFAULT" />
-
-                <data
-                    android:host="accounts"
-                    android:pathPattern="/signin/"
-                    android:scheme="xently" />
-
-                <data
-                    android:host="accounts"
-                    android:pathPattern="/signup/"
-                    android:scheme="xently" />
-            </intent-filter>
-        </activity>
-    </application>
+<manifest package="co.ke.xently.accounts">
 
 </manifest>

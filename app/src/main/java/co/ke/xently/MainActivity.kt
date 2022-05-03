@@ -13,6 +13,7 @@ import androidx.compose.material.Surface
 import androidx.fragment.app.FragmentActivity
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
+import co.ke.xently.accounts.accountsGraph
 import co.ke.xently.feature.LocationService
 import co.ke.xently.feature.theme.XentlyTheme
 import co.ke.xently.feature.utils.Routes
@@ -79,13 +80,15 @@ class MainActivity : FragmentActivity() {
                                 navController.navigate(Routes.Products.toString())
                             },
                             onAccountMenuClicked = {
-                                Intent("co.ke.xently.action.ACCOUNTS").also {
-                                    startActivity(it)
-                                }
+                                navController.navigate(Routes.Account.toString())
                             },
                             onNavigationIconClicked = this@MainActivity::onBackPressed,
                         )
                         productsGraph(
+                            navController = navController,
+                            onNavigationIconClicked = this@MainActivity::onBackPressed,
+                        )
+                        accountsGraph(
                             navController = navController,
                             onNavigationIconClicked = this@MainActivity::onBackPressed,
                         )

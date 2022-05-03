@@ -34,9 +34,21 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <category android:name="android.intent.category.DEFAULT" />
 
+                <!-- Products -->
                 <data
                     android:host="products"
                     android:pathPattern="/shops/..*/"
+                    android:scheme="xently" />
+
+                <!-- Accounts -->
+                <data
+                    android:host="accounts"
+                    android:pathPattern="/signin/"
+                    android:scheme="xently" />
+
+                <data
+                    android:host="accounts"
+                    android:pathPattern="/signup/"
                     android:scheme="xently" />
             </intent-filter>
         </activity>
