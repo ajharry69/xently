@@ -1,6 +1,5 @@
 package co.ke.xently.accounts.ui.signin
 
-import androidx.annotation.VisibleForTesting
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
@@ -52,8 +51,7 @@ internal fun SignInScreen(
 }
 
 @Composable
-@VisibleForTesting
-fun SignInScreen(
+internal fun SignInScreen(
     modifier: Modifier,
     result: TaskResult<User?>,
     auth: User.BasicAuth = User.BasicAuth("", ""),

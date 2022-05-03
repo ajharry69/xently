@@ -1,32 +1,31 @@
 package co.ke.xently.data
 
-import androidx.room.*
+import androidx.room.Embedded
+import androidx.room.Entity
+import androidx.room.PrimaryKey
 import co.ke.xently.common.Exclude
+import com.google.gson.annotations.SerializedName
 
 @Entity(tableName = "shops")
 data class Shop(
     @PrimaryKey(autoGenerate = false)
-    var id: Long = -1,
-    var name: String = "",
-    var taxPin: String = "",
+    val id: Long = -1,
+    val name: String = "",
+    val taxPin: String = "",
+    val descriptiveName: String = "",
     @Exclude(Exclude.During.SERIALIZATION)
-    var productsCount: Int = 0,
-    @Exclude(Exclude.During.SERIALIZATION)
-    var addressesCount: Int = 0,
-    @Ignore
-    val addresses: List<Address> = emptyList(),
-    @Ignore
+    val productsCount: Int = 0,
+    val town: String = "",
+    @Embedded(prefix = "shops_")
+    @SerializedName("coordinates")
+    val coordinate: Coordinate? = null,
     @Exclude
     val isDefault: Boolean = false,
 ) {
-    data class WithAddresses(
-        @Embedded
-        val s: Shop,
-        @Relation(entityColumn = "shopId", parentColumn = "id")
-        val addresses: List<Address>,
-    ) {
-        @Ignore
-        val shop = s.copy(addresses = addresses)
+    data class Coordinate(val lat: Double, val lon: Double) {
+        override fun toString(): String {
+            return "${lat},${lon}"
+        }
     }
 
     override fun toString(): String {
@@ -39,8 +38,10 @@ data class Shop(
 
     companion object {
         fun default() = Shop(
+            descriptiveName = "Xently electronic store, Westlands, Nairobi - P000111222Z",
             name = "Xently electronic store",
             taxPin = "P000111222Z",
+            town = "Westlands, Nairobi",
             isDefault = true,
         )
     }

@@ -6,7 +6,7 @@ import retrofit2.Response
 import retrofit2.http.*
 
 interface ProductService {
-    @GET("products/")
+    @GET("search/products/")
     suspend fun get(
         @Query("q")
         query: String = "",
@@ -18,7 +18,7 @@ interface ProductService {
         cacheControl: String = "only-if-cached",
     ): Response<PagedData<Product>>
 
-    @GET("products/{id}/")
+    @GET("search/products/{id}/")
     suspend fun get(
         @Path("id")
         id: Long,

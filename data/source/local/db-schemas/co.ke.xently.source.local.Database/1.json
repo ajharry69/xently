@@ -2,11 +2,11 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "11f92943b74145173e01633fc4c07337",
+    "identityHash": "4773831dafa263890e569054180706cf",
     "entities": [
       {
         "tableName": "shops",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `name` TEXT NOT NULL, `taxPin` TEXT NOT NULL, `productsCount` INTEGER NOT NULL, `addressesCount` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `name` TEXT NOT NULL, `taxPin` TEXT NOT NULL, `descriptiveName` TEXT NOT NULL, `productsCount` INTEGER NOT NULL, `town` TEXT NOT NULL, `isDefault` INTEGER NOT NULL, `shops_lat` REAL, `shops_lon` REAL, PRIMARY KEY(`id`))",
         "fields": [
           {
             "fieldPath": "id",
@@ -27,16 +27,40 @@
             "notNull": true
           },
           {
+            "fieldPath": "descriptiveName",
+            "columnName": "descriptiveName",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
             "fieldPath": "productsCount",
             "columnName": "productsCount",
             "affinity": "INTEGER",
             "notNull": true
           },
           {
-            "fieldPath": "addressesCount",
-            "columnName": "addressesCount",
+            "fieldPath": "town",
+            "columnName": "town",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isDefault",
+            "columnName": "isDefault",
             "affinity": "INTEGER",
             "notNull": true
+          },
+          {
+            "fieldPath": "coordinate.lat",
+            "columnName": "shops_lat",
+            "affinity": "REAL",
+            "notNull": false
+          },
+          {
+            "fieldPath": "coordinate.lon",
+            "columnName": "shops_lon",
+            "affinity": "REAL",
+            "notNull": false
           }
         ],
         "primaryKey": {
@@ -103,76 +127,8 @@
         "foreignKeys": []
       },
       {
-        "tableName": "addresses",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `town` TEXT NOT NULL, `shopId` INTEGER NOT NULL, `location` TEXT NOT NULL, PRIMARY KEY(`id`))",
-        "fields": [
-          {
-            "fieldPath": "id",
-            "columnName": "id",
-            "affinity": "INTEGER",
-            "notNull": true
-          },
-          {
-            "fieldPath": "town",
-            "columnName": "town",
-            "affinity": "TEXT",
-            "notNull": true
-          },
-          {
-            "fieldPath": "shopId",
-            "columnName": "shopId",
-            "affinity": "INTEGER",
-            "notNull": true
-          },
-          {
-            "fieldPath": "location",
-            "columnName": "location",
-            "affinity": "TEXT",
-            "notNull": true
-          }
-        ],
-        "primaryKey": {
-          "columnNames": [
-            "id"
-          ],
-          "autoGenerate": false
-        },
-        "indices": [
-          {
-            "name": "index_addresses_shopId",
-            "unique": false,
-            "columnNames": [
-              "shopId"
-            ],
-            "orders": [],
-            "createSql": "CREATE INDEX IF NOT EXISTS `index_addresses_shopId` ON `${TABLE_NAME}` (`shopId`)"
-          },
-          {
-            "name": "index_addresses_location",
-            "unique": false,
-            "columnNames": [
-              "location"
-            ],
-            "orders": [],
-            "createSql": "CREATE INDEX IF NOT EXISTS `index_addresses_location` ON `${TABLE_NAME}` (`location`)"
-          },
-          {
-            "name": "index_addresses_shopId_town_location",
-            "unique": true,
-            "columnNames": [
-              "shopId",
-              "town",
-              "location"
-            ],
-            "orders": [],
-            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_addresses_shopId_town_location` ON `${TABLE_NAME}` (`shopId`, `town`, `location`)"
-          }
-        ],
-        "foreignKeys": []
-      },
-      {
         "tableName": "products",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `name` TEXT NOT NULL, `unit` TEXT NOT NULL, `unitQuantity` REAL NOT NULL, `purchasedQuantity` REAL NOT NULL, `shopId` INTEGER NOT NULL, `unitPrice` REAL NOT NULL, `datePurchased` INTEGER NOT NULL, `dateAdded` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `name` TEXT NOT NULL, `unit` TEXT NOT NULL, `unitQuantity` REAL NOT NULL, `purchasedQuantity` REAL NOT NULL, `descriptiveName` TEXT NOT NULL, `shopId` INTEGER NOT NULL, `unitPrice` REAL NOT NULL, `datePurchased` INTEGER NOT NULL, `dateAdded` INTEGER NOT NULL, PRIMARY KEY(`id`))",
         "fields": [
           {
             "fieldPath": "id",
@@ -202,6 +158,12 @@
             "fieldPath": "purchasedQuantity",
             "columnName": "purchasedQuantity",
             "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "descriptiveName",
+            "columnName": "descriptiveName",
+            "affinity": "TEXT",
             "notNull": true
           },
           {
@@ -607,7 +569,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '11f92943b74145173e01633fc4c07337')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '4773831dafa263890e569054180706cf')"
     ]
   }
 }

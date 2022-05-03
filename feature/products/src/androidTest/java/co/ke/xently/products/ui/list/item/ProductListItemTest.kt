@@ -80,7 +80,7 @@ class ProductListItemTest {
     }
 
     @Test
-    fun clickingOnProductListItemNonDefaultProduct() {
+    fun clickingOnProductListItemForNonDefaultProduct() {
         val onItemClickMock: (Product) -> Unit = mock()
         composeTestRule.setContent {
             XentlyTheme {
@@ -119,7 +119,7 @@ class ProductListItemTest {
     }
 
     @Test
-    fun clickingOnMoreOptionsNonDefaultProduct() {
+    fun clickingOnMoreOptionsForNonDefaultProduct() {
         val onUpdateClickedMock: (Product) -> Unit = mock()
         val product = Product.default().copy(id = 1, isDefault = false)
         composeTestRule.setContent {

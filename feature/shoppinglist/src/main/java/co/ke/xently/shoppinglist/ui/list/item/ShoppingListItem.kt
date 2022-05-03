@@ -11,6 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import co.ke.xently.data.ShoppingListItem
+import co.ke.xently.data.utils.forDisplay
 import co.ke.xently.feature.ui.ListItemSurface
 import co.ke.xently.feature.ui.NEGLIGIBLE_SPACE
 import co.ke.xently.feature.ui.shimmerPlaceholder
@@ -52,7 +53,7 @@ internal fun ShoppingListItemCard(
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
-                text = "${item.purchaseQuantity}",
+                text = item.purchaseQuantity.forDisplay,
                 style = MaterialTheme.typography.h6,
                 modifier = Modifier.shimmerPlaceholder(isPlaceholderVisible),
             )

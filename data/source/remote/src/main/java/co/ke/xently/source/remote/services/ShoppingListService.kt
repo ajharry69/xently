@@ -1,6 +1,6 @@
 package co.ke.xently.source.remote.services
 
-import co.ke.xently.data.RecommendationReport
+import co.ke.xently.data.Recommendation
 import co.ke.xently.data.RecommendationRequest
 import co.ke.xently.data.ShoppingListItem
 import co.ke.xently.source.remote.PagedData
@@ -42,8 +42,8 @@ interface ShoppingListService {
         @Query("group") group: String,
         @Query("group_by") groupBy: String,
         @Header("Cache-Control") cacheControl: String = "only-if-cached",
-    ): Response<RecommendationReport>
+    ): Response<List<Recommendation>>
 
     @POST("shopping-list/recommendations/")
-    suspend fun getRecommendations(@Body request: RecommendationRequest): Response<RecommendationReport>
+    suspend fun getRecommendations(@Body request: RecommendationRequest): Response<List<Recommendation>>
 }

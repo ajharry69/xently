@@ -283,6 +283,11 @@ class ProductDetailScreenTest {
     fun typingOnShopFieldWhenShopsSuggestionsAreNotEmpty() {
         composeTestRule.setContent {
             XentlyTheme {
+                val shop = Shop.default().copy(
+                    id = 1,
+                    name = "Naivas",
+                    descriptiveName = "Naivas, Westlands, Nairobi - P000111222Z",
+                )
                 ProductDetailScreen(
                     modifier = Modifier.fillMaxSize(),
                     result = TaskResult.Success(
@@ -292,7 +297,7 @@ class ProductDetailScreenTest {
                         )
                     ),
                     addResult = TaskResult.Success(null),
-                    shopSuggestions = listOf(Shop.default().copy(name = "Naivas", id = 1)),
+                    shopSuggestions = listOf(shop),
                 )
             }
         }

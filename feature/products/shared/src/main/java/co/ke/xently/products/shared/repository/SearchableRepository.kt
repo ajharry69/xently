@@ -12,40 +12,33 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.cancellable
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.mapLatest
 
 @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
 open class SearchableRepository(private val dependencies: Dependencies) : ISearchableRepository {
-    override fun getShops(query: String) = Retry().run {
-        dependencies.database.shopDao.getShops("%${query}%").mapLatest { shops ->
-            if (shops.isEmpty()) {
-                delay(SEARCH_DELAY)
-                sendRequest { dependencies.service.shop.get(query, size = 30) }
-                    .mapCatching { data ->
-                        data.results.also {
-                            dependencies.database.shopDao.add(it)
-                        }
-                    }
+    override fun getShops(query: String) = flow {
+        delay(SEARCH_DELAY)
+        val shopsResult = sendRequest { dependencies.service.shop.get(query, size = 30) }
+            .mapCatching { data ->
+                data.results.also {
+                    dependencies.database.shopDao.add(it)
+                }.take(5)
             }
-            TaskResult.Success(shops.take(5))
-        }.cancellable().retryCatch(this).flowOn(dependencies.dispatcher.io)
-    }
+        emit(shopsResult)
+    }.flowOn(dependencies.dispatcher.io)
 
-    override fun getProducts(query: String) = Retry().run {
-        dependencies.database.productDao.getProducts("%${query}%").mapLatest { products ->
-            if (products.isEmpty()) {
-                delay(SEARCH_DELAY)
-                sendRequest { dependencies.service.product.get(query, size = 30) }
-                    .mapCatching { data ->
-                        data.results.also {
-                            dependencies.database.productDao.save(it)
-                        }
-                    }
+    override fun getProducts(query: String) = flow {
+        delay(SEARCH_DELAY)
+        val productsResult = sendRequest { dependencies.service.product.get(query, size = 5) }
+            .mapCatching { data ->
+                data.results.also {
+                    dependencies.database.productDao.save(it)
+                }.take(5)
             }
-            TaskResult.Success(products.map { it.product }.take(5))
-        }.cancellable().retryCatch(this).flowOn(dependencies.dispatcher.io)
-    }
+        emit(productsResult)
+    }.flowOn(dependencies.dispatcher.io)
 
     override fun getBrands(query: String) = Retry().run {
         dependencies.database.brandDao.get("%${query}%").mapLatest { brands ->

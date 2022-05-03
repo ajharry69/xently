@@ -10,7 +10,6 @@ import co.ke.xently.source.local.daos.*
     entities = [
         Shop::class,
         User::class,
-        Address::class,
         Product::class,
         RemoteKey::class,
         Product.Brand::class,
@@ -32,7 +31,6 @@ abstract class Database : RoomDatabase() {
     abstract val remoteKeyDao: RemoteKeyDao
     abstract val accountDao: AccountDao
     abstract val shopDao: ShopDao
-    abstract val addressDao: AddressDao
     abstract val brandDao: BrandDao
     abstract val attributeDao: AttributeDao
     abstract val productDao: ProductDao

@@ -1,29 +1,40 @@
 package co.ke.xently.shops.ui.detail
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import co.ke.xently.common.DEFAULT_LOCATION
-import co.ke.xently.data.*
+import co.ke.xently.common.KENYA
+import co.ke.xently.data.Shop
+import co.ke.xently.data.Shop.Coordinate
+import co.ke.xently.data.TaskResult
 import co.ke.xently.data.TaskResult.Success
+import co.ke.xently.data.errorMessage
+import co.ke.xently.data.getOrNull
 import co.ke.xently.feature.theme.XentlyTheme
 import co.ke.xently.feature.ui.*
+import co.ke.xently.feature.utils.MAP_HEIGHT
 import co.ke.xently.shops.R
 import com.google.android.libraries.maps.model.LatLng
 import com.google.android.libraries.maps.model.MarkerOptions
+
+const val TEST_TAG_SHOP_DETAIL_BODY_CONTAINER = "TEST_TAG_SHOP_DETAIL_BODY_CONTAINER"
 
 internal data class ShopDetailScreenArgs(
     val name: String = "",
@@ -88,7 +99,10 @@ private fun ShopDetailScreen(
     args: ShopDetailScreenArgs = ShopDetailScreenArgs(),
     function: ShopDetailScreenFunction = ShopDetailScreenFunction(),
 ) {
-    val shop = result.getOrNull() ?: Shop.default().copy(name = args.name)
+    var shop = result.getOrNull() ?: Shop.default().copy(name = args.name)
+    var coordinate by remember(shop.coordinate) {
+        mutableStateOf(shop.coordinate)
+    }
     val toolbarTitle = stringRes(
         R.string.fs_add_shop_toolbar_title,
         if (shop.isDefault) {
@@ -97,16 +111,18 @@ private fun ShopDetailScreen(
             R.string.update
         },
     )
-    val scaffoldState = rememberBackdropScaffoldState(BackdropValue.Revealed)
+    val (scrollState, scaffoldState) = Pair(rememberScrollState(), rememberScaffoldState())
     var nameError by remember { mutableStateOf("") }
+    var townError by remember { mutableStateOf("") }
     var taxPinError by remember { mutableStateOf("") }
-    var addressesError by remember { mutableStateOf("") }
+    var coordinateError by remember { mutableStateOf("") }
 
     if (addResult is TaskResult.Error) {
         val exception = addResult.error as? ShopHttpException
         nameError = exception?.name?.joinToString("\n") ?: ""
+        townError = exception?.town?.joinToString("\n") ?: ""
         taxPinError = exception?.taxPin?.joinToString("\n") ?: ""
-        addressesError = exception?.addresses?.joinToString("\n") ?: ""
+        coordinateError = exception?.coordinate?.joinToString("\n") ?: ""
 
         if (exception?.hasFieldErrors() != true) {
             val errorMessage =
@@ -122,92 +138,67 @@ private fun ShopDetailScreen(
         }
     }
 
-    var isAddressError by remember { mutableStateOf(addressesError.isNotBlank()) }
-    val addresses =
-        remember(permitReAddition) { mutableStateListOf(*shop.addresses.toTypedArray()) }
     val isTaskLoading = arrayOf(result, addResult).any { it is TaskResult.Loading }
-    BackdropScaffold(
-        modifier = modifier,
+    Scaffold(
+        modifier = Modifier.fillMaxSize(),
         scaffoldState = scaffoldState,
-        frontLayerScrimColor = Color.Unspecified,
-        backLayerBackgroundColor = MaterialTheme.colors.background,
-        appBar = {
-            ToolbarWithProgressbar(
-                title = toolbarTitle,
-                showProgress = isTaskLoading,
-                onNavigationIconClicked = function.onNavigationIconClicked,
-            )
-        },
-        backLayerContent = {
-            ShopDetailEntry(
-                shop = shop,
-                args = args,
-                function = function,
-                addresses = addresses,
-                nameError = nameError,
-                taxPinError = taxPinError,
-                toolbarTitle = toolbarTitle,
-                isTaskLoading = isTaskLoading,
-                isAddressError = isAddressError,
-                addressesError = addressesError,
-                permitReAddition = permitReAddition,
-                onAddressRemoved = {
-                    isAddressError = false
-                    // TODO: Remove marker from map...
-                },
-            )
-        },
-        frontLayerContent = {
-            Column(modifier = Modifier.fillMaxSize()) {
+        topBar = {
+            Box(
+                modifier = Modifier
+                    .height(IntrinsicSize.Min)
+                    .fillMaxWidth()
+            ) {
+                val markerPositions = if (coordinate != null) {
+                    val marker = MarkerOptions().apply {
+                        position(LatLng(coordinate!!.lat, coordinate!!.lon))
+                    }
+                    listOf(marker)
+                } else {
+                    emptyList()
+                }
                 GoogleMapView(
-                    modifier = Modifier.fillMaxSize(),
-                    markerPositions = addresses.map {
-                        MarkerOptions().apply {
-                            position(
-                                LatLng(
-                                    it.location.latitude,
-                                    it.location.longitude,
-                                )
-                            )
-                        }
-                    },
+                    modifier = Modifier
+                        .height(MAP_HEIGHT)
+                        .fillMaxWidth(),
+                    markerPositions = markerPositions,
                     onLocationPermissionChanged = function.onLocationPermissionChanged,
                 ) {
                     setOnMapClickListener {
-                        val address = Address(location = DEFAULT_LOCATION.apply {
-                            latitude = it.latitude
-                            longitude = it.longitude
-                        })
-                        if (address in addresses) {
-                            return@setOnMapClickListener
-                        }
-                        addresses.add(address)
-                        val markerOptions = MarkerOptions().apply {
-                            position(
-                                LatLng(
-                                    address.location.latitude,
-                                    address.location.longitude,
-                                )
-                            )
-                        }
-                        addMarker(markerOptions)
-                        isAddressError = false
+                        coordinate = Coordinate(it.latitude, it.longitude)
+                        shop = shop.copy(coordinate = coordinate)
                     }
-                    setOnMarkerClickListener { marker ->
-                        marker.remove()
-                        addresses.removeAll {
-                            it.location.latitude == marker.position.latitude &&
-                                    it.location.longitude == marker.position.longitude
-                        }
-                        isAddressError = false
+                    setOnMarkerClickListener {
+                        coordinate = null
+                        shop = shop.copy(coordinate = coordinate)
                         true
                     }
                 }
-
-                Spacer(modifier = Modifier.navigationBarsPadding())
+                ToolbarWithProgressbar(
+                    elevation = 0.dp,
+                    title = toolbarTitle,
+                    backgroundColor = Color.Transparent,
+                    onNavigationIconClicked = function.onNavigationIconClicked,
+                )
             }
         },
-    )
+    ) { paddingValues ->
+        ShopDetailEntry(
+            shop = shop,
+            args = args,
+            function = function,
+            nameError = nameError,
+            townError = townError,
+            taxPinError = taxPinError,
+            toolbarTitle = toolbarTitle,
+            isTaskLoading = isTaskLoading,
+            coordinateError = coordinateError,
+            permitReAddition = permitReAddition,
+            modifier = modifier
+                .padding(paddingValues)
+                .verticalScroll(scrollState)
+                .semantics { testTag = TEST_TAG_SHOP_DETAIL_BODY_CONTAINER },
+        )
+    }
 }
 
 @Composable
@@ -215,16 +206,14 @@ private fun ShopDetailEntry(
     modifier: Modifier = Modifier,
     shop: Shop,
     nameError: String,
+    townError: String,
     taxPinError: String,
+    coordinateError: String,
     toolbarTitle: String,
-    addressesError: String,
     isTaskLoading: Boolean,
-    isAddressError: Boolean,
     permitReAddition: Boolean,
     args: ShopDetailScreenArgs,
     function: ShopDetailScreenFunction,
-    addresses: SnapshotStateList<Address>,
-    onAddressRemoved: (Address) -> Unit,
 ) {
     val focusManager = LocalFocusManager.current
     Column(modifier = modifier) {
@@ -267,41 +256,51 @@ private fun ShopDetailEntry(
             },
             modifier = VerticalLayoutModifier,
             label = stringResource(R.string.fs_shop_item_detail_tax_pin_label),
+        )
+        Spacer(modifier = Modifier.padding(vertical = VIEW_SPACE_HALVED))
+        var town by remember(shop.id, shop.town, permitReAddition) {
+            mutableStateOf(TextFieldValue(if (!shop.isDefault) shop.town else ""))
+        }
+        var isTownError by remember {
+            mutableStateOf(townError.isNotBlank())
+        }
+        TextInputLayout(
+            value = town,
+            error = townError,
+            isError = isTownError,
+            onValueChange = {
+                town = it
+                isTownError = false
+            },
+            modifier = VerticalLayoutModifier,
+            label = stringResource(R.string.fs_shop_item_detail_town_label),
+        )
+        Spacer(modifier = Modifier.padding(vertical = VIEW_SPACE_HALVED))
+        var coordinate by remember(shop.id, shop.coordinate, permitReAddition) {
+            mutableStateOf(TextFieldValue(if (!shop.isDefault && shop.coordinate != null) shop.coordinate.toString() else ""))
+        }
+        var isCoordinateError by remember {
+            mutableStateOf(coordinateError.isNotBlank())
+        }
+        TextInputLayout(
+            value = coordinate,
+            error = coordinateError,
+            isError = isCoordinateError,
+            onValueChange = {
+                coordinate = it
+                isCoordinateError = false
+            },
+            modifier = VerticalLayoutModifier,
+            label = stringResource(R.string.fs_shop_item_detail_coordinate_label),
             keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
             keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
         )
-        if (addresses.isNotEmpty()) {
-            Spacer(modifier = Modifier.padding(vertical = VIEW_SPACE_HALVED))
-            Text(
-                stringRes(R.string.fs_shop_item_detail_addresses_label),
-                style = MaterialTheme.typography.h5,
-                modifier = VerticalLayoutModifier,
-            )
-            Spacer(modifier = Modifier.padding(vertical = VIEW_SPACE_HALVED))
-            ChipGroup(
-                modifier = VerticalLayoutModifier,
-                isSingleLine = false,
-                chipItems = addresses,
-            ) { i, address ->
-                Chip(address.toString()) {
-                    addresses.removeAt(i)
-                    onAddressRemoved.invoke(address)
-                }
-            }
-        }
         Spacer(modifier = Modifier.padding(vertical = VIEW_SPACE_HALVED))
-        if (isAddressError) {
-            Text(
-                text = addressesError,
-                modifier = VerticalLayoutModifier,
-                style = MaterialTheme.typography.caption.copy(color = MaterialTheme.colors.error),
-            )
-            Spacer(modifier = Modifier.padding(vertical = VIEW_SPACE_HALVED))
-        }
         Button(
             enabled = arrayOf(
                 name,
                 taxPin,
+                coordinate,
             ).all { it.text.isNotBlank() } && !isTaskLoading,
             modifier = VerticalLayoutModifier,
             onClick = {
@@ -310,14 +309,13 @@ private fun ShopDetailEntry(
                     shop.copy(
                         name = name.text.trim(),
                         taxPin = taxPin.text.trim(),
-                        addresses = addresses,
+                        town = town.text.trim(),
                     ),
                 )
-            }
+            },
         ) {
-            Text(toolbarTitle.uppercase())
+            Text(toolbarTitle.uppercase(KENYA))
         }
-        Spacer(modifier = Modifier.navigationBarsPadding())
     }
 }
 
@@ -327,8 +325,8 @@ private fun ShopDetailPreview() {
     XentlyTheme {
         ShopDetailScreen(
             modifier = Modifier.fillMaxSize(),
-            result = Success(Shop(name = "Shop #1000", taxPin = "P000111222B")),
-            addResult = Success(Shop(name = "Shop #1000", taxPin = "P000111222B")),
+            result = Success(Shop.default()),
+            addResult = Success(Shop.default()),
         )
     }
 }
