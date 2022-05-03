@@ -18,6 +18,7 @@ data class Product(
     var unit: String = "",
     var unitQuantity: Float = 1f,
     var purchasedQuantity: Float = 1f,
+    var descriptiveName: String = "",
     @Exclude
     @Ignore
     val shop: Shop = Shop.default(),

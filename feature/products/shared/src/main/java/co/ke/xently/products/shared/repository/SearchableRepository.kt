@@ -29,11 +29,11 @@ open class SearchableRepository(private val dependencies: Dependencies) : ISearc
     }.flowOn(dependencies.dispatcher.io)
 
     override fun getProducts(query: String) = flow {
-        val productsResult = sendRequest { dependencies.service.product.get(query, size = 30) }
+        val productsResult = sendRequest { dependencies.service.product.get(query, size = 5) }
             .mapCatching { data ->
                 data.results.also {
                     dependencies.database.productDao.save(it)
-                }
+                }.take(5)
             }
         emit(productsResult)
     }.flowOn(dependencies.dispatcher.io)

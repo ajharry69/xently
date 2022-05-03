@@ -114,7 +114,7 @@ private fun ShoppingListRecommendationScreen(
                                     recommendation.shop.coordinate != null
                                 }.map { recommendation ->
                                     MarkerOptions().apply {
-                                        title("${recommendation.shop.name}, ${recommendation.shop.taxPin}")
+                                        title(recommendation.shop.descriptiveName)
                                         snippet("${recommendation.hit.count} item(s), ${recommendation.expenditure.total}")
                                         position(
                                             LatLng(

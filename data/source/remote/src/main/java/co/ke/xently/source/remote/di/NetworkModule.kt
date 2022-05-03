@@ -45,6 +45,9 @@ object NetworkModule {
                         // cache object relationships.
                         url(url.newBuilder().addQueryParameter("relatedAsId", "true").build())
                     }
+                    if (url.queryParameter("q").isNullOrBlank()) {
+                        url(url.newBuilder().removeAllQueryParameters("q").build())
+                    }
                 }.build(),
             )
         }

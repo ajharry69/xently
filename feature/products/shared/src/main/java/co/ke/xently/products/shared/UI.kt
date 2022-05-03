@@ -105,26 +105,31 @@ fun productNameTextField(
             onOptionSelected(it)
         },
     ) {
-        Column {
-            Text(style = MaterialTheme.typography.body1, text = it.toString())
-            Text(
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-                style = MaterialTheme.typography.caption,
-                text = stringResource(
-                    R.string.fps_product_suggestion_brands,
-                    it.brands.joinToString(", ").ifBlank { stringResource(R.string.none) },
-                ),
-            )
-            Text(
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-                style = MaterialTheme.typography.caption,
-                text = stringResource(
-                    R.string.fps_product_suggestion_attributes,
-                    it.attributes.joinToString(", ").ifBlank { stringResource(R.string.none) },
-                ),
-            )
+        if (it.descriptiveName.isBlank()) {
+            Column {
+                Text(style = MaterialTheme.typography.body1, text = it.toString())
+                Text(
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    style = MaterialTheme.typography.caption,
+                    text = stringResource(
+                        R.string.fps_product_suggestion_brands,
+                        it.brands.joinToString(", ").ifBlank { stringResource(R.string.none) },
+                    ),
+                )
+                Text(
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    style = MaterialTheme.typography.caption,
+                    text = stringResource(
+                        R.string.fps_product_suggestion_attributes,
+                        it.attributes.joinToString(", ")
+                            .ifBlank { stringResource(R.string.none) },
+                    ),
+                )
+            }
+        } else {
+            Text(style = MaterialTheme.typography.body1, text = it.descriptiveName)
         }
     }
     return value
