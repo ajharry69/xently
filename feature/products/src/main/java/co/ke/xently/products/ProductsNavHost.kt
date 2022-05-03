@@ -22,7 +22,7 @@ import co.ke.xently.products.ui.list.ProductListScreenFunction
 import co.ke.xently.products.ui.list.item.MenuItem
 
 @Composable
-internal fun ProductsNavHost(
+fun ProductsNavHost(
     startDestination: String,
     modifier: Modifier = Modifier,
     navController: NavHostController,

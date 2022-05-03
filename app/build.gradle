@@ -27,6 +27,12 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+    buildFeatures {
+        compose true
+    }
+    composeOptions {
+        kotlinCompilerExtensionVersion compose_version
+    }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
@@ -45,6 +51,7 @@ android {
 
 dependencies {
     implementation project(path: ':common')
+    implementation project(path: ':feature')
     implementation project(path: ":feature:shops")
     implementation project(path: ":feature:accounts")
     implementation project(path: ":feature:products")

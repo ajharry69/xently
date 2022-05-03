@@ -1,4 +1,4 @@
-package co.ke.xently.shoppinglist
+package co.ke.xently
 
 import android.content.ComponentName
 import android.content.Context
@@ -8,17 +8,18 @@ import android.os.Bundle
 import android.os.IBinder
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
-import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
+import androidx.fragment.app.FragmentActivity
 import androidx.navigation.compose.rememberNavController
 import co.ke.xently.feature.LocationService
 import co.ke.xently.feature.theme.XentlyTheme
 import co.ke.xently.feature.viewmodels.LocationPermissionViewModel
+import co.ke.xently.shoppinglist.ShoppingListNavHost
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
-class ShoppingListActivity : AppCompatActivity() {
+class MainActivity : FragmentActivity() {
     private val viewModel: LocationPermissionViewModel by viewModels()
 
     private var locationService: LocationService? = null
@@ -36,6 +37,21 @@ class ShoppingListActivity : AppCompatActivity() {
             locationService = null
             locationServiceBound = false
         }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        Intent(this, LocationService::class.java).also {
+            bindService(it, serviceConnection, Context.BIND_AUTO_CREATE)
+        }
+    }
+
+    override fun onStop() {
+        if (locationServiceBound) {
+            unbindService(serviceConnection)
+            locationServiceBound = false
+        }
+        super.onStop()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -62,9 +78,8 @@ class ShoppingListActivity : AppCompatActivity() {
                                 startActivity(it)
                             }
                         },
-                    ) {
-                        onBackPressed()
-                    }
+                        onNavigationIconClicked = this::onBackPressed,
+                    )
                 }
             }
         }
@@ -74,20 +89,5 @@ class ShoppingListActivity : AppCompatActivity() {
             }
             locationPermissionsGranted = it
         }
-    }
-
-    override fun onStart() {
-        super.onStart()
-        Intent(this, LocationService::class.java).also {
-            bindService(it, serviceConnection, Context.BIND_AUTO_CREATE)
-        }
-    }
-
-    override fun onStop() {
-        if (locationServiceBound) {
-            unbindService(serviceConnection)
-            locationServiceBound = false
-        }
-        super.onStop()
     }
 }

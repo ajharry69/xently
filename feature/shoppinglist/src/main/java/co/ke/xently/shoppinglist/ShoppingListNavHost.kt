@@ -36,7 +36,7 @@ import co.ke.xently.shoppinglist.ui.list.recommendation.item.RecommendationCardI
 import co.ke.xently.shoppinglist.ui.list.recommendation.item.RecommendationCardItemMenuItem
 
 @Composable
-internal fun ShoppingListNavHost(
+fun ShoppingListNavHost(
     modifier: Modifier = Modifier,
     navController: NavHostController,
     onShopMenuClicked: () -> Unit = {},

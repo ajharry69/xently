@@ -2,16 +2,16 @@ package co.ke.xently.products
 
 import android.os.Bundle
 import androidx.activity.compose.setContent
-import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
+import androidx.fragment.app.FragmentActivity
 import androidx.navigation.compose.rememberNavController
 import co.ke.xently.feature.theme.XentlyTheme
 import co.ke.xently.feature.utils.Routes
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
-class ProductsActivity : AppCompatActivity() {
+class ProductsActivity : FragmentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
