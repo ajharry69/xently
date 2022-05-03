@@ -32,7 +32,8 @@ interface ProductDao {
     suspend fun deleteAll(): Int
 
     @Transaction
-    @Query("""SELECT p.* FROM products AS p 
+    @Query(
+        """SELECT p.* FROM products AS p 
         LEFT JOIN
             product_attributes AS pa ON pa.relatedId = p.id
         LEFT JOIN
@@ -44,6 +45,7 @@ interface ProductDao {
             pb.name LIKE :query
         GROUP BY p.id
         ORDER BY p.name
-    """)
+    """
+    )
     fun getProducts(query: String): Flow<List<Product.WithRelated>>
 }

@@ -77,8 +77,10 @@ private fun ShopListScreen(
         floatingActionButton = {
             if (!listState.isScrollInProgress) {
                 FloatingActionButton(onClick = function.onAddFabClicked) {
-                    Icon(Icons.Default.Add,
-                        stringRes(R.string.fs_add_shop_toolbar_title, R.string.add))
+                    Icon(
+                        Icons.Default.Add,
+                        stringRes(R.string.fs_add_shop_toolbar_title, R.string.add)
+                    )
                 }
             }
         },

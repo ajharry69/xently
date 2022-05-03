@@ -1,41 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="co.ke.xently.shops">
-
-    <uses-permission android:name="android.permission.INTERNET" />
-
-    <application>
-        <activity
-            android:name=".ShopsActivity"
-            android:exported="true"
-            android:label="@string/title_activity_shops"
-            android:windowSoftInputMode="adjustResize">
-            <intent-filter>
-                <action android:name="co.ke.xently.action.SHOPS" />
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-
-                <category android:name="android.intent.category.BROWSABLE" />
-                <category android:name="android.intent.category.DEFAULT" />
-
-                <data
-                    android:host="shops"
-                    android:pathPattern="/..*/addresses/.*"
-                    android:scheme="xently" />
-
-                <!--
-                The following should support:
-                    1. xently://shops/1/
-                    2. xently://shops/1/?name=Test
-                 -->
-                <data
-                    android:host="shops"
-                    android:pathPattern="/..*/.*"
-                    android:scheme="xently" />
-            </intent-filter>
-        </activity>
-    </application>
+<manifest package="co.ke.xently.shops">
 
 </manifest>

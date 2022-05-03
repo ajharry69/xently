@@ -33,8 +33,10 @@ class ProductDaoTest {
             )
 
             productDao.getProducts("bread").test {
-                assertThat(awaitItem().map { it.product.name },
-                    Matchers.equalTo(listOf(productToMatch.name)))
+                assertThat(
+                    awaitItem().map { it.product.name },
+                    Matchers.equalTo(listOf(productToMatch.name))
+                )
             }
         }
     }
@@ -48,8 +50,12 @@ class ProductDaoTest {
                 Product.default().copy(name = "bread", id = 2),
             )
 
-            brandDao.add(listOf(Product.Brand.default()
-                .copy(name = "brookside", relatedId = productToMatch.id)))
+            brandDao.add(
+                listOf(
+                    Product.Brand.default()
+                        .copy(name = "brookside", relatedId = productToMatch.id)
+                )
+            )
 
             productDao.getProducts("brookside").test {
                 val products = awaitItem()
@@ -72,13 +78,25 @@ class ProductDaoTest {
             val bread = Product.default().copy(name = "bread", id = 2)
             productDao.save(milk, bread, Product.default().copy(name = "salt", id = 3))
 
-            brandDao.add(listOf(Product.Brand.default()
-                .copy(name = "brookside", relatedId = milk.id)))
+            brandDao.add(
+                listOf(
+                    Product.Brand.default()
+                        .copy(name = "brookside", relatedId = milk.id)
+                )
+            )
 
-            attributeDao.add(listOf(Product.Attribute.default()
-                .copy(name = "kind", value = "whole", relatedId = milk.id)))
-            attributeDao.add(listOf(Product.Attribute.default()
-                .copy(name = "kind", value = "brown", relatedId = bread.id)))
+            attributeDao.add(
+                listOf(
+                    Product.Attribute.default()
+                        .copy(name = "kind", value = "whole", relatedId = milk.id)
+                )
+            )
+            attributeDao.add(
+                listOf(
+                    Product.Attribute.default()
+                        .copy(name = "kind", value = "brown", relatedId = bread.id)
+                )
+            )
 
             productDao.getProducts("%br%").test {
                 val products = awaitItem()
@@ -98,10 +116,18 @@ class ProductDaoTest {
             val bread = Product.default().copy(name = "bread", id = 2)
             productDao.save(milk, bread)
 
-            attributeDao.add(listOf(Product.Attribute.default()
-                .copy(name = "kind", value = "whole", relatedId = milk.id)))
-            attributeDao.add(listOf(Product.Attribute.default()
-                .copy(name = "kind", value = "brown", relatedId = bread.id)))
+            attributeDao.add(
+                listOf(
+                    Product.Attribute.default()
+                        .copy(name = "kind", value = "whole", relatedId = milk.id)
+                )
+            )
+            attributeDao.add(
+                listOf(
+                    Product.Attribute.default()
+                        .copy(name = "kind", value = "brown", relatedId = bread.id)
+                )
+            )
 
             productDao.getProducts("kind").test {
                 val products = awaitItem()
@@ -128,10 +154,18 @@ class ProductDaoTest {
             val bread = Product.default().copy(name = "bread", id = 2)
             productDao.save(milk, bread)
 
-            attributeDao.add(listOf(Product.Attribute.default()
-                .copy(name = "kind", value = "whole", relatedId = milk.id)))
-            attributeDao.add(listOf(Product.Attribute.default()
-                .copy(name = "kind", value = "brown", relatedId = bread.id)))
+            attributeDao.add(
+                listOf(
+                    Product.Attribute.default()
+                        .copy(name = "kind", value = "whole", relatedId = milk.id)
+                )
+            )
+            attributeDao.add(
+                listOf(
+                    Product.Attribute.default()
+                        .copy(name = "kind", value = "brown", relatedId = bread.id)
+                )
+            )
 
             productDao.getProducts("brown").test {
                 val products = awaitItem()

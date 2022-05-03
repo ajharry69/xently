@@ -73,8 +73,10 @@ internal class VerificationViewModel @Inject constructor(
         _isTimerOnHold.emit(true)
         delay(10.seconds)
         _isTimerOnHold.emit(false)
-        countdownSeconds.emitAll((0 until (savedStateHandle.get<Int>(currentTimeoutKey)
-            ?: COUNTDOWN_START)).reversed().asFlow())
+        countdownSeconds.emitAll(
+            (0 until (savedStateHandle.get<Int>(currentTimeoutKey)
+                ?: COUNTDOWN_START)).reversed().asFlow()
+        )
     }
 
     companion object {

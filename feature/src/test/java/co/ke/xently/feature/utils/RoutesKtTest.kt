@@ -17,11 +17,17 @@ class RoutesKtTest : TestCase() {
     fun testBuildRouteForQueriedPath() {
         Assert.assertEquals("path/", "path/?key={key}".buildRoute())
         Assert.assertEquals("path/?key=val", "path/?key={key}".buildRoute("key" to "val"))
-        Assert.assertEquals("path/?key=val",
-            "path/?key={key}&k2={k2}".buildRoute("key" to "val"))
-        Assert.assertEquals("path/?key=val&k2=k2v",
-            "path/?key={key}&k2={k2}".buildRoute("key" to "val", "k2" to "k2v"))
-        Assert.assertEquals("path/1/?key=val",
-            "path/{id}/?key={key}".buildRoute("id" to 1, "key" to "val"))
+        Assert.assertEquals(
+            "path/?key=val",
+            "path/?key={key}&k2={k2}".buildRoute("key" to "val")
+        )
+        Assert.assertEquals(
+            "path/?key=val&k2=k2v",
+            "path/?key={key}&k2={k2}".buildRoute("key" to "val", "k2" to "k2v")
+        )
+        Assert.assertEquals(
+            "path/1/?key=val",
+            "path/{id}/?key={key}".buildRoute("id" to 1, "key" to "val")
+        )
     }
 }

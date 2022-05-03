@@ -20,6 +20,7 @@ import co.ke.xently.feature.utils.Routes
 import co.ke.xently.feature.viewmodels.LocationPermissionViewModel
 import co.ke.xently.products.productsGraph
 import co.ke.xently.shoppinglist.shoppingListGraph
+import co.ke.xently.shops.shopsGraph
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -72,9 +73,7 @@ class MainActivity : FragmentActivity() {
                         shoppingListGraph(
                             navController = navController,
                             onShopMenuClicked = {
-                                Intent("co.ke.xently.action.SHOPS").also {
-                                    startActivity(it)
-                                }
+                                navController.navigate(Routes.Shops.toString())
                             },
                             onProductMenuClicked = {
                                 navController.navigate(Routes.Products.toString())
@@ -89,6 +88,10 @@ class MainActivity : FragmentActivity() {
                             onNavigationIconClicked = this@MainActivity::onBackPressed,
                         )
                         accountsGraph(
+                            navController = navController,
+                            onNavigationIconClicked = this@MainActivity::onBackPressed,
+                        )
+                        shopsGraph(
                             navController = navController,
                             onNavigationIconClicked = this@MainActivity::onBackPressed,
                         )
