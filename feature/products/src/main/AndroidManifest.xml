@@ -1,33 +1,3 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="co.ke.xently.products">
-
-    <uses-permission android:name="android.permission.INTERNET" />
-
-    <application>
-        <activity
-            android:name=".ProductsActivity"
-            android:exported="false"
-            android:label="@string/title_activity_products"
-            android:launchMode="standard"
-            android:theme="@style/Theme.Xently.NoActionBar"
-            android:windowSoftInputMode="adjustResize">
-            <intent-filter>
-                <action android:name="co.ke.xently.action.PRODUCTS" />
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-
-                <category android:name="android.intent.category.BROWSABLE" />
-                <category android:name="android.intent.category.DEFAULT" />
-
-                <data
-                    android:host="products"
-                    android:pathPattern="/shops/..*/"
-                    android:scheme="xently" />
-            </intent-filter>
-        </activity>
-    </application>
-
+<manifest package="co.ke.xently.products">
 </manifest>

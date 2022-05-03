@@ -11,11 +11,14 @@ import androidx.activity.viewModels
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.fragment.app.FragmentActivity
+import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
 import co.ke.xently.feature.LocationService
 import co.ke.xently.feature.theme.XentlyTheme
+import co.ke.xently.feature.utils.Routes
 import co.ke.xently.feature.viewmodels.LocationPermissionViewModel
-import co.ke.xently.shoppinglist.ShoppingListNavHost
+import co.ke.xently.products.productsGraph
+import co.ke.xently.shoppinglist.shoppingListGraph
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -61,25 +64,32 @@ class MainActivity : FragmentActivity() {
                 // A surface container using the 'background' color from the theme
                 Surface(color = MaterialTheme.colors.background) {
                     val navController = rememberNavController()
-                    ShoppingListNavHost(
+                    NavHost(
                         navController = navController,
-                        onShopMenuClicked = {
-                            Intent("co.ke.xently.action.SHOPS").also {
-                                startActivity(it)
-                            }
-                        },
-                        onProductMenuClicked = {
-                            Intent("co.ke.xently.action.PRODUCTS").also {
-                                startActivity(it)
-                            }
-                        },
-                        onAccountMenuClicked = {
-                            Intent("co.ke.xently.action.ACCOUNTS").also {
-                                startActivity(it)
-                            }
-                        },
-                        onNavigationIconClicked = this::onBackPressed,
-                    )
+                        startDestination = Routes.ShoppingList.toString(),
+                    ) {
+                        shoppingListGraph(
+                            navController = navController,
+                            onShopMenuClicked = {
+                                Intent("co.ke.xently.action.SHOPS").also {
+                                    startActivity(it)
+                                }
+                            },
+                            onProductMenuClicked = {
+                                navController.navigate(Routes.Products.toString())
+                            },
+                            onAccountMenuClicked = {
+                                Intent("co.ke.xently.action.ACCOUNTS").also {
+                                    startActivity(it)
+                                }
+                            },
+                            onNavigationIconClicked = this@MainActivity::onBackPressed,
+                        )
+                        productsGraph(
+                            navController = navController,
+                            onNavigationIconClicked = this@MainActivity::onBackPressed,
+                        )
+                    }
                 }
             }
         }

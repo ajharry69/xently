@@ -19,14 +19,25 @@
         <activity
             android:name=".MainActivity"
             android:exported="true"
+            android:launchMode="standard"
             android:theme="@style/Theme.Xently.NoActionBar"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>
-                <action android:name="co.ke.xently.action.SHOPPING_LIST" />
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.BROWSABLE" />
+                <category android:name="android.intent.category.DEFAULT" />
+
+                <data
+                    android:host="products"
+                    android:pathPattern="/shops/..*/"
+                    android:scheme="xently" />
             </intent-filter>
         </activity>
     </application>
