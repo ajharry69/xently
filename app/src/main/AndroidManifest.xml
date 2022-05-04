@@ -21,6 +21,7 @@
             android:theme="@style/Theme.Xently.NoActionBar"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>
+                <action android:name="co.ke.xently.actions.MAIN" />
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.DEFAULT" />
