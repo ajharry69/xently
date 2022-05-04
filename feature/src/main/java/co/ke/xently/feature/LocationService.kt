@@ -15,6 +15,7 @@
  */
 package co.ke.xently.feature
 
+import android.annotation.SuppressLint
 import android.app.*
 import android.content.Context
 import android.content.Intent
@@ -192,12 +193,7 @@ class LocationService : Service() {
         }
     }
 
-    /*
-     * Generates a BIG_TEXT_STYLE Notification that represent latest location.
-     */
     private fun generateNotification(): Notification {
-        val mainNotificationText = getString(R.string.location_tracking_notification_text)
-        // 1. Create Notification Channel for O+ and beyond devices (26+).
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 
             val notificationChannel = NotificationChannel(
@@ -212,46 +208,64 @@ class LocationService : Service() {
             notificationManager.createNotificationChannel(notificationChannel)
         }
 
-        // 2. Build the BIG_TEXT_STYLE.
-        val bigTextStyle = NotificationCompat.BigTextStyle()
-            .bigText(mainNotificationText)
-
-        // 3. Set up main Intent/Pending Intents for notification.
-        val launchActivityIntent = Intent(Intent.ACTION_MAIN)
-
-        val cancelIntent = Intent(this, LocationService::class.java)
-        cancelIntent.putExtra(EXTRA_CANCEL_LOCATION_TRACKING_FROM_NOTIFICATION, true)
-
-        val servicePendingIntent = PendingIntent.getService(
-            this, 0, cancelIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-
-        val activityPendingIntent = PendingIntent.getActivity(
-            this, 0, launchActivityIntent, PendingIntent.FLAG_IMMUTABLE
-        )
-
-        // 4. Build and issue the notification.
-        // Notification Channel Id is ignored for Android pre O (26).
-        val notificationCompatBuilder =
-            NotificationCompat.Builder(applicationContext, NOTIFICATION_CHANNEL_ID)
-
-        return notificationCompatBuilder
-            .setStyle(bigTextStyle)
+        val mainNotificationText = getString(R.string.location_tracking_notification_text)
+        return NotificationCompat.Builder(applicationContext, NOTIFICATION_CHANNEL_ID)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(mainNotificationText))
             .setContentText(mainNotificationText)
             .setSmallIcon(R.mipmap.ic_launcher)
             .setDefaults(NotificationCompat.DEFAULT_ALL)
             .setOngoing(true)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .addAction(
-                R.drawable.ic_launch, getString(R.string.show_screen_button_text),
-                activityPendingIntent
+                R.drawable.ic_launch,
+                getString(R.string.show_screen_button_text),
+                getLaunchActivityIntent(),
             )
             .addAction(
                 R.drawable.ic_cancel,
                 getString(R.string.stop_location_tracking_button_text),
-                servicePendingIntent
+                getStopTrackingIntent(),
             )
             .build()
+    }
+
+    @SuppressLint("UnspecifiedImmutableFlag")
+    private fun getLaunchActivityIntent(): PendingIntent {
+        val mainActivityIntent = Intent("co.ke.xently.actions.MAIN")
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            PendingIntent.getActivity(
+                this,
+                0,
+                mainActivityIntent,
+                PendingIntent.FLAG_IMMUTABLE,
+            )
+        } else {
+            PendingIntent.getActivity(
+                this,
+                0,
+                mainActivityIntent,
+                0, // return an existing PendingIntent if there is one that matches the parameters provided
+            )
+        }
+    }
+
+    @SuppressLint("UnspecifiedImmutableFlag")
+    private fun getStopTrackingIntent(): PendingIntent {
+        val stopTrackingIntent = Intent(this, LocationService::class.java).apply {
+            putExtra(EXTRA_CANCEL_LOCATION_TRACKING_FROM_NOTIFICATION, true)
+        }
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            PendingIntent.getService(
+                this,
+                0,
+                stopTrackingIntent,
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+            )
+        } else {
+            PendingIntent.getService(
+                this, 0, stopTrackingIntent, PendingIntent.FLAG_UPDATE_CURRENT
+            )
+        }
     }
 
     /**
@@ -264,7 +278,7 @@ class LocationService : Service() {
     }
 
     companion object {
-        private const val TAG = "LocationService"
+        private val TAG = LocationService::class.java.simpleName
 
         private const val PACKAGE_NAME = "co.ke.xently"
 
