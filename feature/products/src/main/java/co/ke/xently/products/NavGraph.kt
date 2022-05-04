@@ -8,7 +8,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.core.net.toUri
 import androidx.navigation.*
-import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import co.ke.xently.data.Product
 import co.ke.xently.data.Shop
@@ -21,22 +20,6 @@ import co.ke.xently.products.ui.list.ProductListScreen
 import co.ke.xently.products.ui.list.ProductListScreenFunction
 import co.ke.xently.products.ui.list.item.MenuItem
 
-@Composable
-fun ProductsNavHost(
-    startDestination: String,
-    modifier: Modifier = Modifier,
-    navController: NavHostController,
-    onNavigationIconClicked: () -> Unit,
-) {
-    NavHost(
-        modifier = modifier,
-        navController = navController,
-        startDestination = startDestination,
-    ) {
-        productsGraph(navController, onNavigationIconClicked)
-    }
-}
-
 fun NavGraphBuilder.productsGraph(
     navController: NavHostController,
     onNavigationIconClicked: () -> Unit,
@@ -44,7 +27,7 @@ fun NavGraphBuilder.productsGraph(
     navigation(route = Routes.Products.toString(), startDestination = Routes.Products.LIST) {
         val productList: @Composable (NavBackStackEntry) -> Unit = { backStackEntry ->
             ProductListScreen(
-                shopId = backStackEntry.arguments?.getLong("shopId"),
+                shopId = backStackEntry.arguments?.getLong("shopId", Shop.default().id),
                 function = ProductListScreenFunction(
                     onAddFabClicked = {
                         navController.navigate(Routes.Products.DETAIL.buildRoute("id" to Product.default().id)) {
