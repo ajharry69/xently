@@ -29,6 +29,9 @@ object Routes {
         const val LIST = "products/"
         const val DETAIL = "products/{id}/"
         const val FILTERED_BY_SHOP = "products/shops/{shopId}/"
+        override fun toString(): String {
+            return javaClass.simpleName
+        }
 
         object Deeplinks {
             const val FILTERED_BY_SHOP = "xently://${Routes.Products.FILTERED_BY_SHOP}"
@@ -38,6 +41,9 @@ object Routes {
     object Shops {
         const val LIST = "shops/"
         const val DETAIL = "shops/{id}/?name={name}&moveBack={moveBack}"
+        override fun toString(): String {
+            return javaClass.simpleName
+        }
 
         object Deeplinks {
             const val DETAIL = "xently://${Routes.Shops.DETAIL}"
@@ -51,6 +57,9 @@ object Routes {
         const val PASSWORD_RESET_REQUEST = "request-password-reset/?email={email}"
         const val RESET_PASSWORD = "reset-password/?isChange={isChange}"
         const val VERIFY = "verify-account/?code={code}"
+        override fun toString(): String {
+            return javaClass.simpleName
+        }
 
         object Deeplinks {
             const val SIGN_IN = "xently://accounts/signin/"
@@ -63,5 +72,8 @@ object Routes {
         const val LIST = "shopping-list/?group={group}&groupBy={groupBy}"
         const val DETAIL = "shopping-list/{id}/"
         const val RECOMMENDATION = "shopping-list/recommendations/{recommendBy}/?from={from}"
+        override fun toString(): String {
+            return javaClass.simpleName
+        }
     }
 }

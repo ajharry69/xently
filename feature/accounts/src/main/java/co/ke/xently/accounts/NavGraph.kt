@@ -1,17 +1,11 @@
 package co.ke.xently.accounts
 
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.navigation.NavHostController
-import androidx.navigation.NavType
-import androidx.navigation.compose.NavHost
+import androidx.navigation.*
 import androidx.navigation.compose.composable
-import androidx.navigation.navArgument
-import androidx.navigation.navDeepLink
 import co.ke.xently.accounts.ui.password_reset.PasswordResetScreen
 import co.ke.xently.accounts.ui.password_reset.PasswordResetScreenFunction
 import co.ke.xently.accounts.ui.password_reset.request.PasswordResetRequestScreen
@@ -28,19 +22,15 @@ import co.ke.xently.data.User
 import co.ke.xently.feature.utils.Routes
 import co.ke.xently.feature.utils.buildRoute
 
-
-@Composable
-internal fun AccountNavHost(
-    modifier: Modifier = Modifier,
+fun NavGraphBuilder.accountsGraph(
     navController: NavHostController,
-    onNavigationIconClicked: () -> Unit,
+    onNavigationIconClicked: () -> Unit
 ) {
-    val context = LocalContext.current
-    NavHost(
-        modifier = modifier,
-        navController = navController,
+    navigation(
+        route = Routes.Account.toString(),
         startDestination = Routes.Account.PROFILE,
     ) {
+
         composable(Routes.Account.PROFILE) {
             ProfileScreen(
                 modifier = Modifier.fillMaxSize(),
@@ -65,6 +55,7 @@ internal fun AccountNavHost(
                 },
             ),
         ) { navBackStackEntry ->
+            val context = LocalContext.current
             SignInScreen(
                 modifier = Modifier.fillMaxSize(),
                 auth = User.BasicAuth(
@@ -89,8 +80,11 @@ internal fun AccountNavHost(
                     },
                     createAccount = {
                         navController.navigate(
-                            Routes.Account.SIGN_UP.buildRoute("username" to it.username,
-                            "password" to it.password)) {
+                            Routes.Account.SIGN_UP.buildRoute(
+                                "username" to it.username,
+                                "password" to it.password
+                            )
+                        ) {
                             launchSingleTop = true
                         }
                     },
@@ -113,6 +107,7 @@ internal fun AccountNavHost(
                 },
             ),
         ) { navBackStackEntry ->
+            val context = LocalContext.current
             SignUpScreen(
                 function = SignUpScreenFunction(
                     navigationIcon = onNavigationIconClicked,
@@ -126,8 +121,10 @@ internal fun AccountNavHost(
                         }
                     },
                     signIn = {
-                        Routes.Account.SIGN_IN.buildRoute("username" to it.username,
-                            "password" to it.password).also { route ->
+                        Routes.Account.SIGN_IN.buildRoute(
+                            "username" to it.username,
+                            "password" to it.password
+                        ).also { route ->
                             navController.navigate(route) {
                                 launchSingleTop = true
                                 popUpTo(route.substringBefore("?")) {
@@ -152,6 +149,7 @@ internal fun AccountNavHost(
                 },
             ),
         ) { navBackStackEntry ->
+            val context = LocalContext.current
             VerificationScreen(
                 modifier = Modifier.fillMaxSize(),
                 verificationCode = navBackStackEntry.arguments?.getString("code") ?: "",
@@ -160,9 +158,6 @@ internal fun AccountNavHost(
                     verificationSuccess = {
                         if (it.isVerified) {
                             (context as ComponentActivity).finish()
-                        } else {
-                            Log.d(AccountActivity.TAG,
-                                "ProductsNavHost: User account not verified successfully")
                         }
                     }
                 ),
@@ -198,6 +193,7 @@ internal fun AccountNavHost(
                 },
             ),
         ) {
+            val context = LocalContext.current
             PasswordResetScreen(
                 modifier = Modifier.fillMaxSize(),
                 isChange = it.arguments?.getBoolean("isChange") ?: false,

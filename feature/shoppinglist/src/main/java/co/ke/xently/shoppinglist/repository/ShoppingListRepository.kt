@@ -98,7 +98,8 @@ internal class ShoppingListRepository @Inject constructor(private val dependenci
                     Recommend.From.Item -> {
                         val item = if (recommend.by !is ShoppingListItem) {
                             dependencies.database.shoppingListDao.get(
-                                recommend.by.toString().toLong())
+                                recommend.by.toString().toLong()
+                            )
                                 .first()!!.item
                         } else {
                             recommend.by

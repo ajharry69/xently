@@ -1,4 +1,4 @@
-package co.ke.xently.shoppinglist
+package co.ke.xently
 
 import android.content.ComponentName
 import android.content.Context
@@ -8,17 +8,23 @@ import android.os.Bundle
 import android.os.IBinder
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
-import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
+import androidx.fragment.app.FragmentActivity
+import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
+import co.ke.xently.accounts.accountsGraph
 import co.ke.xently.feature.LocationService
 import co.ke.xently.feature.theme.XentlyTheme
+import co.ke.xently.feature.utils.Routes
 import co.ke.xently.feature.viewmodels.LocationPermissionViewModel
+import co.ke.xently.products.productsGraph
+import co.ke.xently.shoppinglist.shoppingListGraph
+import co.ke.xently.shops.shopsGraph
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
-class ShoppingListActivity : AppCompatActivity() {
+class MainActivity : FragmentActivity() {
     private val viewModel: LocationPermissionViewModel by viewModels()
 
     private var locationService: LocationService? = null
@@ -38,44 +44,6 @@ class ShoppingListActivity : AppCompatActivity() {
         }
     }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContent {
-            XentlyTheme {
-                // A surface container using the 'background' color from the theme
-                Surface(color = MaterialTheme.colors.background) {
-                    val navController = rememberNavController()
-                    ShoppingListNavHost(
-                        navController = navController,
-                        onShopMenuClicked = {
-                            Intent("co.ke.xently.action.SHOPS").also {
-                                startActivity(it)
-                            }
-                        },
-                        onProductMenuClicked = {
-                            Intent("co.ke.xently.action.PRODUCTS").also {
-                                startActivity(it)
-                            }
-                        },
-                        onAccountMenuClicked = {
-                            Intent("co.ke.xently.action.ACCOUNTS").also {
-                                startActivity(it)
-                            }
-                        },
-                    ) {
-                        onBackPressed()
-                    }
-                }
-            }
-        }
-        viewModel.locationPermissionsGranted.observe(this) {
-            if (it && locationServiceBound && !locationPermissionsGranted) {
-                locationService!!.subscribeToLocationUpdates()
-            }
-            locationPermissionsGranted = it
-        }
-    }
-
     override fun onStart() {
         super.onStart()
         Intent(this, LocationService::class.java).also {
@@ -89,5 +57,53 @@ class ShoppingListActivity : AppCompatActivity() {
             locationServiceBound = false
         }
         super.onStop()
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContent {
+            XentlyTheme {
+                // A surface container using the 'background' color from the theme
+                Surface(color = MaterialTheme.colors.background) {
+                    val navController = rememberNavController()
+                    NavHost(
+                        navController = navController,
+                        startDestination = Routes.ShoppingList.toString(),
+                    ) {
+                        shoppingListGraph(
+                            navController = navController,
+                            onShopMenuClicked = {
+                                navController.navigate(Routes.Shops.toString())
+                            },
+                            onProductMenuClicked = {
+                                navController.navigate(Routes.Products.toString())
+                            },
+                            onAccountMenuClicked = {
+                                navController.navigate(Routes.Account.toString())
+                            },
+                            onNavigationIconClicked = this@MainActivity::onBackPressed,
+                        )
+                        productsGraph(
+                            navController = navController,
+                            onNavigationIconClicked = this@MainActivity::onBackPressed,
+                        )
+                        accountsGraph(
+                            navController = navController,
+                            onNavigationIconClicked = this@MainActivity::onBackPressed,
+                        )
+                        shopsGraph(
+                            navController = navController,
+                            onNavigationIconClicked = this@MainActivity::onBackPressed,
+                        )
+                    }
+                }
+            }
+        }
+        viewModel.locationPermissionsGranted.observe(this) {
+            if (it && locationServiceBound && !locationPermissionsGranted) {
+                locationService!!.subscribeToLocationUpdates()
+            }
+            locationPermissionsGranted = it
+        }
     }
 }

@@ -23,8 +23,10 @@ internal class LocationServiceRepository @Inject constructor(private val depende
     }
 
     override fun getLocationTrackingPref() =
-        dependencies.preference.unencrypted.getBoolean(ENABLE_LOCATION_TRACKING_PREFERENCE_KEY,
-            false)
+        dependencies.preference.unencrypted.getBoolean(
+            ENABLE_LOCATION_TRACKING_PREFERENCE_KEY,
+            false
+        )
 
     override fun updateLocation(location: Array<Double>) = Retry().run {
         flow {

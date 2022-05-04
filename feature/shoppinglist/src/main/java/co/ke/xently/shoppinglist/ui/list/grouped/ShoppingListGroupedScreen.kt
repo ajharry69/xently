@@ -130,8 +130,10 @@ private fun GroupedShoppingListScreen(
         floatingActionButton = {
             if (!listState.isScrollInProgress && user != null && !(result is TaskResult.Error && result.error.isAuthError())) {
                 FloatingActionButton(onClick = function.onAddFabClicked) {
-                    Icon(Icons.Default.Add,
-                        stringRes(R.string.fsl_detail_screen_toolbar_title, R.string.add))
+                    Icon(
+                        Icons.Default.Add,
+                        stringRes(R.string.fsl_detail_screen_toolbar_title, R.string.add)
+                    )
                 }
             }
         },

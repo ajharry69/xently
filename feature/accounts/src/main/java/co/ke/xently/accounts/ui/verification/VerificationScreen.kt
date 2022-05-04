@@ -153,7 +153,10 @@ fun VerificationScreen(
                     horizontalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
                     for (i in 0 until VERIFICATION_CODE_LENGTH) {
-                        val codeEntryDescription = stringResource(R.string.fa_verify_account_entry_field_description, i + 1)
+                        val codeEntryDescription = stringResource(
+                            R.string.fa_verify_account_entry_field_description,
+                            i + 1
+                        )
                         TextField(
                             singleLine = true,
                             isError = isCodeError,

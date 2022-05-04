@@ -4,17 +4,12 @@ import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.util.Log
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.core.net.toUri
-import androidx.navigation.NavHostController
-import androidx.navigation.NavType
-import androidx.navigation.compose.NavHost
+import androidx.navigation.*
 import androidx.navigation.compose.composable
-import androidx.navigation.navArgument
-import androidx.navigation.navDeepLink
 import co.ke.xently.data.Shop
 import co.ke.xently.feature.ui.OptionMenu
 import co.ke.xently.feature.utils.Routes
@@ -27,20 +22,14 @@ import co.ke.xently.shops.ui.list.ShopListScreenFunction
 import co.ke.xently.shops.ui.list.item.MenuItem
 import co.ke.xently.shops.ui.list.item.ShopListItemFunction
 
-@Composable
-internal fun ShopsNavHost(
-    modifier: Modifier = Modifier,
+fun NavGraphBuilder.shopsGraph(
     navController: NavHostController,
     onNavigationIconClicked: () -> Unit,
 ) {
-    val context = LocalContext.current
-    val resources = context.resources
-    NavHost(
-        modifier = modifier,
-        navController = navController,
-        startDestination = Routes.Shops.LIST,
-    ) {
+    navigation(route = Routes.Shops.toString(), startDestination = Routes.Shops.LIST) {
         composable(Routes.Shops.LIST) {
+            val context = LocalContext.current
+            val resources = context.resources
             ShopListScreen(
                 modifier = Modifier.fillMaxSize(),
                 optionsMenu = listOf(
@@ -74,7 +63,7 @@ internal fun ShopsNavHost(
                                             context.startActivity(intent)
                                         } catch (ex: ActivityNotFoundException) {
                                             Log.e(
-                                                ShopsActivity::class.simpleName,
+                                                "ShopsActivity",
                                                 "ShopsNavHost: ${ex.message}",
                                                 ex
                                             )

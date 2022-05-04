@@ -27,8 +27,10 @@ fun rememberDatePickerDialog(
 ): MaterialDatePicker<Long> {
     val datePicker = remember {
         MaterialDatePicker.Builder.datePicker()
-            .setSelection((select?.time
-                ?: Date().time) + 24.hours.toLong(DurationUnit.MILLISECONDS))
+            .setSelection(
+                (select?.time
+                    ?: Date().time) + 24.hours.toLong(DurationUnit.MILLISECONDS)
+            )
             .setCalendarConstraints(bounds)
             .setTitleText(title)
             .build()
@@ -49,7 +51,8 @@ fun rememberDatePickerDialog(
 
 internal fun dateFromHourAndMinute(hour: Int, minute: Int, locale: Locale = KENYA) =
     SimpleDateFormat("HH:mm", locale).parse(
-        "${String.format("%02d", hour)}:${String.format("%02d", minute)}")
+        "${String.format("%02d", hour)}:${String.format("%02d", minute)}"
+    )
 
 @Composable
 fun rememberTimePickerDialog(

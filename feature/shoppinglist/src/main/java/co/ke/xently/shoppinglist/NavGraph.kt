@@ -6,15 +6,11 @@ import androidx.compose.material.icons.filled.Business
 import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.navigation.NavHostController
-import androidx.navigation.NavType
-import androidx.navigation.compose.NavHost
+import androidx.navigation.*
 import androidx.navigation.compose.composable
-import androidx.navigation.navArgument
 import co.ke.xently.data.ShoppingListItem
 import co.ke.xently.feature.ui.NavMenuItem
 import co.ke.xently.feature.ui.OptionMenu
@@ -35,19 +31,15 @@ import co.ke.xently.shoppinglist.ui.list.recommendation.ShoppingListRecommendati
 import co.ke.xently.shoppinglist.ui.list.recommendation.item.RecommendationCardItemFunction
 import co.ke.xently.shoppinglist.ui.list.recommendation.item.RecommendationCardItemMenuItem
 
-@Composable
-internal fun ShoppingListNavHost(
-    modifier: Modifier = Modifier,
+fun NavGraphBuilder.shoppingListGraph(
     navController: NavHostController,
-    onShopMenuClicked: () -> Unit = {},
-    onProductMenuClicked: () -> Unit = {},
-    onAccountMenuClicked: () -> Unit = {},
-    onNavigationIconClicked: () -> Unit = {},
+    onAccountMenuClicked: () -> Unit,
+    onShopMenuClicked: () -> Unit,
+    onProductMenuClicked: () -> Unit,
+    onNavigationIconClicked: () -> Unit,
 ) {
-    val context = LocalContext.current
-    NavHost(
-        modifier = modifier,
-        navController = navController,
+    navigation(
+        route = Routes.ShoppingList.toString(),
         startDestination = Routes.ShoppingList.GROUPED,
     ) {
         val onShoppingListItemRecommendClicked: (id: Long) -> Unit = {
@@ -70,6 +62,7 @@ internal fun ShoppingListNavHost(
             MenuItem(R.string.delete),
         )
         composable(Routes.ShoppingList.GROUPED) {
+            val context = LocalContext.current
             GroupedShoppingListScreen(
                 modifier = Modifier.fillMaxSize(),
                 drawerItems = listOf(

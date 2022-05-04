@@ -28,7 +28,10 @@ interface ShopService {
     ): Response<Shop>
 
     @GET("shops/{id}/products/")
-    @Deprecated("Replace with an ES alternative", replaceWith = ReplaceWith("dependencies.service.product.get"))
+    @Deprecated(
+        "Replace with an ES alternative",
+        replaceWith = ReplaceWith("dependencies.service.product.get")
+    )
     suspend fun getProducts(
         @Path("id")
         shopId: Long,

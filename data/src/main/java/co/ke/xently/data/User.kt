@@ -7,9 +7,11 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 import co.ke.xently.common.Exclude
 
-@Entity(tableName = "accounts", indices = [
-    Index("email", unique = true),
-])
+@Entity(
+    tableName = "accounts", indices = [
+        Index("email", unique = true),
+    ]
+)
 data class User(
     @PrimaryKey
     @Exclude(Exclude.During.SERIALIZATION)

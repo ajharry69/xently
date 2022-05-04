@@ -7,14 +7,65 @@
 
     <application
         android:name=".Xently"
-        android:allowBackup="true"
-        android:fullBackupContent="@xml/backup_descriptor"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:networkSecurityConfig="@xml/network_security_config"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Xently"
-        tools:targetApi="n" />
+        tools:targetApi="n">
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:launchMode="standard"
+            android:theme="@style/Theme.Xently.NoActionBar"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.BROWSABLE" />
+                <category android:name="android.intent.category.DEFAULT" />
+
+                <!-- Products -->
+                <data
+                    android:host="products"
+                    android:pathPattern="/shops/..*/"
+                    android:scheme="xently" />
+
+                <!-- Shops -->
+                <data
+                    android:host="shops"
+                    android:pathPattern="/..*/addresses/.*"
+                    android:scheme="xently" />
+
+                <!--
+                The following should support:
+                    1. xently://shops/1/
+                    2. xently://shops/1/?name=Test
+                 -->
+                <data
+                    android:host="shops"
+                    android:pathPattern="/..*/.*"
+                    android:scheme="xently" />
+
+                <!-- Accounts -->
+                <data
+                    android:host="accounts"
+                    android:pathPattern="/signin/"
+                    android:scheme="xently" />
+
+                <data
+                    android:host="accounts"
+                    android:pathPattern="/signup/"
+                    android:scheme="xently" />
+            </intent-filter>
+        </activity>
+    </application>
 
 </manifest>

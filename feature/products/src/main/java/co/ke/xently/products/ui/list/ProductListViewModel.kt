@@ -1,6 +1,7 @@
 package co.ke.xently.products.ui.list
 
 import androidx.lifecycle.viewModelScope
+import co.ke.xently.data.Shop
 import co.ke.xently.feature.utils.DEFAULT_SHARING_STARTED
 import co.ke.xently.feature.viewmodels.AbstractPagedListViewModel
 import co.ke.xently.products.repository.IProductsRepository
@@ -18,7 +19,11 @@ internal class ProductListViewModel @Inject constructor(
     private val shopId = _shopId.asStateFlow()
 
     fun setShopId(id: Long?) {
-        _shopId.value = id
+        _shopId.value = if (id != null && id == Shop.default().id) {
+            null
+        } else {
+            id
+        }
     }
 
     val shopName = shopId.flatMapLatest {

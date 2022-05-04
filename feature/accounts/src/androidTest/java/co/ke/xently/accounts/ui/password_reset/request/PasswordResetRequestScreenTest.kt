@@ -253,7 +253,13 @@ class PasswordResetRequestScreenTest {
             XentlyTheme {
                 PasswordResetRequestScreen(
                     modifier = Modifier.fillMaxSize(),
-                    result = TaskResult.Error(PasswordResetRequestHttpException(email = listOf(errorMessage))),
+                    result = TaskResult.Error(
+                        PasswordResetRequestHttpException(
+                            email = listOf(
+                                errorMessage
+                            )
+                        )
+                    ),
                 )
             }
         }

@@ -84,17 +84,19 @@ private fun ShoppingListScreen(
             }
         },
         floatingActionButton = {
-            if (!listState.isScrollInProgress){
+            if (!listState.isScrollInProgress) {
                 FloatingActionButton(onClick = function.onAddClicked) {
-                    Icon(Icons.Default.Add,
-                        stringRes(R.string.fsl_detail_screen_toolbar_title, R.string.add))
+                    Icon(
+                        Icons.Default.Add,
+                        stringRes(R.string.fsl_detail_screen_toolbar_title, R.string.add)
+                    )
                 }
             }
         },
     ) {
         PagedDataScreen(
             items = items,
-            listState=listState,
+            listState = listState,
             scaffoldState = scaffoldState,
             modifier = modifier.padding(it),
             placeholder = { ShoppingListItem.default() },
