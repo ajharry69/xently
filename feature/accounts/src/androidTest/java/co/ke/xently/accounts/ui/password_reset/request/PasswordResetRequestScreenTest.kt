@@ -267,4 +267,28 @@ class PasswordResetRequestScreenTest {
         composeTestRule.onNodeWithTag(TEST_TAG_TEXT_FIELD_ERROR).assertIsDisplayed()
             .assert(hasText(errorMessage))
     }
+
+    @Test
+    fun clickingResetRequestButtonTrimSpacesFromStartAndEndOfTextInputs() {
+        val requestCallbackMock: (String) -> Unit = mock()
+        composeTestRule.setContent {
+            XentlyTheme {
+                PasswordResetRequestScreen(
+                    modifier = Modifier.fillMaxSize(),
+                    result = TaskResult.Success(null),
+                    function = PasswordResetRequestScreenFunction(request = requestCallbackMock),
+                )
+            }
+        }
+
+        val email = "   user@example.com   "
+        composeTestRule.onNodeWithContentDescription(emailTextFieldDescription)
+            .performTextInput(email)
+
+        composeTestRule.onNodeWithText(requestResetButtonLabel).performClick()
+        with(argumentCaptor<String> { }) {
+            verify(requestCallbackMock, atMostOnce()).invoke(capture())
+            assertThat(firstValue, equalTo("user@example.com"))
+        }
+    }
 }

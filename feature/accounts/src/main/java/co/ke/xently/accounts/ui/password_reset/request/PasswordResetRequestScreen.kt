@@ -56,7 +56,7 @@ internal fun PasswordResetRequestScreen(
 
 @Composable
 @VisibleForTesting
-fun PasswordResetRequestScreen(
+internal fun PasswordResetRequestScreen(
     modifier: Modifier,
     result: TaskResult<User?>,
     email: String = "",
@@ -127,7 +127,7 @@ fun PasswordResetRequestScreen(
                 modifier = VerticalLayoutModifier,
                 onClick = {
                     focusManager.clearFocus()
-                    function.request.invoke(emailAddress.text)
+                    function.request.invoke(emailAddress.text.trim())
                 }
             ) {
                 Text(toolbarTitle.uppercase())

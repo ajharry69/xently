@@ -442,4 +442,62 @@ class SignUpScreenTest {
         composeTestRule.onNodeWithTag(TEST_TAG_TEXT_FIELD_ERROR).assertIsDisplayed()
             .assert(hasText(errorMessage))
     }
+
+    @Test
+    fun clickingOnSignInButtonTrimSpacesFromStartAndEndOfTextInputs() {
+        val signInCallbackMock: (User.BasicAuth) -> Unit = mock()
+        composeTestRule.setContent {
+            XentlyTheme {
+                SignUpScreen(
+                    modifier = Modifier.fillMaxSize(),
+                    result = TaskResult.Success(null),
+                    function = SignUpScreenFunction(signIn = signInCallbackMock),
+                )
+            }
+        }
+
+        val username = "   user@example.com   "
+        val password = "    use a safe password    "
+        composeTestRule.onNodeWithContentDescription(usernameTextFieldDescription)
+            .performTextInput(username)
+
+        composeTestRule.onNodeWithContentDescription(passwordTextFieldDescription)
+            .performTextInput(password)
+
+        composeTestRule.onNodeWithText(signInButtonLabel).performClick()
+        with(argumentCaptor<User.BasicAuth> { }) {
+            verify(signInCallbackMock, atMostOnce()).invoke(capture())
+            assertThat(firstValue.username, equalTo("user@example.com"))
+            assertThat(firstValue.password, equalTo("use a safe password"))
+        }
+    }
+
+    @Test
+    fun clickingOnSignUpButtonTrimSpacesFromStartAndEndOfTextInputs() {
+        val signUpCallbackMock: (User) -> Unit = mock()
+        composeTestRule.setContent {
+            XentlyTheme {
+                SignUpScreen(
+                    modifier = Modifier.fillMaxSize(),
+                    result = TaskResult.Success(null),
+                    function = SignUpScreenFunction(signUp = signUpCallbackMock),
+                )
+            }
+        }
+
+        val username = "   user@example.com   "
+        val password = "    use a safe password    "
+        composeTestRule.onNodeWithContentDescription(usernameTextFieldDescription)
+            .performTextInput(username)
+
+        composeTestRule.onNodeWithContentDescription(passwordTextFieldDescription)
+            .performTextInput(password)
+
+        composeTestRule.onNodeWithText(signUpButtonLabel).performClick()
+        with(argumentCaptor<User> { }) {
+            verify(signUpCallbackMock, atMostOnce()).invoke(capture())
+            assertThat(firstValue.email, equalTo("user@example.com"))
+            assertThat(firstValue.password, equalTo("use a safe password"))
+        }
+    }
 }
