@@ -57,6 +57,13 @@ dependencies {
     implementation project(path: ":feature:products")
     implementation project(path: ":feature:shoppinglist")
 
+    constraints {
+        // Volley is a transitive dependency of maps
+        implementation("com.android.volley:volley:1.2.0") {
+            because("Only volley 1.2.0 or newer are available on maven.google.com")
+        }
+    }
+
     // DI
     implementation "com.google.dagger:hilt-android:$hilt_version"
     kapt "com.google.dagger:hilt-compiler:$hilt_version"
