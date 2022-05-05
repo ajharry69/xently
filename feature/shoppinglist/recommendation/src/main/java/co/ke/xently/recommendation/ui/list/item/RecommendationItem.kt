@@ -1,4 +1,4 @@
-package co.ke.xently.shoppinglist.ui.list.recommendation.item
+package co.ke.xently.recommendation.ui.list.item
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
@@ -16,7 +16,7 @@ import co.ke.xently.data.Shop
 import co.ke.xently.feature.theme.XentlyTheme
 import co.ke.xently.feature.ui.ListItemSurface
 import co.ke.xently.feature.ui.NEGLIGIBLE_SPACE
-import co.ke.xently.shoppinglist.R
+import co.ke.xently.recommendation.R
 import java.text.NumberFormat
 import java.util.*
 
@@ -56,7 +56,7 @@ internal fun RecommendationCardItem(
             Text(
                 modifier = Modifier.wrapContentWidth(),
                 text = LocalContext.current.resources.getQuantityString(
-                    R.plurals.fsl_recommendation_item,
+                    R.plurals.fr_recommendation_item,
                     recommendation.numberOfItems,
                     recommendation.hit.count,
                     recommendation.numberOfItems,
@@ -74,7 +74,7 @@ internal fun RecommendationCardItem(
                         Icons.Default.KeyboardArrowRight
                     },
                     contentDescription = stringResource(
-                        R.string.fsl_recommendation_item_menu_content_description,
+                        R.string.fr_item_menu_content_description,
                         recommendation.shop.descriptiveName,
                     ),
                 )
@@ -115,7 +115,7 @@ private fun RecommendationCardItemPreview() {
                         total = 200f,
                     ),
                 ),
-                menuItems = listOf(RecommendationCardItemMenuItem(R.string.fsl_recommendation_details)),
+                menuItems = listOf(RecommendationCardItemMenuItem(R.string.fr_details)),
                 function = RecommendationCardItemFunction(),
             )
         }

@@ -68,10 +68,17 @@ object Routes {
     }
 
     object ShoppingList {
+        object Recommendation {
+            const val LIST = "shopping-list/recommendations/{recommendBy}/?from={from}"
+            const val FILTER = "shopping-list/recommendations/{recommendBy}/?from={from}"
+            override fun toString(): String {
+                return javaClass.simpleName
+            }
+        }
+
         const val GROUPED = "shopping-list-grouped/"
         const val LIST = "shopping-list/?group={group}&groupBy={groupBy}"
         const val DETAIL = "shopping-list/{id}/"
-        const val RECOMMENDATION = "shopping-list/recommendations/{recommendBy}/?from={from}"
         override fun toString(): String {
             return javaClass.simpleName
         }

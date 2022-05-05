@@ -1,4 +1,4 @@
-package co.ke.xently.shoppinglist
+package co.ke.xently.recommendation
 
 
 data class Recommend(

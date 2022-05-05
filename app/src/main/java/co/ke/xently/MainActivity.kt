@@ -19,6 +19,8 @@ import co.ke.xently.feature.theme.XentlyTheme
 import co.ke.xently.feature.utils.Routes
 import co.ke.xently.feature.viewmodels.LocationPermissionViewModel
 import co.ke.xently.products.productsGraph
+import co.ke.xently.recommendation.Recommend
+import co.ke.xently.recommendation.recommendationGraph
 import co.ke.xently.shoppinglist.shoppingListGraph
 import co.ke.xently.shops.shopsGraph
 import dagger.hilt.android.AndroidEntryPoint
@@ -72,6 +74,7 @@ class MainActivity : FragmentActivity() {
                     ) {
                         shoppingListGraph(
                             navController = navController,
+                            recommendFrom = Recommend.From.Item.name,
                             onShopMenuClicked = {
                                 navController.navigate(Routes.Shops.toString())
                             },
@@ -81,6 +84,10 @@ class MainActivity : FragmentActivity() {
                             onAccountMenuClicked = {
                                 navController.navigate(Routes.Account.toString())
                             },
+                            onNavigationIconClicked = this@MainActivity::onBackPressed,
+                        )
+                        recommendationGraph(
+//                            controller = navController,
                             onNavigationIconClicked = this@MainActivity::onBackPressed,
                         )
                         productsGraph(

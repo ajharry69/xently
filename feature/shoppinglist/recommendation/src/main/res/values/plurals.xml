@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <plurals name="fr_recommendation_item">
+        <item quantity="one">Found %1$d of %2$d item at an estimated total expenditure of %3$s.</item>
+        <item quantity="other">Found %1$d of %2$d items at an estimated total expenditure of %3$s.</item>
+    </plurals>
+</resources>

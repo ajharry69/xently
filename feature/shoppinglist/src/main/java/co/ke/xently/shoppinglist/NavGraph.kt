@@ -26,13 +26,10 @@ import co.ke.xently.shoppinglist.ui.list.grouped.GroupedShoppingListScreenFuncti
 import co.ke.xently.shoppinglist.ui.list.grouped.item.GroupMenuItem
 import co.ke.xently.shoppinglist.ui.list.grouped.item.GroupedShoppingListCardFunction
 import co.ke.xently.shoppinglist.ui.list.item.MenuItem
-import co.ke.xently.shoppinglist.ui.list.recommendation.ShoppingListRecommendationScreen
-import co.ke.xently.shoppinglist.ui.list.recommendation.ShoppingListRecommendationScreenFunction
-import co.ke.xently.shoppinglist.ui.list.recommendation.item.RecommendationCardItemFunction
-import co.ke.xently.shoppinglist.ui.list.recommendation.item.RecommendationCardItemMenuItem
 
 fun NavGraphBuilder.shoppingListGraph(
     navController: NavHostController,
+    recommendFrom: String,
     onAccountMenuClicked: () -> Unit,
     onShopMenuClicked: () -> Unit,
     onProductMenuClicked: () -> Unit,
@@ -44,9 +41,9 @@ fun NavGraphBuilder.shoppingListGraph(
     ) {
         val onShoppingListItemRecommendClicked: (id: Long) -> Unit = {
             navController.navigate(
-                Routes.ShoppingList.RECOMMENDATION.buildRoute(
+                Routes.ShoppingList.Recommendation.FILTER.buildRoute(
                     "recommendBy" to it,
-                    "from" to Recommend.From.Item
+                    "from" to recommendFrom,
                 )
             )
         }
@@ -104,7 +101,11 @@ fun NavGraphBuilder.shoppingListGraph(
                 ),
                 groupMenuItems = listOf(
                     GroupMenuItem(R.string.fsl_group_menu_recommend) {
-                        navController.navigate(Routes.ShoppingList.RECOMMENDATION.buildRoute("recommendBy" to it))
+                        navController.navigate(
+                            Routes.ShoppingList.Recommendation.FILTER.buildRoute(
+                                "recommendBy" to it
+                            )
+                        )
                     },
                     GroupMenuItem(R.string.fsl_group_menu_duplicate) {
 
@@ -168,51 +169,6 @@ fun NavGraphBuilder.shoppingListGraph(
                         },
                     ),
                     OptionMenu(title = stringResource(R.string.refresh)),
-                ),
-            )
-        }
-        composable(
-            route = Routes.ShoppingList.RECOMMENDATION,
-            arguments = listOf(
-                navArgument("recommendBy") {},
-                navArgument("from") {
-                    defaultValue = Recommend.From.GroupedList.name
-                },
-            ),
-        ) {
-            ShoppingListRecommendationScreen(
-                function = ShoppingListRecommendationScreenFunction(
-                    onItemClicked = {},
-                    onNavigationIconClicked = onNavigationIconClicked,
-                    function = RecommendationCardItemFunction(
-                        onItemClicked = {
-                            // TODO: ...
-                        },
-                    ),
-                ),
-                menuItems = listOf(
-                    RecommendationCardItemMenuItem(
-                        label = R.string.fsl_recommendation_directions,
-                        onClick = {
-
-                        },
-                    ),
-                    RecommendationCardItemMenuItem(
-                        label = R.string.fsl_recommendation_details,
-                        onClick = {
-
-                        },
-                    ),
-                ),
-                modifier = Modifier.fillMaxSize(),
-                recommend = Recommend(
-                    it.arguments?.get("recommendBy")!!,
-                    Recommend.From.valueOf(
-                        it.arguments?.getString(
-                            "from",
-                            Recommend.From.GroupedList.name
-                        )!!
-                    ),
                 ),
             )
         }

@@ -1,4 +1,4 @@
-package co.ke.xently.shoppinglist.ui.list.recommendation
+package co.ke.xently.recommendation.ui.list
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -17,15 +17,15 @@ import co.ke.xently.data.TaskResult
 import co.ke.xently.data.getOrThrow
 import co.ke.xently.feature.ui.*
 import co.ke.xently.feature.utils.MAP_HEIGHT
-import co.ke.xently.shoppinglist.R
-import co.ke.xently.shoppinglist.Recommend
-import co.ke.xently.shoppinglist.ui.list.recommendation.item.RecommendationCardItem
-import co.ke.xently.shoppinglist.ui.list.recommendation.item.RecommendationCardItemFunction
-import co.ke.xently.shoppinglist.ui.list.recommendation.item.RecommendationCardItemMenuItem
+import co.ke.xently.recommendation.R
+import co.ke.xently.recommendation.Recommend
+import co.ke.xently.recommendation.ui.list.item.RecommendationCardItem
+import co.ke.xently.recommendation.ui.list.item.RecommendationCardItemFunction
+import co.ke.xently.recommendation.ui.list.item.RecommendationCardItemMenuItem
 import com.google.android.libraries.maps.model.LatLng
 import com.google.android.libraries.maps.model.MarkerOptions
 
-internal data class ShoppingListRecommendationScreenFunction(
+internal data class RecommendationListScreenFunction(
     val onNavigationIconClicked: () -> Unit = {},
     val onRetryClicked: (Throwable) -> Unit = {},
     val onItemClicked: (ShoppingListItem) -> Unit = {},
@@ -34,12 +34,12 @@ internal data class ShoppingListRecommendationScreenFunction(
 )
 
 @Composable
-internal fun ShoppingListRecommendationScreen(
+internal fun RecommendationListScreen(
     modifier: Modifier,
     menuItems: List<RecommendationCardItemMenuItem>,
-    function: ShoppingListRecommendationScreenFunction,
+    function: RecommendationListScreenFunction,
     recommend: Recommend = Recommend(),
-    viewModel: ShoppingListRecommendationViewModel = hiltViewModel(),
+    viewModel: RecommendationListViewModel = hiltViewModel(),
 ) {
     val scope = rememberCoroutineScope()
     val result by viewModel.result.collectAsState(
@@ -51,7 +51,7 @@ internal fun ShoppingListRecommendationScreen(
         viewModel.initRecommendation(recommend)
     }
 
-    ShoppingListRecommendationScreen(
+    RecommendationListScreen(
         result = result,
         modifier = modifier,
         menuItems = menuItems,
@@ -65,11 +65,11 @@ internal fun ShoppingListRecommendationScreen(
 }
 
 @Composable
-private fun ShoppingListRecommendationScreen(
+private fun RecommendationListScreen(
     modifier: Modifier,
     result: TaskResult<List<Recommendation>>,
     menuItems: List<RecommendationCardItemMenuItem>,
-    function: ShoppingListRecommendationScreenFunction,
+    function: RecommendationListScreenFunction,
 ) {
     val scaffoldState = rememberScaffoldState()
     Scaffold(
@@ -77,7 +77,7 @@ private fun ShoppingListRecommendationScreen(
         topBar = {
             if (result !is TaskResult.Success) {
                 ToolbarWithProgressbar(
-                    title = stringResource(R.string.fsl_recommendations_toolbar_title),
+                    title = stringResource(R.string.fr_toolbar_title),
                     onNavigationIconClicked = function.onNavigationIconClicked,
                 )
             }
@@ -127,7 +127,7 @@ private fun ShoppingListRecommendationScreen(
                                 onLocationPermissionChanged = function.onLocationPermissionChanged,
                             )
                             ToolbarWithProgressbar(
-                                title = stringResource(R.string.fsl_recommendations_toolbar_title),
+                                title = stringResource(R.string.fr_toolbar_title),
                                 onNavigationIconClicked = function.onNavigationIconClicked,
                                 backgroundColor = Color.Transparent,
                                 elevation = 0.dp,
