@@ -79,7 +79,7 @@ private fun ShopListScreen(
                 FloatingActionButton(onClick = function.onAddFabClicked) {
                     Icon(
                         Icons.Default.Add,
-                        stringRes(R.string.fs_add_shop_toolbar_title, R.string.add)
+                        stringRes(R.string.fs_shop_detail_toolbar_title, R.string.add)
                     )
                 }
             }

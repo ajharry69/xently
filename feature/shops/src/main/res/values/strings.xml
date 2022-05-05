@@ -5,7 +5,7 @@
     <string name="fs_shop_item_detail_name_label">Name</string>
     <string name="fs_shop_item_detail_tax_pin_label">Tax PIN</string>
     <string name="fs_shop_item_detail_button_label">%1$s shop</string>
-    <string name="fs_add_shop_toolbar_title">%1$s shop</string>
+    <string name="fs_shop_detail_toolbar_title">%1$s shop</string>
     <string name="fs_success_adding_shop">Successfully added shop.</string>
     <string name="fs_shop_list_overflow_menu_description">More options for shop list.</string>
     <string name="fs_shop_item_detail_coordinate_label">Coordinates</string>

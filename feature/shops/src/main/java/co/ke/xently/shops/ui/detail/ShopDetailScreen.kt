@@ -109,7 +109,7 @@ internal fun ShopDetailScreen(
         mutableStateOf(shop.coordinate)
     }
     val toolbarTitle = stringRes(
-        R.string.fs_add_shop_toolbar_title,
+        R.string.fs_shop_detail_toolbar_title,
         if (shop.isDefault) {
             R.string.add
         } else {
