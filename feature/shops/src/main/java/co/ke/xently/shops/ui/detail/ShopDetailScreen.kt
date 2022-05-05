@@ -1,11 +1,15 @@
 package co.ke.xently.shops.ui.detail
 
+import androidx.annotation.VisibleForTesting
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.*
+import androidx.compose.material.Button
+import androidx.compose.material.Scaffold
+import androidx.compose.material.Text
+import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -89,13 +93,14 @@ internal fun ShopDetailScreen(
     )
 }
 
-@OptIn(ExperimentalMaterialApi::class)
 @Composable
-private fun ShopDetailScreen(
+@VisibleForTesting
+internal fun ShopDetailScreen(
     modifier: Modifier,
     result: TaskResult<Shop?>,
     addResult: TaskResult<Shop?>,
     permitReAddition: Boolean = false,
+    isTestMode: Boolean = false,
     args: ShopDetailScreenArgs = ShopDetailScreenArgs(),
     function: ShopDetailScreenFunction = ShopDetailScreenFunction(),
 ) {
@@ -148,29 +153,31 @@ private fun ShopDetailScreen(
                     .height(IntrinsicSize.Min)
                     .fillMaxWidth()
             ) {
-                val markerPositions = if (coordinate != null) {
-                    val marker = MarkerOptions().apply {
-                        position(LatLng(coordinate!!.lat, coordinate!!.lon))
+                if (!isTestMode) {
+                    val markerPositions = if (coordinate != null) {
+                        val marker = MarkerOptions().apply {
+                            position(LatLng(coordinate!!.lat, coordinate!!.lon))
+                        }
+                        listOf(marker)
+                    } else {
+                        emptyList()
                     }
-                    listOf(marker)
-                } else {
-                    emptyList()
-                }
-                GoogleMapView(
-                    modifier = Modifier
-                        .height(MAP_HEIGHT)
-                        .fillMaxWidth(),
-                    markerPositions = markerPositions,
-                    onLocationPermissionChanged = function.onLocationPermissionChanged,
-                ) {
-                    setOnMapClickListener {
-                        coordinate = Coordinate(it.latitude, it.longitude)
-                        shop = shop.copy(coordinate = coordinate)
-                    }
-                    setOnMarkerClickListener {
-                        coordinate = null
-                        shop = shop.copy(coordinate = coordinate)
-                        true
+                    GoogleMapView(
+                        modifier = Modifier
+                            .height(MAP_HEIGHT)
+                            .fillMaxWidth(),
+                        markerPositions = markerPositions,
+                        onLocationPermissionChanged = function.onLocationPermissionChanged,
+                    ) {
+                        setOnMapClickListener {
+                            coordinate = Coordinate(it.latitude, it.longitude)
+                            shop = shop.copy(coordinate = coordinate)
+                        }
+                        setOnMarkerClickListener {
+                            coordinate = null
+                            shop = shop.copy(coordinate = coordinate)
+                            true
+                        }
                     }
                 }
                 ToolbarWithProgressbar(
