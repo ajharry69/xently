@@ -257,7 +257,12 @@ fun productAttributesView(
     }
 
     LaunchedEffect(attributeNameQuery, attributeValueQuery) {
-        onQueryChanged(AttributeQuery(attributeNameQuery.text, attributeValueQuery.text))
+        onQueryChanged(
+            AttributeQuery(
+                name = attributeNameQuery.text.trim(),
+                value = attributeValueQuery.text.trim(),
+            )
+        )
     }
     MultipleTextFieldRow(VerticalLayoutModifier) { fieldModifier ->
         AutoCompleteTextField(
@@ -281,7 +286,7 @@ fun productAttributesView(
             // Only override name if the attr.value was added without an attr.name
             attributes.add(
                 0,
-                it.copy(name = it.name.ifBlank { attributeNameQuery.text.trim() })
+                it.copy(name = it.name.trim().ifBlank { attributeNameQuery.text.trim() })
             )
             attributeValueQuery = TextFieldValue() // Reset search
         }
