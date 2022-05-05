@@ -1,5 +1,6 @@
 package co.ke.xently.accounts.ui.signin
 
+import androidx.annotation.VisibleForTesting
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
@@ -51,6 +52,7 @@ internal fun SignInScreen(
 }
 
 @Composable
+@VisibleForTesting
 internal fun SignInScreen(
     modifier: Modifier,
     result: TaskResult<User?>,
@@ -133,7 +135,7 @@ internal fun SignInScreen(
                 Spacer(modifier = Modifier.padding(vertical = VIEW_SPACE_HALVED))
                 Row(modifier = Modifier.padding(horizontal = VIEW_SPACE)) {
                     Spacer(modifier = Modifier.weight(1f))
-                    TextButton(onClick = { function.forgotPassword.invoke(uname.text) }) {
+                    TextButton(onClick = { function.forgotPassword.invoke(uname.text.trim()) }) {
                         Text(stringResource(R.string.fa_signin_forgot_password_button_label))
                     }
                 }
@@ -150,8 +152,8 @@ internal fun SignInScreen(
                         focusManager.clearFocus()
                         function.signIn.invoke(
                             auth.copy(
-                                username = uname.text,
-                                password = pword.text,
+                                username = uname.text.trim(),
+                                password = pword.text.trim(),
                             ),
                         )
                     }
@@ -164,8 +166,8 @@ internal fun SignInScreen(
                 onClick = {
                     function.createAccount.invoke(
                         auth.copy(
-                            username = uname.text,
-                            password = pword.text,
+                            username = uname.text.trim(),
+                            password = pword.text.trim(),
                         ),
                     )
                 },

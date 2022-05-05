@@ -54,7 +54,7 @@ internal fun SignUpScreen(
 
 @Composable
 @VisibleForTesting
-fun SignUpScreen(
+internal fun SignUpScreen(
     modifier: Modifier,
     result: TaskResult<User?>,
     auth: User.BasicAuth = User.BasicAuth("", ""),
@@ -166,7 +166,12 @@ fun SignUpScreen(
                     modifier = VerticalLayoutModifier,
                     onClick = {
                         focusManager.clearFocus()
-                        function.signUp.invoke(user.copy(email = uname.text, password = pword.text))
+                        function.signUp.invoke(
+                            user.copy(
+                                email = uname.text.trim(),
+                                password = pword.text.trim(),
+                            )
+                        )
                     }
                 ) {
                     Text(toolbarTitle.uppercase())
@@ -177,8 +182,8 @@ fun SignUpScreen(
                 onClick = {
                     function.signIn.invoke(
                         auth.copy(
-                            username = uname.text,
-                            password = pword.text,
+                            username = uname.text.trim(),
+                            password = pword.text.trim(),
                         ),
                     )
                 },

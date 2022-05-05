@@ -1,5 +1,6 @@
 package co.ke.xently.shoppinglist.ui.detail
 
+import androidx.annotation.VisibleForTesting
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
@@ -14,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
+import co.ke.xently.common.KENYA
 import co.ke.xently.data.*
 import co.ke.xently.data.ShoppingListItem.Attribute
 import co.ke.xently.feature.ui.*
@@ -92,9 +94,9 @@ internal fun ShoppingListItemScreen(
     )
 }
 
-
 @Composable
-private fun ShoppingListItemScreen(
+@VisibleForTesting
+internal fun ShoppingListItemScreen(
     modifier: Modifier,
     result: TaskResult<ShoppingListItem?>,
     addResult: TaskResult<ShoppingListItem?>,
@@ -256,10 +258,10 @@ private fun ShoppingListItemScreen(
                     focusManager.clearFocus()
                     function.onDetailsSubmitted.invoke(
                         item.copy(
-                            name = name.text,
-                            unit = unit.text,
-                            unitQuantity = unitQuantity.text.toFloat(),
-                            purchaseQuantity = purchaseQuantity.text.toFloat(),
+                            name = name.text.trim(),
+                            unit = unit.text.trim(),
+                            unitQuantity = unitQuantity.text.trim().toFloat(),
+                            purchaseQuantity = purchaseQuantity.text.trim().toFloat(),
                             brands = brands.filterNot { it.isDefault }.map {
                                 ShoppingListItem.Brand(name = it.name)
                             },
@@ -270,7 +272,7 @@ private fun ShoppingListItemScreen(
                         ),
                     )
                 }
-            ) { Text(toolbarTitle.uppercase()) }
+            ) { Text(toolbarTitle.uppercase(KENYA)) }
         }
     }
 }

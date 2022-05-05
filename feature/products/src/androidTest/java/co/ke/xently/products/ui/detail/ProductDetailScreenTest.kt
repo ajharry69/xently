@@ -16,7 +16,7 @@ import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.equalTo
 import org.junit.Rule
 import org.junit.Test
-import org.mockito.internal.verification.VerificationModeFactory.atMostOnce
+import org.mockito.internal.verification.VerificationModeFactory.times
 import org.mockito.kotlin.argumentCaptor
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
@@ -101,7 +101,7 @@ class ProductDetailScreenTest {
 
         composeTestRule.onNodeWithContentDescription(activity.getString(R.string.move_back))
             .performClick()
-        verify(onNavigationIconClickMock, atMostOnce()).invoke()
+        verify(onNavigationIconClickMock, times(1)).invoke()
     }
 
     @Test
@@ -284,6 +284,7 @@ class ProductDetailScreenTest {
         composeTestRule.setContent {
             XentlyTheme {
                 val shop = Shop.default().copy(
+                    isDefault = false,
                     id = 1,
                     name = "Naivas",
                     descriptiveName = "Naivas, Westlands, Nairobi - P000111222Z",
@@ -359,7 +360,7 @@ class ProductDetailScreenTest {
         }
         composeTestRule.onNodeWithContentDescription(addShopDescription).performClick()
         with(argumentCaptor<String> { }) {
-            verify(addShopCallbackMock, atMostOnce()).invoke(capture())
+            verify(addShopCallbackMock, times(1)).invoke(capture())
             assertThat(firstValue, equalTo("Name of new shop"))
         }
     }
@@ -791,6 +792,137 @@ class ProductDetailScreenTest {
         composeTestRule.onNodeWithTag(TEST_TAG_PRODUCT_DETAIL_BODY_CONTAINER)
             .performScrollToNode(hasText("Bidco")).assertExists()
         composeTestRule.onNodeWithText("Bidco").assertIsDisplayed()
+    }
+
+    @Test
+    fun clickingOnAddProductButtonTrimSpacesFromStartAndEndOfTextInputs() {
+        val onDetailsSubmittedMock: (Product) -> Unit = mock()
+        composeTestRule.setContent {
+            XentlyTheme {
+                val shop = Shop.default().copy(
+                    isDefault = false,
+                    id = 1,
+                    name = "Naivas",
+                    descriptiveName = "Naivas, Westlands, Nairobi - P000111222Z",
+                )
+                ProductDetailScreen(
+                    modifier = Modifier.fillMaxSize(),
+                    result = TaskResult.Success(null),
+                    addResult = TaskResult.Success(null),
+                    function = ProductDetailScreenFunction(onDetailsSubmitted = onDetailsSubmittedMock),
+                    shopSuggestions = listOf(shop),
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithContentDescription(shopDescription).run {
+            performTextClearance()
+            performTextInput("Nai")
+        }
+        composeTestRule.onNodeWithTag(TEST_TAG_AUTOCOMPLETE_TEXT_FIELD_SUGGESTIONS)
+            .performScrollToNode(hasText("Naivas", substring = true)).performClick()
+
+        composeTestRule.onNodeWithContentDescription(nameDescription)
+            .performTextClearance()
+        composeTestRule.onNodeWithContentDescription(nameDescription)
+            .performTextInput(" Bread   ")
+
+        composeTestRule.onNodeWithContentDescription(measurementUnitDescription)
+            .performTextClearance()
+        composeTestRule.onNodeWithContentDescription(measurementUnitDescription)
+            .performTextInput(" grams   ")
+
+        composeTestRule.onNodeWithContentDescription(unitQuantityDescription)
+            .performTextClearance()
+        composeTestRule.onNodeWithContentDescription(unitQuantityDescription)
+            .performTextInput(" 1   ")
+
+        composeTestRule.onNodeWithContentDescription(purchasedQuantityDescription)
+            .performTextClearance()
+        composeTestRule.onNodeWithContentDescription(purchasedQuantityDescription)
+            .performTextInput(" 1   ")
+
+        composeTestRule.onNodeWithContentDescription(unitPriceDescription)
+            .performTextClearance()
+        composeTestRule.onNodeWithContentDescription(unitPriceDescription)
+            .performTextInput(" 1   ")
+
+        composeTestRule.onNodeWithTag(TEST_TAG_PRODUCT_DETAIL_BODY_CONTAINER)
+            .performScrollToNode(hasText(addProductButtonLabel.uppercase()))
+        composeTestRule.onNodeWithText(addProductButtonLabel.uppercase())
+            .assertIsDisplayed()
+            .performClick()
+        with(argumentCaptor<Product> { }) {
+            verify(onDetailsSubmittedMock, times(1)).invoke(capture())
+            assertThat(firstValue.name, equalTo("Bread"))
+            assertThat(firstValue.unit, equalTo("grams"))
+            assertThat(firstValue.unitQuantity, equalTo(1f))
+            assertThat(firstValue.purchasedQuantity, equalTo(1f))
+            assertThat(firstValue.unitPrice, equalTo(1f))
+        }
+    }
+
+    @Test
+    fun clickingOnUpdateProductButtonTrimSpacesFromStartAndEndOfTextInputs() {
+        val onDetailsSubmittedMock: (Product) -> Unit = mock()
+        composeTestRule.setContent {
+            XentlyTheme {
+                val shop = Shop.default().copy(
+                    isDefault = false,
+                    id = 1,
+                    name = "Naivas",
+                    descriptiveName = "Naivas, Westlands, Nairobi - P000111222Z",
+                )
+                ProductDetailScreen(
+                    modifier = Modifier.fillMaxSize(),
+                    result = TaskResult.Success(
+                        Product.default()
+                            .copy(id = 1, isDefault = false, shop = shop, shopId = shop.id)
+                    ),
+                    addResult = TaskResult.Success(null),
+                    function = ProductDetailScreenFunction(onDetailsSubmitted = onDetailsSubmittedMock),
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithContentDescription(nameDescription)
+            .performTextClearance()
+        composeTestRule.onNodeWithContentDescription(nameDescription)
+            .performTextInput(" Bread   ")
+
+        composeTestRule.onNodeWithContentDescription(measurementUnitDescription)
+            .performTextClearance()
+        composeTestRule.onNodeWithContentDescription(measurementUnitDescription)
+            .performTextInput(" grams   ")
+
+        composeTestRule.onNodeWithContentDescription(unitQuantityDescription)
+            .performTextClearance()
+        composeTestRule.onNodeWithContentDescription(unitQuantityDescription)
+            .performTextInput(" 1   ")
+
+        composeTestRule.onNodeWithContentDescription(purchasedQuantityDescription)
+            .performTextClearance()
+        composeTestRule.onNodeWithContentDescription(purchasedQuantityDescription)
+            .performTextInput(" 1   ")
+
+        composeTestRule.onNodeWithContentDescription(unitPriceDescription)
+            .performTextClearance()
+        composeTestRule.onNodeWithContentDescription(unitPriceDescription)
+            .performTextInput(" 1   ")
+
+        composeTestRule.onNodeWithTag(TEST_TAG_PRODUCT_DETAIL_BODY_CONTAINER)
+            .performScrollToNode(hasText(updateProductButtonLabel.uppercase()))
+        composeTestRule.onNodeWithText(updateProductButtonLabel.uppercase())
+            .assertIsDisplayed()
+            .performClick()
+        with(argumentCaptor<Product> { }) {
+            verify(onDetailsSubmittedMock, times(1)).invoke(capture())
+            assertThat(firstValue.name, equalTo("Bread"))
+            assertThat(firstValue.unit, equalTo("grams"))
+            assertThat(firstValue.unitQuantity, equalTo(1f))
+            assertThat(firstValue.purchasedQuantity, equalTo(1f))
+            assertThat(firstValue.unitPrice, equalTo(1f))
+        }
     }
 
 }

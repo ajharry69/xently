@@ -336,6 +336,88 @@ class SignInScreenTest {
     }
 
     @Test
+    fun clickingOnSignInButtonTrimSpacesFromStartAndEndOfTextInputs() {
+        val signInCallbackMock: (User.BasicAuth) -> Unit = mock()
+        composeTestRule.setContent {
+            XentlyTheme {
+                SignInScreen(
+                    modifier = Modifier.fillMaxSize(),
+                    result = TaskResult.Success(null),
+                    function = SignInScreenFunction(signIn = signInCallbackMock),
+                )
+            }
+        }
+
+        val username = "   user@example.com   "
+        val password = "    use a safe password    "
+        composeTestRule.onNodeWithContentDescription(usernameTextFieldDescription)
+            .performTextInput(username)
+
+        composeTestRule.onNodeWithContentDescription(passwordTextFieldDescription)
+            .performTextInput(password)
+
+        composeTestRule.onNodeWithText(signInButtonLabel).performClick()
+        with(argumentCaptor<User.BasicAuth> { }) {
+            verify(signInCallbackMock, atMostOnce()).invoke(capture())
+            assertThat(firstValue.username, equalTo("user@example.com"))
+            assertThat(firstValue.password, equalTo("use a safe password"))
+        }
+    }
+
+    @Test
+    fun clickingOnCreateAccountButtonTrimSpacesFromStartAndEndOfTextInputs() {
+        val createAccountCallbackMock: (User.BasicAuth) -> Unit = mock()
+        composeTestRule.setContent {
+            XentlyTheme {
+                SignInScreen(
+                    modifier = Modifier.fillMaxSize(),
+                    result = TaskResult.Success(null),
+                    function = SignInScreenFunction(createAccount = createAccountCallbackMock),
+                )
+            }
+        }
+
+        val username = "   user@example.com   "
+        val password = "    use a safe password    "
+        composeTestRule.onNodeWithContentDescription(usernameTextFieldDescription)
+            .performTextInput(username)
+
+        composeTestRule.onNodeWithContentDescription(passwordTextFieldDescription)
+            .performTextInput(password)
+
+        composeTestRule.onNodeWithText(signUpButtonLabel).performClick()
+        with(argumentCaptor<User.BasicAuth> { }) {
+            verify(createAccountCallbackMock, atMostOnce()).invoke(capture())
+            assertThat(firstValue.username, equalTo("user@example.com"))
+            assertThat(firstValue.password, equalTo("use a safe password"))
+        }
+    }
+
+    @Test
+    fun clickingOnForgotPasswordButtonTrimSpacesFromStartAndEndOfTextInputs() {
+        val forgotCallbackMock: (String) -> Unit = mock()
+        composeTestRule.setContent {
+            XentlyTheme {
+                SignInScreen(
+                    modifier = Modifier.fillMaxSize(),
+                    result = TaskResult.Success(null),
+                    function = SignInScreenFunction(forgotPassword = forgotCallbackMock),
+                )
+            }
+        }
+
+        val username = "   user@example.com   "
+        composeTestRule.onNodeWithContentDescription(usernameTextFieldDescription)
+            .performTextInput(username)
+
+        composeTestRule.onNodeWithText(forgotPasswordLabel).performClick()
+        with(argumentCaptor<String> { }) {
+            verify(forgotCallbackMock, atMostOnce()).invoke(capture())
+            assertThat(firstValue, equalTo("user@example.com"))
+        }
+    }
+
+    @Test
     fun clickingOnForgotPasswordPassesWhenUsernameFieldIsEmpty() {
         val forgotPasswordCallback: (String) -> Unit = mock()
         composeTestRule.setContent {

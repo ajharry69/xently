@@ -1,6 +1,7 @@
 package co.ke.xently.products.ui.detail
 
 
+import androidx.annotation.VisibleForTesting
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
@@ -122,6 +123,7 @@ internal fun ProductDetailScreen(
 }
 
 @Composable
+@VisibleForTesting
 internal fun ProductDetailScreen(
     modifier: Modifier,
     result: TaskResult<Product?>,
@@ -467,9 +469,9 @@ internal fun ProductDetailScreen(
                             shopId = savableShop,
                             name = name.text.trim(),
                             unit = unit.text.trim(),
-                            unitQuantity = unitQuantity.text.toFloat(),
-                            purchasedQuantity = purchasedQuantity.text.toFloat(),
-                            unitPrice = unitPrice.text.toFloat(),
+                            unitQuantity = unitQuantity.text.trim().toFloat(),
+                            purchasedQuantity = purchasedQuantity.text.trim().toFloat(),
+                            unitPrice = unitPrice.text.trim().toFloat(),
                             datePurchased = DEFAULT_LOCAL_DATE_TIME_FORMAT.parse("${dateOfPurchase.text} ${timeOfPurchase.text}")
                                 ?: error("Invalid date and/or time format"),
                             brands = brands.filterNot { it.isDefault },

@@ -54,7 +54,7 @@ internal fun PasswordResetScreen(
 
 @Composable
 @VisibleForTesting
-fun PasswordResetScreen(
+internal fun PasswordResetScreen(
     modifier: Modifier,
     result: TaskResult<User?>,
     isChange: Boolean = false,
@@ -181,7 +181,11 @@ fun PasswordResetScreen(
                 onClick = {
                     focusManager.clearFocus()
                     function.reset.invoke(
-                        User.ResetPassword(oldPassword.text, newPassword.text, isChange),
+                        User.ResetPassword(
+                            isChange = isChange,
+                            oldPassword = oldPassword.text.trim(),
+                            newPassword = newPassword.text.trim(),
+                        ),
                     )
                 },
             ) {

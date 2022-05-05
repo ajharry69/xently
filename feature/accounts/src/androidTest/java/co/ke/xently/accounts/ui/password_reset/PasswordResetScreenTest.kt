@@ -429,4 +429,63 @@ class PasswordResetScreenTest {
             assertThat(firstValue.email, equalTo("user@example.com"))
         }
     }
+
+    @Test
+    fun clickingOnChangePasswordButtonTrimSpacesFromStartAndEndOfTextInputs() {
+        val resetCallbackMock: (User.ResetPassword) -> Unit = mock()
+        composeTestRule.setContent {
+            XentlyTheme {
+                PasswordResetScreen(
+                    isChange = true,
+                    modifier = Modifier.fillMaxSize(),
+                    result = TaskResult.Success(null),
+                    function = PasswordResetScreenFunction(reset = resetCallbackMock),
+                )
+            }
+        }
+
+        val oldPassword = "   old password   "
+        val newPassword = "    new password    "
+        composeTestRule.onNodeWithContentDescription(oldPasswordTextFieldDescription)
+            .performTextInput(oldPassword)
+
+        composeTestRule.onNodeWithContentDescription(newPasswordTextFieldDescription)
+            .performTextInput(newPassword)
+
+        composeTestRule.onNodeWithText(changePasswordButtonLabel).performClick()
+        with(argumentCaptor<User.ResetPassword> { }) {
+            verify(resetCallbackMock, VerificationModeFactory.atMostOnce()).invoke(capture())
+            assertThat(firstValue.oldPassword, equalTo("old password"))
+            assertThat(firstValue.newPassword, equalTo("new password"))
+        }
+    }
+
+    @Test
+    fun clickingOnResetPasswordButtonTrimSpacesFromStartAndEndOfTextInputs() {
+        val resetCallbackMock: (User.ResetPassword) -> Unit = mock()
+        composeTestRule.setContent {
+            XentlyTheme {
+                PasswordResetScreen(
+                    modifier = Modifier.fillMaxSize(),
+                    result = TaskResult.Success(null),
+                    function = PasswordResetScreenFunction(reset = resetCallbackMock),
+                )
+            }
+        }
+
+        val oldPassword = "   old password   "
+        val newPassword = "    new password    "
+        composeTestRule.onNodeWithContentDescription(oldPasswordTextFieldDescription)
+            .performTextInput(oldPassword)
+
+        composeTestRule.onNodeWithContentDescription(newPasswordTextFieldDescription)
+            .performTextInput(newPassword)
+
+        composeTestRule.onNodeWithText(resetPasswordButtonLabel).performClick()
+        with(argumentCaptor<User.ResetPassword> { }) {
+            verify(resetCallbackMock, VerificationModeFactory.atMostOnce()).invoke(capture())
+            assertThat(firstValue.oldPassword, equalTo("old password"))
+            assertThat(firstValue.newPassword, equalTo("new password"))
+        }
+    }
 }
