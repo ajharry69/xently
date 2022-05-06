@@ -37,7 +37,7 @@ internal class RecommendationRepository @Inject constructor(
                         @Suppress("UNCHECKED_CAST")
                         dependencies.service.shoppingList.getRecommendations(
                             RecommendationRequest(
-                                recommend.by as List<ShoppingListItem>,
+                                recommend.by as List<Any>,
                                 recommend.saveBy
                             )
                         )
