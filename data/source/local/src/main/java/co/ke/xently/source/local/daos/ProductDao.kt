@@ -33,18 +33,18 @@ interface ProductDao {
 
     @Transaction
     @Query(
-        """SELECT p.* FROM products AS p 
+        """SELECT products.* FROM products
         LEFT JOIN
-            product_attributes AS pa ON pa.relatedId = p.id
+            product_attributes ON product_attributes.relatedId = products.id
         LEFT JOIN
-            product_brands AS pb ON pb.relatedId = p.id
+            product_brands ON product_brands.relatedId = products.id
         WHERE
-            p.name LIKE :query OR
-            pa.name LIKE :query OR
-            pa.value LIKE :query OR
-            pb.name LIKE :query
-        GROUP BY p.id
-        ORDER BY p.name
+            products.name LIKE :query OR
+            product_attributes.name LIKE :query OR
+            product_attributes.value LIKE :query OR
+            product_brands.name LIKE :query
+        GROUP BY products.id
+        ORDER BY products.name
     """
     )
     fun getProducts(query: String): Flow<List<Product.WithRelated>>

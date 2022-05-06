@@ -31,9 +31,9 @@ android {
         jvmTarget = '1.8'
         useIR = true
         freeCompilerArgs += [
-                "-Xopt-in=kotlin.RequiresOptIn",
-                "-Xopt-in=kotlin.time.ExperimentalTime",
-                "-Xopt-in=com.google.accompanist.permissions.ExperimentalPermissionsApi",
+                "-opt-in=kotlin.RequiresOptIn",
+                "-opt-in=kotlin.time.ExperimentalTime",
+                "-opt-in=com.google.accompanist.permissions.ExperimentalPermissionsApi",
         ]
     }
     buildFeatures {
@@ -56,14 +56,14 @@ dependencies {
     implementation project(path: ':data:source:remote')
     implementation project(path: ':data:source:local')
 
-    api 'com.google.android.material:material:1.5.0'
+    api 'com.google.android.material:material:1.6.0'
 
     // DI
     implementation "com.google.dagger:hilt-android:$hilt_version"
     kapt "com.google.dagger:hilt-compiler:$hilt_version"
 
     api "com.google.android.libraries.maps:maps:3.1.0-beta"
-    implementation 'com.google.maps.android:maps-v3-ktx:3.3.0'
+    implementation 'com.google.maps.android:maps-v3-ktx:3.4.0'
 
     constraints {
         // Volley is a transitive dependency of maps
@@ -82,8 +82,8 @@ dependencies {
     // https://developer.android.com/jetpack/compose/libraries#viewmodel
     api "androidx.lifecycle:lifecycle-viewmodel-compose:$lifecycle_viewmodel_version"
     api "com.google.accompanist:accompanist-permissions:0.20.0"
-    api 'com.google.accompanist:accompanist-placeholder-material:0.24.3-alpha'
-    implementation "com.google.accompanist:accompanist-swiperefresh:0.24.3-alpha"
+    api 'com.google.accompanist:accompanist-placeholder-material:0.24.7-alpha'
+    implementation 'com.google.accompanist:accompanist-swiperefresh:0.24.7-alpha'
     api "androidx.compose.material:material:$compose_version"
     api "androidx.compose.material:material-icons-extended:$compose_version"
     api "androidx.compose.ui:ui-tooling-preview:$compose_version"

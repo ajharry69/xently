@@ -68,7 +68,6 @@ private fun NavigationDrawerItem(
             }
             onClick.invoke()
         },
-        onClickLabel = label,
     ) {
         Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Box(

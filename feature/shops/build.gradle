@@ -34,7 +34,7 @@ android {
         useIR = true
         freeCompilerArgs += [
                 "-opt-in=kotlin.RequiresOptIn",
-                "-Xopt-in=androidx.paging.ExperimentalPagingApi",
+                "-opt-in=androidx.paging.ExperimentalPagingApi",
         ]
     }
     buildFeatures {

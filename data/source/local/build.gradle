@@ -29,7 +29,7 @@ android {
         jvmTarget = '1.8'
         useIR = true
         freeCompilerArgs += [
-                "-Xopt-in=kotlin.RequiresOptIn",
+                "-opt-in=kotlin.RequiresOptIn",
         ]
     }
     kapt {
