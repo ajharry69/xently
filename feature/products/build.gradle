@@ -12,11 +12,22 @@ android {
         minSdk 21
         targetSdk 31
 
-        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
         vectorDrawables {
             useSupportLibrary true
         }
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        // The following argument makes the Android Test Orchestrator run its
+        // "pm clear" command after each test invocation. This command ensures
+        // that the app's state is completely cleared between tests.
+        testInstrumentationRunnerArguments clearPackageData: 'true'
+    }
+
+    testOptions {
+        execution 'ANDROIDX_TEST_ORCHESTRATOR'
+        animationsDisabled = true
     }
 
     buildTypes {
@@ -65,4 +76,5 @@ dependencies {
     testImplementation project(path: ':feature:tests:unit')
     androidTestImplementation project(path: ':feature:tests:integration')
     kaptAndroidTest "com.google.dagger:hilt-compiler:$hilt_version"
+    androidTestUtil 'androidx.test:orchestrator:1.4.1'
 }
