@@ -18,7 +18,6 @@ import co.ke.xently.data.getOrThrow
 import co.ke.xently.feature.ui.*
 import co.ke.xently.feature.utils.MAP_HEIGHT
 import co.ke.xently.recommendation.R
-import co.ke.xently.recommendation.Recommend
 import co.ke.xently.recommendation.ui.list.item.RecommendationCardItem
 import co.ke.xently.recommendation.ui.list.item.RecommendationCardItemFunction
 import co.ke.xently.recommendation.ui.list.item.RecommendationCardItemMenuItem
@@ -36,9 +35,9 @@ internal data class RecommendationListScreenFunction(
 @Composable
 internal fun RecommendationListScreen(
     modifier: Modifier,
+    lookupId: String,
     menuItems: List<RecommendationCardItemMenuItem>,
     function: RecommendationListScreenFunction,
-    recommend: Recommend = Recommend(),
     viewModel: RecommendationListViewModel = hiltViewModel(),
 ) {
     val scope = rememberCoroutineScope()
@@ -47,8 +46,8 @@ internal fun RecommendationListScreen(
         context = scope.coroutineContext,
     )
 
-    LaunchedEffect(recommend) {
-        viewModel.initRecommendation(recommend)
+    LaunchedEffect(lookupId) {
+        viewModel.recommend(lookupId)
     }
 
     RecommendationListScreen(
@@ -57,7 +56,7 @@ internal fun RecommendationListScreen(
         menuItems = menuItems,
         function = function.copy(
             onRetryClicked = {
-                viewModel.initRecommendation(recommend)
+                viewModel.recommend(lookupId)
             },
             onLocationPermissionChanged = viewModel::setLocationPermissionGranted,
         ),

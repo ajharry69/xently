@@ -3,6 +3,7 @@ package co.ke.xently.source.remote.services
 import co.ke.xently.data.Recommendation
 import co.ke.xently.data.RecommendationRequest
 import co.ke.xently.data.ShoppingListItem
+import co.ke.xently.source.remote.DeferredRecommendation
 import co.ke.xently.source.remote.PagedData
 import retrofit2.Response
 import retrofit2.http.*
@@ -37,13 +38,19 @@ interface ShoppingListService {
         cacheControl: String = "only-if-cached",
     ): Response<Map<String, List<ShoppingListItem>>>
 
-    @GET("shopping-list/recommendations/")
+    /*@GET("shopping-list/recommendations/")
     suspend fun getRecommendations(
         @Query("group") group: String,
         @Query("group_by") groupBy: String,
         @Header("Cache-Control") cacheControl: String = "only-if-cached",
+    ): Response<List<Recommendation>>*/
+
+    @GET("shopping-list/recommendations/")
+    suspend fun getRecommendations(
+        @Query("lookup_id") lookupId: String,
+        @Header("Cache-Control") cacheControl: String = "only-if-cached",
     ): Response<List<Recommendation>>
 
     @POST("shopping-list/recommendations/")
-    suspend fun getRecommendations(@Body request: RecommendationRequest): Response<List<Recommendation>>
+    suspend fun getRecommendations(@Body request: RecommendationRequest): Response<DeferredRecommendation>
 }

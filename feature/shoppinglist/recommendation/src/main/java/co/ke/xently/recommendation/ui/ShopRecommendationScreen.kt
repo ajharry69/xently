@@ -1,6 +1,7 @@
 package co.ke.xently.recommendation.ui
 
 import androidx.annotation.VisibleForTesting
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -17,6 +18,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import co.ke.xently.common.KENYA
 import co.ke.xently.data.*
@@ -33,16 +35,31 @@ internal data class ShopRecommendationScreenFunction(
 @Composable
 internal fun ShopRecommendationScreen(
     modifier: Modifier,
+    args: ShopRecommendationScreenArgs,
     function: ShopRecommendationScreenFunction,
     viewModel: ShopRecommendationViewModel = hiltViewModel(),
 ) {
+    val scope = rememberCoroutineScope()
+    val persistedShoppingListResult by viewModel.persistedShoppingListResult.collectAsState(
+        initial = TaskResult.Success(emptyList()),
+        context = scope.coroutineContext,
+    )
+    LaunchedEffect(args) {
+        viewModel.setArgs(args)
+    }
+
+    val result by viewModel.result.collectAsState(
+        initial = TaskResult.Success(null),
+        context = scope.coroutineContext,
+    )
+
     ShopRecommendationScreen(
         modifier = modifier,
+        result = result,
+        persistedShoppingListResult = persistedShoppingListResult,
         function = function.copy(
             onDetailSubmitted = viewModel::recommend,
         ),
-        result = TaskResult.Success(null),
-        persistedShoppingListResult = TaskResult.Success(emptyList()),
     )
 }
 
@@ -97,7 +114,8 @@ internal fun ShopRecommendationScreen(
             }
             Row(
                 modifier = VerticalLayoutModifier.padding(top = VIEW_SPACE),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.Bottom,
+                horizontalArrangement = Arrangement.spacedBy(VIEW_SPACE_HALVED),
             ) {
                 TextInputLayout(
                     value = productName,
@@ -125,17 +143,23 @@ internal fun ShopRecommendationScreen(
                         }
                     },
                 )
-                Spacer(modifier = Modifier.width(VIEW_SPACE_HALVED))
-                Button(
-                    modifier = Modifier.height(IntrinsicSize.Max),
+                TextButton(
+                    border = BorderStroke(
+                        width = 1.dp,
+                        color = MaterialTheme.colors.primary,
+                    ),
+                    modifier = Modifier
+                        .height(IntrinsicSize.Max)
+                        .weight(1f),
                     enabled = !isTaskLoading && (unPersistedShoppingList.isNotEmpty() || persistedShoppingList.isNotEmpty()),
                     onClick = {
                         focusManager.clearFocus()
                         val items = unPersistedShoppingList + persistedShoppingList
                         function.onDetailSubmitted.invoke(
                             RecommendationRequest(
-                                persist = shouldPersist,
                                 items = items,
+                                persist = shouldPersist,
+                                cacheRecommendationsForLater = true,
                             ),
                         )
                     },

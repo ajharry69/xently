@@ -33,7 +33,7 @@ internal data class GroupedShoppingListCardFunction(
 internal data class GroupMenuItem(
     @StringRes
     val label: Int,
-    val onClick: (group: Any) -> Unit,
+    val onClick: (ShoppingListGroup) -> Unit,
 )
 
 @Composable
@@ -96,7 +96,7 @@ internal fun GroupedShoppingListCard(
                         for (item in groupMenuItems) {
                             DropdownMenuItem(
                                 onClick = {
-                                    item.onClick.invoke(groupList.group)
+                                    item.onClick.invoke(ShoppingListGroup(groupList.group))
                                     showDropDownMenu = false
                                 },
                             ) { Text(text = stringResource(item.label)) }

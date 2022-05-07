@@ -6,7 +6,6 @@ import androidx.lifecycle.viewModelScope
 import co.ke.xently.feature.utils.DEFAULT_SHARING_STARTED
 import co.ke.xently.feature.utils.flagLoadingOnStart
 import co.ke.xently.feature.viewmodels.LocationPermissionViewModel
-import co.ke.xently.recommendation.Recommend
 import co.ke.xently.recommendation.repository.IRecommendationRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -22,15 +21,15 @@ internal class RecommendationListViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val repository: IRecommendationRepository,
 ) : LocationPermissionViewModel(context, savedStateHandle) {
-    private val recommend = MutableSharedFlow<Recommend>()
+    private val lookupId = MutableSharedFlow<String>()
 
-    val result = recommend.flatMapLatest {
-        repository.get(it).flagLoadingOnStart()
+    val result = lookupId.flatMapLatest {
+        repository.getRecommendation(it).flagLoadingOnStart()
     }.shareIn(viewModelScope, DEFAULT_SHARING_STARTED)
 
-    fun initRecommendation(recommend: Recommend) {
+    fun recommend(lookupId: String) {
         viewModelScope.launch {
-            this@RecommendationListViewModel.recommend.emit(recommend)
+            this@RecommendationListViewModel.lookupId.emit(lookupId)
         }
     }
 }

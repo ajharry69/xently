@@ -27,6 +27,14 @@ interface ShoppingListDao {
     @Query("SELECT * FROM shoppinglist WHERE dateAdded = :group ORDER BY name")
     fun get(group: Date): PagingSource<Int, ShoppingListItem.WithRelated>
 
+    @Transaction
+    @Query("SELECT * FROM shoppinglist WHERE dateAdded = :group ORDER BY name")
+    fun getList(group: Date): Flow<List<ShoppingListItem.WithRelated>>
+
+    @Transaction
+    @Query("SELECT * FROM shoppinglist WHERE id = :id")
+    fun getList(id: Long): Flow<List<ShoppingListItem.WithRelated>>
+
     @Query("SELECT dateAdded AS `group`, COUNT(dateAdded) AS numberOfItems FROM shoppinglist GROUP BY dateAdded")
     fun getCountGroupedByDateAdded(): Flow<List<GroupedShoppingListCount>>
 

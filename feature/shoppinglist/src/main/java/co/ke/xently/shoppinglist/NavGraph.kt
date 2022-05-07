@@ -29,7 +29,6 @@ import co.ke.xently.shoppinglist.ui.list.item.MenuItem
 
 fun NavGraphBuilder.shoppingListGraph(
     navController: NavHostController,
-    recommendFrom: String,
     onAccountMenuClicked: () -> Unit,
     onShopMenuClicked: () -> Unit,
     onProductMenuClicked: () -> Unit,
@@ -42,8 +41,7 @@ fun NavGraphBuilder.shoppingListGraph(
         val onShoppingListItemRecommendClicked: (id: Long) -> Unit = {
             navController.navigate(
                 Routes.ShoppingList.Recommendation.FILTER.buildRoute(
-                    "recommendBy" to it,
-                    "from" to recommendFrom,
+                    "itemId" to it,
                 )
             )
         }
@@ -103,7 +101,8 @@ fun NavGraphBuilder.shoppingListGraph(
                     GroupMenuItem(R.string.fsl_group_menu_recommend) {
                         navController.navigate(
                             Routes.ShoppingList.Recommendation.FILTER.buildRoute(
-                                "recommendBy" to it
+                                "group" to it.group,
+                                "groupBy" to it.groupBy,
                             )
                         )
                     },
