@@ -1,5 +1,7 @@
 package co.ke.xently.recommendation
 
+import co.ke.xently.shoppinglist.GroupBy
+
 
 data class Recommend(
     internal val by: Any = Unit,

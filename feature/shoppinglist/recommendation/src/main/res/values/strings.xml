@@ -9,6 +9,8 @@
     <string name="fr_filter_add_product_name_content_description">Add product name</string>
     <string name="fr_filter_should_persist_shopping_lists">Save shopping list items if possible?</string>
     <string name="fr_filter_recommend">Recommend</string>
-    <string name="fr_filter_remove_unpersisted_item">Remove \'%1$s\'</string>
+    <string name="fr_filter_remove_unpersisted_item">Remove unsaved shopping list item \'%1$s\'</string>
+    <string name="fr_filter_remove_persisted_item">Remove saved shopping list item \'%1$s\'</string>
     <string name="fr_filter_un_persisted_list_subheading">Unsaved shopping list</string>
+    <string name="fr_filter_persisted_list_subheading">Saved shopping list</string>
 </resources>

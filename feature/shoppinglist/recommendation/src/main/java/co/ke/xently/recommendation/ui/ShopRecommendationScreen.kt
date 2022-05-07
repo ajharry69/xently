@@ -11,6 +11,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -19,8 +20,13 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.hilt.navigation.compose.hiltViewModel
 import co.ke.xently.common.KENYA
 import co.ke.xently.data.RecommendationRequest
+import co.ke.xently.data.ShoppingListItem
+import co.ke.xently.data.TaskResult
+import co.ke.xently.data.getOrNull
 import co.ke.xently.feature.ui.*
 import co.ke.xently.recommendation.R
+import co.ke.xently.shoppinglist.ui.list.item.ShoppingListItemCard
+import co.ke.xently.source.remote.DeferredRecommendation
 
 internal data class ShopRecommendationScreenFunction(
     val onNavigationClick: () -> Unit = {},
@@ -38,6 +44,8 @@ internal fun ShopRecommendationScreen(
         function = function.copy(
             onDetailSubmitted = viewModel::recommend,
         ),
+        result = TaskResult.Success(null),
+        persistedShoppingListResult = TaskResult.Success(emptyList()),
     )
 }
 
@@ -46,26 +54,35 @@ internal fun ShopRecommendationScreen(
 internal fun ShopRecommendationScreen(
     modifier: Modifier,
     function: ShopRecommendationScreenFunction,
+    result: TaskResult<DeferredRecommendation?>,
+    persistedShoppingListResult: TaskResult<List<ShoppingListItem>>,
 ) {
     val unPersistedShoppingList = remember {
         mutableStateListOf<String>()
+    }
+    val persistedShoppingList = remember(persistedShoppingListResult) {
+        mutableStateListOf(*(persistedShoppingListResult.getOrNull() ?: emptyList()).toTypedArray())
     }
     var shouldPersist by remember {
         mutableStateOf(true)
     }
 
-    val toolbarTitle = stringResource(R.string.fr_filter_toolbar_title)
     val scaffoldState = rememberScaffoldState()
+    val toolbarTitle = stringResource(R.string.fr_filter_toolbar_title)
+    val isTaskLoading =
+        result is TaskResult.Loading || persistedShoppingListResult is TaskResult.Loading
     Scaffold(
         scaffoldState = scaffoldState,
         topBar = {
             ToolbarWithProgressbar(
                 title = toolbarTitle,
+                showProgress = isTaskLoading,
                 onNavigationIconClicked = function.onNavigationClick,
             )
         },
     ) { paddingValues ->
         Column(modifier = modifier.padding(paddingValues)) {
+            val focusManager = LocalFocusManager.current
             var productName by remember {
                 mutableStateOf(TextFieldValue(""))
             }
@@ -87,7 +104,7 @@ internal fun ShopRecommendationScreen(
                             enabled = productName.text.isNotBlank(),
                             modifier = Modifier.semantics { testTag = description },
                             onClick = {
-                                if (unPersistedShoppingList.size > 0) {
+                                if (unPersistedShoppingList.isNotEmpty()) {
                                     unPersistedShoppingList.add(0, productName.text.trim())
                                 } else {
                                     unPersistedShoppingList.add(productName.text.trim())
@@ -102,12 +119,14 @@ internal fun ShopRecommendationScreen(
                 Spacer(modifier = Modifier.width(VIEW_SPACE_HALVED))
                 Button(
                     modifier = Modifier.height(IntrinsicSize.Max),
-                    enabled = unPersistedShoppingList.isNotEmpty(),
+                    enabled = !isTaskLoading && (unPersistedShoppingList.isNotEmpty() || persistedShoppingList.isNotEmpty()),
                     onClick = {
+                        focusManager.clearFocus()
+                        val items = unPersistedShoppingList + persistedShoppingList
                         function.onDetailSubmitted.invoke(
                             RecommendationRequest(
                                 persist = shouldPersist,
-                                items = unPersistedShoppingList,
+                                items = items,
                             ),
                         )
                     },
@@ -121,6 +140,7 @@ internal fun ShopRecommendationScreen(
                     checked = shouldPersist,
                     onCheckedChange = {
                         shouldPersist = it
+                        focusManager.clearFocus()
                     },
                     modifier = Modifier.semantics {
                         contentDescription = description
@@ -129,12 +149,14 @@ internal fun ShopRecommendationScreen(
                 Text(text = description)
             }
             LazyColumn {
-                item {
-                    Text(
-                        text = stringResource(R.string.fr_filter_un_persisted_list_subheading),
-                        style = MaterialTheme.typography.h5,
-                        modifier = VerticalLayoutModifier,
-                    )
+                if (unPersistedShoppingList.isNotEmpty()) {
+                    item {
+                        Text(
+                            text = stringResource(R.string.fr_filter_un_persisted_list_subheading),
+                            style = MaterialTheme.typography.h5,
+                            modifier = VerticalLayoutModifier,
+                        )
+                    }
                 }
                 itemsIndexed(unPersistedShoppingList) { index, item ->
                     ListItemSurface(modifier = Modifier.fillMaxWidth()) {
@@ -146,7 +168,10 @@ internal fun ShopRecommendationScreen(
                         val description =
                             stringResource(R.string.fr_filter_remove_unpersisted_item, item)
                         IconButton(
-                            onClick = { unPersistedShoppingList.removeAt(index) },
+                            onClick = {
+                                focusManager.clearFocus()
+                                unPersistedShoppingList.removeAt(index)
+                            },
                             modifier = Modifier.semantics { testTag = description },
                         ) {
                             Icon(
@@ -155,6 +180,37 @@ internal fun ShopRecommendationScreen(
                             )
                         }
                     }
+                }
+                if (persistedShoppingList.isNotEmpty()) {
+                    item {
+                        Text(
+                            text = stringResource(R.string.fr_filter_persisted_list_subheading),
+                            style = MaterialTheme.typography.h5,
+                            modifier = VerticalLayoutModifier,
+                        )
+                    }
+                }
+                itemsIndexed(persistedShoppingList) { index, item: ShoppingListItem ->
+                    val description =
+                        stringResource(R.string.fr_filter_remove_persisted_item, item)
+                    ShoppingListItemCard(
+                        item = item,
+                        modifier = Modifier.fillMaxWidth(),
+                        trailingIcon = {
+                            IconButton(
+                                onClick = {
+                                    focusManager.clearFocus()
+                                    persistedShoppingList.removeAt(index)
+                                },
+                                modifier = Modifier.semantics { testTag = description },
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Delete,
+                                    contentDescription = description,
+                                )
+                            }
+                        },
+                    ) {}
                 }
             }
         }

@@ -66,6 +66,7 @@ dependencies {
     implementation project(path: ":data:source:local")
     implementation project(path: ":data:source:remote")
     implementation project(path: ":feature")
+    implementation project(path: ":feature:shoppinglist")
 
     // DI
     implementation "com.google.dagger:hilt-android:$hilt_version"
