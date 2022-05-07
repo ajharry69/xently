@@ -3,13 +3,15 @@ package co.ke.xently.recommendation
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavGraphBuilder
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import androidx.navigation.navigation
 import co.ke.xently.feature.utils.Routes
-import co.ke.xently.recommendation.ui.ShopRecommendationScreen
+import co.ke.xently.feature.utils.buildRoute
+import co.ke.xently.recommendation.ui.RecommendationScreen
+import co.ke.xently.recommendation.ui.RecommendationScreenFunction
 import co.ke.xently.recommendation.ui.ShopRecommendationScreenArgs
-import co.ke.xently.recommendation.ui.ShopRecommendationScreenFunction
 import co.ke.xently.recommendation.ui.list.RecommendationListScreen
 import co.ke.xently.recommendation.ui.list.RecommendationListScreenFunction
 import co.ke.xently.recommendation.ui.list.item.RecommendationCardItemFunction
@@ -18,7 +20,7 @@ import co.ke.xently.shoppinglist.GroupBy
 import co.ke.xently.shoppinglist.repository.ShoppingListGroup
 
 fun NavGraphBuilder.recommendationGraph(
-//    controller: NavHostController,
+    controller: NavHostController,
     onNavigationIconClicked: () -> Unit,
 ) {
     navigation(
@@ -38,20 +40,27 @@ fun NavGraphBuilder.recommendationGraph(
                     nullable = true
                 },
             ),
-        ) {
-            ShopRecommendationScreen(
+        ) { navBackStackEntry ->
+            RecommendationScreen(
                 modifier = Modifier.fillMaxSize(),
-                function = ShopRecommendationScreenFunction(
+                function = RecommendationScreenFunction(
                     onNavigationClick = onNavigationIconClicked,
+                    onSuccess = {
+                        controller.navigate(
+                            route = Routes.ShoppingList.Recommendation.LIST.buildRoute(
+                                "lookupId" to it,
+                            ),
+                        )
+                    },
                 ),
                 args = ShopRecommendationScreenArgs(
-                    itemId = it.arguments?.get("itemId").toString().toLongOrNull(),
-                    group = if (it.arguments?.get("group") == null) {
+                    itemId = navBackStackEntry.arguments?.get("itemId").toString().toLongOrNull(),
+                    group = if (navBackStackEntry.arguments?.get("group") == null) {
                         null
                     } else {
                         ShoppingListGroup(
-                            group = it.arguments!!.get("group")!!,
-                            groupBy = it.arguments?.getString("groupBy")
+                            group = navBackStackEntry.arguments!!.get("group")!!,
+                            groupBy = navBackStackEntry.arguments?.getString("groupBy")
                                 ?.let { groupBy -> GroupBy.valueOf(groupBy) } ?: GroupBy.DateAdded,
                         )
                     },

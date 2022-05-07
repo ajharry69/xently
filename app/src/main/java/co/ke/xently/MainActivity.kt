@@ -85,7 +85,7 @@ class MainActivity : FragmentActivity() {
                             onNavigationIconClicked = this@MainActivity::onBackPressed,
                         )
                         recommendationGraph(
-//                            controller = navController,
+                            controller = navController,
                             onNavigationIconClicked = this@MainActivity::onBackPressed,
                         )
                         productsGraph(

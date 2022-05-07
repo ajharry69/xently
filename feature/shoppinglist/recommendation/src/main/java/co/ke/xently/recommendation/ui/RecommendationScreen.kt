@@ -1,7 +1,6 @@
 package co.ke.xently.recommendation.ui
 
 import androidx.annotation.VisibleForTesting
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -18,7 +17,6 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import co.ke.xently.common.KENYA
 import co.ke.xently.data.*
@@ -27,17 +25,20 @@ import co.ke.xently.recommendation.R
 import co.ke.xently.shoppinglist.ui.list.item.ShoppingListItemCard
 import co.ke.xently.source.remote.DeferredRecommendation
 
-internal data class ShopRecommendationScreenFunction(
+internal const val TEST_TAG_RECOMMENDATION_BODY_CONTAINER = "TEST_TAG_RECOMMENDATION_BODY_CONTAINER"
+
+internal data class RecommendationScreenFunction(
     val onNavigationClick: () -> Unit = {},
+    val onSuccess: (DeferredRecommendation) -> Unit = {},
     val onDetailSubmitted: (RecommendationRequest) -> Unit = {},
 )
 
 @Composable
-internal fun ShopRecommendationScreen(
+internal fun RecommendationScreen(
     modifier: Modifier,
     args: ShopRecommendationScreenArgs,
-    function: ShopRecommendationScreenFunction,
-    viewModel: ShopRecommendationViewModel = hiltViewModel(),
+    function: RecommendationScreenFunction,
+    viewModel: RecommendationViewModel = hiltViewModel(),
 ) {
     val scope = rememberCoroutineScope()
     val persistedShoppingListResult by viewModel.persistedShoppingListResult.collectAsState(
@@ -53,7 +54,7 @@ internal fun ShopRecommendationScreen(
         context = scope.coroutineContext,
     )
 
-    ShopRecommendationScreen(
+    RecommendationScreen(
         modifier = modifier,
         result = result,
         persistedShoppingListResult = persistedShoppingListResult,
@@ -65,9 +66,9 @@ internal fun ShopRecommendationScreen(
 
 @Composable
 @VisibleForTesting
-internal fun ShopRecommendationScreen(
+internal fun RecommendationScreen(
     modifier: Modifier,
-    function: ShopRecommendationScreenFunction,
+    function: RecommendationScreenFunction,
     result: TaskResult<DeferredRecommendation?>,
     persistedShoppingListResult: TaskResult<List<ShoppingListItem>>,
 ) {
@@ -92,6 +93,10 @@ internal fun ShopRecommendationScreen(
                 duration = SnackbarDuration.Long,
             )
         }
+    } else if (result is TaskResult.Success && result.data != null) {
+        SideEffect {
+            function.onSuccess.invoke(result.data!!)
+        }
     }
 
     val toolbarTitle = stringResource(R.string.fr_filter_toolbar_title)
@@ -112,61 +117,32 @@ internal fun ShopRecommendationScreen(
             var productName by remember {
                 mutableStateOf(TextFieldValue(""))
             }
-            Row(
+            TextInputLayout(
+                value = productName,
+                label = stringResource(R.string.fr_filter_product_name),
                 modifier = VerticalLayoutModifier.padding(top = VIEW_SPACE),
-                verticalAlignment = Alignment.Bottom,
-                horizontalArrangement = Arrangement.spacedBy(VIEW_SPACE_HALVED),
-            ) {
-                TextInputLayout(
-                    value = productName,
-                    label = stringResource(R.string.fr_filter_product_name),
-                    modifier = Modifier.weight(1f),
-                    onValueChange = {
-                        productName = it
-                    },
-                    trailingIcon = {
-                        val description =
-                            stringResource(R.string.fr_filter_add_product_name_content_description)
-                        IconButton(
-                            enabled = productName.text.isNotBlank(),
-                            modifier = Modifier.semantics { testTag = description },
-                            onClick = {
-                                if (unPersistedShoppingList.isNotEmpty()) {
-                                    unPersistedShoppingList.add(0, productName.text.trim())
-                                } else {
-                                    unPersistedShoppingList.add(productName.text.trim())
-                                }
-                                productName = TextFieldValue("")
-                            },
-                        ) {
-                            Icon(imageVector = Icons.Default.Add, contentDescription = description)
-                        }
-                    },
-                )
-                TextButton(
-                    border = BorderStroke(
-                        width = 1.dp,
-                        color = MaterialTheme.colors.primary,
-                    ),
-                    modifier = Modifier
-                        .height(IntrinsicSize.Max)
-                        .weight(1f),
-                    enabled = !isTaskLoading && (unPersistedShoppingList.isNotEmpty() || persistedShoppingList.isNotEmpty()),
-                    onClick = {
-                        focusManager.clearFocus()
-                        val items = unPersistedShoppingList + persistedShoppingList
-                        function.onDetailSubmitted.invoke(
-                            RecommendationRequest(
-                                items = items,
-                                persist = shouldPersist,
-                                cacheRecommendationsForLater = true,
-                            ),
-                        )
-                    },
-                ) {
-                    Text(text = stringResource(R.string.fr_filter_recommend).uppercase(KENYA))
-                }
-            }
+                onValueChange = {
+                    productName = it
+                },
+                trailingIcon = {
+                    val description =
+                        stringResource(R.string.fr_filter_add_product_name_content_description)
+                    IconButton(
+                        enabled = productName.text.isNotBlank(),
+                        modifier = Modifier.semantics { testTag = description },
+                        onClick = {
+                            if (unPersistedShoppingList.isNotEmpty()) {
+                                unPersistedShoppingList.add(0, productName.text.trim())
+                            } else {
+                                unPersistedShoppingList.add(productName.text.trim())
+                            }
+                            productName = TextFieldValue("")
+                        },
+                    ) {
+                        Icon(imageVector = Icons.Default.Add, contentDescription = description)
+                    }
+                },
+            )
             Row(modifier = VerticalLayoutModifier, verticalAlignment = Alignment.CenterVertically) {
                 val description = stringResource(R.string.fr_filter_should_persist_shopping_lists)
                 Checkbox(
@@ -181,7 +157,11 @@ internal fun ShopRecommendationScreen(
                 )
                 Text(text = description)
             }
-            LazyColumn {
+            LazyColumn(
+                modifier = Modifier.semantics {
+                    testTag = TEST_TAG_RECOMMENDATION_BODY_CONTAINER
+                },
+            ) {
                 if (unPersistedShoppingList.isNotEmpty()) {
                     item {
                         Text(
@@ -244,6 +224,25 @@ internal fun ShopRecommendationScreen(
                             }
                         },
                     ) {}
+                }
+                item {
+                    Button(
+                        modifier = VerticalLayoutModifier,
+                        enabled = !isTaskLoading && (unPersistedShoppingList.isNotEmpty() || persistedShoppingList.isNotEmpty()),
+                        onClick = {
+                            focusManager.clearFocus()
+                            val items = unPersistedShoppingList + persistedShoppingList
+                            function.onDetailSubmitted.invoke(
+                                RecommendationRequest(
+                                    items = items,
+                                    persist = shouldPersist,
+                                    cacheRecommendationsForLater = true,
+                                ),
+                            )
+                        },
+                    ) {
+                        Text(text = stringResource(R.string.fr_filter_recommend).uppercase(KENYA))
+                    }
                 }
             }
         }

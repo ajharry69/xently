@@ -11,6 +11,7 @@ import co.ke.xently.data.ShoppingListItem
 import co.ke.xently.data.TaskResult
 import co.ke.xently.feature.theme.XentlyTheme
 import co.ke.xently.recommendation.R
+import co.ke.xently.source.remote.DeferredRecommendation
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.equalTo
 import org.hamcrest.Matchers.instanceOf
@@ -21,7 +22,7 @@ import org.mockito.kotlin.mock
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 
-class ShopRecommendationScreenTest {
+class RecommendationScreenTest {
     @get:Rule
     val composeTestRule = createAndroidComposeRule<ComponentActivity>()
 
@@ -69,9 +70,9 @@ class ShopRecommendationScreenTest {
     fun toolbarTitle() {
         composeTestRule.setContent {
             XentlyTheme {
-                ShopRecommendationScreen(
+                RecommendationScreen(
                     modifier = Modifier.fillMaxSize(),
-                    function = ShopRecommendationScreenFunction(),
+                    function = RecommendationScreenFunction(),
                     result = TaskResult.Success(null),
                     persistedShoppingListResult = TaskResult.Success(emptyList()),
                 )
@@ -85,9 +86,9 @@ class ShopRecommendationScreenTest {
     fun progressbarIsShownWhenDeferredRecommendationResultIsLoading() {
         composeTestRule.setContent {
             XentlyTheme {
-                ShopRecommendationScreen(
+                RecommendationScreen(
                     modifier = Modifier.fillMaxSize(),
-                    function = ShopRecommendationScreenFunction(),
+                    function = RecommendationScreenFunction(),
                     result = TaskResult.Loading,
                     persistedShoppingListResult = TaskResult.Success(emptyList()),
                 )
@@ -101,9 +102,9 @@ class ShopRecommendationScreenTest {
     fun progressbarIsShownWhenPersistedShoppingListResultIsLoading() {
         composeTestRule.setContent {
             XentlyTheme {
-                ShopRecommendationScreen(
+                RecommendationScreen(
                     modifier = Modifier.fillMaxSize(),
-                    function = ShopRecommendationScreenFunction(),
+                    function = RecommendationScreenFunction(),
                     result = TaskResult.Success(null),
                     persistedShoppingListResult = TaskResult.Loading,
                 )
@@ -117,9 +118,9 @@ class ShopRecommendationScreenTest {
     fun recommendButtonIsDisabledWhenDeferredRecommendationResultIsLoading() {
         composeTestRule.setContent {
             XentlyTheme {
-                ShopRecommendationScreen(
+                RecommendationScreen(
                     modifier = Modifier.fillMaxSize(),
-                    function = ShopRecommendationScreenFunction(),
+                    function = RecommendationScreenFunction(),
                     result = TaskResult.Loading,
                     persistedShoppingListResult = TaskResult.Success(emptyList()),
                 )
@@ -136,9 +137,9 @@ class ShopRecommendationScreenTest {
     fun recommendButtonIsDisabledWhenPersistedShoppingListResultIsLoading() {
         composeTestRule.setContent {
             XentlyTheme {
-                ShopRecommendationScreen(
+                RecommendationScreen(
                     modifier = Modifier.fillMaxSize(),
-                    function = ShopRecommendationScreenFunction(),
+                    function = RecommendationScreenFunction(),
                     result = TaskResult.Success(null),
                     persistedShoppingListResult = TaskResult.Loading,
                 )
@@ -155,9 +156,9 @@ class ShopRecommendationScreenTest {
     fun recommendButtonIsEnabledIfPersistedShoppingListResultIsNotEmptyList() {
         composeTestRule.setContent {
             XentlyTheme {
-                ShopRecommendationScreen(
+                RecommendationScreen(
                     modifier = Modifier.fillMaxSize(),
-                    function = ShopRecommendationScreenFunction(),
+                    function = RecommendationScreenFunction(),
                     result = TaskResult.Success(null),
                     persistedShoppingListResult = TaskResult.Success(listOf(ShoppingListItem.default())),
                 )
@@ -172,9 +173,9 @@ class ShopRecommendationScreenTest {
     fun errorIsShownIfPersistedShoppingListResultReturnsAnError() {
         composeTestRule.setContent {
             XentlyTheme {
-                ShopRecommendationScreen(
+                RecommendationScreen(
                     modifier = Modifier.fillMaxSize(),
-                    function = ShopRecommendationScreenFunction(),
+                    function = RecommendationScreenFunction(),
                     result = TaskResult.Success(null),
                     persistedShoppingListResult = TaskResult.Error("Sorry, something went wrong."),
                 )
@@ -189,9 +190,9 @@ class ShopRecommendationScreenTest {
     fun errorIsShownIfDeferredRecommendationResultReturnsAnError() {
         composeTestRule.setContent {
             XentlyTheme {
-                ShopRecommendationScreen(
+                RecommendationScreen(
                     modifier = Modifier.fillMaxSize(),
-                    function = ShopRecommendationScreenFunction(),
+                    function = RecommendationScreenFunction(),
                     result = TaskResult.Error("Location access is required."),
                     persistedShoppingListResult = TaskResult.Success(emptyList()),
                 )
@@ -203,12 +204,32 @@ class ShopRecommendationScreenTest {
     }
 
     @Test
+    fun successfulDeferredRecommendationResultWithNonNullData() {
+        val onSuccessMock: (DeferredRecommendation) -> Unit = mock()
+        composeTestRule.setContent {
+            XentlyTheme {
+                RecommendationScreen(
+                    modifier = Modifier.fillMaxSize(),
+                    function = RecommendationScreenFunction(onSuccess = onSuccessMock),
+                    result = TaskResult.Success(DeferredRecommendation(id = "recommendation-lookup-key")),
+                    persistedShoppingListResult = TaskResult.Success(emptyList()),
+                )
+            }
+        }
+
+        with(argumentCaptor<DeferredRecommendation> { }) {
+            verify(onSuccessMock, times(1)).invoke(capture())
+            assertThat(firstValue.toString(), equalTo("recommendation-lookup-key"))
+        }
+    }
+
+    @Test
     fun recommendButtonText() {
         composeTestRule.setContent {
             XentlyTheme {
-                ShopRecommendationScreen(
+                RecommendationScreen(
                     modifier = Modifier.fillMaxSize(),
-                    function = ShopRecommendationScreenFunction(),
+                    function = RecommendationScreenFunction(),
                     result = TaskResult.Success(null),
                     persistedShoppingListResult = TaskResult.Success(emptyList()),
                 )
@@ -223,9 +244,9 @@ class ShopRecommendationScreenTest {
     fun recommendButtonIsDisabledByDefault() {
         composeTestRule.setContent {
             XentlyTheme {
-                ShopRecommendationScreen(
+                RecommendationScreen(
                     modifier = Modifier.fillMaxSize(),
-                    function = ShopRecommendationScreenFunction(),
+                    function = RecommendationScreenFunction(),
                     result = TaskResult.Success(null),
                     persistedShoppingListResult = TaskResult.Success(emptyList()),
                 )
@@ -239,9 +260,9 @@ class ShopRecommendationScreenTest {
     fun recommendButtonIsShownIfUnPersistedShoppingListItemIsAdded() {
         composeTestRule.setContent {
             XentlyTheme {
-                ShopRecommendationScreen(
+                RecommendationScreen(
                     modifier = Modifier.fillMaxSize(),
-                    function = ShopRecommendationScreenFunction(),
+                    function = RecommendationScreenFunction(),
                     result = TaskResult.Success(null),
                     persistedShoppingListResult = TaskResult.Success(emptyList()),
                 )
@@ -257,9 +278,9 @@ class ShopRecommendationScreenTest {
     fun persistCheckboxIsCheckedByDefault() {
         composeTestRule.setContent {
             XentlyTheme {
-                ShopRecommendationScreen(
+                RecommendationScreen(
                     modifier = Modifier.fillMaxSize(),
-                    function = ShopRecommendationScreenFunction(),
+                    function = RecommendationScreenFunction(),
                     result = TaskResult.Success(null),
                     persistedShoppingListResult = TaskResult.Success(emptyList()),
                 )
@@ -275,9 +296,11 @@ class ShopRecommendationScreenTest {
         val onNavigationClickMock: () -> Unit = mock()
         composeTestRule.setContent {
             XentlyTheme {
-                ShopRecommendationScreen(
+                RecommendationScreen(
                     modifier = Modifier.fillMaxSize(),
-                    function = ShopRecommendationScreenFunction(onNavigationClick = onNavigationClickMock),
+                    function = RecommendationScreenFunction(
+                        onNavigationClick = onNavigationClickMock,
+                    ),
                     result = TaskResult.Success(null),
                     persistedShoppingListResult = TaskResult.Success(emptyList()),
                 )
@@ -293,9 +316,9 @@ class ShopRecommendationScreenTest {
     fun productNameTextFieldIsEmptyByDefault() {
         composeTestRule.setContent {
             XentlyTheme {
-                ShopRecommendationScreen(
+                RecommendationScreen(
                     modifier = Modifier.fillMaxSize(),
-                    function = ShopRecommendationScreenFunction(),
+                    function = RecommendationScreenFunction(),
                     result = TaskResult.Success(null),
                     persistedShoppingListResult = TaskResult.Success(emptyList()),
                 )
@@ -310,9 +333,9 @@ class ShopRecommendationScreenTest {
     fun addProductNameButtonIsDisabledByDefault() {
         composeTestRule.setContent {
             XentlyTheme {
-                ShopRecommendationScreen(
+                RecommendationScreen(
                     modifier = Modifier.fillMaxSize(),
-                    function = ShopRecommendationScreenFunction(),
+                    function = RecommendationScreenFunction(),
                     result = TaskResult.Success(null),
                     persistedShoppingListResult = TaskResult.Success(emptyList()),
                 )
@@ -327,9 +350,9 @@ class ShopRecommendationScreenTest {
     fun addProductNameButtonIsEnabledIfProductNameFieldIsNotBlank() {
         composeTestRule.setContent {
             XentlyTheme {
-                ShopRecommendationScreen(
+                RecommendationScreen(
                     modifier = Modifier.fillMaxSize(),
-                    function = ShopRecommendationScreenFunction(),
+                    function = RecommendationScreenFunction(),
                     result = TaskResult.Success(null),
                     persistedShoppingListResult = TaskResult.Success(emptyList()),
                 )
@@ -348,9 +371,9 @@ class ShopRecommendationScreenTest {
         val onDetailSubmittedMock: (RecommendationRequest) -> Unit = mock()
         composeTestRule.setContent {
             XentlyTheme {
-                ShopRecommendationScreen(
+                RecommendationScreen(
                     modifier = Modifier.fillMaxSize(),
-                    function = ShopRecommendationScreenFunction(
+                    function = RecommendationScreenFunction(
                         onDetailSubmitted = onDetailSubmittedMock,
                     ),
                     result = TaskResult.Success(null),
@@ -369,9 +392,9 @@ class ShopRecommendationScreenTest {
         val onDetailSubmittedMock: (RecommendationRequest) -> Unit = mock()
         composeTestRule.setContent {
             XentlyTheme {
-                ShopRecommendationScreen(
+                RecommendationScreen(
                     modifier = Modifier.fillMaxSize(),
-                    function = ShopRecommendationScreenFunction(
+                    function = RecommendationScreenFunction(
                         onDetailSubmitted = onDetailSubmittedMock,
                     ),
                     result = TaskResult.Success(null),
@@ -395,9 +418,9 @@ class ShopRecommendationScreenTest {
         val onDetailSubmittedMock: (RecommendationRequest) -> Unit = mock()
         composeTestRule.setContent {
             XentlyTheme {
-                ShopRecommendationScreen(
+                RecommendationScreen(
                     modifier = Modifier.fillMaxSize(),
-                    function = ShopRecommendationScreenFunction(
+                    function = RecommendationScreenFunction(
                         onDetailSubmitted = onDetailSubmittedMock,
                     ),
                     result = TaskResult.Success(null),
@@ -423,9 +446,9 @@ class ShopRecommendationScreenTest {
     fun unsavedShoppingListItemHeadingIsHiddenIfUnPersistedShoppingListIsEmpty() {
         composeTestRule.setContent {
             XentlyTheme {
-                ShopRecommendationScreen(
+                RecommendationScreen(
                     modifier = Modifier.fillMaxSize(),
-                    function = ShopRecommendationScreenFunction(),
+                    function = RecommendationScreenFunction(),
                     result = TaskResult.Success(null),
                     persistedShoppingListResult = TaskResult.Success(emptyList()),
                 )
@@ -440,9 +463,9 @@ class ShopRecommendationScreenTest {
     fun unsavedShoppingListItemHeadingIsShownIfUnPersistedShoppingListIsNotEmpty() {
         composeTestRule.setContent {
             XentlyTheme {
-                ShopRecommendationScreen(
+                RecommendationScreen(
                     modifier = Modifier.fillMaxSize(),
-                    function = ShopRecommendationScreenFunction(),
+                    function = RecommendationScreenFunction(),
                     result = TaskResult.Success(null),
                     persistedShoppingListResult = TaskResult.Success(emptyList()),
                 )
@@ -458,9 +481,9 @@ class ShopRecommendationScreenTest {
     fun savedShoppingListItemHeadingIsHiddenIfPersistedShoppingListIsEmpty() {
         composeTestRule.setContent {
             XentlyTheme {
-                ShopRecommendationScreen(
+                RecommendationScreen(
                     modifier = Modifier.fillMaxSize(),
-                    function = ShopRecommendationScreenFunction(),
+                    function = RecommendationScreenFunction(),
                     result = TaskResult.Success(null),
                     persistedShoppingListResult = TaskResult.Success(emptyList()),
                 )
@@ -475,9 +498,9 @@ class ShopRecommendationScreenTest {
     fun savedShoppingListItemHeadingIsShownIfPersistedShoppingListIsNotEmpty() {
         composeTestRule.setContent {
             XentlyTheme {
-                ShopRecommendationScreen(
+                RecommendationScreen(
                     modifier = Modifier.fillMaxSize(),
-                    function = ShopRecommendationScreenFunction(),
+                    function = RecommendationScreenFunction(),
                     result = TaskResult.Success(null),
                     persistedShoppingListResult = TaskResult.Success(
                         listOf(ShoppingListItem.default().copy(isDefault = false))
@@ -495,9 +518,9 @@ class ShopRecommendationScreenTest {
         val onDetailSubmittedMock: (RecommendationRequest) -> Unit = mock()
         composeTestRule.setContent {
             XentlyTheme {
-                ShopRecommendationScreen(
+                RecommendationScreen(
                     modifier = Modifier.fillMaxSize(),
-                    function = ShopRecommendationScreenFunction(
+                    function = RecommendationScreenFunction(
                         onDetailSubmitted = onDetailSubmittedMock,
                     ),
                     result = TaskResult.Success(null),
@@ -544,9 +567,9 @@ class ShopRecommendationScreenTest {
         )
         composeTestRule.setContent {
             XentlyTheme {
-                ShopRecommendationScreen(
+                RecommendationScreen(
                     modifier = Modifier.fillMaxSize(),
-                    function = ShopRecommendationScreenFunction(
+                    function = RecommendationScreenFunction(
                         onDetailSubmitted = onDetailSubmittedMock,
                     ),
                     result = TaskResult.Success(null),
@@ -586,9 +609,9 @@ class ShopRecommendationScreenTest {
         )
         composeTestRule.setContent {
             XentlyTheme {
-                ShopRecommendationScreen(
+                RecommendationScreen(
                     modifier = Modifier.fillMaxSize(),
-                    function = ShopRecommendationScreenFunction(
+                    function = RecommendationScreenFunction(
                         onDetailSubmitted = onDetailSubmittedMock,
                     ),
                     result = TaskResult.Success(null),

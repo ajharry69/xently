@@ -14,7 +14,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-internal class ShopRecommendationViewModel @Inject constructor(
+internal class RecommendationViewModel @Inject constructor(
     private val repository: IRecommendationRepository
 ) : ViewModel() {
     private val args = MutableSharedFlow<ShopRecommendationScreenArgs>(replay = 1)
@@ -34,13 +34,13 @@ internal class ShopRecommendationViewModel @Inject constructor(
 
     fun recommend(request: RecommendationRequest) {
         viewModelScope.launch {
-            this@ShopRecommendationViewModel.request.emit(request)
+            this@RecommendationViewModel.request.emit(request)
         }
     }
 
     suspend fun setArgs(args: ShopRecommendationScreenArgs) {
         viewModelScope.launch {
-            this@ShopRecommendationViewModel.args.emit(args)
+            this@RecommendationViewModel.args.emit(args)
         }
     }
 }

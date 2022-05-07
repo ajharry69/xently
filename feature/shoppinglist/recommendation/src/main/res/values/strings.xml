@@ -4,7 +4,7 @@
     <string name="fr_directions">Directions</string>
     <string name="fr_toolbar_title">Recommendations</string>
     <string name="fr_details">Details</string>
-    <string name="fr_filter_toolbar_title">Shop recommendation</string>
+    <string name="fr_filter_toolbar_title">Recommendation</string>
     <string name="fr_filter_product_name">Product name</string>
     <string name="fr_filter_add_product_name_content_description">Add product name</string>
     <string name="fr_filter_should_persist_shopping_lists">Save shopping list items if possible?</string>

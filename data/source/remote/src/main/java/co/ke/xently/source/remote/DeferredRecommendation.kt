@@ -1,4 +1,7 @@
 package co.ke.xently.source.remote
 
-@JvmInline
-value class DeferredRecommendation(val id: String)
+data class DeferredRecommendation(val id: String) {
+    override fun toString(): String {
+        return id
+    }
+}
