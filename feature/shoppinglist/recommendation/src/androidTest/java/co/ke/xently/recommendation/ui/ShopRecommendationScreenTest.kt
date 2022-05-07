@@ -57,7 +57,7 @@ class ShopRecommendationScreenTest {
         composeTestRule.onNodeWithText(toolbarTitle).assertIsDisplayed().assertHasNoClickAction()
     }
 
-    /*@Test
+    @Test
     fun recommendButtonText() {
         composeTestRule.setContent {
             XentlyTheme {
@@ -70,10 +70,10 @@ class ShopRecommendationScreenTest {
 
         composeTestRule.onNodeWithText(recommendButton).assertIsDisplayed()
             .assertHasClickAction()
-    }*/
+    }
 
     @Test
-    fun recommendButtonIsHiddenByDefault() {
+    fun recommendButtonIsDisabledByDefault() {
         composeTestRule.setContent {
             XentlyTheme {
                 ShopRecommendationScreen(
@@ -83,7 +83,7 @@ class ShopRecommendationScreenTest {
             }
         }
 
-        composeTestRule.onNodeWithText(recommendButton).assertDoesNotExist()
+        composeTestRule.onNodeWithText(recommendButton).assertIsNotEnabled()
     }
 
     @Test
@@ -299,7 +299,12 @@ class ShopRecommendationScreenTest {
             assertThat(firstValue.items[0], equalTo("milk"))
         }
 
-        composeTestRule.onNodeWithTag(activity.getString(R.string.fr_filter_remove_unpersisted_item, "milk")).performClick()
+        composeTestRule.onNodeWithTag(
+            activity.getString(
+                R.string.fr_filter_remove_unpersisted_item,
+                "milk"
+            )
+        ).performClick()
 
         composeTestRule.onNodeWithText(recommendButton).performClick()
         with(argumentCaptor<RecommendationRequest> { }) {

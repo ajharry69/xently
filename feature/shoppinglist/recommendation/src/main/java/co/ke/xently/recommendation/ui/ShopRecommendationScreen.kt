@@ -64,12 +64,45 @@ internal fun ShopRecommendationScreen(
                 onNavigationIconClicked = function.onNavigationClick,
             )
         },
-        floatingActionButton = {
-            if (unPersistedShoppingList.isNotEmpty()) {
-                ExtendedFloatingActionButton(
-                    text = {
-                        Text(text = stringResource(R.string.fr_filter_recommend).uppercase(KENYA))
+    ) { paddingValues ->
+        Column(modifier = modifier.padding(paddingValues)) {
+            var productName by remember {
+                mutableStateOf(TextFieldValue(""))
+            }
+            Row(
+                modifier = VerticalLayoutModifier.padding(top = VIEW_SPACE),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                TextInputLayout(
+                    value = productName,
+                    label = stringResource(R.string.fr_filter_product_name),
+                    modifier = Modifier.weight(1f),
+                    onValueChange = {
+                        productName = it
                     },
+                    trailingIcon = {
+                        val description =
+                            stringResource(R.string.fr_filter_add_product_name_content_description)
+                        IconButton(
+                            enabled = productName.text.isNotBlank(),
+                            modifier = Modifier.semantics { testTag = description },
+                            onClick = {
+                                if (unPersistedShoppingList.size > 0) {
+                                    unPersistedShoppingList.add(0, productName.text.trim())
+                                } else {
+                                    unPersistedShoppingList.add(productName.text.trim())
+                                }
+                                productName = TextFieldValue("")
+                            },
+                        ) {
+                            Icon(imageVector = Icons.Default.Add, contentDescription = description)
+                        }
+                    },
+                )
+                Spacer(modifier = Modifier.width(VIEW_SPACE_HALVED))
+                Button(
+                    modifier = Modifier.height(IntrinsicSize.Max),
+                    enabled = unPersistedShoppingList.isNotEmpty(),
                     onClick = {
                         function.onDetailSubmitted.invoke(
                             RecommendationRequest(
@@ -78,40 +111,10 @@ internal fun ShopRecommendationScreen(
                             ),
                         )
                     },
-                )
+                ) {
+                    Text(text = stringResource(R.string.fr_filter_recommend).uppercase(KENYA))
+                }
             }
-        },
-    ) { paddingValues ->
-        Column(modifier = modifier.padding(paddingValues)) {
-            var productName by remember {
-                mutableStateOf(TextFieldValue(""))
-            }
-            TextInputLayout(
-                value = productName,
-                modifier = VerticalLayoutModifier.padding(top = VIEW_SPACE),
-                label = stringResource(R.string.fr_filter_product_name),
-                onValueChange = {
-                    productName = it
-                },
-                trailingIcon = {
-                    val description =
-                        stringResource(R.string.fr_filter_add_product_name_content_description)
-                    IconButton(
-                        enabled = productName.text.isNotBlank(),
-                        modifier = Modifier.semantics { testTag = description },
-                        onClick = {
-                            if (unPersistedShoppingList.size > 0) {
-                                unPersistedShoppingList.add(0, productName.text.trim())
-                            } else {
-                                unPersistedShoppingList.add(productName.text.trim())
-                            }
-                            productName = TextFieldValue("")
-                        },
-                    ) {
-                        Icon(imageVector = Icons.Default.Add, contentDescription = description)
-                    }
-                },
-            )
             Row(modifier = VerticalLayoutModifier, verticalAlignment = Alignment.CenterVertically) {
                 val description = stringResource(R.string.fr_filter_should_persist_shopping_lists)
                 Checkbox(
@@ -154,20 +157,6 @@ internal fun ShopRecommendationScreen(
                     }
                 }
             }
-            /*Button(
-                enabled = unPersistedShoppingList.isNotEmpty(),
-                modifier = VerticalLayoutModifier,
-                onClick = {
-                    function.onDetailSubmitted.invoke(
-                        RecommendationRequest(
-                            persist = shouldPersist,
-                            items = unPersistedShoppingList,
-                        ),
-                    )
-                },
-            ) {
-                Text(text = stringResource(R.string.fr_filter_recommend).uppercase(KENYA))
-            }*/
         }
     }
 }
