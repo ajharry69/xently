@@ -169,6 +169,40 @@ class ShopRecommendationScreenTest {
     }
 
     @Test
+    fun errorIsShownIfPersistedShoppingListResultReturnsAnError() {
+        composeTestRule.setContent {
+            XentlyTheme {
+                ShopRecommendationScreen(
+                    modifier = Modifier.fillMaxSize(),
+                    function = ShopRecommendationScreenFunction(),
+                    result = TaskResult.Success(null),
+                    persistedShoppingListResult = TaskResult.Error("Sorry, something went wrong."),
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithText("Sorry, something went wrong.")
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun errorIsShownIfDeferredRecommendationResultReturnsAnError() {
+        composeTestRule.setContent {
+            XentlyTheme {
+                ShopRecommendationScreen(
+                    modifier = Modifier.fillMaxSize(),
+                    function = ShopRecommendationScreenFunction(),
+                    result = TaskResult.Error("Location access is required."),
+                    persistedShoppingListResult = TaskResult.Success(emptyList()),
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithText("Location access is required.")
+            .assertIsDisplayed()
+    }
+
+    @Test
     fun recommendButtonText() {
         composeTestRule.setContent {
             XentlyTheme {

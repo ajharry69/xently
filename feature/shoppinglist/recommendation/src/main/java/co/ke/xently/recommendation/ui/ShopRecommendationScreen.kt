@@ -19,10 +19,7 @@ import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.hilt.navigation.compose.hiltViewModel
 import co.ke.xently.common.KENYA
-import co.ke.xently.data.RecommendationRequest
-import co.ke.xently.data.ShoppingListItem
-import co.ke.xently.data.TaskResult
-import co.ke.xently.data.getOrNull
+import co.ke.xently.data.*
 import co.ke.xently.feature.ui.*
 import co.ke.xently.recommendation.R
 import co.ke.xently.shoppinglist.ui.list.item.ShoppingListItemCard
@@ -68,6 +65,18 @@ internal fun ShopRecommendationScreen(
     }
 
     val scaffoldState = rememberScaffoldState()
+
+    if (result is TaskResult.Error || persistedShoppingListResult is TaskResult.Error) {
+        val errorMessage = result.errorMessage ?: persistedShoppingListResult.errorMessage
+        ?: stringResource(R.string.generic_error_message)
+        LaunchedEffect(result, persistedShoppingListResult) {
+            scaffoldState.snackbarHostState.showSnackbar(
+                message = errorMessage,
+                duration = SnackbarDuration.Long,
+            )
+        }
+    }
+
     val toolbarTitle = stringResource(R.string.fr_filter_toolbar_title)
     val isTaskLoading =
         result is TaskResult.Loading || persistedShoppingListResult is TaskResult.Loading
