@@ -10,8 +10,8 @@ import androidx.navigation.navigation
 import co.ke.xently.feature.utils.Routes
 import co.ke.xently.feature.utils.buildRoute
 import co.ke.xently.recommendation.ui.RecommendationScreen
-import co.ke.xently.recommendation.ui.RecommendationScreenFunction
 import co.ke.xently.recommendation.ui.RecommendationScreenArgs
+import co.ke.xently.recommendation.ui.RecommendationScreenFunction
 import co.ke.xently.recommendation.ui.list.RecommendationListScreen
 import co.ke.xently.recommendation.ui.list.RecommendationListScreenFunction
 import co.ke.xently.recommendation.ui.list.item.RecommendationCardItemFunction

@@ -5,4 +5,5 @@ data class RecommendationRequest(
     // Save shopping list items...
     val persist: Boolean = true,
     val cacheRecommendationsForLater: Boolean = false,
+    val isLocationPermissionGranted: Boolean = false,
 )

@@ -4,6 +4,7 @@ import androidx.annotation.VisibleForTesting
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -17,6 +18,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.hilt.navigation.compose.hiltViewModel
 import co.ke.xently.common.KENYA
@@ -25,16 +27,19 @@ import co.ke.xently.feature.ui.*
 import co.ke.xently.recommendation.R
 import co.ke.xently.shoppinglist.ui.list.item.ShoppingListItemCard
 import co.ke.xently.source.remote.DeferredRecommendation
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
 
 internal const val TEST_TAG_RECOMMENDATION_BODY_CONTAINER = "TEST_TAG_RECOMMENDATION_BODY_CONTAINER"
 
 internal data class RecommendationScreenFunction(
-    val onNavigationClick: () -> Unit = {},
-    val onSuccess: (DeferredRecommendation) -> Unit = {},
-    val onDetailSubmitted: (RecommendationRequest) -> Unit = {},
+    internal val onNavigationClick: () -> Unit = {},
+    internal val onLocationPermissionRequest: () -> Unit = {},
+    internal val onSuccess: (DeferredRecommendation) -> Unit = {},
+    internal val onDetailSubmitted: (RecommendationRequest) -> Unit = {},
 )
 
 @Composable
+@OptIn(ExperimentalPermissionsApi::class)
 internal fun RecommendationScreen(
     modifier: Modifier,
     args: RecommendationScreenArgs,
@@ -55,13 +60,24 @@ internal fun RecommendationScreen(
         context = scope.coroutineContext,
     )
 
+    var shouldRequestPermission by remember {
+        mutableStateOf(false)
+    }
+
+    val permissionState =
+        requestLocationPermission(shouldRequestPermission = shouldRequestPermission)
+
     RecommendationScreen(
         modifier = modifier,
         result = result,
         persistedShoppingListResult = persistedShoppingListResult,
         function = function.copy(
             onDetailSubmitted = viewModel::recommend,
+            onLocationPermissionRequest = {
+                shouldRequestPermission = true
+            },
         ),
+        isLocationPermissionGranted = permissionState.allPermissionsGranted,
     )
 }
 
@@ -71,6 +87,7 @@ internal fun RecommendationScreen(
     modifier: Modifier,
     function: RecommendationScreenFunction,
     result: TaskResult<DeferredRecommendation?>,
+    isLocationPermissionGranted: Boolean,
     persistedShoppingListResult: TaskResult<List<ShoppingListItem>>,
 ) {
     val unPersistedShoppingList = remember {
@@ -84,6 +101,22 @@ internal fun RecommendationScreen(
     }
 
     val scaffoldState = rememberScaffoldState()
+
+    if (!isLocationPermissionGranted) {
+        val message = stringResource(R.string.location_permission_rationale_minified)
+        val actionLabel = stringResource(R.string.grant_button_label)
+        LaunchedEffect(isLocationPermissionGranted) {
+            val snackbarResult = scaffoldState.snackbarHostState.showSnackbar(
+                message = message,
+                actionLabel = actionLabel,
+                duration = SnackbarDuration.Indefinite,
+            )
+            when (snackbarResult) {
+                SnackbarResult.Dismissed -> TODO()
+                SnackbarResult.ActionPerformed -> function.onLocationPermissionRequest.invoke()
+            }
+        }
+    }
 
     if (result is TaskResult.Error || persistedShoppingListResult is TaskResult.Error) {
         val errorMessage = result.errorMessage ?: persistedShoppingListResult.errorMessage
@@ -130,6 +163,12 @@ internal fun RecommendationScreen(
                 onValueChange = {
                     productName = it
                 },
+                keyboardOptions = DefaultKeyboardOptions.copy(imeAction = ImeAction.Done),
+                keyboardActions = KeyboardActions(
+                    onDone = {
+                        focusManager.clearFocus()
+                    }
+                ),
                 trailingIcon = {
                     val description =
                         stringResource(R.string.fr_filter_add_product_name_content_description)
@@ -162,6 +201,23 @@ internal fun RecommendationScreen(
                     },
                 )
                 Text(text = description)
+            }
+            Button(
+                modifier = VerticalLayoutModifier,
+                enabled = isLocationPermissionGranted && !isTaskLoading && (unPersistedShoppingList.isNotEmpty() || persistedShoppingList.isNotEmpty()),
+                onClick = {
+                    focusManager.clearFocus()
+                    val items = unPersistedShoppingList + persistedShoppingList
+                    function.onDetailSubmitted.invoke(
+                        RecommendationRequest(
+                            items = items,
+                            persist = shouldPersist,
+                            cacheRecommendationsForLater = true,
+                        ),
+                    )
+                },
+            ) {
+                Text(text = stringResource(R.string.fr_filter_recommend).uppercase(KENYA))
             }
             LazyColumn(
                 modifier = Modifier.semantics {
@@ -230,25 +286,6 @@ internal fun RecommendationScreen(
                             }
                         },
                     ) {}
-                }
-                item {
-                    Button(
-                        modifier = VerticalLayoutModifier,
-                        enabled = !isTaskLoading && (unPersistedShoppingList.isNotEmpty() || persistedShoppingList.isNotEmpty()),
-                        onClick = {
-                            focusManager.clearFocus()
-                            val items = unPersistedShoppingList + persistedShoppingList
-                            function.onDetailSubmitted.invoke(
-                                RecommendationRequest(
-                                    items = items,
-                                    persist = shouldPersist,
-                                    cacheRecommendationsForLater = true,
-                                ),
-                            )
-                        },
-                    ) {
-                        Text(text = stringResource(R.string.fr_filter_recommend).uppercase(KENYA))
-                    }
                 }
             }
         }
