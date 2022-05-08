@@ -11,6 +11,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -109,6 +110,11 @@ internal fun RecommendationScreen(
                 title = toolbarTitle,
                 showProgress = isTaskLoading,
                 onNavigationIconClicked = function.onNavigationClick,
+                subTitle = LocalContext.current.resources.getQuantityString(
+                    R.plurals.fr_filter_toolbar_subtitle,
+                    unPersistedShoppingList.size + persistedShoppingList.size,
+                    unPersistedShoppingList.size + persistedShoppingList.size,
+                )
             )
         },
     ) { paddingValues ->

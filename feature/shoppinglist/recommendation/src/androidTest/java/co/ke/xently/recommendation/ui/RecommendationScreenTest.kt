@@ -595,6 +595,137 @@ class RecommendationScreenTest {
     }
 
     @Test
+    fun toolbarSubtitleForEmptyPersistedShoppingList() {
+        composeTestRule.setContent {
+            XentlyTheme {
+                RecommendationScreen(
+                    modifier = Modifier.fillMaxSize(),
+                    function = RecommendationScreenFunction(),
+                    result = TaskResult.Success(null),
+                    persistedShoppingListResult = TaskResult.Success(emptyList()),
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithText("0 items").assertIsDisplayed()
+    }
+
+    @Test
+    fun toolbarSubtitleForNonEmptyPersistedShoppingList() {
+        val persistedShoppingList = listOf(
+            ShoppingListItem.default().copy(isDefault = false, id = 1),
+            ShoppingListItem.default().copy(
+                isDefault = false,
+                name = "White bread by superloaf",
+                unit = "grams",
+                unitQuantity = 400f,
+                id = 2,
+            ),
+        )
+        composeTestRule.setContent {
+            XentlyTheme {
+                RecommendationScreen(
+                    modifier = Modifier.fillMaxSize(),
+                    function = RecommendationScreenFunction(),
+                    result = TaskResult.Success(null),
+                    persistedShoppingListResult = TaskResult.Success(persistedShoppingList),
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithText("2 items").assertIsDisplayed()
+    }
+
+    @Test
+    fun toolbarSubtitleForPersistedShoppingListOfSize1() {
+        val persistedShoppingList = listOf(
+            ShoppingListItem.default().copy(isDefault = false, id = 1)
+        )
+        composeTestRule.setContent {
+            XentlyTheme {
+                RecommendationScreen(
+                    modifier = Modifier.fillMaxSize(),
+                    function = RecommendationScreenFunction(),
+                    result = TaskResult.Success(null),
+                    persistedShoppingListResult = TaskResult.Success(persistedShoppingList),
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithText("1 item").assertIsDisplayed()
+    }
+
+    @Test
+    fun toolbarSubtitleForPersistedAndUnPersistedShoppingList() {
+        val persistedShoppingList = listOf(
+            ShoppingListItem.default().copy(isDefault = false, id = 1)
+        )
+        composeTestRule.setContent {
+            XentlyTheme {
+                RecommendationScreen(
+                    modifier = Modifier.fillMaxSize(),
+                    function = RecommendationScreenFunction(),
+                    result = TaskResult.Success(null),
+                    persistedShoppingListResult = TaskResult.Success(persistedShoppingList),
+                )
+            }
+        }
+
+        addUnPersistedShoppingListItem("Milk")
+
+        composeTestRule.onNodeWithText("2 items").assertIsDisplayed()
+    }
+
+    @Test
+    fun toolbarSubtitleWhenPersistedShoppingListItemIsRemoved() {
+        val persistedShoppingList = listOf(
+            ShoppingListItem.default().copy(isDefault = false, id = 1)
+        )
+        composeTestRule.setContent {
+            XentlyTheme {
+                RecommendationScreen(
+                    modifier = Modifier.fillMaxSize(),
+                    function = RecommendationScreenFunction(),
+                    result = TaskResult.Success(null),
+                    persistedShoppingListResult = TaskResult.Success(persistedShoppingList),
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithText("1 item").assertIsDisplayed()
+
+        composeTestRule.onNodeWithTag(
+            activity.getString(R.string.fr_filter_remove_persisted_item, persistedShoppingList[0])
+        ).performClick()
+
+        composeTestRule.onNodeWithText("0 items").assertIsDisplayed()
+    }
+
+    @Test
+    fun toolbarSubtitleWhenUnPersistedShoppingListItemIsRemoved() {
+        composeTestRule.setContent {
+            XentlyTheme {
+                RecommendationScreen(
+                    modifier = Modifier.fillMaxSize(),
+                    function = RecommendationScreenFunction(),
+                    result = TaskResult.Success(null),
+                    persistedShoppingListResult = TaskResult.Success(emptyList()),
+                )
+            }
+        }
+
+        addUnPersistedShoppingListItem("Bread")
+
+        composeTestRule.onNodeWithText("1 item").assertIsDisplayed()
+
+        composeTestRule.onNodeWithTag(
+            activity.getString(R.string.fr_filter_remove_unpersisted_item, "Bread")
+        ).performClick()
+
+        composeTestRule.onNodeWithText("0 items").assertIsDisplayed()
+    }
+
+    @Test
     fun clickingOnRemovePersistedIconRemovesTheItemFromPersistedShoppingList() {
         val onDetailSubmittedMock: (RecommendationRequest) -> Unit = mock()
         val persistedShoppingList = listOf(
