@@ -5,6 +5,7 @@
     <!-- Drawer menu labels -->
     <string name="drawer_menu_shops">Shops</string>
     <string name="drawer_menu_products">Products</string>
+    <string name="drawer_menu_recommendation">Recommendation</string>
 
     <string name="toggle_drawer_visibility">%1$s drawer</string>
     <string name="toggle_password_visibility">%1$s password</string>

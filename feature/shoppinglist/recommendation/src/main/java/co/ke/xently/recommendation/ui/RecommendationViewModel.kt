@@ -17,7 +17,7 @@ import javax.inject.Inject
 internal class RecommendationViewModel @Inject constructor(
     private val repository: IRecommendationRepository
 ) : ViewModel() {
-    private val args = MutableSharedFlow<ShopRecommendationScreenArgs>(replay = 1)
+    private val args = MutableSharedFlow<RecommendationScreenArgs>(replay = 1)
     val persistedShoppingListResult: Flow<TaskResult<List<ShoppingListItem>>> =
         args.flatMapLatest(repository::getShoppingListItems)
             .map<List<ShoppingListItem>, TaskResult<List<ShoppingListItem>>> {
@@ -38,7 +38,7 @@ internal class RecommendationViewModel @Inject constructor(
         }
     }
 
-    suspend fun setArgs(args: ShopRecommendationScreenArgs) {
+    suspend fun setArgs(args: RecommendationScreenArgs) {
         viewModelScope.launch {
             this@RecommendationViewModel.args.emit(args)
         }

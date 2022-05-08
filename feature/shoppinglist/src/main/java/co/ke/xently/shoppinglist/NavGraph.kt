@@ -2,10 +2,7 @@ package co.ke.xently.shoppinglist
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Business
-import androidx.compose.material.icons.filled.Category
-import androidx.compose.material.icons.filled.List
-import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -32,6 +29,7 @@ fun NavGraphBuilder.shoppingListGraph(
     onAccountMenuClicked: () -> Unit,
     onShopMenuClicked: () -> Unit,
     onProductMenuClicked: () -> Unit,
+    onRecommendationMenuClicked: () -> Unit,
     onNavigationIconClicked: () -> Unit,
 ) {
     navigation(
@@ -91,6 +89,12 @@ fun NavGraphBuilder.shoppingListGraph(
                         label = R.string.drawer_menu_products,
                         icon = Icons.Default.Category,
                         onClick = onProductMenuClicked,
+                    ),
+                    NavMenuItem(
+                        context = context,
+                        label = R.string.drawer_menu_recommendation,
+                        icon = Icons.Default.AltRoute,
+                        onClick = onRecommendationMenuClicked,
                     ),
                 ),
                 menuItems = shoppingListItemMenuItems,

@@ -5,13 +5,10 @@ import co.ke.xently.common.Retry
 import co.ke.xently.data.RecommendationRequest
 import co.ke.xently.data.ShoppingListItem
 import co.ke.xently.feature.repository.Dependencies
-import co.ke.xently.recommendation.ui.ShopRecommendationScreenArgs
+import co.ke.xently.recommendation.ui.RecommendationScreenArgs
 import co.ke.xently.source.remote.retryCatch
 import co.ke.xently.source.remote.sendRequest
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -34,15 +31,25 @@ internal class RecommendationRepository @Inject constructor(
         }.retryCatch(this).flowOn(dependencies.dispatcher.io)
     }
 
-    override fun getShoppingListItems(args: ShopRecommendationScreenArgs): Flow<List<ShoppingListItem>> {
-        return if (args.group != null) {
-            val date = DEFAULT_SERVER_DATE_FORMAT.parse(args.group.group.toString())!!
-            dependencies.database.shoppingListDao.getList(date)
-        } else {
-            dependencies.database.shoppingListDao.getList(args.itemId!!)
-        }.map { shoppingList ->
-            shoppingList.map {
-                it.item
+    override fun getShoppingListItems(args: RecommendationScreenArgs): Flow<List<ShoppingListItem>> {
+        return when {
+            args.group != null -> {
+                val date = DEFAULT_SERVER_DATE_FORMAT.parse(args.group.group.toString())!!
+                dependencies.database.shoppingListDao.getList(date).map { shoppingList ->
+                    shoppingList.map {
+                        it.item
+                    }
+                }
+            }
+            args.itemId != null -> {
+                dependencies.database.shoppingListDao.getList(args.itemId).map { shoppingList ->
+                    shoppingList.map {
+                        it.item
+                    }
+                }
+            }
+            else -> {
+                flowOf(emptyList())
             }
         }
     }

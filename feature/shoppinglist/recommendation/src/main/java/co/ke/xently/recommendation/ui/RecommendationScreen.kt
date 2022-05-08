@@ -36,7 +36,7 @@ internal data class RecommendationScreenFunction(
 @Composable
 internal fun RecommendationScreen(
     modifier: Modifier,
-    args: ShopRecommendationScreenArgs,
+    args: RecommendationScreenArgs,
     function: RecommendationScreenFunction,
     viewModel: RecommendationViewModel = hiltViewModel(),
 ) {

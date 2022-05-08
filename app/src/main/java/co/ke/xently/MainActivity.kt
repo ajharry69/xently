@@ -82,6 +82,9 @@ class MainActivity : FragmentActivity() {
                             onProductMenuClicked = {
                                 navController.navigate(Routes.Products.toString())
                             },
+                            onRecommendationMenuClicked = {
+                                navController.navigate(Routes.ShoppingList.Recommendation.toString())
+                            },
                             onNavigationIconClicked = this@MainActivity::onBackPressed,
                         )
                         recommendationGraph(
