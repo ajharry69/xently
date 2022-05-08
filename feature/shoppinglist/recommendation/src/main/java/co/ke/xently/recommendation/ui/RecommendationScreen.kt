@@ -19,6 +19,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.hilt.navigation.compose.hiltViewModel
 import co.ke.xently.common.KENYA
@@ -163,7 +164,10 @@ internal fun RecommendationScreen(
                 onValueChange = {
                     productName = it
                 },
-                keyboardOptions = DefaultKeyboardOptions.copy(imeAction = ImeAction.Done),
+                keyboardOptions = DefaultKeyboardOptions.copy(
+                    imeAction = ImeAction.Done,
+                    capitalization = KeyboardCapitalization.Sentences,
+                ),
                 keyboardActions = KeyboardActions(
                     onDone = {
                         focusManager.clearFocus()
@@ -213,6 +217,7 @@ internal fun RecommendationScreen(
                             items = items,
                             persist = shouldPersist,
                             cacheRecommendationsForLater = true,
+                            isLocationPermissionGranted = isLocationPermissionGranted,
                         ),
                     )
                 },
