@@ -25,6 +25,7 @@ import co.ke.xently.shops.ui.list.item.ShopListItemFunction
 fun NavGraphBuilder.shopsGraph(
     navController: NavHostController,
     onNavigationIconClicked: () -> Unit,
+    onLocationPermissionChanged: (permissionGranted: Boolean) -> Unit,
 ) {
     navigation(route = Routes.Shops.toString(), startDestination = Routes.Shops.LIST) {
         composable(Routes.Shops.LIST) {
@@ -115,6 +116,7 @@ fun NavGraphBuilder.shopsGraph(
                 ),
                 function = ShopDetailScreenFunction(
                     onNavigationIconClicked = onNavigationIconClicked,
+                    onLocationPermissionChanged = onLocationPermissionChanged,
                 ),
             )
         }

@@ -26,6 +26,7 @@ import android.os.IBinder
 import android.os.Looper
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import co.ke.xently.data.Shop
 import co.ke.xently.feature.repository.ILocationServiceRepository
 import com.google.android.gms.location.*
 import dagger.hilt.android.AndroidEntryPoint
@@ -78,7 +79,8 @@ class LocationService : Service() {
 
                 locationResult.lastLocation.run {
                     runBlocking {
-                        repository.updateLocation(arrayOf(latitude, longitude)).collect()
+                        repository.updateLocation(Shop.Coordinate(lat = latitude, lon = longitude))
+                            .collect()
                     }
                 }
 

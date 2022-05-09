@@ -35,7 +35,9 @@ class MainActivity : FragmentActivity() {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
             locationService = (service as? LocationService.LocalBinder)?.service?.also {
                 locationServiceBound = true
-                if (locationPermissionsGranted) it.subscribeToLocationUpdates()
+                if (locationPermissionsGranted) {
+                    it.subscribeToLocationUpdates()
+                }
             }
         }
 
@@ -90,6 +92,7 @@ class MainActivity : FragmentActivity() {
                         recommendationGraph(
                             controller = navController,
                             onNavigationIconClicked = this@MainActivity::onBackPressed,
+                            onLocationPermissionChanged = viewModel::setLocationPermissionGranted,
                         )
                         productsGraph(
                             navController = navController,
@@ -102,6 +105,7 @@ class MainActivity : FragmentActivity() {
                         shopsGraph(
                             navController = navController,
                             onNavigationIconClicked = this@MainActivity::onBackPressed,
+                            onLocationPermissionChanged = viewModel::setLocationPermissionGranted,
                         )
                     }
                 }

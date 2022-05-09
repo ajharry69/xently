@@ -13,6 +13,7 @@ import co.ke.xently.recommendation.ui.RecommendationScreen
 import co.ke.xently.recommendation.ui.RecommendationScreenArgs
 import co.ke.xently.recommendation.ui.RecommendationScreenFunction
 import co.ke.xently.recommendation.ui.list.RecommendationListScreen
+import co.ke.xently.recommendation.ui.list.RecommendationListScreenArgs
 import co.ke.xently.recommendation.ui.list.RecommendationListScreenFunction
 import co.ke.xently.recommendation.ui.list.item.RecommendationCardItemFunction
 import co.ke.xently.recommendation.ui.list.item.RecommendationCardItemMenuItem
@@ -22,6 +23,7 @@ import co.ke.xently.shoppinglist.repository.ShoppingListGroup
 fun NavGraphBuilder.recommendationGraph(
     controller: NavHostController,
     onNavigationIconClicked: () -> Unit,
+    onLocationPermissionChanged: (permissionGranted: Boolean) -> Unit,
 ) {
     navigation(
         route = Routes.ShoppingList.Recommendation.toString(),
@@ -45,10 +47,12 @@ fun NavGraphBuilder.recommendationGraph(
                 modifier = Modifier.fillMaxSize(),
                 function = RecommendationScreenFunction(
                     onNavigationClick = onNavigationIconClicked,
+                    onLocationPermissionChanged = onLocationPermissionChanged,
                     onSuccess = {
                         controller.navigate(
                             route = Routes.ShoppingList.Recommendation.LIST.buildRoute(
                                 "lookupId" to it,
+                                "numberOfItems" to it.numberOfItems,
                             ),
                         )
                     },
@@ -71,12 +75,16 @@ fun NavGraphBuilder.recommendationGraph(
             route = Routes.ShoppingList.Recommendation.LIST,
             arguments = listOf(
                 navArgument("lookupId") {},
+                navArgument("numberOfItems") {
+                    defaultValue = 0
+                },
             ),
         ) {
             RecommendationListScreen(
                 function = RecommendationListScreenFunction(
                     onItemClicked = {},
                     onNavigationIconClicked = onNavigationIconClicked,
+                    onLocationPermissionChanged = onLocationPermissionChanged,
                     function = RecommendationCardItemFunction(
                         onItemClicked = {
                             // TODO: ...
@@ -98,7 +106,10 @@ fun NavGraphBuilder.recommendationGraph(
                     ),
                 ),
                 modifier = Modifier.fillMaxSize(),
-                lookupId = it.arguments?.getString("lookupId")!!,
+                args = RecommendationListScreenArgs(
+                    lookupId = it.arguments?.getString("lookupId")!!,
+                    numberOfItems = it.arguments?.getInt("numberOfItems", 0)!!,
+                ),
             )
         }
     }

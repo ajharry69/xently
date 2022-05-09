@@ -8,13 +8,14 @@ import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import co.ke.xently.data.Recommendation
 import co.ke.xently.data.ShoppingListItem
 import co.ke.xently.data.TaskResult
-import co.ke.xently.data.getOrThrow
+import co.ke.xently.data.getOrNull
 import co.ke.xently.feature.ui.*
 import co.ke.xently.feature.utils.MAP_HEIGHT
 import co.ke.xently.recommendation.R
@@ -25,40 +26,45 @@ import com.google.android.libraries.maps.model.LatLng
 import com.google.android.libraries.maps.model.MarkerOptions
 
 internal data class RecommendationListScreenFunction(
-    val onNavigationIconClicked: () -> Unit = {},
-    val onRetryClicked: (Throwable) -> Unit = {},
-    val onItemClicked: (ShoppingListItem) -> Unit = {},
-    val onLocationPermissionChanged: (Boolean) -> Unit = {},
-    val function: RecommendationCardItemFunction = RecommendationCardItemFunction(),
+    internal val onNavigationIconClicked: () -> Unit = {},
+    internal val onRetryClicked: (Throwable) -> Unit = {},
+    internal val onItemClicked: (ShoppingListItem) -> Unit = {},
+    internal val onLocationPermissionChanged: (Boolean) -> Unit = {},
+    internal val function: RecommendationCardItemFunction = RecommendationCardItemFunction(),
+)
+
+internal data class RecommendationListScreenArgs(
+    internal val lookupId: String,
+    internal val numberOfItems: Int,
 )
 
 @Composable
 internal fun RecommendationListScreen(
     modifier: Modifier,
-    lookupId: String,
-    menuItems: List<RecommendationCardItemMenuItem>,
+    args: RecommendationListScreenArgs,
     function: RecommendationListScreenFunction,
+    menuItems: List<RecommendationCardItemMenuItem>,
     viewModel: RecommendationListViewModel = hiltViewModel(),
 ) {
     val scope = rememberCoroutineScope()
     val result by viewModel.result.collectAsState(
-        initial = TaskResult.Loading,
         context = scope.coroutineContext,
+        initial = TaskResult.Success(emptyList()),
     )
 
-    LaunchedEffect(lookupId) {
-        viewModel.recommend(lookupId)
+    LaunchedEffect(args.lookupId) {
+        viewModel.recommend(args.lookupId)
     }
 
     RecommendationListScreen(
+        args = args,
         result = result,
         modifier = modifier,
         menuItems = menuItems,
         function = function.copy(
             onRetryClicked = {
-                viewModel.recommend(lookupId)
+                viewModel.recommend(args.lookupId)
             },
-            onLocationPermissionChanged = viewModel::setLocationPermissionGranted,
         ),
     )
 }
@@ -66,15 +72,17 @@ internal fun RecommendationListScreen(
 @Composable
 private fun RecommendationListScreen(
     modifier: Modifier,
+    args: RecommendationListScreenArgs,
     result: TaskResult<List<Recommendation>>,
-    menuItems: List<RecommendationCardItemMenuItem>,
     function: RecommendationListScreenFunction,
+    menuItems: List<RecommendationCardItemMenuItem>,
 ) {
     val scaffoldState = rememberScaffoldState()
+    val recommendations: List<Recommendation>? = result.getOrNull()
     Scaffold(
         scaffoldState = scaffoldState,
         topBar = {
-            if (result !is TaskResult.Success) {
+            if (recommendations.isNullOrEmpty()) {
                 ToolbarWithProgressbar(
                     title = stringResource(R.string.fr_toolbar_title),
                     onNavigationIconClicked = function.onNavigationIconClicked,
@@ -94,51 +102,61 @@ private fun RecommendationListScreen(
                 FullscreenLoading<Recommendation>(modifier = modifier.padding(it))
             }
             is TaskResult.Success -> {
-                val recommendations = result.getOrThrow()
-                LazyColumn(
-                    modifier = modifier.padding(it),
-                    verticalArrangement = Arrangement.spacedBy(VIEW_SPACE_HALVED),
-                ) {
-                    item {
-                        Box(
-                            modifier = Modifier
-                                .height(IntrinsicSize.Min)
-                                .fillMaxWidth()
-                        ) {
-                            GoogleMapView(
-                                Modifier
-                                    .height(MAP_HEIGHT)
+                if (recommendations!!.isEmpty()) {
+                    FullscreenEmptyList<Recommendation>(
+                        modifier = modifier.padding(it),
+                        error = LocalContext.current.resources.getQuantityString(
+                            R.plurals.fr_empty_recommendation_list,
+                            args.numberOfItems,
+                            args.numberOfItems,
+                        )
+                    )
+                } else {
+                    LazyColumn(
+                        modifier = modifier.padding(it),
+                        verticalArrangement = Arrangement.spacedBy(VIEW_SPACE_HALVED),
+                    ) {
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .height(IntrinsicSize.Min)
                                     .fillMaxWidth(),
-                                markerPositions = recommendations.filter { recommendation ->
-                                    recommendation.shop.coordinate != null
-                                }.map { recommendation ->
-                                    MarkerOptions().apply {
-                                        title(recommendation.shop.descriptiveName)
-                                        snippet("${recommendation.hit.count} item(s), ${recommendation.expenditure.total}")
-                                        position(
-                                            LatLng(
-                                                recommendation.shop.coordinate!!.lat,
-                                                recommendation.shop.coordinate!!.lon,
+                            ) {
+                                GoogleMapView(
+                                    Modifier
+                                        .height(MAP_HEIGHT)
+                                        .fillMaxWidth(),
+                                    markerPositions = recommendations.filter { recommendation ->
+                                        recommendation.shop.coordinate != null
+                                    }.map { recommendation ->
+                                        MarkerOptions().apply {
+                                            title(recommendation.shop.descriptiveName)
+                                            snippet("${recommendation.hit.count} item(s), ${recommendation.expenditure.total}")  // TODO: Shift to string resource...
+                                            position(
+                                                LatLng(
+                                                    recommendation.shop.coordinate!!.lat,
+                                                    recommendation.shop.coordinate!!.lon,
+                                                )
                                             )
-                                        )
-                                    }
-                                },
-                                onLocationPermissionChanged = function.onLocationPermissionChanged,
-                            )
-                            ToolbarWithProgressbar(
-                                title = stringResource(R.string.fr_toolbar_title),
-                                onNavigationIconClicked = function.onNavigationIconClicked,
-                                backgroundColor = Color.Transparent,
-                                elevation = 0.dp,
+                                        }
+                                    },
+                                    onLocationPermissionChanged = function.onLocationPermissionChanged,
+                                )
+                                ToolbarWithProgressbar(
+                                    title = stringResource(R.string.fr_toolbar_title),
+                                    onNavigationIconClicked = function.onNavigationIconClicked,
+                                    backgroundColor = Color.Transparent,
+                                    elevation = 0.dp,
+                                )
+                            }
+                        }
+                        items(recommendations) { recommendation ->
+                            RecommendationCardItem(
+                                menuItems = menuItems,
+                                function = function.function,
+                                recommendation = recommendation,
                             )
                         }
-                    }
-                    items(recommendations) { recommendation ->
-                        RecommendationCardItem(
-                            menuItems = menuItems,
-                            function = function.function,
-                            recommendation = recommendation,
-                        )
                     }
                 }
             }

@@ -14,8 +14,9 @@ import com.google.accompanist.permissions.rememberMultiplePermissionsState
 
 @Composable
 fun requestLocationPermission(
-    shouldRequestPermission: Boolean = true,
     vararg permissions: String,
+    shouldRequestPermission: Boolean = true,
+    onLocationPermissionChanged: (permissionGranted: Boolean) -> Unit = {},
 ): MultiplePermissionsState {
     var showRationale by rememberSaveable { mutableStateOf(true) }
 
@@ -60,6 +61,10 @@ fun requestLocationPermission(
             },
             text = { Text(stringResource(R.string.location_permission_rationale)) },
         )
+    } else {
+        SideEffect {
+            onLocationPermissionChanged.invoke(permissionState.allPermissionsGranted)
+        }
     }
     return permissionState
 }

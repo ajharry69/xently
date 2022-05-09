@@ -8,4 +8,8 @@
         <item quantity="one">%1$d item</item>
         <item quantity="other">%1$d items</item>
     </plurals>
+    <plurals name="fr_empty_recommendation_list">
+        <item quantity="one">Shop recommendation for %1$d item not found within your current location.</item>
+        <item quantity="other">Shop recommendation for %1$d items not found within your current location.</item>
+    </plurals>
 </resources>

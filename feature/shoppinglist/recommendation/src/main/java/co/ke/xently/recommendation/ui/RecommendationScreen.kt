@@ -37,6 +37,7 @@ internal data class RecommendationScreenFunction(
     internal val onLocationPermissionRequest: () -> Unit = {},
     internal val onSuccess: (DeferredRecommendation) -> Unit = {},
     internal val onDetailSubmitted: (RecommendationRequest) -> Unit = {},
+    internal val onLocationPermissionChanged: (permissionGranted: Boolean) -> Unit = {},
 )
 
 @Composable
@@ -65,8 +66,10 @@ internal fun RecommendationScreen(
         mutableStateOf(false)
     }
 
-    val permissionState =
-        requestLocationPermission(shouldRequestPermission = shouldRequestPermission)
+    val permissionState = requestLocationPermission(
+        shouldRequestPermission = shouldRequestPermission,
+        onLocationPermissionChanged = function.onLocationPermissionChanged,
+    )
 
     RecommendationScreen(
         modifier = modifier,
@@ -130,7 +133,10 @@ internal fun RecommendationScreen(
         }
     } else if (result is TaskResult.Success && result.data != null) {
         SideEffect {
-            function.onSuccess.invoke(result.data!!)
+            val deferredRecommendation = result.data!!.copy(
+                numberOfItems = unPersistedShoppingList.size + persistedShoppingList.size,
+            )
+            function.onSuccess.invoke(deferredRecommendation)
         }
     }
 

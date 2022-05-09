@@ -14,7 +14,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 
 @HiltViewModel
-open class LocationPermissionViewModel @Inject constructor(
+class LocationPermissionViewModel @Inject constructor(
     @ApplicationContext context: Context,
     private val savedStateHandle: SavedStateHandle,
 ) : ViewModel() {

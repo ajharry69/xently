@@ -46,9 +46,9 @@ internal data class ShopDetailScreenArgs(
 )
 
 internal data class ShopDetailScreenFunction(
-    val onAddShopClicked: (Shop) -> Unit = {},
-    val onNavigationIconClicked: () -> Unit = {},
-    val onLocationPermissionChanged: (Boolean) -> Unit = {},
+    internal val onAddShopClicked: (Shop) -> Unit = {},
+    internal val onNavigationIconClicked: () -> Unit = {},
+    internal val onLocationPermissionChanged: (Boolean) -> Unit = {},
 )
 
 @Composable
@@ -86,10 +86,7 @@ internal fun ShopDetailScreen(
         },
         addResult = addResult,
         permitReAddition = permitReAddition,
-        function = function.copy(
-            onAddShopClicked = viewModel::addOrUpdate,
-            onLocationPermissionChanged = viewModel::setLocationPermissionGranted,
-        ),
+        function = function.copy(onAddShopClicked = viewModel::addOrUpdate),
     )
 }
 

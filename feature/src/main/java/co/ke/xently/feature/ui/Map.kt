@@ -53,13 +53,14 @@ private fun GoogleMapViewContainer(
     onLocationPermissionChanged: (permissionGranted: Boolean) -> Unit,
     setUp: GoogleMap.() -> Unit,
 ) {
-    val permissionState = requestLocationPermission()
+    val permissionState =
+        requestLocationPermission(onLocationPermissionChanged = onLocationPermissionChanged)
     val myLocation by rememberSaveable(currentPosition.latitude, currentPosition.longitude) {
         mutableStateOf(currentPosition)
     }
 
     LaunchedEffect(map, permissionState.allPermissionsGranted) {
-        onLocationPermissionChanged(permissionState.allPermissionsGranted)
+//        onLocationPermissionChanged(permissionState.allPermissionsGranted)
         map.awaitMap().apply {
             uiSettings.apply {
                 isZoomControlsEnabled = true

@@ -1,16 +1,13 @@
 package co.ke.xently.shops.ui.detail
 
-import android.content.Context
-import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.ke.xently.data.Shop
 import co.ke.xently.data.TaskResult
 import co.ke.xently.feature.utils.DEFAULT_SHARING_STARTED
 import co.ke.xently.feature.utils.flagLoadingOnStart
-import co.ke.xently.feature.viewmodels.LocationPermissionViewModel
 import co.ke.xently.shops.repository.IShopsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.flatMapLatest
@@ -22,10 +19,8 @@ import javax.inject.Inject
 @HiltViewModel
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class ShopDetailViewModel @Inject constructor(
-    @ApplicationContext context: Context,
-    savedStateHandle: SavedStateHandle,
     private val repository: IShopsRepository,
-) : LocationPermissionViewModel(context, savedStateHandle) {
+) : ViewModel() {
     private val shop = MutableSharedFlow<Shop>()
     val addResult = shop.flatMapLatest {
         if (it.isDefault) {
