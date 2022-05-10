@@ -322,6 +322,41 @@ class RecommendationScreenTest {
         with(argumentCaptor<DeferredRecommendation> { }) {
             verify(onSuccessMock, times(1)).invoke(capture())
             assertThat(firstValue.toString(), equalTo("recommendation-lookup-key"))
+            assertThat(firstValue.id, equalTo("recommendation-lookup-key"))
+            assertThat(firstValue.numberOfItems, equalTo(0))
+        }
+    }
+
+    @Test
+    fun successfulDeferredRecommendationResultWithNonNullDataAndNonEmptyPersistedShoppingList() {
+        val persistedShoppingList = listOf(
+            ShoppingListItem.default().copy(isDefault = false, id = 1),
+            ShoppingListItem.default().copy(
+                isDefault = false,
+                name = "White bread by superloaf",
+                unit = "grams",
+                unitQuantity = 400f,
+                id = 2,
+            ),
+        )
+        val onSuccessMock: (DeferredRecommendation) -> Unit = mock()
+        composeTestRule.setContent {
+            XentlyTheme {
+                RecommendationScreen(
+                    modifier = Modifier.fillMaxSize(),
+                    function = RecommendationScreenFunction(onSuccess = onSuccessMock),
+                    result = TaskResult.Success(DeferredRecommendation(id = "recommendation-lookup-key")),
+                    persistedShoppingListResult = TaskResult.Success(persistedShoppingList),
+                    isLocationPermissionGranted = true,
+                )
+            }
+        }
+
+        with(argumentCaptor<DeferredRecommendation> { }) {
+            verify(onSuccessMock, times(1)).invoke(capture())
+            assertThat(firstValue.toString(), equalTo("recommendation-lookup-key"))
+            assertThat(firstValue.id, equalTo("recommendation-lookup-key"))
+            assertThat(firstValue.numberOfItems, equalTo(2))
         }
     }
 
