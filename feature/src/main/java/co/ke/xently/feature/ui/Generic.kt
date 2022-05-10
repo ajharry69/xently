@@ -46,6 +46,8 @@ import co.ke.xently.source.remote.RETRY_ABLE_ERROR_CLASSES
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 
+const val TEST_TAG_CIRCULAR_PROGRESS_BAR = "TEST_TAG_CIRCULAR_PROGRESS_BAR"
+
 val VIEW_SPACE = 16.dp
 
 val VIEW_SPACE_HALVED = VIEW_SPACE / 2
@@ -216,7 +218,11 @@ fun <T> FullscreenLoading(
 ) {
     if (placeholder == null) {
         Box(modifier = modifier, contentAlignment = Alignment.Center) {
-            CircularProgressIndicator()
+            CircularProgressIndicator(
+                modifier = Modifier.semantics {
+                    testTag = TEST_TAG_CIRCULAR_PROGRESS_BAR
+                },
+            )
         }
     } else {
         LazyColumn(modifier = modifier, userScrollEnabled = false) {

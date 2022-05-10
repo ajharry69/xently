@@ -252,7 +252,7 @@ internal fun RecommendationScreen(
                             modifier = Modifier.wrapContentWidth(),
                         )
                         val description =
-                            stringResource(R.string.fr_filter_remove_unpersisted_item, item)
+                            stringResource(R.string.fr_filter_remove_un_persisted_item, item)
                         IconButton(
                             onClick = {
                                 focusManager.clearFocus()

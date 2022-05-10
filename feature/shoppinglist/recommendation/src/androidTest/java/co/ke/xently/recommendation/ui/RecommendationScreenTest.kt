@@ -694,7 +694,7 @@ class RecommendationScreenTest {
         }*/
 
         composeTestRule.onNodeWithTag(
-            activity.getString(R.string.fr_filter_remove_unpersisted_item, "milk")
+            activity.getString(R.string.fr_filter_remove_un_persisted_item, "milk")
         ).performClick()
 
         composeTestRule.onNodeWithText(recommendButton)
@@ -879,7 +879,7 @@ class RecommendationScreenTest {
         composeTestRule.onNodeWithText("1 item").assertIsDisplayed()
 
         composeTestRule.onNodeWithTag(
-            activity.getString(R.string.fr_filter_remove_unpersisted_item, "Bread")
+            activity.getString(R.string.fr_filter_remove_un_persisted_item, "Bread")
         ).performClick()
 
         composeTestRule.onNodeWithText("0 items").assertIsDisplayed()
