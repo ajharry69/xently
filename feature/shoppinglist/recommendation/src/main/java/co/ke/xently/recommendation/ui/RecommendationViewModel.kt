@@ -24,7 +24,7 @@ internal class RecommendationViewModel @Inject constructor(
                 TaskResult.Success(it)
             }.catch {
                 emit(TaskResult.Error(it))
-            }.flagLoadingOnStart().shareIn(viewModelScope, DEFAULT_SHARING_STARTED)
+            }.flagLoadingOnStart().shareIn(viewModelScope, DEFAULT_SHARING_STARTED, 1)
 
     private val request = MutableSharedFlow<RecommendationRequest>()
 

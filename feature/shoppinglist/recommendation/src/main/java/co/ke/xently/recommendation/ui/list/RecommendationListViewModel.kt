@@ -20,7 +20,7 @@ internal class RecommendationListViewModel @Inject constructor(
 
     val result = lookupId.flatMapLatest {
         repository.getRecommendation(it).flagLoadingOnStart()
-    }.shareIn(viewModelScope, DEFAULT_SHARING_STARTED)
+    }.shareIn(viewModelScope, DEFAULT_SHARING_STARTED, replay = 1)
 
     fun recommend(lookupId: String) {
         viewModelScope.launch {

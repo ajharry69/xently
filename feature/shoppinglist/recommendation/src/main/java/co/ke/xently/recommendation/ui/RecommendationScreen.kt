@@ -132,7 +132,7 @@ internal fun RecommendationScreen(
             )
         }
     } else if (result is TaskResult.Success && result.data != null) {
-        SideEffect {
+        LaunchedEffect(result.data) {
             val deferredRecommendation = result.data!!.copy(
                 numberOfItems = unPersistedShoppingList.size + persistedShoppingList.size,
             )

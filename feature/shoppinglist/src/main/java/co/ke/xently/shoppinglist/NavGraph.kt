@@ -41,7 +41,9 @@ fun NavGraphBuilder.shoppingListGraph(
                 Routes.ShoppingList.Recommendation.FILTER.buildRoute(
                     "itemId" to it,
                 )
-            )
+            ) {
+                launchSingleTop = true
+            }
         }
         val onShoppingListItemClicked: (id: Long) -> Unit = {
             navController.navigate(Routes.ShoppingList.DETAIL.buildRoute("id" to it))
@@ -108,7 +110,9 @@ fun NavGraphBuilder.shoppingListGraph(
                                 "group" to it.group,
                                 "groupBy" to it.groupBy,
                             )
-                        )
+                        ) {
+                            launchSingleTop = true
+                        }
                     },
                     GroupMenuItem(R.string.fsl_group_menu_duplicate) {
 

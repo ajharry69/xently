@@ -54,7 +54,9 @@ fun NavGraphBuilder.recommendationGraph(
                                 "lookupId" to it,
                                 "numberOfItems" to it.numberOfItems,
                             ),
-                        )
+                        ) {
+                            launchSingleTop = true
+                        }
                     },
                 ),
                 args = RecommendationScreenArgs(
@@ -101,7 +103,7 @@ fun NavGraphBuilder.recommendationGraph(
                     RecommendationCardItemMenuItem(
                         label = R.string.fr_details,
                         onClick = {
-
+                            // TODO: Show a modal with hit and miss...
                         },
                     ),
                 ),
