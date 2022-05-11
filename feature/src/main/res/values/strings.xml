@@ -5,6 +5,7 @@
     <!-- Drawer menu labels -->
     <string name="drawer_menu_shops">Shops</string>
     <string name="drawer_menu_products">Products</string>
+    <string name="drawer_menu_recommendation">Recommendation</string>
 
     <string name="toggle_drawer_visibility">%1$s drawer</string>
     <string name="toggle_password_visibility">%1$s password</string>
@@ -16,7 +17,9 @@
     <string name="retry">Retry</string>
     <string name="request_permission_button_label">REQUEST PERMISSION</string>
     <string name="never_show_again_button_label">NEVER SHOW AGAIN</string>
+    <string name="grant_button_label">GRANT</string>
     <string name="location_permission_rationale">Location service is important for effective shop recommendation by this app. Please grant the permission.</string>
+    <string name="location_permission_rationale_minified">Please grant location access permission.</string>
     <string name="move_back">Move back</string>
     <string name="add">Add</string>
     <string name="update">Update</string>

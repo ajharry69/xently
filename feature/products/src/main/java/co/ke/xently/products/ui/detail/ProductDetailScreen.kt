@@ -39,7 +39,7 @@ import co.ke.xently.products.shared.*
 import com.google.android.material.datepicker.CalendarConstraints
 import com.google.android.material.datepicker.DateValidatorPointBackward
 
-const val TEST_TAG_PRODUCT_DETAIL_BODY_CONTAINER = "TEST_TAG_PRODUCT_DETAIL_BODY_CONTAINER"
+internal const val TEST_TAG_PRODUCT_DETAIL_BODY_CONTAINER = "TEST_TAG_PRODUCT_DETAIL_BODY_CONTAINER"
 
 internal data class ProductDetailScreenFunction(
     val onNavigationIconClicked: () -> Unit = {},

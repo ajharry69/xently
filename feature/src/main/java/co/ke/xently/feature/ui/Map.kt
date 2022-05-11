@@ -1,18 +1,14 @@
 package co.ke.xently.feature.ui
 
-import android.Manifest
 import android.annotation.SuppressLint
-import androidx.compose.material.AlertDialog
-import androidx.compose.material.Text
-import androidx.compose.material.TextButton
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.viewinterop.NoOpUpdate
-import co.ke.xently.feature.R
-import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.google.android.libraries.maps.CameraUpdateFactory
 import com.google.android.libraries.maps.GoogleMap
 import com.google.android.libraries.maps.MapView
@@ -57,48 +53,14 @@ private fun GoogleMapViewContainer(
     onLocationPermissionChanged: (permissionGranted: Boolean) -> Unit,
     setUp: GoogleMap.() -> Unit,
 ) {
+    val permissionState =
+        requestLocationPermission(onLocationPermissionChanged = onLocationPermissionChanged)
     val myLocation by rememberSaveable(currentPosition.latitude, currentPosition.longitude) {
         mutableStateOf(currentPosition)
     }
-    var showRationale by rememberSaveable { mutableStateOf(true) }
-
-    val permissionState = rememberMultiplePermissionsState(
-        listOf(
-            Manifest.permission.ACCESS_FINE_LOCATION,
-            Manifest.permission.ACCESS_COARSE_LOCATION,
-        )
-    )
-
-    if (!permissionState.permissionRequested) {
-        SideEffect {
-            permissionState.launchMultiplePermissionRequest()
-        }
-    }
-    // If the user denied the permission but a rationale should be shown, or the user sees
-    // the permission for the first time, explain why the feature is needed by the app and allow
-    // the user to be presented with the permission again or to not see the rationale any more.
-    else if (permissionState.shouldShowRationale && showRationale) {
-        AlertDialog(
-            onDismissRequest = { showRationale = false },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        permissionState.launchMultiplePermissionRequest()
-                        showRationale = false
-                    },
-                ) { Text(stringResource(R.string.request_permission_button_label)) }
-            },
-            dismissButton = {
-                TextButton(onClick = { showRationale = false }) {
-                    Text(stringResource(R.string.never_show_again_button_label))
-                }
-            },
-            text = { Text(stringResource(R.string.location_permission_rationale)) },
-        )
-    }
 
     LaunchedEffect(map, permissionState.allPermissionsGranted) {
-        onLocationPermissionChanged(permissionState.allPermissionsGranted)
+//        onLocationPermissionChanged(permissionState.allPermissionsGranted)
         map.awaitMap().apply {
             uiSettings.apply {
                 isZoomControlsEnabled = true

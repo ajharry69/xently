@@ -1,4 +1,4 @@
-package co.ke.xently.shoppinglist.ui.list.recommendation.item
+package co.ke.xently.recommendation.ui.list.item
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.ui.Modifier
@@ -9,13 +9,13 @@ import co.ke.xently.common.KENYA
 import co.ke.xently.data.Recommendation
 import co.ke.xently.data.Shop
 import co.ke.xently.feature.theme.XentlyTheme
-import co.ke.xently.shoppinglist.R
+import co.ke.xently.recommendation.R
 import org.junit.Rule
 import org.junit.Test
 import java.text.NumberFormat
 import java.util.*
 
-class ShoppingListRecommendationItemTest {
+class RecommendationItemTest {
     @get:Rule
     val composeTestRule = createComposeRule()
 
@@ -41,7 +41,7 @@ class ShoppingListRecommendationItemTest {
                 RecommendationCardItem(
                     modifier = Modifier.fillMaxWidth(),
                     recommendation = recommendation,
-                    menuItems = listOf(RecommendationCardItemMenuItem(R.string.fsl_recommendation_details)),
+                    menuItems = listOf(RecommendationCardItemMenuItem(R.string.fr_details)),
                     function = RecommendationCardItemFunction(),
                 )
             }

@@ -46,6 +46,8 @@ import co.ke.xently.source.remote.RETRY_ABLE_ERROR_CLASSES
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 
+const val TEST_TAG_CIRCULAR_PROGRESS_BAR = "TEST_TAG_CIRCULAR_PROGRESS_BAR"
+
 val VIEW_SPACE = 16.dp
 
 val VIEW_SPACE_HALVED = VIEW_SPACE / 2
@@ -216,7 +218,11 @@ fun <T> FullscreenLoading(
 ) {
     if (placeholder == null) {
         Box(modifier = modifier, contentAlignment = Alignment.Center) {
-            CircularProgressIndicator()
+            CircularProgressIndicator(
+                modifier = Modifier.semantics {
+                    testTag = TEST_TAG_CIRCULAR_PROGRESS_BAR
+                },
+            )
         }
     } else {
         LazyColumn(modifier = modifier, userScrollEnabled = false) {
@@ -233,22 +239,23 @@ fun <T> FullscreenLoading(
 @Composable
 inline fun <reified T : Any> FullscreenEmptyList(
     modifier: Modifier,
-    @StringRes error: Int? = null,
+    error: String? = null,
 ) {
     Box(modifier = modifier, contentAlignment = Alignment.Center) {
         Text(
             modifier = Modifier.padding(VIEW_SPACE),
             textAlign = TextAlign.Center,
-            text = if (error != null) {
-                stringResource(error)
-            } else {
-                stringResource(R.string.empty_list,
-                    T::class.java.simpleName.mapIndexed { i, c -> if (i != 0 && c.isUpperCase()) " $c" else "$c" }
-                        .joinToString("") { it }.lowercase()
-                )
-            },
+            text = error ?: stringResource(R.string.empty_list,
+                T::class.java.simpleName.mapIndexed { i, c -> if (i != 0 && c.isUpperCase()) " $c" else "$c" }
+                    .joinToString("") { it }.lowercase()
+            ),
         )
     }
+}
+
+@Composable
+inline fun <reified T : Any> FullscreenEmptyList(modifier: Modifier, @StringRes error: Int) {
+    FullscreenEmptyList<T>(modifier = modifier, error = stringResource(error))
 }
 
 @Preview(showBackground = true)
@@ -266,7 +273,7 @@ inline fun <reified T : Any> PagedDataScreen(
     items: LazyPagingItems<T>,
     scaffoldState: ScaffoldState,
     noinline placeholder: (() -> T)?,
-    @StringRes emptyListMessage: Int? = null,
+    emptyListMessage: String? = null,
     click: HttpErrorButtonClick = HttpErrorButtonClick(retryAble = { items.retry() }),
     numberOfPlaceholders: Int = PLACEHOLDER_COUNT_SMALL_ITEM_SIZE,
     noinline preErrorContent: @Composable (ColumnScope.(Throwable) -> Unit) = {},

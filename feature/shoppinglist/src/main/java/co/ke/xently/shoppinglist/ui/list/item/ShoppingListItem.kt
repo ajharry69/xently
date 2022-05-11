@@ -17,18 +17,19 @@ import co.ke.xently.feature.ui.NEGLIGIBLE_SPACE
 import co.ke.xently.feature.ui.shimmerPlaceholder
 import co.ke.xently.shoppinglist.R
 
-internal data class MenuItem(
+data class MenuItem(
     @StringRes
     val label: Int,
     val onClick: (Long) -> Unit = {},
 )
 
 @Composable
-internal fun ShoppingListItemCard(
+fun ShoppingListItemCard(
     item: ShoppingListItem,
     modifier: Modifier = Modifier,
     showPlaceholder: Boolean = false,
     menuItems: List<MenuItem> = emptyList(),
+    trailingIcon: (@Composable () -> Unit)? = null,
     onClick: (ShoppingListItem) -> Unit,
 ) {
     val isPlaceholderVisible = showPlaceholder || item.isDefault
@@ -57,31 +58,37 @@ internal fun ShoppingListItemCard(
                 style = MaterialTheme.typography.h6,
                 modifier = Modifier.shimmerPlaceholder(isPlaceholderVisible),
             )
-            Box {
-                IconButton(onClick = { showDropMenu = !isPlaceholderVisible }) {
-                    Icon(
-                        imageVector = if (showDropMenu) {
-                            Icons.Default.KeyboardArrowDown
-                        } else {
-                            Icons.Default.KeyboardArrowRight
-                        },
-                        contentDescription = stringResource(
-                            R.string.fsl_detail_more_actions_content_description,
-                            item.name,
-                        ),
-                        modifier = Modifier.shimmerPlaceholder(isPlaceholderVisible),
-                    )
-                }
-                DropdownMenu(expanded = showDropMenu, onDismissRequest = { showDropMenu = false }) {
-                    for (menuItem in menuItems) {
-                        DropdownMenuItem(
-                            onClick = {
-                                menuItem.onClick.invoke(item.id)
-                                showDropMenu = false
+            if (trailingIcon == null) {
+                Box {
+                    IconButton(onClick = { showDropMenu = !isPlaceholderVisible }) {
+                        Icon(
+                            imageVector = if (showDropMenu) {
+                                Icons.Default.KeyboardArrowDown
+                            } else {
+                                Icons.Default.KeyboardArrowRight
                             },
-                        ) { Text(stringResource(menuItem.label)) }
+                            contentDescription = stringResource(
+                                R.string.fsl_detail_more_actions_content_description,
+                                item.name,
+                            ),
+                            modifier = Modifier.shimmerPlaceholder(isPlaceholderVisible),
+                        )
+                    }
+                    DropdownMenu(
+                        expanded = showDropMenu,
+                        onDismissRequest = { showDropMenu = false }) {
+                        for (menuItem in menuItems) {
+                            DropdownMenuItem(
+                                onClick = {
+                                    menuItem.onClick.invoke(item.id)
+                                    showDropMenu = false
+                                },
+                            ) { Text(stringResource(menuItem.label)) }
+                        }
                     }
                 }
+            } else {
+                trailingIcon.invoke()
             }
         }
     }

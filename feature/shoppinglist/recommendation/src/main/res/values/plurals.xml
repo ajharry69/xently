@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <plurals name="fr_recommendation_item">
+        <item quantity="one">Found %1$d of %2$d item at an estimated total expenditure of %3$s.</item>
+        <item quantity="other">Found %1$d of %2$d items at an estimated total expenditure of %3$s.</item>
+    </plurals>
+    <plurals name="fr_filter_toolbar_subtitle">
+        <item quantity="one">%1$d item</item>
+        <item quantity="other">%1$d items</item>
+    </plurals>
+    <plurals name="fr_empty_recommendation_list">
+        <item quantity="one">Shop recommendation for %1$d item not found within your current location.</item>
+        <item quantity="other">Shop recommendation for %1$d items not found within your current location.</item>
+    </plurals>
+</resources>

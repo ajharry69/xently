@@ -100,7 +100,7 @@ private fun ShoppingListScreen(
             scaffoldState = scaffoldState,
             modifier = modifier.padding(it),
             placeholder = { ShoppingListItem.default() },
-            emptyListMessage = R.string.fsl_empty_shopping_list,
+            emptyListMessage = stringResource(R.string.fsl_empty_shopping_list),
         ) { item ->
             ShoppingListItemCard(
                 item = item,

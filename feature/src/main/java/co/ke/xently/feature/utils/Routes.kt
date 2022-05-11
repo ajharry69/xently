@@ -30,7 +30,7 @@ object Routes {
         const val DETAIL = "products/{id}/"
         const val FILTERED_BY_SHOP = "products/shops/{shopId}/"
         override fun toString(): String {
-            return javaClass.simpleName
+            return javaClass.name
         }
 
         object Deeplinks {
@@ -42,7 +42,7 @@ object Routes {
         const val LIST = "shops/"
         const val DETAIL = "shops/{id}/?name={name}&moveBack={moveBack}"
         override fun toString(): String {
-            return javaClass.simpleName
+            return javaClass.name
         }
 
         object Deeplinks {
@@ -58,7 +58,7 @@ object Routes {
         const val RESET_PASSWORD = "reset-password/?isChange={isChange}"
         const val VERIFY = "verify-account/?code={code}"
         override fun toString(): String {
-            return javaClass.simpleName
+            return javaClass.name
         }
 
         object Deeplinks {
@@ -68,12 +68,19 @@ object Routes {
     }
 
     object ShoppingList {
+        object Recommendation {
+            const val LIST = "shopping-list/recommendations/{lookupId}/?numberOfItems={numberOfItems}"
+            const val FILTER = "shopping-list/recommendation/?itemId={itemId}&group={group}&groupBy={groupBy}"
+            override fun toString(): String {
+                return javaClass.name
+            }
+        }
+
         const val GROUPED = "shopping-list-grouped/"
         const val LIST = "shopping-list/?group={group}&groupBy={groupBy}"
         const val DETAIL = "shopping-list/{id}/"
-        const val RECOMMENDATION = "shopping-list/recommendations/{recommendBy}/?from={from}"
         override fun toString(): String {
-            return javaClass.simpleName
+            return javaClass.name
         }
     }
 }

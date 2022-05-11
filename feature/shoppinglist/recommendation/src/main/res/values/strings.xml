@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="fr_item_menu_content_description">%1$s recommendation options</string>
+    <string name="fr_directions">Directions</string>
+    <string name="fr_toolbar_title">Recommendations</string>
+    <string name="fr_details">Details</string>
+    <string name="fr_filter_toolbar_title">Recommendation</string>
+    <string name="fr_filter_product_name">Product name</string>
+    <string name="fr_filter_add_product_name_content_description">Add product name</string>
+    <string name="fr_filter_should_persist_shopping_lists">Save shopping list items if possible?</string>
+    <string name="fr_filter_recommend">Recommend</string>
+    <string name="fr_filter_remove_un_persisted_item">Remove unsaved shopping list item \'%1$s\'</string>
+    <string name="fr_filter_remove_persisted_item">Remove saved shopping list item \'%1$s\'</string>
+    <string name="fr_filter_un_persisted_list_subheading">Unsaved shopping list</string>
+    <string name="fr_filter_persisted_list_subheading">Saved shopping list</string>
+    <string name="fr_recommendation_card_test_tag" translatable="false">Recommendation card test tag %1$d</string>
+</resources>

@@ -2,10 +2,7 @@ package co.ke.xently.shoppinglist
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Business
-import androidx.compose.material.icons.filled.Category
-import androidx.compose.material.icons.filled.List
-import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -26,16 +23,13 @@ import co.ke.xently.shoppinglist.ui.list.grouped.GroupedShoppingListScreenFuncti
 import co.ke.xently.shoppinglist.ui.list.grouped.item.GroupMenuItem
 import co.ke.xently.shoppinglist.ui.list.grouped.item.GroupedShoppingListCardFunction
 import co.ke.xently.shoppinglist.ui.list.item.MenuItem
-import co.ke.xently.shoppinglist.ui.list.recommendation.ShoppingListRecommendationScreen
-import co.ke.xently.shoppinglist.ui.list.recommendation.ShoppingListRecommendationScreenFunction
-import co.ke.xently.shoppinglist.ui.list.recommendation.item.RecommendationCardItemFunction
-import co.ke.xently.shoppinglist.ui.list.recommendation.item.RecommendationCardItemMenuItem
 
 fun NavGraphBuilder.shoppingListGraph(
     navController: NavHostController,
     onAccountMenuClicked: () -> Unit,
     onShopMenuClicked: () -> Unit,
     onProductMenuClicked: () -> Unit,
+    onRecommendationMenuClicked: () -> Unit,
     onNavigationIconClicked: () -> Unit,
 ) {
     navigation(
@@ -44,11 +38,12 @@ fun NavGraphBuilder.shoppingListGraph(
     ) {
         val onShoppingListItemRecommendClicked: (id: Long) -> Unit = {
             navController.navigate(
-                Routes.ShoppingList.RECOMMENDATION.buildRoute(
-                    "recommendBy" to it,
-                    "from" to Recommend.From.Item
+                Routes.ShoppingList.Recommendation.FILTER.buildRoute(
+                    "itemId" to it,
                 )
-            )
+            ) {
+                launchSingleTop = true
+            }
         }
         val onShoppingListItemClicked: (id: Long) -> Unit = {
             navController.navigate(Routes.ShoppingList.DETAIL.buildRoute("id" to it))
@@ -97,6 +92,12 @@ fun NavGraphBuilder.shoppingListGraph(
                         icon = Icons.Default.Category,
                         onClick = onProductMenuClicked,
                     ),
+                    NavMenuItem(
+                        context = context,
+                        label = R.string.drawer_menu_recommendation,
+                        icon = Icons.Default.AltRoute,
+                        onClick = onRecommendationMenuClicked,
+                    ),
                 ),
                 menuItems = shoppingListItemMenuItems,
                 optionsMenu = listOf(
@@ -104,7 +105,14 @@ fun NavGraphBuilder.shoppingListGraph(
                 ),
                 groupMenuItems = listOf(
                     GroupMenuItem(R.string.fsl_group_menu_recommend) {
-                        navController.navigate(Routes.ShoppingList.RECOMMENDATION.buildRoute("recommendBy" to it))
+                        navController.navigate(
+                            Routes.ShoppingList.Recommendation.FILTER.buildRoute(
+                                "group" to it.group,
+                                "groupBy" to it.groupBy,
+                            )
+                        ) {
+                            launchSingleTop = true
+                        }
                     },
                     GroupMenuItem(R.string.fsl_group_menu_duplicate) {
 
@@ -168,51 +176,6 @@ fun NavGraphBuilder.shoppingListGraph(
                         },
                     ),
                     OptionMenu(title = stringResource(R.string.refresh)),
-                ),
-            )
-        }
-        composable(
-            route = Routes.ShoppingList.RECOMMENDATION,
-            arguments = listOf(
-                navArgument("recommendBy") {},
-                navArgument("from") {
-                    defaultValue = Recommend.From.GroupedList.name
-                },
-            ),
-        ) {
-            ShoppingListRecommendationScreen(
-                function = ShoppingListRecommendationScreenFunction(
-                    onItemClicked = {},
-                    onNavigationIconClicked = onNavigationIconClicked,
-                    function = RecommendationCardItemFunction(
-                        onItemClicked = {
-                            // TODO: ...
-                        },
-                    ),
-                ),
-                menuItems = listOf(
-                    RecommendationCardItemMenuItem(
-                        label = R.string.fsl_recommendation_directions,
-                        onClick = {
-
-                        },
-                    ),
-                    RecommendationCardItemMenuItem(
-                        label = R.string.fsl_recommendation_details,
-                        onClick = {
-
-                        },
-                    ),
-                ),
-                modifier = Modifier.fillMaxSize(),
-                recommend = Recommend(
-                    it.arguments?.get("recommendBy")!!,
-                    Recommend.From.valueOf(
-                        it.arguments?.getString(
-                            "from",
-                            Recommend.From.GroupedList.name
-                        )!!
-                    ),
                 ),
             )
         }

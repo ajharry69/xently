@@ -90,7 +90,7 @@ data class ShoppingListItem(
 
     companion object {
         fun default() = ShoppingListItem(
-            name = "Golden crown milk",
+            name = "Gold crown milk",
             unit = "litres",
             isDefault = true,
         )

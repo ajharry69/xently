@@ -12,8 +12,19 @@ android {
         minSdk 21
         targetSdk 31
 
-        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        // The following argument makes the Android Test Orchestrator run its
+        // "pm clear" command after each test invocation. This command ensures
+        // that the app's state is completely cleared between tests.
+        testInstrumentationRunnerArguments clearPackageData: 'true'
+    }
+
+    testOptions {
+        execution 'ANDROIDX_TEST_ORCHESTRATOR'
+        animationsDisabled = true
     }
 
     buildTypes {
@@ -29,10 +40,10 @@ android {
     kotlinOptions {
         jvmTarget = '1.8'
         freeCompilerArgs += [
-                "-Xopt-in=kotlin.time.ExperimentalTime",
-                "-Xopt-in=androidx.paging.ExperimentalPagingApi",
-                "-Xopt-in=kotlinx.coroutines.ExperimentalCoroutinesApi",
-                "-Xopt-in=androidx.compose.material.ExperimentalMaterialApi",
+                "-opt-in=kotlin.time.ExperimentalTime",
+                "-opt-in=androidx.paging.ExperimentalPagingApi",
+                "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi",
+                "-opt-in=androidx.compose.material.ExperimentalMaterialApi",
         ]
         useIR = true
     }
@@ -57,7 +68,7 @@ dependencies {
     implementation project(path: ":feature")
     implementation project(path: ":feature:products:shared")
 
-    implementation "com.google.accompanist:accompanist-swiperefresh:0.24.3-alpha"
+    implementation 'com.google.accompanist:accompanist-swiperefresh:0.24.7-alpha'
     // DI
     implementation "com.google.dagger:hilt-android:$hilt_version"
     kapt "com.google.dagger:hilt-compiler:$hilt_version"
@@ -65,4 +76,5 @@ dependencies {
     testImplementation project(path: ':feature:tests:unit')
     androidTestImplementation project(path: ':feature:tests:integration')
     kaptAndroidTest "com.google.dagger:hilt-compiler:$hilt_version"
+    androidTestUtil 'androidx.test:orchestrator:1.4.1'
 }

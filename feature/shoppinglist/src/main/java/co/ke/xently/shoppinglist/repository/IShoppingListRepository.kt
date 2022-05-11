@@ -3,12 +3,10 @@ package co.ke.xently.shoppinglist.repository
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import co.ke.xently.data.GroupedShoppingList
-import co.ke.xently.data.Recommendation
 import co.ke.xently.data.ShoppingListItem
 import co.ke.xently.data.TaskResult
 import co.ke.xently.products.shared.repository.ISearchableRepository
 import co.ke.xently.shoppinglist.GroupBy
-import co.ke.xently.shoppinglist.Recommend
 import co.ke.xently.source.remote.CacheControl
 import kotlinx.coroutines.flow.Flow
 
@@ -23,8 +21,6 @@ interface IShoppingListRepository : ISearchableRepository {
     fun getCount(groupBy: GroupBy): Flow<Map<Any, Int>>
 
     fun get(id: Long): Flow<TaskResult<ShoppingListItem>>
-
-    fun get(recommend: Recommend): Flow<TaskResult<List<Recommendation>>>
 
     fun get(config: PagingConfig, group: ShoppingListGroup?): Flow<PagingData<ShoppingListItem>>
 }
