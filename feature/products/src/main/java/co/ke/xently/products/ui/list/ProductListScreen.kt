@@ -16,6 +16,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import co.ke.xently.data.Product
+import co.ke.xently.feature.SharedFunction
 import co.ke.xently.feature.ui.*
 import co.ke.xently.products.R
 import co.ke.xently.products.ui.list.item.MenuItem
@@ -24,7 +25,7 @@ import co.ke.xently.products.ui.list.item.ProductListItemFunction
 
 internal data class ProductListScreenFunction(
     val onAddFabClicked: () -> Unit = {},
-    val onNavigationIconClicked: () -> Unit = {},
+    val sharedFunction: SharedFunction = SharedFunction(),
     val function: ProductListItemFunction = ProductListItemFunction(),
 )
 
@@ -65,10 +66,10 @@ internal fun ProductListScreen(
 private fun ProductListScreen(
     modifier: Modifier,
     shopName: String?,
-    function: ProductListScreenFunction,
-    items: LazyPagingItems<Product>,
     menuItems: List<MenuItem>,
     optionsMenu: List<OptionMenu>,
+    items: LazyPagingItems<Product>,
+    function: ProductListScreenFunction,
 ) {
     val listState = rememberLazyListState()
     val scaffoldState = rememberScaffoldState()
@@ -76,9 +77,9 @@ private fun ProductListScreen(
         scaffoldState = scaffoldState,
         topBar = {
             ToolbarWithProgressbar(
-                title = stringResource(R.string.title_activity_products),
-                onNavigationIconClicked = function.onNavigationIconClicked,
                 subTitle = shopName,
+                title = stringResource(R.string.title_activity_products),
+                onNavigationIconClicked = function.sharedFunction.onNavigationIconClicked,
             ) {
                 OverflowOptionMenu(
                     menu = optionsMenu,

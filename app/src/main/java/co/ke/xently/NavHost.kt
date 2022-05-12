@@ -1,6 +1,5 @@
 package co.ke.xently
 
-import androidx.annotation.VisibleForTesting
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -16,8 +15,7 @@ import co.ke.xently.shops.shopsGraph
 
 
 @Composable
-@VisibleForTesting(otherwise = VisibleForTesting.PACKAGE_PRIVATE)
-fun XentlyNavHost(
+internal fun XentlyNavHost(
     sharedFunction: SharedFunction,
     onSignInOrOut: (User?) -> Unit,
     navController: NavHostController,
@@ -32,11 +30,11 @@ fun XentlyNavHost(
         )
         productsGraph(
             navController = navController,
-            onNavigationIconClicked = sharedFunction.onNavigationIconClicked,
+            sharedFunction = sharedFunction,
         )
         accountsGraph(
             navController = navController,
-            onNavigationIconClicked = sharedFunction.onNavigationIconClicked,
+            sharedFunction = sharedFunction,
         )
         shopsGraph(
             navController = navController,

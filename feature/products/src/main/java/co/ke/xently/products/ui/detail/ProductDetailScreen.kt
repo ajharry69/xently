@@ -32,6 +32,7 @@ import co.ke.xently.common.DEFAULT_LOCAL_TIME_FORMAT
 import co.ke.xently.data.*
 import co.ke.xently.data.TaskResult.Loading
 import co.ke.xently.data.TaskResult.Success
+import co.ke.xently.feature.SharedFunction
 import co.ke.xently.feature.theme.XentlyTheme
 import co.ke.xently.feature.ui.*
 import co.ke.xently.products.R
@@ -42,12 +43,12 @@ import com.google.android.material.datepicker.DateValidatorPointBackward
 internal const val TEST_TAG_PRODUCT_DETAIL_BODY_CONTAINER = "TEST_TAG_PRODUCT_DETAIL_BODY_CONTAINER"
 
 internal data class ProductDetailScreenFunction(
-    val onNavigationIconClicked: () -> Unit = {},
     val onShopQueryChanged: (String) -> Unit = {},
     val onBrandQueryChanged: (String) -> Unit = {},
     val onDetailsSubmitted: (Product) -> Unit = {},
-    val onAddNewShop: (shopName: String) -> Unit = {},
     val onProductQueryChanged: (String) -> Unit = {},
+    val onAddNewShop: (shopName: String) -> Unit = {},
+    val sharedFunction: SharedFunction = SharedFunction(),
     val onMeasurementUnitQueryChanged: (String) -> Unit = {},
     val onAttributeQueryChanged: (AttributeQuery) -> Unit = {},
 )
@@ -189,7 +190,7 @@ internal fun ProductDetailScreen(
             ToolbarWithProgressbar(
                 title = toolbarTitle,
                 showProgress = isTaskLoading,
-                onNavigationIconClicked = function.onNavigationIconClicked,
+                onNavigationIconClicked = function.sharedFunction.onNavigationIconClicked,
             )
         },
     ) { paddingValues ->

@@ -1,6 +1,5 @@
 package co.ke.xently
 
-import androidx.annotation.VisibleForTesting
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,8 +17,7 @@ import co.ke.xently.feature.ui.NavMenuItem
 import co.ke.xently.feature.ui.NavigationDrawer
 import co.ke.xently.shoppinglist.R
 
-@VisibleForTesting(otherwise = VisibleForTesting.PACKAGE_PRIVATE)
-data class DrawerContentFunction(
+internal data class DrawerContentFunction(
     val onHelpClicked: () -> Unit = {},
     val onFeedbackClicked: () -> Unit = {},
     val onShopMenuClicked: () -> Unit = {},
@@ -31,8 +29,7 @@ data class DrawerContentFunction(
 )
 
 @Composable
-@VisibleForTesting(otherwise = VisibleForTesting.PACKAGE_PRIVATE)
-fun ColumnScope.DrawerContent(
+internal fun ColumnScope.DrawerContent(
     user: User?,
     drawerState: DrawerState,
     function: DrawerContentFunction,
