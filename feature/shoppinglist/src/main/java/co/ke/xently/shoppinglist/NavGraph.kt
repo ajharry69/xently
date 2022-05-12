@@ -122,9 +122,9 @@ fun NavGraphBuilder.shoppingListGraph(
                     )
                 },
                 function = ShoppingListScreenFunction(
-                    onAddClicked = onAddShoppingListItemClicked,
-                    onNavigationIconClicked = sharedFunction.onNavigationIconClicked,
                     onItemClicked = {},
+                    sharedFunction = sharedFunction,
+                    onAddClicked = onAddShoppingListItemClicked,
                 ),
                 optionsMenu = listOf(
                     OptionMenu(
