@@ -15,10 +15,21 @@ android {
         versionCode 1
         versionName "1.0"
 
-        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary true
         }
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        // The following argument makes the Android Test Orchestrator run its
+        // "pm clear" command after each test invocation. This command ensures
+        // that the app's state is completely cleared between tests.
+        testInstrumentationRunnerArguments clearPackageData: 'true'
+    }
+
+    testOptions {
+        execution 'ANDROIDX_TEST_ORCHESTRATOR'
+        animationsDisabled = true
     }
 
     buildTypes {
@@ -40,6 +51,9 @@ android {
     kotlinOptions {
         jvmTarget = '1.8'
         useIR = true
+        freeCompilerArgs += [
+                "-opt-in=kotlin.RequiresOptIn",
+        ]
     }
     packagingOptions {
         resources {
@@ -51,6 +65,7 @@ android {
 
 dependencies {
     implementation project(path: ':common')
+    implementation project(path: ':data')
     implementation project(path: ':feature')
     implementation project(path: ":feature:shops")
     implementation project(path: ":feature:accounts")

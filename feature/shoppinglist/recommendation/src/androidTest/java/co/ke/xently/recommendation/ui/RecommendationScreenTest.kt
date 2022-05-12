@@ -10,12 +10,12 @@ import co.ke.xently.common.KENYA
 import co.ke.xently.data.RecommendationRequest
 import co.ke.xently.data.ShoppingListItem
 import co.ke.xently.data.TaskResult
+import co.ke.xently.feature.SharedFunction
 import co.ke.xently.feature.theme.XentlyTheme
 import co.ke.xently.recommendation.R
 import co.ke.xently.source.remote.DeferredRecommendation
 import org.hamcrest.MatcherAssert.assertThat
-import org.hamcrest.Matchers.equalTo
-import org.hamcrest.Matchers.instanceOf
+import org.hamcrest.Matchers.*
 import org.junit.Rule
 import org.junit.Test
 import org.mockito.kotlin.argumentCaptor
@@ -137,13 +137,15 @@ class RecommendationScreenTest {
 
     @Test
     fun clickingOnLocationRequestButton() {
-        val onLocationPermissionRequestMock: () -> Unit = mock()
+        val onLocationPermissionRequestMock: (Boolean) -> Unit = mock()
         composeTestRule.setContent {
             XentlyTheme {
                 RecommendationScreen(
                     modifier = Modifier.fillMaxSize(),
                     function = RecommendationScreenFunction(
-                        onLocationPermissionRequest = onLocationPermissionRequestMock,
+                        sharedFunction = SharedFunction(
+                            onLocationPermissionChanged = onLocationPermissionRequestMock,
+                        ),
                     ),
                     result = TaskResult.Success(null),
                     persistedShoppingListResult = TaskResult.Success(emptyList()),
@@ -156,7 +158,10 @@ class RecommendationScreenTest {
             activity.getString(R.string.grant_button_label)
         ).performClick()
 
-        verify(onLocationPermissionRequestMock, times(1)).invoke()
+        with(argumentCaptor<Boolean> { }) {
+            verify(onLocationPermissionRequestMock, times(1)).invoke(capture())
+            assertThat(firstValue, `is`(false))
+        }
     }
 
     @Test
@@ -440,7 +445,9 @@ class RecommendationScreenTest {
                 RecommendationScreen(
                     modifier = Modifier.fillMaxSize(),
                     function = RecommendationScreenFunction(
-                        onNavigationClick = onNavigationClickMock,
+                        sharedFunction = SharedFunction(
+                            onNavigationIconClicked = onNavigationClickMock
+                        ),
                     ),
                     result = TaskResult.Success(null),
                     persistedShoppingListResult = TaskResult.Success(emptyList()),

@@ -10,23 +10,21 @@ import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.fragment.app.FragmentActivity
-import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
-import co.ke.xently.accounts.accountsGraph
+import co.ke.xently.data.TaskResult
 import co.ke.xently.feature.LocationService
+import co.ke.xently.feature.SharedFunction
 import co.ke.xently.feature.theme.XentlyTheme
-import co.ke.xently.feature.utils.Routes
-import co.ke.xently.feature.viewmodels.LocationPermissionViewModel
-import co.ke.xently.products.productsGraph
-import co.ke.xently.recommendation.recommendationGraph
-import co.ke.xently.shoppinglist.shoppingListGraph
-import co.ke.xently.shops.shopsGraph
+import co.ke.xently.feature.ui.navigateToSignInScreen
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class MainActivity : FragmentActivity() {
-    private val viewModel: LocationPermissionViewModel by viewModels()
+    private val viewModel: MainActivityViewModel by viewModels()
 
     private var locationService: LocationService? = null
     private var locationServiceBound: Boolean = false
@@ -68,46 +66,36 @@ class MainActivity : FragmentActivity() {
             XentlyTheme {
                 // A surface container using the 'background' color from the theme
                 Surface(color = MaterialTheme.colors.background) {
+                    val scope = rememberCoroutineScope()
                     val navController = rememberNavController()
-                    NavHost(
+                    XentlyNavHost(
                         navController = navController,
-                        startDestination = Routes.ShoppingList.toString(),
-                    ) {
-                        shoppingListGraph(
-                            navController = navController,
-                            onAccountMenuClicked = {
-                                navController.navigate(Routes.Account.toString())
-                            },
-                            onShopMenuClicked = {
-                                navController.navigate(Routes.Shops.toString())
-                            },
-                            onProductMenuClicked = {
-                                navController.navigate(Routes.Products.toString())
-                            },
-                            onRecommendationMenuClicked = {
-                                navController.navigate(Routes.ShoppingList.Recommendation.toString())
-                            },
-                            onNavigationIconClicked = this@MainActivity::onBackPressed,
-                        )
-                        recommendationGraph(
-                            controller = navController,
-                            onNavigationIconClicked = this@MainActivity::onBackPressed,
+                        onSignInOrOut = {
+                            if (it == null) {
+                                navigateToSignInScreen.invoke(this)
+                            } else {
+                                viewModel.signOut()
+                            }
+                        },
+                        sharedFunction = SharedFunction(
+                            onNavigationIconClicked = this::onBackPressed,
                             onLocationPermissionChanged = viewModel::setLocationPermissionGranted,
-                        )
-                        productsGraph(
-                            navController = navController,
-                            onNavigationIconClicked = this@MainActivity::onBackPressed,
-                        )
-                        accountsGraph(
-                            navController = navController,
-                            onNavigationIconClicked = this@MainActivity::onBackPressed,
-                        )
-                        shopsGraph(
-                            navController = navController,
-                            onNavigationIconClicked = this@MainActivity::onBackPressed,
-                            onLocationPermissionChanged = viewModel::setLocationPermissionGranted,
-                        )
-                    }
+                            currentlyActiveUser = {
+                                val user by viewModel.currentlyActiveUser.collectAsState(
+                                    initial = null,
+                                    context = scope.coroutineContext,
+                                )
+                                user
+                            },
+                            signOutResult = {
+                                val signOutResult: TaskResult<Unit> by viewModel.signOutResult.collectAsState(
+                                    initial = TaskResult.Success(Unit),
+                                    context = scope.coroutineContext,
+                                )
+                                signOutResult
+                            },
+                        ),
+                    )
                 }
             }
         }
