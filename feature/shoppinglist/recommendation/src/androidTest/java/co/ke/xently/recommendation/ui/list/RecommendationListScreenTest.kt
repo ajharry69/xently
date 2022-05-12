@@ -8,6 +8,7 @@ import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import co.ke.xently.data.Recommendation
 import co.ke.xently.data.Shop
 import co.ke.xently.data.TaskResult
+import co.ke.xently.feature.SharedFunction
 import co.ke.xently.feature.theme.XentlyTheme
 import co.ke.xently.feature.ui.TEST_TAG_CIRCULAR_PROGRESS_BAR
 import co.ke.xently.recommendation.R
@@ -38,7 +39,9 @@ class RecommendationListScreenTest {
                     modifier = Modifier.fillMaxSize(),
                     result = TaskResult.Success(emptyList()),
                     function = RecommendationListScreenFunction(
-                        onNavigationIconClicked = onNavigationClickMock,
+                        sharedFunction = SharedFunction(
+                            onNavigationIconClicked = onNavigationClickMock,
+                        ),
                     ),
                 )
             }

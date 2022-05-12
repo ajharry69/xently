@@ -84,8 +84,7 @@ fun NavGraphBuilder.recommendationGraph(
             RecommendationListScreen(
                 function = RecommendationListScreenFunction(
                     onItemClicked = {},
-                    onNavigationIconClicked = sharedFunction.onNavigationIconClicked,
-                    onLocationPermissionChanged = sharedFunction.onLocationPermissionChanged,
+                    sharedFunction = sharedFunction,
                     function = RecommendationCardItemFunction(
                         onItemClicked = {
                             // TODO: ...
