@@ -13,6 +13,7 @@ import co.ke.xently.accounts.R
 import co.ke.xently.common.KENYA
 import co.ke.xently.data.TaskResult
 import co.ke.xently.data.User
+import co.ke.xently.feature.SharedFunction
 import co.ke.xently.feature.theme.XentlyTheme
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
@@ -23,11 +24,7 @@ import org.hamcrest.Matchers.equalTo
 import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
-import org.mockito.internal.verification.VerificationModeFactory.atMostOnce
-import org.mockito.kotlin.argumentCaptor
-import org.mockito.kotlin.atMost
-import org.mockito.kotlin.mock
-import org.mockito.kotlin.verify
+import org.mockito.kotlin.*
 
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -37,8 +34,11 @@ class SignInScreenTest {
 
     private val activity by lazy { composeTestRule.activity }
     private val forgotPasswordLabel by lazy { activity.getString(R.string.fa_signin_forgot_password_button_label) }
+    private val signInToolbarTitle by lazy {
+        activity.getString(R.string.fa_signin_toolbar_title)
+    }
     private val signInButtonLabel by lazy {
-        activity.getString(R.string.fa_signin_toolbar_title).uppercase(KENYA)
+        signInToolbarTitle.uppercase(KENYA)
     }
     private val signUpButtonLabel by lazy {
         activity.getString(R.string.fa_signin_signup_button_label)
@@ -68,14 +68,18 @@ class SignInScreenTest {
                 SignInScreen(
                     modifier = Modifier.fillMaxSize(),
                     result = TaskResult.Success(null),
-                    function = SignInScreenFunction(navigationIcon = navigationIconClickMock),
+                    function = SignInScreenFunction(
+                        sharedFunction = SharedFunction(
+                            onNavigationIconClicked = navigationIconClickMock,
+                        ),
+                    ),
                 )
             }
         }
 
         composeTestRule.onNodeWithContentDescription(activity.getString(R.string.move_back))
             .performClick()
-        verify(navigationIconClickMock, atMostOnce()).invoke()
+        verify(navigationIconClickMock, times(1)).invoke()
     }
 
     @Test
@@ -101,7 +105,7 @@ class SignInScreenTest {
     }
 
     @Test
-    fun toolbarTitleIsSameAsSignInButtonLabel() {
+    fun toolbarTitle() {
         composeTestRule.setContent {
             XentlyTheme {
                 SignInScreen(
@@ -111,8 +115,25 @@ class SignInScreenTest {
             }
         }
 
-        composeTestRule.onAllNodesWithText(signInButtonLabel, ignoreCase = true)
-            .assertCountEquals(2)
+        composeTestRule.onNodeWithText(signInToolbarTitle)
+            .assertIsDisplayed()
+            .assertHasNoClickAction()
+    }
+
+    @Test
+    fun signInButtonLabel() {
+        composeTestRule.setContent {
+            XentlyTheme {
+                SignInScreen(
+                    modifier = Modifier.fillMaxSize(),
+                    result = TaskResult.Success(null),
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithText(signInButtonLabel)
+            .assertIsDisplayed()
+            .assertHasClickAction()
     }
 
     @Test
@@ -329,7 +350,7 @@ class SignInScreenTest {
 
         composeTestRule.onNodeWithText(signInButtonLabel).performClick()
         with(argumentCaptor<User.BasicAuth> { }) {
-            verify(signInCallback, atMostOnce()).invoke(capture())
+            verify(signInCallback, times(1)).invoke(capture())
             assertThat(firstValue.username, equalTo(username))
             assertThat(firstValue.password, equalTo(password))
         }
@@ -358,7 +379,7 @@ class SignInScreenTest {
 
         composeTestRule.onNodeWithText(signInButtonLabel).performClick()
         with(argumentCaptor<User.BasicAuth> { }) {
-            verify(signInCallbackMock, atMostOnce()).invoke(capture())
+            verify(signInCallbackMock, times(1)).invoke(capture())
             assertThat(firstValue.username, equalTo("user@example.com"))
             assertThat(firstValue.password, equalTo("use a safe password"))
         }
@@ -387,7 +408,7 @@ class SignInScreenTest {
 
         composeTestRule.onNodeWithText(signUpButtonLabel).performClick()
         with(argumentCaptor<User.BasicAuth> { }) {
-            verify(createAccountCallbackMock, atMostOnce()).invoke(capture())
+            verify(createAccountCallbackMock, times(1)).invoke(capture())
             assertThat(firstValue.username, equalTo("user@example.com"))
             assertThat(firstValue.password, equalTo("use a safe password"))
         }
@@ -412,7 +433,7 @@ class SignInScreenTest {
 
         composeTestRule.onNodeWithText(forgotPasswordLabel).performClick()
         with(argumentCaptor<String> { }) {
-            verify(forgotCallbackMock, atMostOnce()).invoke(capture())
+            verify(forgotCallbackMock, times(1)).invoke(capture())
             assertThat(firstValue, equalTo("user@example.com"))
         }
     }
@@ -432,7 +453,7 @@ class SignInScreenTest {
 
         composeTestRule.onNodeWithText(forgotPasswordLabel).performClick()
         with(argumentCaptor<String> {}) {
-            verify(forgotPasswordCallback, atMostOnce()).invoke(capture())
+            verify(forgotPasswordCallback, times(1)).invoke(capture())
             assertThat(firstValue, emptyString())
         }
     }
@@ -455,7 +476,7 @@ class SignInScreenTest {
             .performTextInput(username)
         composeTestRule.onNodeWithText(forgotPasswordLabel).performClick()
         with(argumentCaptor<String> { }) {
-            verify(forgotPasswordCallback, atMostOnce()).invoke(capture())
+            verify(forgotPasswordCallback, times(1)).invoke(capture())
             assertThat(firstValue, equalTo(username))
         }
     }
@@ -475,7 +496,7 @@ class SignInScreenTest {
 
         composeTestRule.onNodeWithText(signUpButtonLabel).performClick()
         with(argumentCaptor<User.BasicAuth> { }) {
-            verify(createAccountCallback, atMostOnce()).invoke(capture())
+            verify(createAccountCallback, times(1)).invoke(capture())
             assertThat(firstValue.username, emptyString())
             assertThat(firstValue.password, emptyString())
         }
@@ -545,7 +566,7 @@ class SignInScreenTest {
         }
 
         with(argumentCaptor<User> { }) {
-            verify(signInSuccessCallback, atMostOnce()).invoke(capture())
+            verify(signInSuccessCallback, times(1)).invoke(capture())
             assertThat(firstValue.id, equalTo(1))
             assertThat(firstValue.email, equalTo("user@example.com"))
         }

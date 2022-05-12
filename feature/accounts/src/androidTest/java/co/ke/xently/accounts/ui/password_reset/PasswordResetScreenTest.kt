@@ -12,6 +12,7 @@ import co.ke.xently.accounts.R
 import co.ke.xently.common.KENYA
 import co.ke.xently.data.TaskResult
 import co.ke.xently.data.User
+import co.ke.xently.feature.SharedFunction
 import co.ke.xently.feature.theme.XentlyTheme
 import co.ke.xently.feature.ui.TEST_TAG_TEXT_FIELD_ERROR
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -22,9 +23,9 @@ import org.hamcrest.Matchers.equalTo
 import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
-import org.mockito.internal.verification.VerificationModeFactory
 import org.mockito.kotlin.argumentCaptor
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 
 class PasswordResetScreenTest {
@@ -33,18 +34,18 @@ class PasswordResetScreenTest {
 
     private val activity by lazy { composeTestRule.activity }
 
-    private val resetPasswordButtonLabel by lazy {
+    private val resetPasswordToolbarTitle by lazy {
         activity.getString(
             R.string.fa_reset_password_toolbar_title,
             activity.getString(R.string.fa_reset)
-        ).uppercase(KENYA)
+        )
     }
 
-    private val changePasswordButtonLabel by lazy {
+    private val changePasswordToolbarTitle by lazy {
         activity.getString(
             R.string.fa_reset_password_toolbar_title,
             activity.getString(R.string.fa_change),
-        ).uppercase(KENYA)
+        )
     }
     private val oldPasswordTextFieldDescription by lazy {
         activity.getString(
@@ -71,14 +72,18 @@ class PasswordResetScreenTest {
                 PasswordResetScreen(
                     modifier = Modifier.fillMaxSize(),
                     result = TaskResult.Success(null),
-                    function = PasswordResetScreenFunction(navigationIcon = navigationIconClickMock),
+                    function = PasswordResetScreenFunction(
+                        sharedFunction = SharedFunction(
+                            onNavigationIconClicked = navigationIconClickMock,
+                        ),
+                    ),
                 )
             }
         }
 
         composeTestRule.onNodeWithContentDescription(activity.getString(R.string.move_back))
             .performClick()
-        verify(navigationIconClickMock, VerificationModeFactory.atMostOnce()).invoke()
+        verify(navigationIconClickMock, times(1)).invoke()
     }
 
     @Test
@@ -110,7 +115,7 @@ class PasswordResetScreenTest {
     }
 
     @Test
-    fun toolbarTitleIsSameAsResetPasswordButtonLabelForPasswordReset() {
+    fun toolbarTitleForPasswordReset() {
         composeTestRule.setContent {
             XentlyTheme {
                 PasswordResetScreen(
@@ -120,12 +125,29 @@ class PasswordResetScreenTest {
             }
         }
 
-        composeTestRule.onAllNodesWithText(resetPasswordButtonLabel, ignoreCase = true)
-            .assertCountEquals(2)
+        composeTestRule.onNodeWithText(resetPasswordToolbarTitle)
+            .assertIsDisplayed()
+            .assertHasNoClickAction()
     }
 
     @Test
-    fun toolbarTitleIsSameAsChangePasswordButtonLabelForPasswordChange() {
+    fun resetPasswordButtonLabelForPasswordReset() {
+        composeTestRule.setContent {
+            XentlyTheme {
+                PasswordResetScreen(
+                    modifier = Modifier.fillMaxSize(),
+                    result = TaskResult.Success(null),
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithText(resetPasswordToolbarTitle.uppercase(KENYA))
+            .assertIsDisplayed()
+            .assertHasClickAction()
+    }
+
+    @Test
+    fun toolbarTitleForPasswordChange() {
         composeTestRule.setContent {
             XentlyTheme {
                 PasswordResetScreen(
@@ -136,8 +158,26 @@ class PasswordResetScreenTest {
             }
         }
 
-        composeTestRule.onAllNodesWithText(changePasswordButtonLabel, ignoreCase = true)
-            .assertCountEquals(2)
+        composeTestRule.onNodeWithText(changePasswordToolbarTitle)
+            .assertIsDisplayed()
+            .assertHasNoClickAction()
+    }
+
+    @Test
+    fun changePasswordButtonLabelForPasswordChange() {
+        composeTestRule.setContent {
+            XentlyTheme {
+                PasswordResetScreen(
+                    modifier = Modifier.fillMaxSize(),
+                    result = TaskResult.Success(null),
+                    isChange = true,
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithText(changePasswordToolbarTitle.uppercase(KENYA))
+            .assertIsDisplayed()
+            .assertHasClickAction()
     }
 
     @Test
@@ -182,7 +222,8 @@ class PasswordResetScreenTest {
         }
 
         composeTestRule.onNodeWithContentDescription(progressbarDescription).assertIsDisplayed()
-        composeTestRule.onNodeWithText(resetPasswordButtonLabel).assertIsNotEnabled()
+        composeTestRule.onNodeWithText(resetPasswordToolbarTitle.uppercase(KENYA))
+            .assertIsNotEnabled()
     }
 
     @Test
@@ -198,7 +239,7 @@ class PasswordResetScreenTest {
         }
 
         composeTestRule.onNodeWithContentDescription(progressbarDescription).assertIsDisplayed()
-        composeTestRule.onNodeWithText(changePasswordButtonLabel).assertIsNotEnabled()
+        composeTestRule.onNodeWithText(changePasswordToolbarTitle.uppercase(KENYA)).assertIsNotEnabled()
     }
 
     @Test
@@ -212,16 +253,20 @@ class PasswordResetScreenTest {
             }
         }
 
-        composeTestRule.onNodeWithText(resetPasswordButtonLabel).assertIsNotEnabled()
+        composeTestRule.onNodeWithText(resetPasswordToolbarTitle.uppercase(KENYA))
+            .assertIsNotEnabled()
         composeTestRule.onNodeWithContentDescription(oldPasswordTextFieldDescription)
             .performTextInput("old password")
-        composeTestRule.onNodeWithText(resetPasswordButtonLabel).assertIsNotEnabled()
+        composeTestRule.onNodeWithText(resetPasswordToolbarTitle.uppercase(KENYA))
+            .assertIsNotEnabled()
         composeTestRule.onNodeWithContentDescription(oldPasswordTextFieldDescription)
             .performTextClearance()
-        composeTestRule.onNodeWithText(resetPasswordButtonLabel).assertIsNotEnabled()
+        composeTestRule.onNodeWithText(resetPasswordToolbarTitle.uppercase(KENYA))
+            .assertIsNotEnabled()
         composeTestRule.onNodeWithContentDescription(newPasswordTextFieldDescription)
             .performTextInput("new password")
-        composeTestRule.onNodeWithText(resetPasswordButtonLabel).assertIsNotEnabled()
+        composeTestRule.onNodeWithText(resetPasswordToolbarTitle.uppercase(KENYA))
+            .assertIsNotEnabled()
     }
 
     @Test
@@ -236,16 +281,16 @@ class PasswordResetScreenTest {
             }
         }
 
-        composeTestRule.onNodeWithText(changePasswordButtonLabel).assertIsNotEnabled()
+        composeTestRule.onNodeWithText(changePasswordToolbarTitle.uppercase(KENYA)).assertIsNotEnabled()
         composeTestRule.onNodeWithContentDescription(oldPasswordTextFieldDescription)
             .performTextInput("old password")
-        composeTestRule.onNodeWithText(changePasswordButtonLabel).assertIsNotEnabled()
+        composeTestRule.onNodeWithText(changePasswordToolbarTitle.uppercase(KENYA)).assertIsNotEnabled()
         composeTestRule.onNodeWithContentDescription(oldPasswordTextFieldDescription)
             .performTextClearance()
-        composeTestRule.onNodeWithText(changePasswordButtonLabel).assertIsNotEnabled()
+        composeTestRule.onNodeWithText(changePasswordToolbarTitle.uppercase(KENYA)).assertIsNotEnabled()
         composeTestRule.onNodeWithContentDescription(newPasswordTextFieldDescription)
             .performTextInput("new password")
-        composeTestRule.onNodeWithText(changePasswordButtonLabel).assertIsNotEnabled()
+        composeTestRule.onNodeWithText(changePasswordToolbarTitle.uppercase(KENYA)).assertIsNotEnabled()
     }
 
     @Test
@@ -261,7 +306,7 @@ class PasswordResetScreenTest {
             }
         }
 
-        composeTestRule.onNodeWithText(resetPasswordButtonLabel).performClick()
+        composeTestRule.onNodeWithText(resetPasswordToolbarTitle.uppercase(KENYA)).performClick()
         with(argumentCaptor<Boolean> { }) {
             verify(focusManagerMock).clearFocus(capture())
             assertThat(firstValue, `is`(false))
@@ -282,7 +327,7 @@ class PasswordResetScreenTest {
             }
         }
 
-        composeTestRule.onNodeWithText(resetPasswordButtonLabel).performClick()
+        composeTestRule.onNodeWithText(resetPasswordToolbarTitle.uppercase(KENYA)).performClick()
         with(argumentCaptor<Boolean> { }) {
             verify(focusManagerMock).clearFocus(capture())
             assertThat(firstValue, `is`(false))
@@ -310,9 +355,9 @@ class PasswordResetScreenTest {
         composeTestRule.onNodeWithContentDescription(newPasswordTextFieldDescription)
             .performTextInput(newPassword)
 
-        composeTestRule.onNodeWithText(resetPasswordButtonLabel).performClick()
+        composeTestRule.onNodeWithText(resetPasswordToolbarTitle.uppercase(KENYA)).performClick()
         with(argumentCaptor<User.ResetPassword> { }) {
-            verify(resetCallbackMock, VerificationModeFactory.atMostOnce()).invoke(capture())
+            verify(resetCallbackMock, times(1)).invoke(capture())
             assertThat(firstValue.oldPassword, equalTo(oldPassword))
             assertThat(firstValue.newPassword, equalTo(newPassword))
             assertThat(firstValue.isChange, `is`(false))
@@ -341,9 +386,9 @@ class PasswordResetScreenTest {
         composeTestRule.onNodeWithContentDescription(newPasswordTextFieldDescription)
             .performTextInput(newPassword)
 
-        composeTestRule.onNodeWithText(changePasswordButtonLabel).performClick()
+        composeTestRule.onNodeWithText(changePasswordToolbarTitle.uppercase(KENYA)).performClick()
         with(argumentCaptor<User.ResetPassword> { }) {
-            verify(resetCallbackMock, VerificationModeFactory.atMostOnce()).invoke(capture())
+            verify(resetCallbackMock, times(1)).invoke(capture())
             assertThat(firstValue.oldPassword, equalTo(oldPassword))
             assertThat(firstValue.newPassword, equalTo(newPassword))
             assertThat(firstValue.isChange, `is`(true))
@@ -424,7 +469,7 @@ class PasswordResetScreenTest {
         }
 
         with(argumentCaptor<User> { }) {
-            verify(resetSuccessCallback, VerificationModeFactory.atMostOnce()).invoke(capture())
+            verify(resetSuccessCallback, times(1)).invoke(capture())
             assertThat(firstValue.id, equalTo(1))
             assertThat(firstValue.email, equalTo("user@example.com"))
         }
@@ -452,9 +497,9 @@ class PasswordResetScreenTest {
         composeTestRule.onNodeWithContentDescription(newPasswordTextFieldDescription)
             .performTextInput(newPassword)
 
-        composeTestRule.onNodeWithText(changePasswordButtonLabel).performClick()
+        composeTestRule.onNodeWithText(changePasswordToolbarTitle.uppercase(KENYA)).performClick()
         with(argumentCaptor<User.ResetPassword> { }) {
-            verify(resetCallbackMock, VerificationModeFactory.atMostOnce()).invoke(capture())
+            verify(resetCallbackMock, times(1)).invoke(capture())
             assertThat(firstValue.oldPassword, equalTo("old password"))
             assertThat(firstValue.newPassword, equalTo("new password"))
         }
@@ -481,9 +526,9 @@ class PasswordResetScreenTest {
         composeTestRule.onNodeWithContentDescription(newPasswordTextFieldDescription)
             .performTextInput(newPassword)
 
-        composeTestRule.onNodeWithText(resetPasswordButtonLabel).performClick()
+        composeTestRule.onNodeWithText(resetPasswordToolbarTitle.uppercase(KENYA)).performClick()
         with(argumentCaptor<User.ResetPassword> { }) {
-            verify(resetCallbackMock, VerificationModeFactory.atMostOnce()).invoke(capture())
+            verify(resetCallbackMock, times(1)).invoke(capture())
             assertThat(firstValue.oldPassword, equalTo("old password"))
             assertThat(firstValue.newPassword, equalTo("new password"))
         }

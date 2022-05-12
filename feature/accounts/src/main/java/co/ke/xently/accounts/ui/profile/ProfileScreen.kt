@@ -24,20 +24,21 @@ import co.ke.xently.data.TaskResult.Loading
 import co.ke.xently.data.User
 import co.ke.xently.data.errorMessage
 import co.ke.xently.data.getOrNull
+import co.ke.xently.feature.SharedFunction
 import co.ke.xently.feature.repository.AccountHttpException
 import co.ke.xently.feature.repository.error
 import co.ke.xently.feature.theme.XentlyTheme
 import co.ke.xently.feature.ui.*
 
-data class ProfileScreenClick(
+internal data class ProfileScreenFunction(
     val update: (User) -> Unit = {},
-    val navigationIcon: () -> Unit = {},
+    internal val sharedFunction: SharedFunction = SharedFunction(),
 )
 
 @Composable
 internal fun ProfileScreen(
     modifier: Modifier,
-    click: ProfileScreenClick,
+    function: ProfileScreenFunction,
     userId: Long? = null,
     viewModel: ProfileViewModel = hiltViewModel(),
 ) {
@@ -57,7 +58,7 @@ internal fun ProfileScreen(
         modifier = modifier,
         fetchResult = fetchResult,
         updateResult = updateResult,
-        click = click.copy(update = viewModel::update),
+        function = function.copy(update = viewModel::update),
     )
 }
 
@@ -66,7 +67,7 @@ private fun ProfileScreen(
     fetchResult: TaskResult<User>,
     updateResult: TaskResult<User?>,
     modifier: Modifier = Modifier,
-    click: ProfileScreenClick = ProfileScreenClick(),
+    function: ProfileScreenFunction = ProfileScreenFunction(),
 ) {
     val user = fetchResult.getOrNull()
     val scaffoldState = rememberScaffoldState()
@@ -96,7 +97,7 @@ private fun ProfileScreen(
         topBar = {
             ToolbarWithProgressbar(
                 showProgress = fetchResult is Loading || updateResult is Loading,
-                onNavigationIconClicked = click.navigationIcon,
+                onNavigationIconClicked = function.sharedFunction.onNavigationIconClicked,
                 title = stringResource(R.string.fa_account_profile_screen_title),
             ) {
                 IconButton(onClick = { isEditMode = !isEditMode }) {
@@ -148,7 +149,7 @@ private fun ProfileScreen(
                     email,
                 ).all { it.text.isNotBlank() } && updateResult !is Loading,
                 modifier = VerticalLayoutModifier.padding(top = VIEW_SPACE_HALVED),
-                onClick = { click.update.invoke(user!!) },
+                onClick = { function.update.invoke(user!!) },
             ) {
                 Text(
                     style = MaterialTheme.typography.button,

@@ -21,14 +21,15 @@ import co.ke.xently.common.KENYA
 import co.ke.xently.data.TaskResult
 import co.ke.xently.data.User
 import co.ke.xently.data.errorMessage
+import co.ke.xently.feature.SharedFunction
 import co.ke.xently.feature.ui.*
 
-data class SignInScreenFunction(
-    val navigationIcon: () -> Unit = {},
+internal data class SignInScreenFunction(
     val signInSuccess: (User) -> Unit = {},
     val forgotPassword: (String) -> Unit = {},
     val signIn: (User.BasicAuth) -> Unit = { },
     val createAccount: (User.BasicAuth) -> Unit = { },
+    val sharedFunction: SharedFunction = SharedFunction(),
 )
 
 @Composable
@@ -88,8 +89,8 @@ internal fun SignInScreen(
         topBar = {
             ToolbarWithProgressbar(
                 title = toolbarTitle,
-                onNavigationIconClicked = function.navigationIcon,
                 showProgress = result is TaskResult.Loading,
+                onNavigationIconClicked = function.sharedFunction.onNavigationIconClicked,
             )
         },
     ) { paddingValues ->

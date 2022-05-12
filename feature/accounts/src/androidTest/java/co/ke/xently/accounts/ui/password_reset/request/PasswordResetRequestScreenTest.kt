@@ -10,6 +10,7 @@ import co.ke.xently.accounts.R
 import co.ke.xently.common.KENYA
 import co.ke.xently.data.TaskResult
 import co.ke.xently.data.User
+import co.ke.xently.feature.SharedFunction
 import co.ke.xently.feature.theme.XentlyTheme
 import co.ke.xently.feature.ui.TEST_TAG_TEXT_FIELD_ERROR
 import org.hamcrest.MatcherAssert.assertThat
@@ -18,9 +19,9 @@ import org.hamcrest.Matchers.equalTo
 import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
-import org.mockito.internal.verification.VerificationModeFactory.atMostOnce
 import org.mockito.kotlin.argumentCaptor
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 
 class PasswordResetRequestScreenTest {
@@ -35,8 +36,8 @@ class PasswordResetRequestScreenTest {
             activity.getString(R.string.fa_request_password_reset_email_label)
         )
     }
-    private val requestResetButtonLabel by lazy {
-        activity.getString(R.string.fa_request_password_reset_toolbar_title).uppercase(KENYA)
+    private val requestResetToolbarTitle by lazy {
+        activity.getString(R.string.fa_request_password_reset_toolbar_title)
     }
     private val progressbarDescription by lazy {
         activity.getString(R.string.progress_bar_content_description)
@@ -51,18 +52,22 @@ class PasswordResetRequestScreenTest {
                 PasswordResetRequestScreen(
                     modifier = Modifier.fillMaxSize(),
                     result = TaskResult.Success(null),
-                    function = PasswordResetRequestScreenFunction(navigationIcon = navigationIconClickMock),
+                    function = PasswordResetRequestScreenFunction(
+                        sharedFunction = SharedFunction(
+                            onNavigationIconClicked = navigationIconClickMock,
+                        ),
+                    ),
                 )
             }
         }
 
         composeTestRule.onNodeWithContentDescription(activity.getString(R.string.move_back))
             .performClick()
-        verify(navigationIconClickMock, atMostOnce()).invoke()
+        verify(navigationIconClickMock, times(1)).invoke()
     }
 
     @Test
-    fun toolbarTitleIsSameAsResetRequestButtonLabel() {
+    fun toolbarTitle() {
         composeTestRule.setContent {
             XentlyTheme {
                 PasswordResetRequestScreen(
@@ -72,8 +77,25 @@ class PasswordResetRequestScreenTest {
             }
         }
 
-        composeTestRule.onAllNodesWithText(requestResetButtonLabel, ignoreCase = true)
-            .assertCountEquals(2)
+        composeTestRule.onNodeWithText(requestResetToolbarTitle)
+            .assertIsDisplayed()
+            .assertHasNoClickAction()
+    }
+
+    @Test
+    fun resetRequestButtonLabel() {
+        composeTestRule.setContent {
+            XentlyTheme {
+                PasswordResetRequestScreen(
+                    modifier = Modifier.fillMaxSize(),
+                    result = TaskResult.Success(null),
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithText(requestResetToolbarTitle.uppercase(KENYA))
+            .assertIsDisplayed()
+            .assertHasClickAction()
     }
 
     @Test
@@ -114,7 +136,7 @@ class PasswordResetRequestScreenTest {
                 )
             }
         }
-        composeTestRule.onNodeWithText(requestResetButtonLabel).assertIsDisplayed()
+        composeTestRule.onNodeWithText(requestResetToolbarTitle.uppercase(KENYA)).assertIsDisplayed()
     }
 
     @Test
@@ -157,10 +179,10 @@ class PasswordResetRequestScreenTest {
             }
         }
 
-        composeTestRule.onNodeWithText(requestResetButtonLabel).assertIsNotEnabled()
+        composeTestRule.onNodeWithText(requestResetToolbarTitle.uppercase(KENYA)).assertIsNotEnabled()
         composeTestRule.onNodeWithContentDescription(emailTextFieldDescription)
             .performTextInput("user@example.com")
-        composeTestRule.onNodeWithText(requestResetButtonLabel).assertIsEnabled()
+        composeTestRule.onNodeWithText(requestResetToolbarTitle.uppercase(KENYA)).assertIsEnabled()
     }
 
     @Test
@@ -177,7 +199,7 @@ class PasswordResetRequestScreenTest {
         }
 
         composeTestRule.onNodeWithContentDescription(progressbarDescription).assertIsDisplayed()
-        composeTestRule.onNodeWithText(requestResetButtonLabel).assertIsNotEnabled()
+        composeTestRule.onNodeWithText(requestResetToolbarTitle.uppercase(KENYA)).assertIsNotEnabled()
     }
 
     @Test
@@ -195,7 +217,7 @@ class PasswordResetRequestScreenTest {
         }
 
         with(argumentCaptor<User> { }) {
-            verify(requestSuccessCallback, atMostOnce()).invoke(capture())
+            verify(requestSuccessCallback, times(1)).invoke(capture())
             assertThat(firstValue.id, equalTo(1))
             assertThat(firstValue.email, equalTo("user@example.com"))
         }
@@ -215,7 +237,7 @@ class PasswordResetRequestScreenTest {
             }
         }
 
-        composeTestRule.onNodeWithText(requestResetButtonLabel).performClick()
+        composeTestRule.onNodeWithText(requestResetToolbarTitle.uppercase(KENYA)).performClick()
         with(argumentCaptor<Boolean> { }) {
             verify(focusManagerMock).clearFocus(capture())
             assertThat(firstValue, `is`(false))
@@ -239,9 +261,9 @@ class PasswordResetRequestScreenTest {
         composeTestRule.onNodeWithContentDescription(emailTextFieldDescription)
             .performTextInput(email)
 
-        composeTestRule.onNodeWithText(requestResetButtonLabel).performClick()
+        composeTestRule.onNodeWithText(requestResetToolbarTitle.uppercase(KENYA)).performClick()
         with(argumentCaptor<String> { }) {
-            verify(requestCallbackMock, atMostOnce()).invoke(capture())
+            verify(requestCallbackMock, times(1)).invoke(capture())
             assertThat(firstValue, equalTo(email))
         }
     }
@@ -285,9 +307,9 @@ class PasswordResetRequestScreenTest {
         composeTestRule.onNodeWithContentDescription(emailTextFieldDescription)
             .performTextInput(email)
 
-        composeTestRule.onNodeWithText(requestResetButtonLabel).performClick()
+        composeTestRule.onNodeWithText(requestResetToolbarTitle.uppercase(KENYA)).performClick()
         with(argumentCaptor<String> { }) {
-            verify(requestCallbackMock, atMostOnce()).invoke(capture())
+            verify(requestCallbackMock, times(1)).invoke(capture())
             assertThat(firstValue, equalTo("user@example.com"))
         }
     }

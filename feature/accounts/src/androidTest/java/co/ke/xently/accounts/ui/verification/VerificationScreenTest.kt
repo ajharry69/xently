@@ -7,17 +7,19 @@ import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.text.input.ImeAction
 import co.ke.xently.accounts.R
+import co.ke.xently.common.KENYA
 import co.ke.xently.data.TaskResult
 import co.ke.xently.data.User
+import co.ke.xently.feature.SharedFunction
 import co.ke.xently.feature.theme.XentlyTheme
 import co.ke.xently.feature.ui.TEST_TAG_TEXT_FIELD_ERROR
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.equalTo
 import org.junit.Rule
 import org.junit.Test
-import org.mockito.internal.verification.VerificationModeFactory.atMostOnce
 import org.mockito.kotlin.argumentCaptor
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 
 class VerificationScreenTest {
@@ -29,8 +31,8 @@ class VerificationScreenTest {
     private val progressbarDescription by lazy {
         activity.getString(R.string.progress_bar_content_description)
     }
-    private val verifyButtonLabel by lazy {
-        activity.getString(R.string.fa_verify_account_toolbar_title).uppercase()
+    private val verifyToolbarTitle by lazy {
+        activity.getString(R.string.fa_verify_account_toolbar_title)
     }
     private val resendButtonLabel = "RESEND"
 
@@ -44,18 +46,22 @@ class VerificationScreenTest {
                     modifier = Modifier.fillMaxSize(),
                     verifyResult = TaskResult.Success(null),
                     resendResult = TaskResult.Success(null),
-                    function = VerificationScreenFunction(navigationIcon = navigationIconClickMock),
+                    function = VerificationScreenFunction(
+                        sharedFunction = SharedFunction(
+                            onNavigationIconClicked = navigationIconClickMock,
+                        )
+                    ),
                 )
             }
         }
 
         composeTestRule.onNodeWithContentDescription(activity.getString(R.string.move_back))
             .performClick()
-        verify(navigationIconClickMock, atMostOnce()).invoke()
+        verify(navigationIconClickMock, times(1)).invoke()
     }
 
     @Test
-    fun toolbarTitleIsSameAsSignUpButtonLabel() {
+    fun defaultToolbarTitle() {
         composeTestRule.setContent {
             XentlyTheme {
                 VerificationScreen(
@@ -66,8 +72,26 @@ class VerificationScreenTest {
             }
         }
 
-        composeTestRule.onAllNodesWithText(verifyButtonLabel, ignoreCase = true)
-            .assertCountEquals(2)
+        composeTestRule.onNodeWithText(verifyToolbarTitle)
+            .assertIsDisplayed()
+            .assertHasNoClickAction()
+    }
+
+    @Test
+    fun verificationButtonLabel() {
+        composeTestRule.setContent {
+            XentlyTheme {
+                VerificationScreen(
+                    modifier = Modifier.fillMaxSize(),
+                    verifyResult = TaskResult.Success(null),
+                    resendResult = TaskResult.Success(null),
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithText(verifyToolbarTitle.uppercase(KENYA))
+            .assertIsDisplayed()
+            .assertHasClickAction()
     }
 
     @Test
@@ -140,7 +164,7 @@ class VerificationScreenTest {
                 )
             }
         }
-        composeTestRule.onNodeWithText(verifyButtonLabel).assertIsDisplayed()
+        composeTestRule.onNodeWithText(verifyToolbarTitle.uppercase(KENYA)).assertIsDisplayed()
     }
 
     @Test
@@ -222,7 +246,7 @@ class VerificationScreenTest {
             }
         }
 
-        composeTestRule.onNodeWithText(verifyButtonLabel).assertIsNotEnabled()
+        composeTestRule.onNodeWithText(verifyToolbarTitle.uppercase(KENYA)).assertIsNotEnabled()
         composeTestRule.onNodeWithContentDescription(
             activity.getString(
                 R.string.fa_verify_account_entry_field_description,
@@ -230,7 +254,7 @@ class VerificationScreenTest {
             )
         )
             .performTextInput("1")
-        composeTestRule.onNodeWithText(verifyButtonLabel).assertIsEnabled()
+        composeTestRule.onNodeWithText(verifyToolbarTitle.uppercase(KENYA)).assertIsEnabled()
     }
 
     @Test
@@ -247,7 +271,7 @@ class VerificationScreenTest {
         }
 
         composeTestRule.onNodeWithContentDescription(progressbarDescription).assertIsDisplayed()
-        composeTestRule.onNodeWithText(verifyButtonLabel).assertIsNotEnabled()
+        composeTestRule.onNodeWithText(verifyToolbarTitle.uppercase(KENYA)).assertIsNotEnabled()
     }
 
     @Test
@@ -282,7 +306,7 @@ class VerificationScreenTest {
         }
 
         with(argumentCaptor<User> { }) {
-            verify(verificationSuccessMock, atMostOnce()).invoke(capture())
+            verify(verificationSuccessMock, times(1)).invoke(capture())
             assertThat(firstValue.id, equalTo(1))
             assertThat(firstValue.email, equalTo("user@example.com"))
         }

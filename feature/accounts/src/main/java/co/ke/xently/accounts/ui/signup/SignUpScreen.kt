@@ -23,13 +23,14 @@ import co.ke.xently.data.TaskResult
 import co.ke.xently.data.User
 import co.ke.xently.data.errorMessage
 import co.ke.xently.data.getOrNull
+import co.ke.xently.feature.SharedFunction
 import co.ke.xently.feature.ui.*
 
-data class SignUpScreenFunction(
+internal data class SignUpScreenFunction(
     val signUp: (User) -> Unit = {},
-    val navigationIcon: () -> Unit = {},
     val signUpSuccess: (User) -> Unit = {},
     val signIn: (User.BasicAuth) -> Unit = { },
+    val sharedFunction: SharedFunction = SharedFunction(),
 )
 
 @Composable
@@ -99,7 +100,7 @@ internal fun SignUpScreen(
             ToolbarWithProgressbar(
                 title = toolbarTitle,
                 showProgress = result is TaskResult.Loading,
-                onNavigationIconClicked = function.navigationIcon,
+                onNavigationIconClicked = function.sharedFunction.onNavigationIconClicked,
             )
         },
     ) { paddingValues ->

@@ -24,12 +24,13 @@ import co.ke.xently.accounts.R
 import co.ke.xently.data.TaskResult
 import co.ke.xently.data.User
 import co.ke.xently.data.errorMessage
+import co.ke.xently.feature.SharedFunction
 import co.ke.xently.feature.ui.*
 
-data class PasswordResetScreenFunction(
-    val navigationIcon: () -> Unit = {},
+internal data class PasswordResetScreenFunction(
     val resetSuccess: (User) -> Unit = {},
     val reset: (User.ResetPassword) -> Unit = {},
+    val sharedFunction: SharedFunction = SharedFunction(),
 )
 
 @Composable
@@ -104,7 +105,7 @@ internal fun PasswordResetScreen(
             ToolbarWithProgressbar(
                 title = toolbarTitle,
                 showProgress = result is TaskResult.Loading,
-                onNavigationIconClicked = function.navigationIcon,
+                onNavigationIconClicked = function.sharedFunction.onNavigationIconClicked,
             )
         },
     ) { paddingValues ->
