@@ -40,8 +40,7 @@ fun XentlyNavHost(
         )
         shopsGraph(
             navController = navController,
-            onNavigationIconClicked = sharedFunction.onNavigationIconClicked,
-            onLocationPermissionChanged = sharedFunction.onLocationPermissionChanged,
+            sharedFunction = sharedFunction,
         )
         shoppingListGraph(
             navController = navController,

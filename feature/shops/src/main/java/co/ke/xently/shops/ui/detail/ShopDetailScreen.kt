@@ -31,6 +31,7 @@ import co.ke.xently.data.TaskResult
 import co.ke.xently.data.TaskResult.Success
 import co.ke.xently.data.errorMessage
 import co.ke.xently.data.getOrNull
+import co.ke.xently.feature.SharedFunction
 import co.ke.xently.feature.theme.XentlyTheme
 import co.ke.xently.feature.ui.*
 import co.ke.xently.feature.utils.MAP_HEIGHT
@@ -47,8 +48,7 @@ internal data class ShopDetailScreenArgs(
 
 internal data class ShopDetailScreenFunction(
     internal val onAddShopClicked: (Shop) -> Unit = {},
-    internal val onNavigationIconClicked: () -> Unit = {},
-    internal val onLocationPermissionChanged: (Boolean) -> Unit = {},
+    internal val sharedFunction: SharedFunction = SharedFunction(),
 )
 
 @Composable
@@ -73,7 +73,9 @@ internal fun ShopDetailScreen(
     }
     val permitReAddition = id == Shop.default().id && addResult.getOrNull() != null
     if (permitReAddition && args.moveBack) {
-        SideEffect(function.onNavigationIconClicked)
+        LaunchedEffect(permitReAddition && args.moveBack) {
+            function.sharedFunction.onNavigationIconClicked.invoke()
+        }
     }
 
     ShopDetailScreen(
@@ -164,7 +166,7 @@ internal fun ShopDetailScreen(
                             .height(MAP_HEIGHT)
                             .fillMaxWidth(),
                         markerPositions = markerPositions,
-                        onLocationPermissionChanged = function.onLocationPermissionChanged,
+                        onLocationPermissionChanged = function.sharedFunction.onLocationPermissionChanged,
                     ) {
                         setOnMapClickListener {
                             coordinate = Coordinate(it.latitude, it.longitude)
@@ -181,7 +183,7 @@ internal fun ShopDetailScreen(
                     elevation = 0.dp,
                     title = toolbarTitle,
                     backgroundColor = Color.Transparent,
-                    onNavigationIconClicked = function.onNavigationIconClicked,
+                    onNavigationIconClicked = function.sharedFunction.onNavigationIconClicked,
                 )
             }
         },

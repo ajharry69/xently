@@ -8,6 +8,7 @@ import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import co.ke.xently.common.KENYA
 import co.ke.xently.data.Shop
 import co.ke.xently.data.TaskResult
+import co.ke.xently.feature.SharedFunction
 import co.ke.xently.feature.theme.XentlyTheme
 import co.ke.xently.feature.ui.TEST_TAG_TEXT_FIELD_ERROR
 import co.ke.xently.shops.R
@@ -27,17 +28,13 @@ class ShopDetailScreenTest {
     private val activity by lazy { composeTestRule.activity }
     private val addShopButtonLabel by lazy {
         activity.getString(R.string.fs_shop_detail_toolbar_title, activity.getString(R.string.add))
-            .uppercase(
-                KENYA
-            )
+            .uppercase(KENYA)
     }
     private val updateShopButtonLabel by lazy {
         activity.getString(
             R.string.fs_shop_detail_toolbar_title,
             activity.getString(R.string.update)
-        ).uppercase(
-            KENYA
-        )
+        ).uppercase(KENYA)
     }
     private val nameTextFieldDescription by lazy {
         activity.getString(
@@ -62,6 +59,162 @@ class ShopDetailScreenTest {
             R.string.text_field_content_description,
             activity.getString(R.string.fs_shop_item_detail_coordinate_label),
         )
+    }
+
+    private val toolbarTitleAdd by lazy {
+        activity.getString(
+            R.string.fs_shop_detail_toolbar_title,
+            activity.getString(R.string.add),
+        )
+    }
+
+    private val toolbarTitleUpdate by lazy {
+        activity.getString(
+            R.string.fs_shop_detail_toolbar_title,
+            activity.getString(R.string.update),
+        )
+    }
+
+    @Test
+    fun clickingOnNavigationButton() {
+        val onNavigationClickMock: () -> Unit = mock()
+        composeTestRule.setContent {
+            XentlyTheme {
+                ShopDetailScreen(
+                    isTestMode = true,
+                    modifier = Modifier.fillMaxSize(),
+                    result = TaskResult.Success(null),
+                    addResult = TaskResult.Success(null),
+                    function = ShopDetailScreenFunction(
+                        sharedFunction = SharedFunction(
+                            onNavigationIconClicked = onNavigationClickMock,
+                        ),
+                    ),
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithContentDescription(activity.getString(R.string.move_back))
+            .performClick()
+        verify(onNavigationClickMock, org.mockito.kotlin.times(1)).invoke()
+    }
+
+    @Test
+    fun toolbarTitleWhenAddingShop() {
+        composeTestRule.setContent {
+            XentlyTheme {
+                ShopDetailScreen(
+                    isTestMode = true,
+                    modifier = Modifier.fillMaxSize(),
+                    result = TaskResult.Success(null),
+                    addResult = TaskResult.Success(null),
+                    function = ShopDetailScreenFunction(),
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithText(toolbarTitleAdd)
+            .assertIsDisplayed()
+            .assertHasNoClickAction()
+    }
+
+    @Test
+    fun toolbarTitleWhenUpdatingShop() {
+        composeTestRule.setContent {
+            XentlyTheme {
+                ShopDetailScreen(
+                    isTestMode = true,
+                    modifier = Modifier.fillMaxSize(),
+                    result = TaskResult.Success(Shop.default().copy(isDefault = false, id = 1)),
+                    addResult = TaskResult.Success(null),
+                    function = ShopDetailScreenFunction(),
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithText(toolbarTitleUpdate)
+            .assertIsDisplayed()
+            .assertHasNoClickAction()
+    }
+
+    @Test
+    fun buttonLabelWhenAddingShop() {
+        composeTestRule.setContent {
+            XentlyTheme {
+                ShopDetailScreen(
+                    isTestMode = true,
+                    modifier = Modifier.fillMaxSize(),
+                    result = TaskResult.Success(null),
+                    addResult = TaskResult.Success(null),
+                    function = ShopDetailScreenFunction(),
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithText(toolbarTitleAdd.uppercase(KENYA))
+            .assertIsDisplayed()
+            .assertHasClickAction()
+    }
+
+    @Test
+    fun addButtonIsDisabledByDefaultWhenAddingShop() {
+        composeTestRule.setContent {
+            XentlyTheme {
+                ShopDetailScreen(
+                    isTestMode = true,
+                    modifier = Modifier.fillMaxSize(),
+                    result = TaskResult.Success(null),
+                    addResult = TaskResult.Success(null),
+                    function = ShopDetailScreenFunction(),
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithText(toolbarTitleAdd.uppercase(KENYA))
+            .assertIsNotEnabled()
+    }
+
+    @Test
+    fun buttonLabelWhenUpdatingShop() {
+        composeTestRule.setContent {
+            XentlyTheme {
+                ShopDetailScreen(
+                    isTestMode = true,
+                    modifier = Modifier.fillMaxSize(),
+                    result = TaskResult.Success(Shop.default().copy(isDefault = false, id = 1)),
+                    addResult = TaskResult.Success(null),
+                    function = ShopDetailScreenFunction(),
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithText(toolbarTitleUpdate.uppercase(KENYA))
+            .assertIsDisplayed()
+            .assertHasClickAction()
+    }
+
+    @Test
+    fun updateButtonIsEnabledByDefaultWhenUpdatingShop() {
+        composeTestRule.setContent {
+            XentlyTheme {
+                ShopDetailScreen(
+                    isTestMode = true,
+                    modifier = Modifier.fillMaxSize(),
+                    result = TaskResult.Success(
+                        Shop.default().copy(
+                            isDefault = false,
+                            id = 1,
+                            coordinate = Shop.Coordinate(1.0, 2.0),
+                        )
+                    ),
+                    addResult = TaskResult.Success(null),
+                    function = ShopDetailScreenFunction(),
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithText(toolbarTitleUpdate.uppercase(KENYA))
+            .assertIsEnabled()
     }
 
     @Test

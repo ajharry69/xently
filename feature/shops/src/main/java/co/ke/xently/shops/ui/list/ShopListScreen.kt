@@ -16,6 +16,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import co.ke.xently.data.Shop
+import co.ke.xently.feature.SharedFunction
 import co.ke.xently.feature.ui.*
 import co.ke.xently.shops.R
 import co.ke.xently.shops.ui.list.item.MenuItem
@@ -24,7 +25,7 @@ import co.ke.xently.shops.ui.list.item.ShopListItemFunction
 
 internal data class ShopListScreenFunction(
     val onAddFabClicked: () -> Unit = {},
-    val onNavigationIcon: () -> Unit = {},
+    val sharedFunction: SharedFunction = SharedFunction(),
     val function: ShopListItemFunction = ShopListItemFunction(),
 )
 
@@ -66,7 +67,7 @@ private fun ShopListScreen(
         topBar = {
             ToolbarWithProgressbar(
                 title = stringResource(R.string.title_activity_shops),
-                onNavigationIconClicked = function.onNavigationIcon,
+                onNavigationIconClicked = function.sharedFunction.onNavigationIconClicked,
             ) {
                 OverflowOptionMenu(
                     menu = optionsMenu,

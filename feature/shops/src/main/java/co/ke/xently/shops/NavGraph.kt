@@ -11,6 +11,7 @@ import androidx.core.net.toUri
 import androidx.navigation.*
 import androidx.navigation.compose.composable
 import co.ke.xently.data.Shop
+import co.ke.xently.feature.SharedFunction
 import co.ke.xently.feature.ui.OptionMenu
 import co.ke.xently.feature.utils.Routes
 import co.ke.xently.feature.utils.buildRoute
@@ -23,9 +24,8 @@ import co.ke.xently.shops.ui.list.item.MenuItem
 import co.ke.xently.shops.ui.list.item.ShopListItemFunction
 
 fun NavGraphBuilder.shopsGraph(
+    sharedFunction: SharedFunction,
     navController: NavHostController,
-    onNavigationIconClicked: () -> Unit,
-    onLocationPermissionChanged: (permissionGranted: Boolean) -> Unit,
 ) {
     navigation(route = Routes.Shops.toString(), startDestination = Routes.Shops.LIST) {
         composable(Routes.Shops.LIST) {
@@ -79,7 +79,7 @@ fun NavGraphBuilder.shopsGraph(
                     onAddFabClicked = {
                         navController.navigate(Routes.Shops.DETAIL.buildRoute("id" to Shop.default().id))
                     },
-                    onNavigationIcon = onNavigationIconClicked,
+                    sharedFunction = sharedFunction,
                     function = ShopListItemFunction(
                         onItemClicked = {},
                     ),
@@ -114,10 +114,7 @@ fun NavGraphBuilder.shopsGraph(
                     name = it.arguments?.getString("name") ?: "",
                     moveBack = it.arguments?.getLong("moveBack") == 1L,
                 ),
-                function = ShopDetailScreenFunction(
-                    onNavigationIconClicked = onNavigationIconClicked,
-                    onLocationPermissionChanged = onLocationPermissionChanged,
-                ),
+                function = ShopDetailScreenFunction(sharedFunction = sharedFunction),
             )
         }
     }
