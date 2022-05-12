@@ -26,8 +26,8 @@ import co.ke.xently.shoppinglist.ui.list.item.ShoppingListItemCard
 
 internal data class ShoppingListScreenFunction(
     val onAddClicked: () -> Unit = {},
-    val sharedFunction: SharedFunction,
     val onItemClicked: (ShoppingListItem) -> Unit = {},
+    val sharedFunction: SharedFunction = SharedFunction(),
 )
 
 @Composable
