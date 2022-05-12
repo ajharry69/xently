@@ -149,9 +149,7 @@ fun NavGraphBuilder.shoppingListGraph(
             ShoppingListItemScreen(
                 modifier = Modifier.fillMaxSize(),
                 id = it.arguments?.getLong("id") ?: ShoppingListItem.default().id,
-                function = ShoppingListItemScreenFunction(
-                    onNavigationIconClicked = sharedFunction.onNavigationIconClicked,
-                ),
+                function = ShoppingListItemScreenFunction(sharedFunction = sharedFunction),
             )
         }
     }
