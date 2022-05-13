@@ -11,7 +11,7 @@ import co.ke.xently.accounts.ui.password_reset.PasswordResetScreenFunction
 import co.ke.xently.accounts.ui.password_reset.request.PasswordResetRequestScreen
 import co.ke.xently.accounts.ui.password_reset.request.PasswordResetRequestScreenFunction
 import co.ke.xently.accounts.ui.profile.ProfileScreen
-import co.ke.xently.accounts.ui.profile.ProfileScreenClick
+import co.ke.xently.accounts.ui.profile.ProfileScreenFunction
 import co.ke.xently.accounts.ui.signin.SignInScreen
 import co.ke.xently.accounts.ui.signin.SignInScreenFunction
 import co.ke.xently.accounts.ui.signup.SignUpScreen
@@ -19,12 +19,13 @@ import co.ke.xently.accounts.ui.signup.SignUpScreenFunction
 import co.ke.xently.accounts.ui.verification.VerificationScreen
 import co.ke.xently.accounts.ui.verification.VerificationScreenFunction
 import co.ke.xently.data.User
+import co.ke.xently.feature.SharedFunction
 import co.ke.xently.feature.utils.Routes
 import co.ke.xently.feature.utils.buildRoute
 
 fun NavGraphBuilder.accountsGraph(
+    sharedFunction: SharedFunction,
     navController: NavHostController,
-    onNavigationIconClicked: () -> Unit
 ) {
     navigation(
         route = Routes.Account.toString(),
@@ -34,9 +35,7 @@ fun NavGraphBuilder.accountsGraph(
         composable(Routes.Account.PROFILE) {
             ProfileScreen(
                 modifier = Modifier.fillMaxSize(),
-                click = ProfileScreenClick(
-                    navigationIcon = onNavigationIconClicked,
-                ),
+                function = ProfileScreenFunction(sharedFunction = sharedFunction),
             )
         }
         composable(
@@ -63,7 +62,7 @@ fun NavGraphBuilder.accountsGraph(
                     password = navBackStackEntry.arguments?.getString("password") ?: "",
                 ),
                 function = SignInScreenFunction(
-                    navigationIcon = onNavigationIconClicked,
+                    sharedFunction = sharedFunction,
                     forgotPassword = {
                         navController.navigate(Routes.Account.PASSWORD_RESET_REQUEST.buildRoute("email" to it)) {
                             launchSingleTop = true
@@ -110,7 +109,7 @@ fun NavGraphBuilder.accountsGraph(
             val context = LocalContext.current
             SignUpScreen(
                 function = SignUpScreenFunction(
-                    navigationIcon = onNavigationIconClicked,
+                    sharedFunction = sharedFunction,
                     signUpSuccess = { user ->
                         if (user.isVerified) {
                             (context as ComponentActivity).finish()
@@ -154,7 +153,7 @@ fun NavGraphBuilder.accountsGraph(
                 modifier = Modifier.fillMaxSize(),
                 verificationCode = navBackStackEntry.arguments?.getString("code") ?: "",
                 function = VerificationScreenFunction(
-                    navigationIcon = onNavigationIconClicked,
+                    sharedFunction = sharedFunction,
                     verificationSuccess = {
                         if (it.isVerified) {
                             (context as ComponentActivity).finish()
@@ -175,7 +174,7 @@ fun NavGraphBuilder.accountsGraph(
                 modifier = Modifier.fillMaxSize(),
                 email = it.arguments?.getString("email") ?: "",
                 function = PasswordResetRequestScreenFunction(
-                    navigationIcon = onNavigationIconClicked,
+                    sharedFunction = sharedFunction,
                     requestSuccess = {
                         navController.navigate(Routes.Account.RESET_PASSWORD) {
                             launchSingleTop = true
@@ -198,8 +197,9 @@ fun NavGraphBuilder.accountsGraph(
                 modifier = Modifier.fillMaxSize(),
                 isChange = it.arguments?.getBoolean("isChange") ?: false,
                 function = PasswordResetScreenFunction(
-                    navigationIcon = onNavigationIconClicked,
+                    sharedFunction = sharedFunction,
                     resetSuccess = {
+                        // TODO: Fix this...
                         (context as ComponentActivity).finish()
                     },
                 ),

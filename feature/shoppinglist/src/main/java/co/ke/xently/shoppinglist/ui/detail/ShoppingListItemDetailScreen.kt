@@ -18,17 +18,18 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import co.ke.xently.common.KENYA
 import co.ke.xently.data.*
 import co.ke.xently.data.ShoppingListItem.Attribute
+import co.ke.xently.feature.SharedFunction
 import co.ke.xently.feature.ui.*
 import co.ke.xently.products.shared.*
 import co.ke.xently.shoppinglist.R
 
 internal data class ShoppingListItemScreenFunction(
-    val onNavigationIconClicked: () -> Unit = {},
-    val onProductQueryChanged: (String) -> Unit = {},
-    val onMeasurementUnitQueryChanged: (String) -> Unit = {},
     val onBrandQueryChanged: (String) -> Unit = {},
-    val onAttributeQueryChanged: (AttributeQuery) -> Unit = {},
+    val onProductQueryChanged: (String) -> Unit = {},
+    val sharedFunction: SharedFunction = SharedFunction(),
     val onDetailsSubmitted: (ShoppingListItem) -> Unit = {},
+    val onMeasurementUnitQueryChanged: (String) -> Unit = {},
+    val onAttributeQueryChanged: (AttributeQuery) -> Unit = {},
 )
 
 @Composable
@@ -153,7 +154,7 @@ internal fun ShoppingListItemScreen(
             ToolbarWithProgressbar(
                 title = toolbarTitle,
                 showProgress = isTaskLoading,
-                onNavigationIconClicked = function.onNavigationIconClicked,
+                onNavigationIconClicked = function.sharedFunction.onNavigationIconClicked,
             )
         },
     ) { paddingValues ->

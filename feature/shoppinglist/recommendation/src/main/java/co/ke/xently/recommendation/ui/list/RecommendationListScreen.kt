@@ -21,6 +21,7 @@ import co.ke.xently.data.Recommendation
 import co.ke.xently.data.ShoppingListItem
 import co.ke.xently.data.TaskResult
 import co.ke.xently.data.getOrNull
+import co.ke.xently.feature.SharedFunction
 import co.ke.xently.feature.ui.*
 import co.ke.xently.feature.utils.MAP_HEIGHT
 import co.ke.xently.recommendation.R
@@ -33,10 +34,9 @@ import java.text.NumberFormat
 import java.util.*
 
 internal data class RecommendationListScreenFunction(
-    internal val onNavigationIconClicked: () -> Unit = {},
     internal val onRetryClicked: (Throwable) -> Unit = {},
     internal val onItemClicked: (ShoppingListItem) -> Unit = {},
-    internal val onLocationPermissionChanged: (Boolean) -> Unit = {},
+    internal val sharedFunction: SharedFunction = SharedFunction(),
     internal val function: RecommendationCardItemFunction = RecommendationCardItemFunction(),
 )
 
@@ -109,7 +109,7 @@ internal fun RecommendationListScreen(
             if (recommendations.isNullOrEmpty()) {
                 ToolbarWithProgressbar(
                     title = stringResource(R.string.fr_toolbar_title),
-                    onNavigationIconClicked = function.onNavigationIconClicked,
+                    onNavigationIconClicked = function.sharedFunction.onNavigationIconClicked,
                 )
             }
         }
@@ -157,14 +157,14 @@ internal fun RecommendationListScreen(
                                         }.map { recommendation ->
                                             recommendation.createMarkerOption(context)
                                         },
-                                        onLocationPermissionChanged = function.onLocationPermissionChanged,
+                                        onLocationPermissionChanged = function.sharedFunction.onLocationPermissionChanged,
                                     )
                                 }
                                 ToolbarWithProgressbar(
                                     elevation = 0.dp,
                                     backgroundColor = Color.Transparent,
                                     title = stringResource(R.string.fr_toolbar_title),
-                                    onNavigationIconClicked = function.onNavigationIconClicked,
+                                    onNavigationIconClicked = function.sharedFunction.onNavigationIconClicked,
                                     subTitle = context.resources.getQuantityString(
                                         R.plurals.fr_filter_toolbar_subtitle,
                                         numberOfItems,

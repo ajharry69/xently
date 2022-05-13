@@ -1,15 +1,15 @@
 package co.ke.xently.shoppinglist
 
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.DrawerState
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.navigation.*
 import androidx.navigation.compose.composable
 import co.ke.xently.data.ShoppingListItem
-import co.ke.xently.feature.ui.NavMenuItem
+import co.ke.xently.feature.SharedFunction
 import co.ke.xently.feature.ui.OptionMenu
 import co.ke.xently.feature.utils.Routes
 import co.ke.xently.feature.utils.buildRoute
@@ -25,12 +25,9 @@ import co.ke.xently.shoppinglist.ui.list.grouped.item.GroupedShoppingListCardFun
 import co.ke.xently.shoppinglist.ui.list.item.MenuItem
 
 fun NavGraphBuilder.shoppingListGraph(
+    sharedFunction: SharedFunction,
     navController: NavHostController,
-    onAccountMenuClicked: () -> Unit,
-    onShopMenuClicked: () -> Unit,
-    onProductMenuClicked: () -> Unit,
-    onRecommendationMenuClicked: () -> Unit,
-    onNavigationIconClicked: () -> Unit,
+    drawerContent: @Composable (ColumnScope.(DrawerState) -> Unit),
 ) {
     navigation(
         route = Routes.ShoppingList.toString(),
@@ -57,48 +54,8 @@ fun NavGraphBuilder.shoppingListGraph(
             MenuItem(R.string.delete),
         )
         composable(Routes.ShoppingList.GROUPED) {
-            val context = LocalContext.current
             GroupedShoppingListScreen(
                 modifier = Modifier.fillMaxSize(),
-                drawerItems = listOf(
-                    NavMenuItem(
-                        context = context,
-                        label = R.string.drawer_menu_shopping_list,
-                        icon = Icons.Default.List,
-                        onClick = {
-                            if (navController.currentDestination?.route != Routes.ShoppingList.GROUPED) {
-                                navController.navigate(Routes.ShoppingList.GROUPED.buildRoute()) {
-                                    launchSingleTop = true
-                                }
-                            }
-                        },
-                    ),
-                    NavMenuItem(
-                        // TODO: Show only if user is signed in
-                        context = context,
-                        label = R.string.drawer_menu_account,
-                        icon = Icons.Default.Person,
-                        onClick = onAccountMenuClicked,
-                    ),
-                    NavMenuItem(
-                        context = context,
-                        label = R.string.drawer_menu_shops,
-                        icon = Icons.Default.Business,
-                        onClick = onShopMenuClicked,
-                    ),
-                    NavMenuItem(
-                        context = context,
-                        label = R.string.drawer_menu_products,
-                        icon = Icons.Default.Category,
-                        onClick = onProductMenuClicked,
-                    ),
-                    NavMenuItem(
-                        context = context,
-                        label = R.string.drawer_menu_recommendation,
-                        icon = Icons.Default.AltRoute,
-                        onClick = onRecommendationMenuClicked,
-                    ),
-                ),
                 menuItems = shoppingListItemMenuItems,
                 optionsMenu = listOf(
                     OptionMenu(title = stringResource(R.string.refresh)),
@@ -122,6 +79,7 @@ fun NavGraphBuilder.shoppingListGraph(
                     },
                 ),
                 function = GroupedShoppingListScreenFunction(
+                    shared = sharedFunction,
                     onAddFabClicked = onAddShoppingListItemClicked,
                     function = GroupedShoppingListCardFunction(
                         onItemClicked = {
@@ -131,12 +89,13 @@ fun NavGraphBuilder.shoppingListGraph(
                             navController.navigate(
                                 Routes.ShoppingList.LIST.buildRoute(
                                     "group" to it.group,
-                                    "groupBy" to it.groupBy
+                                    "groupBy" to it.groupBy,
                                 )
                             )
                         },
                     ),
                 ),
+                drawerContent = drawerContent,
             )
         }
         composable(
@@ -163,9 +122,9 @@ fun NavGraphBuilder.shoppingListGraph(
                     )
                 },
                 function = ShoppingListScreenFunction(
-                    onAddClicked = onAddShoppingListItemClicked,
-                    onNavigationIconClicked = onNavigationIconClicked,
                     onItemClicked = {},
+                    sharedFunction = sharedFunction,
+                    onAddClicked = onAddShoppingListItemClicked,
                 ),
                 optionsMenu = listOf(
                     OptionMenu(
@@ -190,9 +149,7 @@ fun NavGraphBuilder.shoppingListGraph(
             ShoppingListItemScreen(
                 modifier = Modifier.fillMaxSize(),
                 id = it.arguments?.getLong("id") ?: ShoppingListItem.default().id,
-                function = ShoppingListItemScreenFunction(
-                    onNavigationIconClicked = onNavigationIconClicked,
-                ),
+                function = ShoppingListItemScreenFunction(sharedFunction = sharedFunction),
             )
         }
     }

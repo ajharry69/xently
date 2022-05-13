@@ -8,6 +8,7 @@ import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import co.ke.xently.common.KENYA
 import co.ke.xently.data.ShoppingListItem
 import co.ke.xently.data.TaskResult
+import co.ke.xently.feature.SharedFunction
 import co.ke.xently.feature.theme.XentlyTheme
 import co.ke.xently.shoppinglist.R
 import org.hamcrest.MatcherAssert.assertThat
@@ -58,6 +59,29 @@ class ShoppingListItemDetailScreenTest {
             R.string.text_field_content_description,
             activity.getString(R.string.fsl_text_field_label_purchase_quantity),
         )
+    }
+
+    @Test
+    fun clickingOnNavigationButton() {
+        val onNavigationIconClickedMock: () -> Unit = mock()
+        composeTestRule.setContent {
+            XentlyTheme {
+                ShoppingListItemScreen(
+                    modifier = Modifier.fillMaxSize(),
+                    result = TaskResult.Success(null),
+                    addResult = TaskResult.Success(null),
+                    function = ShoppingListItemScreenFunction(
+                        sharedFunction = SharedFunction(
+                            onNavigationIconClicked = onNavigationIconClickedMock,
+                        ),
+                    ),
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithContentDescription(activity.getString(R.string.move_back))
+            .performClick()
+        verify(onNavigationIconClickedMock, org.mockito.kotlin.times(1)).invoke()
     }
 
     @Test

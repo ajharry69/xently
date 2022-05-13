@@ -34,13 +34,14 @@ import co.ke.xently.common.replaceAt
 import co.ke.xently.data.TaskResult
 import co.ke.xently.data.User
 import co.ke.xently.data.errorMessage
+import co.ke.xently.feature.SharedFunction
 import co.ke.xently.feature.ui.*
 
-data class VerificationScreenFunction(
-    val navigationIcon: () -> Unit = {},
-    val verificationSuccess: (User) -> Unit = {},
+internal data class VerificationScreenFunction(
     val resendCode: () -> Unit = {},
     val verify: (String) -> Unit = {},
+    val verificationSuccess: (User) -> Unit = {},
+    val sharedFunction: SharedFunction = SharedFunction(),
 )
 
 private const val VERIFICATION_CODE_LENGTH = 6
@@ -88,7 +89,7 @@ internal fun VerificationScreen(
 @Composable
 @VisibleForTesting
 @OptIn(ExperimentalComposeUiApi::class)
-fun VerificationScreen(
+internal fun VerificationScreen(
     modifier: Modifier,
     verifyResult: TaskResult<User?>,
     resendResult: TaskResult<User?>,
@@ -131,7 +132,7 @@ fun VerificationScreen(
             ToolbarWithProgressbar(
                 title = toolbarTitle,
                 showProgress = isTaskLoading,
-                onNavigationIconClicked = function.navigationIcon,
+                onNavigationIconClicked = function.sharedFunction.onNavigationIconClicked,
             )
         },
     ) { paddingValues ->

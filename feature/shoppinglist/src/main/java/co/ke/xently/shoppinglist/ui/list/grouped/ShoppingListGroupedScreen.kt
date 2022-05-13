@@ -1,7 +1,6 @@
 package co.ke.xently.shoppinglist.ui.list.grouped
 
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyItemScope
@@ -9,14 +8,15 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import co.ke.xently.data.*
+import co.ke.xently.feature.SharedFunction
 import co.ke.xently.feature.ui.*
 import co.ke.xently.shoppinglist.GroupBy
 import co.ke.xently.shoppinglist.R
@@ -30,24 +30,22 @@ import kotlinx.coroutines.launch
 
 internal data class GroupedShoppingListScreenFunction(
     val onRefresh: () -> Unit = {},
-    val signInOrOut: () -> Unit = {},
-    val onHelpClicked: () -> Unit = {},
     val onAddFabClicked: () -> Unit = {},
-    val onFeedbackClicked: () -> Unit = {},
     val onRetryClicked: (Throwable) -> Unit = {},
+    val shared: SharedFunction = SharedFunction(),
     val function: GroupedShoppingListCardFunction = GroupedShoppingListCardFunction(),
 )
 
 @Composable
 internal fun GroupedShoppingListScreen(
     modifier: Modifier,
-    drawerItems: List<NavMenuItem>,
     menuItems: List<MenuItem>,
+    optionsMenu: List<OptionMenu>,
     groupMenuItems: List<GroupMenuItem>,
     function: GroupedShoppingListScreenFunction,
-    optionsMenu: List<OptionMenu>,
     groupBy: GroupBy = GroupBy.DateAdded,
     viewModel: ShoppingListGroupedViewModel = hiltViewModel(),
+    drawerContent: @Composable (ColumnScope.(DrawerState) -> Unit),
 ) {
     val scope = rememberCoroutineScope()
     val result by viewModel.shoppingListResult.collectAsState(
@@ -56,32 +54,25 @@ internal fun GroupedShoppingListScreen(
     val shoppingListCount by viewModel.shoppingListCount.collectAsState(
         context = scope.coroutineContext,
     )
-    val user by viewModel.currentlyActiveUser.collectAsState(
-        initial = null,
-        context = scope.coroutineContext,
-    )
-    val signOutResult by viewModel.signOutResult.collectAsState(
-        initial = TaskResult.Success(Unit),
-        context = scope.coroutineContext,
-    )
     val isRefreshing by viewModel.isRefreshing.collectAsState(
         context = scope.coroutineContext,
     )
+    val user = function.shared.currentlyActiveUser.invoke()
+    val signOutResult = function.shared.signOutResult.invoke()
 
     LaunchedEffect(groupBy) {
         viewModel.initFetch(groupBy)
     }
 
-    val context = LocalContext.current
     GroupedShoppingListScreen(
         user = user,
         result = result,
         groupBy = groupBy,
         modifier = modifier,
         menuItems = menuItems,
-        drawerItems = drawerItems,
         isRefreshing = isRefreshing,
         signOutResult = signOutResult,
+        drawerContent = drawerContent,
         groupCount = shoppingListCount,
         groupMenuItems = groupMenuItems,
         optionsMenu = optionsMenu.map { menu ->
@@ -93,13 +84,6 @@ internal fun GroupedShoppingListScreen(
         },
         function = function.copy(
             onRefresh = viewModel::refresh,
-            signInOrOut = {
-                if (user == null) {
-                    navigateToSignInScreen.invoke(context)
-                } else {
-                    viewModel.signOut()
-                }
-            },
             onRetryClicked = {
                 viewModel.initFetch(groupBy)
             },
@@ -116,11 +100,11 @@ private fun GroupedShoppingListScreen(
     menuItems: List<MenuItem>,
     groupCount: Map<Any, Int>,
     optionsMenu: List<OptionMenu>,
-    drawerItems: List<NavMenuItem>,
     signOutResult: TaskResult<Unit>,
     groupMenuItems: List<GroupMenuItem>,
     function: GroupedShoppingListScreenFunction,
     result: TaskResult<List<GroupedShoppingList>>,
+    drawerContent: @Composable (ColumnScope.(DrawerState) -> Unit),
 ) {
     val listState = rememberLazyListState()
     val scaffoldState = rememberScaffoldState()
@@ -177,45 +161,7 @@ private fun GroupedShoppingListScreen(
             )
         },
         drawerContent = {
-            NavigationDrawer(
-                drawerState = scaffoldState.drawerState,
-                navGroups = listOf(
-                    NavDrawerGroupItem(items = drawerItems),
-                    NavDrawerGroupItem(
-                        checkable = false,
-                        title = stringResource(R.string.fsl_navigation_drawer_other_menu),
-                        items = listOf(
-                            NavMenuItem(
-                                onClick = function.onFeedbackClicked,
-                                icon = Icons.Default.Feedback,
-                                label = stringResource(R.string.fsl_drawer_menu_feedback),
-                            ),
-                            NavMenuItem(
-                                onClick = function.onHelpClicked,
-                                icon = Icons.Default.Help,
-                                label = stringResource(R.string.fsl_drawer_menu_help),
-                            ),
-                            NavMenuItem(
-                                onClick = function.signInOrOut,
-                                icon = Icons.Default.ExitToApp,
-                                label = stringResource(
-                                    if (user == null) {
-                                        R.string.fsl_drawer_menu_signin
-                                    } else {
-                                        R.string.fsl_drawer_menu_signout
-                                    },
-                                ),
-                            ),
-                        ),
-                    )
-                ),
-            ) {
-                Image(
-                    painterResource(R.drawable.ic_launcher_background),
-                    null,
-                    modifier = Modifier.fillMaxSize(),
-                )
-            }
+            drawerContent(scaffoldState.drawerState)
         },
     ) { paddingValues ->
         val itemContent: @Composable (LazyItemScope.(GroupedShoppingList) -> Unit) = { groupList ->

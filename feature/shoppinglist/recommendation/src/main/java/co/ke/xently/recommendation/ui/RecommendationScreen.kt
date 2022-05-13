@@ -24,6 +24,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.hilt.navigation.compose.hiltViewModel
 import co.ke.xently.common.KENYA
 import co.ke.xently.data.*
+import co.ke.xently.feature.SharedFunction
 import co.ke.xently.feature.ui.*
 import co.ke.xently.recommendation.R
 import co.ke.xently.shoppinglist.ui.list.item.ShoppingListItemCard
@@ -33,11 +34,9 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 internal const val TEST_TAG_RECOMMENDATION_BODY_CONTAINER = "TEST_TAG_RECOMMENDATION_BODY_CONTAINER"
 
 internal data class RecommendationScreenFunction(
-    internal val onNavigationClick: () -> Unit = {},
-    internal val onLocationPermissionRequest: () -> Unit = {},
+    internal val sharedFunction: SharedFunction = SharedFunction(),
     internal val onSuccess: (DeferredRecommendation) -> Unit = {},
     internal val onDetailSubmitted: (RecommendationRequest) -> Unit = {},
-    internal val onLocationPermissionChanged: (permissionGranted: Boolean) -> Unit = {},
 )
 
 @Composable
@@ -68,7 +67,7 @@ internal fun RecommendationScreen(
 
     val permissionState = requestLocationPermission(
         shouldRequestPermission = shouldRequestPermission,
-        onLocationPermissionChanged = function.onLocationPermissionChanged,
+        onLocationPermissionChanged = function.sharedFunction.onLocationPermissionChanged,
     )
 
     RecommendationScreen(
@@ -77,9 +76,11 @@ internal fun RecommendationScreen(
         persistedShoppingListResult = persistedShoppingListResult,
         function = function.copy(
             onDetailSubmitted = viewModel::recommend,
-            onLocationPermissionRequest = {
-                shouldRequestPermission = true
-            },
+            sharedFunction = function.sharedFunction.copy(
+                onLocationPermissionChanged = {
+                    shouldRequestPermission = true
+                }
+            ),
         ),
         isLocationPermissionGranted = permissionState.allPermissionsGranted,
     )
@@ -89,9 +90,9 @@ internal fun RecommendationScreen(
 @VisibleForTesting
 internal fun RecommendationScreen(
     modifier: Modifier,
+    isLocationPermissionGranted: Boolean,
     function: RecommendationScreenFunction,
     result: TaskResult<DeferredRecommendation?>,
-    isLocationPermissionGranted: Boolean,
     persistedShoppingListResult: TaskResult<List<ShoppingListItem>>,
 ) {
     val unPersistedShoppingList = remember {
@@ -117,7 +118,9 @@ internal fun RecommendationScreen(
             )
             when (snackbarResult) {
                 SnackbarResult.Dismissed -> TODO()
-                SnackbarResult.ActionPerformed -> function.onLocationPermissionRequest.invoke()
+                SnackbarResult.ActionPerformed -> {
+                    function.sharedFunction.onLocationPermissionChanged.invoke(false)
+                }
             }
         }
     }
@@ -149,7 +152,7 @@ internal fun RecommendationScreen(
             ToolbarWithProgressbar(
                 title = toolbarTitle,
                 showProgress = isTaskLoading,
-                onNavigationIconClicked = function.onNavigationClick,
+                onNavigationIconClicked = function.sharedFunction.onNavigationIconClicked,
                 subTitle = LocalContext.current.resources.getQuantityString(
                     R.plurals.fr_filter_toolbar_subtitle,
                     unPersistedShoppingList.size + persistedShoppingList.size,

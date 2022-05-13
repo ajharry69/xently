@@ -8,6 +8,7 @@ import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import co.ke.xently.data.Product
 import co.ke.xently.data.Shop
 import co.ke.xently.data.TaskResult
+import co.ke.xently.feature.SharedFunction
 import co.ke.xently.feature.theme.XentlyTheme
 import co.ke.xently.feature.ui.TEST_TAG_AUTOCOMPLETE_TEXT_FIELD_SUGGESTIONS
 import co.ke.xently.feature.ui.TEST_TAG_TEXT_FIELD_ERROR
@@ -94,7 +95,11 @@ class ProductDetailScreenTest {
                     modifier = Modifier.fillMaxSize(),
                     result = TaskResult.Success(null),
                     addResult = TaskResult.Success(null),
-                    function = ProductDetailScreenFunction(onNavigationIconClicked = onNavigationIconClickMock),
+                    function = ProductDetailScreenFunction(
+                        sharedFunction = SharedFunction(
+                            onNavigationIconClicked = onNavigationIconClickMock,
+                        ),
+                    ),
                 )
             }
         }
