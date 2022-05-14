@@ -181,8 +181,16 @@ class RecommendationListScreenTest {
                 shop = Shop.default().copy(isDefault = false, id = 1),
                 hit = Recommendation.Hit(
                     items = listOf(
-                        "Bread",
-                        "Milk",
+                        Recommendation.Hit.Item(
+                            found = "Bread",
+                            requested = "Bread",
+                            unitPrice = 50f,
+                        ),
+                        Recommendation.Hit.Item(
+                            found = "Milk",
+                            requested = "Milk",
+                            unitPrice = 50f,
+                        ),
                     ),
                     count = 2,
                 ),
