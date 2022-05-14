@@ -5,7 +5,7 @@ import co.ke.xently.common.ENABLE_LOCATION_TRACKING_PREFERENCE_KEY
 import co.ke.xently.common.MY_LOCATION_LATITUDE_SHARED_PREFERENCE_KEY
 import co.ke.xently.common.MY_LOCATION_LONGITUDE_SHARED_PREFERENCE_KEY
 import co.ke.xently.common.Retry
-import co.ke.xently.data.Shop
+import co.ke.xently.data.Coordinate
 import co.ke.xently.source.remote.retryCatch
 import co.ke.xently.source.remote.sendRequest
 import kotlinx.coroutines.flow.flow
@@ -29,7 +29,7 @@ internal class LocationServiceRepository @Inject constructor(private val depende
             false
         )
 
-    override fun updateLocation(location: Shop.Coordinate) = Retry().run {
+    override fun updateLocation(location: Coordinate) = Retry().run {
         flow {
             // TODO: Add user ID to location update...
             val result = sendRequest {

@@ -29,7 +29,10 @@ internal class RecommendationRepository @Inject constructor(
 
     override fun getRecommendation(request: RecommendationRequest) = Retry().run {
         flow {
-            emit(sendRequest { dependencies.service.shoppingList.getRecommendations(request) })
+            val taskResult = sendRequest {
+                dependencies.service.shoppingList.getRecommendations(request.copy())
+            }
+            emit(taskResult)
         }.retryCatch(this).flowOn(dependencies.dispatcher.io)
     }
 

@@ -22,12 +22,6 @@ data class Shop(
     @Exclude
     val isDefault: Boolean = false,
 ) {
-    data class Coordinate(val lat: Double, val lon: Double) {
-        override fun toString(): String {
-            return "${lat},${lon}"
-        }
-    }
-
     override fun toString(): String {
         val s = StringBuilder()
         if (name.isNotBlank()) {

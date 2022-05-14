@@ -25,12 +25,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import co.ke.xently.common.KENYA
-import co.ke.xently.data.Shop
-import co.ke.xently.data.Shop.Coordinate
-import co.ke.xently.data.TaskResult
+import co.ke.xently.data.*
 import co.ke.xently.data.TaskResult.Success
-import co.ke.xently.data.errorMessage
-import co.ke.xently.data.getOrNull
 import co.ke.xently.feature.SharedFunction
 import co.ke.xently.feature.theme.XentlyTheme
 import co.ke.xently.feature.ui.*
