@@ -1,10 +1,7 @@
 package co.ke.xently.feature.ui
 
 import android.annotation.SuppressLint
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
@@ -59,15 +56,19 @@ private fun GoogleMapViewContainer(
         mutableStateOf(currentPosition)
     }
 
-    LaunchedEffect(map, permissionState.allPermissionsGranted) {
-//        onLocationPermissionChanged(permissionState.allPermissionsGranted)
+    val enableMyLocation by remember(permissionState) {
+        derivedStateOf {
+            permissionState.allPermissionsGranted
+        }
+    }
+    LaunchedEffect(map, enableMyLocation) {
         map.awaitMap().apply {
             uiSettings.apply {
                 isZoomControlsEnabled = true
                 isZoomGesturesEnabled = true
-                isMyLocationButtonEnabled = permissionState.allPermissionsGranted
+                isMyLocationButtonEnabled = enableMyLocation
             }
-            isMyLocationEnabled = permissionState.allPermissionsGranted
+            isMyLocationEnabled = enableMyLocation
             setMinZoomPreference(15f)
             markerPositions.forEach {
                 addMarker(it)

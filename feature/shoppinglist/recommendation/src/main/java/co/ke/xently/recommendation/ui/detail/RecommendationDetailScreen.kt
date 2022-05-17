@@ -1,9 +1,6 @@
 package co.ke.xently.recommendation.ui.detail
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.MaterialTheme
@@ -15,6 +12,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import co.ke.xently.common.KENYA
 import co.ke.xently.data.Recommendation
+import co.ke.xently.feature.ui.DEFAULT_VERTICAL_SPACING_ONLY
 import co.ke.xently.feature.ui.ListItemSurface
 import co.ke.xently.recommendation.R
 import java.text.NumberFormat
@@ -34,7 +32,10 @@ internal fun RecommendationDetailScreen(
                 )
             }
             items(recommendation.hit.items) { hit ->
-                ListItemSurface(modifier = Modifier.fillMaxWidth()) {
+                ListItemSurface(
+                    modifier = Modifier.fillMaxWidth(),
+                    paddingValues = DEFAULT_VERTICAL_SPACING_ONLY,
+                ) {
                     Column(modifier = Modifier.fillParentMaxWidth()) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -64,7 +65,10 @@ internal fun RecommendationDetailScreen(
                 )
             }
             items(recommendation.miss.items) { miss ->
-                ListItemSurface(modifier = Modifier.fillMaxWidth()) {
+                ListItemSurface(
+                    modifier = Modifier.fillMaxWidth(),
+                    paddingValues = DEFAULT_VERTICAL_SPACING_ONLY,
+                ) {
                     Text(text = miss, style = MaterialTheme.typography.body1)
                 }
             }

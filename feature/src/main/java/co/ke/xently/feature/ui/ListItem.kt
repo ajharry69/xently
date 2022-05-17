@@ -18,22 +18,28 @@ fun Modifier.shimmerPlaceholder(visible: Boolean) = composed {
     )
 }
 
+val DEFAULT_VERTICAL_SPACING_ONLY = PaddingValues(vertical = VIEW_SPACE_HALVED)
+
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun ListItemSurface(
     modifier: Modifier,
+    paddingValues: PaddingValues = PaddingValues(
+        start = VIEW_SPACE,
+        top = VIEW_SPACE_HALVED,
+        bottom = VIEW_SPACE_HALVED,
+    ),
     onClick: () -> Unit = {},
     content: @Composable (RowScope.() -> Unit),
 ) {
     Surface(modifier = modifier, onClick = onClick) {
-        Row(
-            content = content,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = VIEW_SPACE)
-                .padding(vertical = VIEW_SPACE_HALVED),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-        )
+        Box(modifier = Modifier.padding(paddingValues = paddingValues)) {
+            Row(
+                content = content,
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            )
+        }
     }
 }

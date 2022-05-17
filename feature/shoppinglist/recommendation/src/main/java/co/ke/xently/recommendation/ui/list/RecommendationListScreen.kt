@@ -93,6 +93,21 @@ private fun Recommendation.createMarkerOption(context: Context) = MarkerOptions(
 }
 
 @Composable
+private fun ConsiderFailure(
+    modifier: Modifier = Modifier,
+    function: RecommendationListScreenFunction,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    Column(modifier = modifier.fillMaxSize()) {
+        ToolbarWithProgressbar(
+            title = stringResource(R.string.fr_toolbar_title),
+            onNavigationIconClicked = function.sharedFunction.onNavigationIconClicked,
+        )
+        content()
+    }
+}
+
+@Composable
 @VisibleForTesting
 internal fun RecommendationListScreen(
     modifier: Modifier,
@@ -105,22 +120,13 @@ internal fun RecommendationListScreen(
         mutableStateOf<Recommendation?>(null)
     }
     val coroutineScope = rememberCoroutineScope()
-    val scaffoldState = rememberBottomSheetScaffoldState()
     val recommendations: List<Recommendation>? = result.getOrNull()
-    BottomSheetScaffold(
-        scaffoldState = scaffoldState,
-        topBar = {
-            if (recommendations.isNullOrEmpty()) {
-                ToolbarWithProgressbar(
-                    title = stringResource(R.string.fr_toolbar_title),
-                    onNavigationIconClicked = function.sharedFunction.onNavigationIconClicked,
-                )
-            }
-        },
+    val sheetState = rememberModalBottomSheetState(initialValue = ModalBottomSheetValue.Hidden)
+    ModalBottomSheetLayout(
+        sheetState = sheetState,
         sheetContent = {
             if (recommendation != null) {
                 TopAppBar(
-                    elevation = 1.dp,
                     title = {
                         val title = stringResource(R.string.fr_shop_details)
                         Column {
@@ -135,10 +141,8 @@ internal fun RecommendationListScreen(
                         IconButton(
                             onClick = {
                                 coroutineScope.launch {
-                                    scaffoldState.bottomSheetState.apply {
-                                        if (!isCollapsed && isExpanded) {
-                                            collapse()
-                                        }
+                                    if (sheetState.isVisible) {
+                                        sheetState.hide()
                                     }
                                 }
                             },
@@ -154,34 +158,41 @@ internal fun RecommendationListScreen(
                     recommendation = recommendation!!,
                     modifier = Modifier.padding(PaddingValues(horizontal = VIEW_SPACE)),
                 )
+            } else {
+                Box(modifier = Modifier.height(1.dp))
             }
         },
-        sheetPeekHeight = 0.dp,
-    ) { paddingValues ->
+    ) {
         when (result) {
             is TaskResult.Error -> {
-                FullscreenError(
-                    error = result.error,
-                    modifier = modifier.padding(paddingValues),
-                    click = HttpErrorButtonClick(retryAble = function.onRetryClicked),
-                )
+                ConsiderFailure(function = function) {
+                    FullscreenError(
+                        error = result.error,
+                        modifier = modifier,
+                        click = HttpErrorButtonClick(retryAble = function.onRetryClicked),
+                    )
+                }
             }
             TaskResult -> {
-                FullscreenLoading<Recommendation>(modifier = modifier.padding(paddingValues))
+                ConsiderFailure(function = function) {
+                    FullscreenLoading<Recommendation>(modifier = modifier)
+                }
             }
             is TaskResult.Success -> {
                 if (recommendations!!.isEmpty()) {
-                    FullscreenEmptyList<Recommendation>(
-                        modifier = modifier.padding(paddingValues),
-                        error = LocalContext.current.resources.getQuantityString(
-                            R.plurals.fr_empty_recommendation_list,
-                            numberOfItems,
-                            numberOfItems,
-                        ),
-                    )
+                    ConsiderFailure(function = function) {
+                        FullscreenEmptyList<Recommendation>(
+                            modifier = modifier,
+                            error = LocalContext.current.resources.getQuantityString(
+                                R.plurals.fr_empty_recommendation_list,
+                                numberOfItems,
+                                numberOfItems,
+                            ),
+                        )
+                    }
                 } else {
                     LazyColumn(
-                        modifier = modifier.padding(paddingValues),
+                        modifier = modifier,
                         verticalArrangement = Arrangement.spacedBy(VIEW_SPACE_HALVED),
                     ) {
                         item {
@@ -192,15 +203,18 @@ internal fun RecommendationListScreen(
                             ) {
                                 val context = LocalContext.current
                                 if (showMap) {
+                                    val markerPositions = remember(recommendations) {
+                                        recommendations.filter { recommendation ->
+                                            recommendation.shop.coordinate != null
+                                        }.map { recommendation ->
+                                            recommendation.createMarkerOption(context)
+                                        }
+                                    }
                                     GoogleMapView(
                                         modifier = Modifier
                                             .height(MAP_HEIGHT)
                                             .fillMaxWidth(),
-                                        markerPositions = recommendations.filter { recommendation ->
-                                            recommendation.shop.coordinate != null
-                                        }.map { recommendation ->
-                                            recommendation.createMarkerOption(context)
-                                        },
+                                        markerPositions = markerPositions,
                                         onLocationPermissionChanged = function.sharedFunction.onLocationPermissionChanged,
                                     )
                                 }
@@ -234,10 +248,10 @@ internal fun RecommendationListScreen(
                                         onClick = {
                                             recommendation = it
                                             coroutineScope.launch {
-                                                scaffoldState.bottomSheetState.apply {
-                                                    if (isCollapsed && !isExpanded) {
-                                                        expand()
-                                                    }
+                                                if (sheetState.isVisible) {
+                                                    sheetState.hide()
+                                                } else {
+                                                    sheetState.show()
                                                 }
                                             }
                                         },
