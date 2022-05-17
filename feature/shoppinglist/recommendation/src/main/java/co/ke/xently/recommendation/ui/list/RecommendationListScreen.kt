@@ -5,8 +5,9 @@ import androidx.annotation.VisibleForTesting
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.material.Scaffold
-import androidx.compose.material.rememberScaffoldState
+import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -25,11 +26,13 @@ import co.ke.xently.feature.SharedFunction
 import co.ke.xently.feature.ui.*
 import co.ke.xently.feature.utils.MAP_HEIGHT
 import co.ke.xently.recommendation.R
+import co.ke.xently.recommendation.ui.detail.RecommendationDetailScreen
 import co.ke.xently.recommendation.ui.list.item.RecommendationCardItem
 import co.ke.xently.recommendation.ui.list.item.RecommendationCardItemFunction
 import co.ke.xently.recommendation.ui.list.item.RecommendationCardItemMenuItem
 import com.google.android.libraries.maps.model.LatLng
 import com.google.android.libraries.maps.model.MarkerOptions
+import kotlinx.coroutines.launch
 import java.text.NumberFormat
 import java.util.*
 
@@ -50,7 +53,6 @@ internal fun RecommendationListScreen(
     modifier: Modifier,
     args: RecommendationListScreenArgs,
     function: RecommendationListScreenFunction,
-    menuItems: List<RecommendationCardItemMenuItem>,
     viewModel: RecommendationListViewModel = hiltViewModel(),
 ) {
     val scope = rememberCoroutineScope()
@@ -66,7 +68,6 @@ internal fun RecommendationListScreen(
     RecommendationListScreen(
         result = result,
         modifier = modifier,
-        menuItems = menuItems,
         numberOfItems = args.numberOfItems,
         function = function.copy(
             onRetryClicked = {
@@ -98,12 +99,15 @@ internal fun RecommendationListScreen(
     numberOfItems: Int,
     result: TaskResult<List<Recommendation>>,
     function: RecommendationListScreenFunction,
-    menuItems: List<RecommendationCardItemMenuItem>,
     showMap: Boolean = true,
 ) {
-    val scaffoldState = rememberScaffoldState()
+    var recommendation by remember {
+        mutableStateOf<Recommendation?>(null)
+    }
+    val coroutineScope = rememberCoroutineScope()
+    val scaffoldState = rememberBottomSheetScaffoldState()
     val recommendations: List<Recommendation>? = result.getOrNull()
-    Scaffold(
+    BottomSheetScaffold(
         scaffoldState = scaffoldState,
         topBar = {
             if (recommendations.isNullOrEmpty()) {
@@ -112,23 +116,63 @@ internal fun RecommendationListScreen(
                     onNavigationIconClicked = function.sharedFunction.onNavigationIconClicked,
                 )
             }
-        }
-    ) {
+        },
+        sheetContent = {
+            if (recommendation != null) {
+                TopAppBar(
+                    elevation = 1.dp,
+                    title = {
+                        val title = stringResource(R.string.fr_shop_details)
+                        Column {
+                            Text(title, style = MaterialTheme.typography.body1)
+                            Text(
+                                recommendation!!.shop.descriptiveName,
+                                style = MaterialTheme.typography.caption,
+                            )
+                        }
+                    },
+                    navigationIcon = {
+                        IconButton(
+                            onClick = {
+                                coroutineScope.launch {
+                                    scaffoldState.bottomSheetState.apply {
+                                        if (!isCollapsed && isExpanded) {
+                                            collapse()
+                                        }
+                                    }
+                                }
+                            },
+                        ) {
+                            Icon(
+                                Icons.Default.KeyboardArrowDown,
+                                contentDescription = stringResource(R.string.hide),
+                            )
+                        }
+                    },
+                )
+                RecommendationDetailScreen(
+                    recommendation = recommendation!!,
+                    modifier = Modifier.padding(PaddingValues(horizontal = VIEW_SPACE)),
+                )
+            }
+        },
+        sheetPeekHeight = 0.dp,
+    ) { paddingValues ->
         when (result) {
             is TaskResult.Error -> {
                 FullscreenError(
                     error = result.error,
-                    modifier = modifier.padding(it),
+                    modifier = modifier.padding(paddingValues),
                     click = HttpErrorButtonClick(retryAble = function.onRetryClicked),
                 )
             }
             TaskResult -> {
-                FullscreenLoading<Recommendation>(modifier = modifier.padding(it))
+                FullscreenLoading<Recommendation>(modifier = modifier.padding(paddingValues))
             }
             is TaskResult.Success -> {
                 if (recommendations!!.isEmpty()) {
                     FullscreenEmptyList<Recommendation>(
-                        modifier = modifier.padding(it),
+                        modifier = modifier.padding(paddingValues),
                         error = LocalContext.current.resources.getQuantityString(
                             R.plurals.fr_empty_recommendation_list,
                             numberOfItems,
@@ -137,7 +181,7 @@ internal fun RecommendationListScreen(
                     )
                 } else {
                     LazyColumn(
-                        modifier = modifier.padding(it),
+                        modifier = modifier.padding(paddingValues),
                         verticalArrangement = Arrangement.spacedBy(VIEW_SPACE_HALVED),
                     ) {
                         item {
@@ -173,18 +217,38 @@ internal fun RecommendationListScreen(
                                 )
                             }
                         }
-                        itemsIndexed(recommendations) { index, recommendation ->
+                        itemsIndexed(recommendations) { index, _recommendation ->
                             val recommendationTestTag = stringResource(
                                 R.string.fr_recommendation_card_test_tag,
                                 index,
                             )
                             RecommendationCardItem(
-                                menuItems = menuItems,
                                 function = function.function,
-                                recommendation = recommendation,
+                                recommendation = _recommendation,
                                 modifier = Modifier.semantics {
                                     testTag = recommendationTestTag
                                 },
+                                menuItems = listOf(
+                                    RecommendationCardItemMenuItem(
+                                        label = R.string.fr_details,
+                                        onClick = {
+                                            recommendation = it
+                                            coroutineScope.launch {
+                                                scaffoldState.bottomSheetState.apply {
+                                                    if (isCollapsed && !isExpanded) {
+                                                        expand()
+                                                    }
+                                                }
+                                            }
+                                        },
+                                    ),
+                                    RecommendationCardItemMenuItem(
+                                        label = R.string.fr_directions,
+                                        onClick = {
+
+                                        },
+                                    ),
+                                ),
                             )
                         }
                     }

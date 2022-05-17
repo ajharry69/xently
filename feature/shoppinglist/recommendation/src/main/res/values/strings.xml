@@ -14,4 +14,7 @@
     <string name="fr_filter_un_persisted_list_subheading">Unsaved shopping list</string>
     <string name="fr_filter_persisted_list_subheading">Saved shopping list</string>
     <string name="fr_recommendation_card_test_tag" translatable="false">Recommendation card test tag %1$d</string>
+    <string name="fr_detail_hit_heading">Items found</string>
+    <string name="fr_detail_miss_heading">Items not found</string>
+    <string name="fr_shop_details">Shop details</string>
 </resources>

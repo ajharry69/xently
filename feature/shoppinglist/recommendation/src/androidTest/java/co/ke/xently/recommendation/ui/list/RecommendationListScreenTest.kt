@@ -34,9 +34,8 @@ class RecommendationListScreenTest {
         composeTestRule.setContent {
             XentlyTheme {
                 RecommendationListScreen(
-                    numberOfItems = 1,
-                    menuItems = emptyList(),
                     modifier = Modifier.fillMaxSize(),
+                    numberOfItems = 1,
                     result = TaskResult.Success(emptyList()),
                     function = RecommendationListScreenFunction(
                         sharedFunction = SharedFunction(
@@ -57,9 +56,8 @@ class RecommendationListScreenTest {
         composeTestRule.setContent {
             XentlyTheme {
                 RecommendationListScreen(
-                    numberOfItems = 1,
-                    menuItems = emptyList(),
                     modifier = Modifier.fillMaxSize(),
+                    numberOfItems = 1,
                     result = TaskResult.Success(emptyList()),
                     function = RecommendationListScreenFunction(),
                 )
@@ -78,9 +76,8 @@ class RecommendationListScreenTest {
         composeTestRule.setContent {
             XentlyTheme {
                 RecommendationListScreen(
-                    numberOfItems = 1,
-                    menuItems = emptyList(),
                     modifier = Modifier.fillMaxSize(),
+                    numberOfItems = 1,
                     result = TaskResult.Success(emptyList()),
                     function = RecommendationListScreenFunction(),
                 )
@@ -99,9 +96,8 @@ class RecommendationListScreenTest {
         composeTestRule.setContent {
             XentlyTheme {
                 RecommendationListScreen(
-                    numberOfItems = 1,
-                    menuItems = emptyList(),
                     modifier = Modifier.fillMaxSize(),
+                    numberOfItems = 1,
                     result = TaskResult.Loading,
                     function = RecommendationListScreenFunction(),
                 )
@@ -119,9 +115,8 @@ class RecommendationListScreenTest {
         composeTestRule.setContent {
             XentlyTheme {
                 RecommendationListScreen(
-                    numberOfItems = 1,
-                    menuItems = emptyList(),
                     modifier = Modifier.fillMaxSize(),
+                    numberOfItems = 1,
                     result = TaskResult.Success(emptyList()),
                     function = RecommendationListScreenFunction(),
                 )
@@ -139,9 +134,8 @@ class RecommendationListScreenTest {
         composeTestRule.setContent {
             XentlyTheme {
                 RecommendationListScreen(
-                    numberOfItems = 1,
-                    menuItems = emptyList(),
                     modifier = Modifier.fillMaxSize(),
+                    numberOfItems = 1,
                     result = TaskResult.Error("An error occurred."),
                     function = RecommendationListScreenFunction(),
                 )
@@ -159,9 +153,8 @@ class RecommendationListScreenTest {
         composeTestRule.setContent {
             XentlyTheme {
                 RecommendationListScreen(
-                    numberOfItems = 1,
-                    menuItems = emptyList(),
                     modifier = Modifier.fillMaxSize(),
+                    numberOfItems = 1,
                     result = TaskResult.Error("An error occurred."),
                     function = RecommendationListScreenFunction(),
                 )
@@ -207,12 +200,11 @@ class RecommendationListScreenTest {
         composeTestRule.setContent {
             XentlyTheme {
                 RecommendationListScreen(
-                    showMap = false,
-                    numberOfItems = 3,
-                    menuItems = emptyList(),
                     modifier = Modifier.fillMaxSize(),
+                    numberOfItems = 3,
                     result = TaskResult.Success(recommendations),
                     function = RecommendationListScreenFunction(),
+                    showMap = false,
                 )
             }
         }

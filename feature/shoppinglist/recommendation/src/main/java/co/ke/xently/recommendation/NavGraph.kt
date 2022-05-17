@@ -91,20 +91,6 @@ fun NavGraphBuilder.recommendationGraph(
                         },
                     ),
                 ),
-                menuItems = listOf(
-                    RecommendationCardItemMenuItem(
-                        label = R.string.fr_directions,
-                        onClick = {
-
-                        },
-                    ),
-                    RecommendationCardItemMenuItem(
-                        label = R.string.fr_details,
-                        onClick = {
-                            // TODO: Show a modal with hit and miss...
-                        },
-                    ),
-                ),
                 modifier = Modifier.fillMaxSize(),
                 args = RecommendationListScreenArgs(
                     lookupId = it.arguments?.getString("lookupId")!!,
