@@ -52,8 +52,8 @@ class RecommendationItemTest {
                 RecommendationCardItem(
                     modifier = Modifier.fillMaxWidth(),
                     recommendation = recommendation,
-                    menuItems = listOf(RecommendationCardItemMenuItem(R.string.fr_details)),
                     function = RecommendationCardItemFunction(),
+                    menuItems = listOf(RecommendationCardItemMenuItem(R.string.fr_details)),
                 )
             }
         }

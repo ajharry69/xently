@@ -138,6 +138,7 @@ internal fun RecommendationListScreen(
                         }
                     },
                     navigationIcon = {
+                        val contentDescription = stringResource(R.string.hide)
                         IconButton(
                             onClick = {
                                 coroutineScope.launch {
@@ -146,10 +147,13 @@ internal fun RecommendationListScreen(
                                     }
                                 }
                             },
+                            modifier = Modifier.semantics {
+                                testTag = contentDescription
+                            }
                         ) {
                             Icon(
                                 Icons.Default.KeyboardArrowDown,
-                                contentDescription = stringResource(R.string.hide),
+                                contentDescription = contentDescription,
                             )
                         }
                     },
@@ -179,11 +183,12 @@ internal fun RecommendationListScreen(
                 }
             }
             is TaskResult.Success -> {
+                val context = LocalContext.current
                 if (recommendations!!.isEmpty()) {
                     ConsiderFailure(function = function) {
                         FullscreenEmptyList<Recommendation>(
                             modifier = modifier,
-                            error = LocalContext.current.resources.getQuantityString(
+                            error = context.resources.getQuantityString(
                                 R.plurals.fr_empty_recommendation_list,
                                 numberOfItems,
                                 numberOfItems,
@@ -201,7 +206,6 @@ internal fun RecommendationListScreen(
                                     .height(IntrinsicSize.Min)
                                     .fillMaxWidth(),
                             ) {
-                                val context = LocalContext.current
                                 if (showMap) {
                                     val markerPositions = remember(recommendations) {
                                         recommendations.filter { recommendation ->
@@ -232,29 +236,31 @@ internal fun RecommendationListScreen(
                             }
                         }
                         itemsIndexed(recommendations) { index, _recommendation ->
-                            val recommendationTestTag = stringResource(
-                                R.string.fr_recommendation_card_test_tag,
-                                index,
-                            )
+                            val onItemClick: (Recommendation) -> Unit = {
+                                recommendation = it
+                                coroutineScope.launch {
+                                    if (sheetState.isVisible) {
+                                        sheetState.hide()
+                                    } else {
+                                        sheetState.show()
+                                    }
+                                }
+                            }
                             RecommendationCardItem(
-                                function = function.function,
-                                recommendation = _recommendation,
                                 modifier = Modifier.semantics {
-                                    testTag = recommendationTestTag
+                                    testTag = context.getString(
+                                        R.string.fr_recommendation_card_test_tag,
+                                        index,
+                                    )
                                 },
+                                recommendation = _recommendation,
+                                function = function.function.copy(
+                                    onItemClicked = onItemClick,
+                                ),
                                 menuItems = listOf(
                                     RecommendationCardItemMenuItem(
                                         label = R.string.fr_details,
-                                        onClick = {
-                                            recommendation = it
-                                            coroutineScope.launch {
-                                                if (sheetState.isVisible) {
-                                                    sheetState.hide()
-                                                } else {
-                                                    sheetState.show()
-                                                }
-                                            }
-                                        },
+                                        onClick = onItemClick,
                                     ),
                                     RecommendationCardItemMenuItem(
                                         label = R.string.fr_directions,

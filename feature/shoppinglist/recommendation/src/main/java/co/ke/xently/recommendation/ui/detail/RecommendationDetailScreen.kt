@@ -1,6 +1,9 @@
 package co.ke.xently.recommendation.ui.detail
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.MaterialTheme
@@ -31,7 +34,7 @@ internal fun RecommendationDetailScreen(
                     style = MaterialTheme.typography.h5
                 )
             }
-            items(recommendation.hit.items) { hit ->
+            items(recommendation.hit.items, key = { it.requested }) { hit ->
                 ListItemSurface(
                     modifier = Modifier.fillMaxWidth(),
                     paddingValues = DEFAULT_VERTICAL_SPACING_ONLY,
