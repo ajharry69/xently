@@ -5,8 +5,9 @@ import androidx.annotation.VisibleForTesting
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.material.Scaffold
-import androidx.compose.material.rememberScaffoldState
+import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -25,11 +26,13 @@ import co.ke.xently.feature.SharedFunction
 import co.ke.xently.feature.ui.*
 import co.ke.xently.feature.utils.MAP_HEIGHT
 import co.ke.xently.recommendation.R
+import co.ke.xently.recommendation.ui.detail.RecommendationDetailScreen
 import co.ke.xently.recommendation.ui.list.item.RecommendationCardItem
 import co.ke.xently.recommendation.ui.list.item.RecommendationCardItemFunction
 import co.ke.xently.recommendation.ui.list.item.RecommendationCardItemMenuItem
 import com.google.android.libraries.maps.model.LatLng
 import com.google.android.libraries.maps.model.MarkerOptions
+import kotlinx.coroutines.launch
 import java.text.NumberFormat
 import java.util.*
 
@@ -50,7 +53,6 @@ internal fun RecommendationListScreen(
     modifier: Modifier,
     args: RecommendationListScreenArgs,
     function: RecommendationListScreenFunction,
-    menuItems: List<RecommendationCardItemMenuItem>,
     viewModel: RecommendationListViewModel = hiltViewModel(),
 ) {
     val scope = rememberCoroutineScope()
@@ -66,7 +68,6 @@ internal fun RecommendationListScreen(
     RecommendationListScreen(
         result = result,
         modifier = modifier,
-        menuItems = menuItems,
         numberOfItems = args.numberOfItems,
         function = function.copy(
             onRetryClicked = {
@@ -92,52 +93,111 @@ private fun Recommendation.createMarkerOption(context: Context) = MarkerOptions(
 }
 
 @Composable
+private fun ConsiderFailure(
+    modifier: Modifier = Modifier,
+    function: RecommendationListScreenFunction,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    Column(modifier = modifier.fillMaxSize()) {
+        ToolbarWithProgressbar(
+            title = stringResource(R.string.fr_toolbar_title),
+            onNavigationIconClicked = function.sharedFunction.onNavigationIconClicked,
+        )
+        content()
+    }
+}
+
+@Composable
 @VisibleForTesting
 internal fun RecommendationListScreen(
     modifier: Modifier,
     numberOfItems: Int,
     result: TaskResult<List<Recommendation>>,
     function: RecommendationListScreenFunction,
-    menuItems: List<RecommendationCardItemMenuItem>,
     showMap: Boolean = true,
 ) {
-    val scaffoldState = rememberScaffoldState()
+    var recommendation by remember {
+        mutableStateOf<Recommendation?>(null)
+    }
+    val coroutineScope = rememberCoroutineScope()
     val recommendations: List<Recommendation>? = result.getOrNull()
-    Scaffold(
-        scaffoldState = scaffoldState,
-        topBar = {
-            if (recommendations.isNullOrEmpty()) {
-                ToolbarWithProgressbar(
-                    title = stringResource(R.string.fr_toolbar_title),
-                    onNavigationIconClicked = function.sharedFunction.onNavigationIconClicked,
+    val sheetState = rememberModalBottomSheetState(initialValue = ModalBottomSheetValue.Hidden)
+    ModalBottomSheetLayout(
+        sheetState = sheetState,
+        sheetContent = {
+            if (recommendation != null) {
+                TopAppBar(
+                    title = {
+                        val title = stringResource(R.string.fr_shop_details)
+                        Column {
+                            Text(title, style = MaterialTheme.typography.body1)
+                            Text(
+                                recommendation!!.shop.descriptiveName,
+                                style = MaterialTheme.typography.caption,
+                            )
+                        }
+                    },
+                    navigationIcon = {
+                        val contentDescription = stringResource(R.string.hide)
+                        IconButton(
+                            onClick = {
+                                coroutineScope.launch {
+                                    if (sheetState.isVisible) {
+                                        sheetState.hide()
+                                    }
+                                }
+                            },
+                            modifier = Modifier.semantics {
+                                testTag = contentDescription
+                            }
+                        ) {
+                            Icon(
+                                Icons.Default.KeyboardArrowDown,
+                                contentDescription = contentDescription,
+                            )
+                        }
+                    },
                 )
+                RecommendationDetailScreen(
+                    recommendation = recommendation!!,
+                    modifier = Modifier.padding(PaddingValues(horizontal = VIEW_SPACE)),
+                )
+            } else {
+                Box(modifier = Modifier.height(1.dp))
             }
-        }
+        },
     ) {
         when (result) {
             is TaskResult.Error -> {
-                FullscreenError(
-                    error = result.error,
-                    modifier = modifier.padding(it),
-                    click = HttpErrorButtonClick(retryAble = function.onRetryClicked),
-                )
+                ConsiderFailure(function = function) {
+                    FullscreenError(
+                        error = result.error,
+                        modifier = modifier,
+                        click = HttpErrorButtonClick(retryAble = function.onRetryClicked),
+                    )
+                }
             }
             TaskResult -> {
-                FullscreenLoading<Recommendation>(modifier = modifier.padding(it))
+                ConsiderFailure(function = function) {
+                    FullscreenLoading<Recommendation>(modifier = modifier)
+                }
             }
             is TaskResult.Success -> {
+                val context = LocalContext.current
                 if (recommendations!!.isEmpty()) {
-                    FullscreenEmptyList<Recommendation>(
-                        modifier = modifier.padding(it),
-                        error = LocalContext.current.resources.getQuantityString(
-                            R.plurals.fr_empty_recommendation_list,
-                            numberOfItems,
-                            numberOfItems,
-                        ),
-                    )
+                    ConsiderFailure(function = function) {
+                        FullscreenEmptyList<Recommendation>(
+                            modifier = modifier,
+                            error = context.resources.getQuantityString(
+                                R.plurals.fr_empty_recommendation_list,
+                                numberOfItems,
+                                numberOfItems,
+                            ),
+                        )
+                    }
                 } else {
                     LazyColumn(
-                        modifier = modifier.padding(it),
+                        modifier = modifier,
                         verticalArrangement = Arrangement.spacedBy(VIEW_SPACE_HALVED),
                     ) {
                         item {
@@ -146,17 +206,19 @@ internal fun RecommendationListScreen(
                                     .height(IntrinsicSize.Min)
                                     .fillMaxWidth(),
                             ) {
-                                val context = LocalContext.current
                                 if (showMap) {
+                                    val markerPositions = remember(recommendations) {
+                                        recommendations.filter { recommendation ->
+                                            recommendation.shop.coordinate != null
+                                        }.map { recommendation ->
+                                            recommendation.createMarkerOption(context)
+                                        }
+                                    }
                                     GoogleMapView(
                                         modifier = Modifier
                                             .height(MAP_HEIGHT)
                                             .fillMaxWidth(),
-                                        markerPositions = recommendations.filter { recommendation ->
-                                            recommendation.shop.coordinate != null
-                                        }.map { recommendation ->
-                                            recommendation.createMarkerOption(context)
-                                        },
+                                        markerPositions = markerPositions,
                                         onLocationPermissionChanged = function.sharedFunction.onLocationPermissionChanged,
                                     )
                                 }
@@ -173,18 +235,40 @@ internal fun RecommendationListScreen(
                                 )
                             }
                         }
-                        itemsIndexed(recommendations) { index, recommendation ->
-                            val recommendationTestTag = stringResource(
-                                R.string.fr_recommendation_card_test_tag,
-                                index,
-                            )
+                        itemsIndexed(recommendations) { index, _recommendation ->
+                            val onItemClick: (Recommendation) -> Unit = {
+                                recommendation = it
+                                coroutineScope.launch {
+                                    if (sheetState.isVisible) {
+                                        sheetState.hide()
+                                    } else {
+                                        sheetState.show()
+                                    }
+                                }
+                            }
                             RecommendationCardItem(
-                                menuItems = menuItems,
-                                function = function.function,
-                                recommendation = recommendation,
                                 modifier = Modifier.semantics {
-                                    testTag = recommendationTestTag
+                                    testTag = context.getString(
+                                        R.string.fr_recommendation_card_test_tag,
+                                        index,
+                                    )
                                 },
+                                recommendation = _recommendation,
+                                function = function.function.copy(
+                                    onItemClicked = onItemClick,
+                                ),
+                                menuItems = listOf(
+                                    RecommendationCardItemMenuItem(
+                                        label = R.string.fr_details,
+                                        onClick = onItemClick,
+                                    ),
+                                    RecommendationCardItemMenuItem(
+                                        label = R.string.fr_directions,
+                                        onClick = {
+
+                                        },
+                                    ),
+                                ),
                             )
                         }
                     }

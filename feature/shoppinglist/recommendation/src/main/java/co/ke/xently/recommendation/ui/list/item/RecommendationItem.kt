@@ -9,6 +9,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import co.ke.xently.common.KENYA
 import co.ke.xently.data.Recommendation
@@ -31,10 +33,10 @@ internal data class RecommendationCardItemMenuItem(
 
 @Composable
 internal fun RecommendationCardItem(
-    recommendation: Recommendation,
-    menuItems: List<RecommendationCardItemMenuItem>,
-    function: RecommendationCardItemFunction,
     modifier: Modifier = Modifier,
+    recommendation: Recommendation,
+    function: RecommendationCardItemFunction,
+    menuItems: List<RecommendationCardItemMenuItem>,
 ) {
     var showMenu by remember { mutableStateOf(false) }
     ListItemSurface(
@@ -66,17 +68,23 @@ internal fun RecommendationCardItem(
             )
         }
         Box(modifier = Modifier.width(IntrinsicSize.Min)) {
-            IconButton(onClick = { showMenu = true }) {
+            val contentDescription = stringResource(
+                R.string.fr_item_menu_content_description,
+                recommendation.shop.descriptiveName,
+            )
+            IconButton(
+                onClick = { showMenu = true },
+                modifier = Modifier.semantics {
+                    testTag = contentDescription
+                },
+            ) {
                 Icon(
                     imageVector = if (showMenu) {
                         Icons.Default.KeyboardArrowDown
                     } else {
                         Icons.Default.KeyboardArrowRight
                     },
-                    contentDescription = stringResource(
-                        R.string.fr_item_menu_content_description,
-                        recommendation.shop.descriptiveName,
-                    ),
+                    contentDescription = contentDescription,
                 )
             }
             DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
@@ -104,7 +112,18 @@ private fun RecommendationCardItemPreview() {
                     shop = Shop.default(),
                     hit = Recommendation.Hit(
                         count = 2,
-                        items = listOf("Bread", "Milk"),
+                        items = listOf(
+                            Recommendation.Hit.Item(
+                                found = "Bread",
+                                requested = "Bread",
+                                unitPrice = 50f,
+                            ),
+                            Recommendation.Hit.Item(
+                                found = "Milk",
+                                requested = "Milk",
+                                unitPrice = 50f,
+                            ),
+                        ),
                     ),
                     miss = Recommendation.Miss(
                         count = 1,
@@ -115,8 +134,8 @@ private fun RecommendationCardItemPreview() {
                         total = 200f,
                     ),
                 ),
-                menuItems = listOf(RecommendationCardItemMenuItem(R.string.fr_details)),
                 function = RecommendationCardItemFunction(),
+                menuItems = listOf(RecommendationCardItemMenuItem(R.string.fr_details)),
             )
         }
     }

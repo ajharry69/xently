@@ -1,6 +1,6 @@
 package co.ke.xently.feature.repository
 
-import co.ke.xently.data.Shop
+import co.ke.xently.data.Coordinate
 import co.ke.xently.data.TaskResult
 import kotlinx.coroutines.flow.Flow
 
@@ -9,5 +9,5 @@ interface ILocationServiceRepository {
 
     fun saveLocationTrackingPref(requestLocationUpdates: Boolean)
 
-    fun updateLocation(location: Shop.Coordinate): Flow<TaskResult<Unit>>
+    fun updateLocation(location: Coordinate): Flow<TaskResult<Unit>>
 }

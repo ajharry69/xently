@@ -6,6 +6,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import co.ke.xently.common.KENYA
+import co.ke.xently.data.Coordinate
 import co.ke.xently.data.Shop
 import co.ke.xently.data.TaskResult
 import co.ke.xently.feature.SharedFunction
@@ -204,7 +205,7 @@ class ShopDetailScreenTest {
                         Shop.default().copy(
                             isDefault = false,
                             id = 1,
-                            coordinate = Shop.Coordinate(1.0, 2.0),
+                            coordinate = Coordinate(1.0, 2.0),
                         )
                     ),
                     addResult = TaskResult.Success(null),
@@ -286,7 +287,7 @@ class ShopDetailScreenTest {
                     modifier = Modifier.fillMaxSize(),
                     result = TaskResult.Success(
                         Shop.default()
-                            .copy(isDefault = false, id = 1, coordinate = Shop.Coordinate(0.0, 0.0))
+                            .copy(isDefault = false, id = 1, coordinate = Coordinate(0.0, 0.0))
                     ),
                     addResult = TaskResult.Success(null),
                     function = ShopDetailScreenFunction(onAddShopClicked = onAddShopClickedMock),

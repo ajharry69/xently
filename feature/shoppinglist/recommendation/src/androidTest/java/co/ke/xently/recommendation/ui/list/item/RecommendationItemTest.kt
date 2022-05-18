@@ -25,7 +25,18 @@ class RecommendationItemTest {
             shop = Shop.default(),
             hit = Recommendation.Hit(
                 count = 2,
-                items = listOf("Bread", "Milk"),
+                items = listOf(
+                    Recommendation.Hit.Item(
+                        found = "Bread",
+                        requested = "Bread",
+                        unitPrice = 50f,
+                    ),
+                    Recommendation.Hit.Item(
+                        found = "Milk",
+                        requested = "Milk",
+                        unitPrice = 50f,
+                    ),
+                ),
             ),
             miss = Recommendation.Miss(
                 count = 1,
@@ -41,8 +52,8 @@ class RecommendationItemTest {
                 RecommendationCardItem(
                     modifier = Modifier.fillMaxWidth(),
                     recommendation = recommendation,
-                    menuItems = listOf(RecommendationCardItemMenuItem(R.string.fr_details)),
                     function = RecommendationCardItemFunction(),
+                    menuItems = listOf(RecommendationCardItemMenuItem(R.string.fr_details)),
                 )
             }
         }

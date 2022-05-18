@@ -1,6 +1,6 @@
 package co.ke.xently.source.remote.services
 
-import co.ke.xently.data.Shop
+import co.ke.xently.data.Coordinate
 import co.ke.xently.data.User
 import retrofit2.Response
 import retrofit2.http.*
@@ -42,6 +42,6 @@ interface AccountService {
     @POST("accounts/{id}/update-location/")
     suspend fun update(
         @Path("id") userId: Long = 1L,
-        @Body location: Shop.Coordinate,
+        @Body location: Coordinate,
     ): Response<Unit>
 }

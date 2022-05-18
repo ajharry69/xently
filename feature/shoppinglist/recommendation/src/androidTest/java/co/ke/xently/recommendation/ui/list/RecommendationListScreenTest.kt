@@ -34,9 +34,8 @@ class RecommendationListScreenTest {
         composeTestRule.setContent {
             XentlyTheme {
                 RecommendationListScreen(
-                    numberOfItems = 1,
-                    menuItems = emptyList(),
                     modifier = Modifier.fillMaxSize(),
+                    numberOfItems = 1,
                     result = TaskResult.Success(emptyList()),
                     function = RecommendationListScreenFunction(
                         sharedFunction = SharedFunction(
@@ -57,9 +56,8 @@ class RecommendationListScreenTest {
         composeTestRule.setContent {
             XentlyTheme {
                 RecommendationListScreen(
-                    numberOfItems = 1,
-                    menuItems = emptyList(),
                     modifier = Modifier.fillMaxSize(),
+                    numberOfItems = 1,
                     result = TaskResult.Success(emptyList()),
                     function = RecommendationListScreenFunction(),
                 )
@@ -78,9 +76,8 @@ class RecommendationListScreenTest {
         composeTestRule.setContent {
             XentlyTheme {
                 RecommendationListScreen(
-                    numberOfItems = 1,
-                    menuItems = emptyList(),
                     modifier = Modifier.fillMaxSize(),
+                    numberOfItems = 1,
                     result = TaskResult.Success(emptyList()),
                     function = RecommendationListScreenFunction(),
                 )
@@ -99,9 +96,8 @@ class RecommendationListScreenTest {
         composeTestRule.setContent {
             XentlyTheme {
                 RecommendationListScreen(
-                    numberOfItems = 1,
-                    menuItems = emptyList(),
                     modifier = Modifier.fillMaxSize(),
+                    numberOfItems = 1,
                     result = TaskResult.Loading,
                     function = RecommendationListScreenFunction(),
                 )
@@ -119,9 +115,8 @@ class RecommendationListScreenTest {
         composeTestRule.setContent {
             XentlyTheme {
                 RecommendationListScreen(
-                    numberOfItems = 1,
-                    menuItems = emptyList(),
                     modifier = Modifier.fillMaxSize(),
+                    numberOfItems = 1,
                     result = TaskResult.Success(emptyList()),
                     function = RecommendationListScreenFunction(),
                 )
@@ -139,9 +134,8 @@ class RecommendationListScreenTest {
         composeTestRule.setContent {
             XentlyTheme {
                 RecommendationListScreen(
-                    numberOfItems = 1,
-                    menuItems = emptyList(),
                     modifier = Modifier.fillMaxSize(),
+                    numberOfItems = 1,
                     result = TaskResult.Error("An error occurred."),
                     function = RecommendationListScreenFunction(),
                 )
@@ -159,9 +153,8 @@ class RecommendationListScreenTest {
         composeTestRule.setContent {
             XentlyTheme {
                 RecommendationListScreen(
-                    numberOfItems = 1,
-                    menuItems = emptyList(),
                     modifier = Modifier.fillMaxSize(),
+                    numberOfItems = 1,
                     result = TaskResult.Error("An error occurred."),
                     function = RecommendationListScreenFunction(),
                 )
@@ -181,8 +174,16 @@ class RecommendationListScreenTest {
                 shop = Shop.default().copy(isDefault = false, id = 1),
                 hit = Recommendation.Hit(
                     items = listOf(
-                        "Bread",
-                        "Milk",
+                        Recommendation.Hit.Item(
+                            found = "Bread",
+                            requested = "Bread",
+                            unitPrice = 50f,
+                        ),
+                        Recommendation.Hit.Item(
+                            found = "Milk",
+                            requested = "Milk",
+                            unitPrice = 50f,
+                        ),
                     ),
                     count = 2,
                 ),
@@ -199,12 +200,11 @@ class RecommendationListScreenTest {
         composeTestRule.setContent {
             XentlyTheme {
                 RecommendationListScreen(
-                    showMap = false,
-                    numberOfItems = 3,
-                    menuItems = emptyList(),
                     modifier = Modifier.fillMaxSize(),
+                    numberOfItems = 3,
                     result = TaskResult.Success(recommendations),
                     function = RecommendationListScreenFunction(),
+                    showMap = false,
                 )
             }
         }
@@ -217,5 +217,155 @@ class RecommendationListScreenTest {
         ).assertIsDisplayed()
         composeTestRule.onNodeWithText("3 items")
             .assertIsDisplayed()
+    }
+
+    @Test
+    fun clickingOnShoppingListItemDetailsPopupMenu() {
+        val recommendations = listOf(
+            Recommendation(
+                shop = Shop.default().copy(isDefault = false, id = 1),
+                hit = Recommendation.Hit(
+                    items = listOf(
+                        Recommendation.Hit.Item(
+                            found = "Bread",
+                            requested = "Bread",
+                            unitPrice = 50f,
+                        ),
+                        Recommendation.Hit.Item(
+                            found = "Milk",
+                            requested = "Milk",
+                            unitPrice = 50f,
+                        ),
+                    ),
+                    count = 2,
+                ),
+                miss = Recommendation.Miss(
+                    items = listOf("Sugar"),
+                    count = 1,
+                ),
+                expenditure = Recommendation.Expenditure(
+                    unit = 100f,
+                    total = 100f,
+                ),
+            ),
+        )
+
+        composeTestRule.setContent {
+            XentlyTheme {
+                RecommendationListScreen(
+                    modifier = Modifier.fillMaxSize(),
+                    numberOfItems = 3,
+                    result = TaskResult.Success(recommendations),
+                    function = RecommendationListScreenFunction(),
+                    showMap = false,
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithTag(
+            activity.getString(
+                R.string.fr_item_menu_content_description,
+                recommendations[0].shop.descriptiveName,
+            )
+        ).performClick()
+
+        // Before clicking on details menu item...
+        composeTestRule.onNodeWithText(activity.getString(R.string.fr_shop_details))
+            .assertDoesNotExist()
+        composeTestRule.onAllNodesWithText(recommendations[0].shop.descriptiveName)
+            .assertCountEquals(1)
+
+        composeTestRule.onNodeWithText(activity.getString(R.string.fr_details))
+            .performClick()
+
+        // After clicking on details menu item...
+        composeTestRule.onNodeWithText(activity.getString(R.string.fr_shop_details))
+            .assertIsDisplayed()
+        composeTestRule.onAllNodesWithText(recommendations[0].shop.descriptiveName)
+            .assertCountEquals(2)
+        composeTestRule.onNodeWithText(activity.getString(R.string.fr_detail_hit_heading))
+            .assertIsDisplayed()
+        composeTestRule.onNodeWithText(activity.getString(R.string.fr_detail_miss_heading))
+            .assertIsDisplayed()
+
+        // After hiding the modal...
+        composeTestRule.onNodeWithContentDescription(activity.getString(R.string.hide))
+            .performClick()
+        composeTestRule.onNodeWithText(activity.getString(R.string.fr_detail_hit_heading))
+            .assertIsNotDisplayed()
+        composeTestRule.onNodeWithText(activity.getString(R.string.fr_detail_miss_heading))
+            .assertIsNotDisplayed()
+    }
+
+    @Test
+    fun clickingOnShoppingListItem() {
+        val recommendations = listOf(
+            Recommendation(
+                shop = Shop.default().copy(isDefault = false, id = 1),
+                hit = Recommendation.Hit(
+                    items = listOf(
+                        Recommendation.Hit.Item(
+                            found = "Bread",
+                            requested = "Bread",
+                            unitPrice = 50f,
+                        ),
+                        Recommendation.Hit.Item(
+                            found = "Milk",
+                            requested = "Milk",
+                            unitPrice = 50f,
+                        ),
+                    ),
+                    count = 2,
+                ),
+                miss = Recommendation.Miss(
+                    items = listOf("Sugar"),
+                    count = 1,
+                ),
+                expenditure = Recommendation.Expenditure(
+                    unit = 100f,
+                    total = 100f,
+                ),
+            ),
+        )
+
+        composeTestRule.setContent {
+            XentlyTheme {
+                RecommendationListScreen(
+                    modifier = Modifier.fillMaxSize(),
+                    numberOfItems = 3,
+                    result = TaskResult.Success(recommendations),
+                    function = RecommendationListScreenFunction(),
+                    showMap = false,
+                )
+            }
+        }
+
+        // Before clicking...
+        composeTestRule.onNodeWithText(activity.getString(R.string.fr_shop_details))
+            .assertDoesNotExist()
+        composeTestRule.onAllNodesWithText(recommendations[0].shop.descriptiveName)
+            .assertCountEquals(1)
+
+        composeTestRule.onNodeWithTag(
+            activity.getString(R.string.fr_recommendation_card_test_tag, 0)
+        ).performClick()
+
+        // After clicking...
+        composeTestRule.onNodeWithText(activity.getString(R.string.fr_shop_details))
+            .assertIsDisplayed()
+        composeTestRule.onAllNodesWithText(recommendations[0].shop.descriptiveName)
+            .assertCountEquals(2)
+        composeTestRule.onNodeWithText(activity.getString(R.string.fr_detail_hit_heading))
+            .assertIsDisplayed()
+        composeTestRule.onNodeWithText(activity.getString(R.string.fr_detail_miss_heading))
+            .assertIsDisplayed()
+
+        // After hiding the modal...
+        composeTestRule.onNodeWithContentDescription(activity.getString(R.string.hide))
+            .performClick()
+        composeTestRule.onNodeWithText(activity.getString(R.string.fr_detail_hit_heading))
+            .assertIsNotDisplayed()
+        composeTestRule.onNodeWithText(activity.getString(R.string.fr_detail_miss_heading))
+            .assertIsNotDisplayed()
     }
 }
