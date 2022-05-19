@@ -10,6 +10,7 @@ import co.ke.xently.common.KENYA
 import co.ke.xently.data.RecommendationRequest
 import co.ke.xently.data.ShoppingListItem
 import co.ke.xently.data.TaskResult
+import co.ke.xently.feature.PermissionGranted
 import co.ke.xently.feature.SharedFunction
 import co.ke.xently.feature.theme.XentlyTheme
 import co.ke.xently.recommendation.R
@@ -137,7 +138,7 @@ class RecommendationScreenTest {
 
     @Test
     fun clickingOnLocationRequestButton() {
-        val onLocationPermissionRequestMock: (Boolean) -> Unit = mock()
+        val onLocationPermissionRequestMock: (PermissionGranted) -> Unit = mock()
         composeTestRule.setContent {
             XentlyTheme {
                 RecommendationScreen(
@@ -158,9 +159,9 @@ class RecommendationScreenTest {
             activity.getString(R.string.grant_button_label)
         ).performClick()
 
-        with(argumentCaptor<Boolean> { }) {
+        with(argumentCaptor<PermissionGranted> { }) {
             verify(onLocationPermissionRequestMock, times(1)).invoke(capture())
-            assertThat(firstValue, `is`(false))
+            assertThat(firstValue.value, `is`(false))
         }
     }
 

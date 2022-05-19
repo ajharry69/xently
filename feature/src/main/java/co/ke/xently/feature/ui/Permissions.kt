@@ -8,6 +8,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.window.DialogProperties
+import co.ke.xently.feature.PermissionGranted
 import co.ke.xently.feature.R
 import com.google.accompanist.permissions.MultiplePermissionsState
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
@@ -16,7 +17,7 @@ import com.google.accompanist.permissions.rememberMultiplePermissionsState
 fun requestLocationPermission(
     vararg permissions: String,
     shouldRequestPermission: Boolean = true,
-    onLocationPermissionChanged: (permissionGranted: Boolean) -> Unit = {},
+    onLocationPermissionChanged: (PermissionGranted) -> Unit = {},
 ): MultiplePermissionsState {
     var showRationale by rememberSaveable { mutableStateOf(true) }
 
@@ -63,7 +64,8 @@ fun requestLocationPermission(
         )
     } else {
         SideEffect {
-            onLocationPermissionChanged.invoke(permissionState.allPermissionsGranted)
+            val permissionGranted = PermissionGranted(permissionState.allPermissionsGranted)
+            onLocationPermissionChanged.invoke(permissionGranted)
         }
     }
     return permissionState

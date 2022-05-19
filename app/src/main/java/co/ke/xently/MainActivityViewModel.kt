@@ -9,6 +9,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.Transformations
 import androidx.lifecycle.viewModelScope
+import co.ke.xently.feature.PermissionGranted
 import co.ke.xently.feature.repository.IAuthRepository
 import co.ke.xently.feature.utils.flagLoadingOnStart
 import co.ke.xently.feature.viewmodels.AbstractAuthViewModel
@@ -39,8 +40,8 @@ class MainActivityViewModel @Inject constructor(
         )
     ) { it == 1 }
 
-    fun setLocationPermissionGranted(granted: Boolean) {
-        savedStateHandle[KEY] = if (granted) {
+    fun setLocationPermissionGranted(granted: PermissionGranted) {
+        savedStateHandle[KEY] = if (granted.value) {
             1
         } else {
             0

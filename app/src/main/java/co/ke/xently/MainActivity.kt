@@ -87,14 +87,13 @@ class MainActivity : FragmentActivity() {
                                 )
                                 user
                             },
-                            signOutResult = {
-                                val signOutResult: TaskResult<Unit> by viewModel.signOutResult.collectAsState(
-                                    initial = TaskResult.Success(Unit),
-                                    context = scope.coroutineContext,
-                                )
-                                signOutResult
-                            },
-                        ),
+                        ) {
+                            val signOutResult: TaskResult<Unit> by viewModel.signOutResult.collectAsState(
+                                initial = TaskResult.Success(Unit),
+                                context = scope.coroutineContext,
+                            )
+                            signOutResult
+                        },
                     )
                 }
             }

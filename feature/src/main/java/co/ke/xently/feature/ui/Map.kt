@@ -10,6 +10,7 @@ import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import co.ke.xently.feature.PermissionGranted
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.*
@@ -59,7 +60,7 @@ fun rememberMyLocation(sharedPreference: SharedPreferences? = null): LatLng {
 */
 
 @Composable
-fun isMyLocationEnabled(onLocationPermissionChanged: (permissionGranted: Boolean) -> Unit): Boolean {
+fun isMyLocationEnabled(onLocationPermissionChanged: (PermissionGranted) -> Unit): Boolean {
     val permissionState =
         requestLocationPermission(onLocationPermissionChanged = onLocationPermissionChanged)
 
@@ -75,7 +76,7 @@ fun isMyLocationEnabled(onLocationPermissionChanged: (permissionGranted: Boolean
 fun GoogleMapViewWithLoadingIndicator(
     modifier: Modifier = Modifier,
     onMapClick: (LatLng) -> Unit = {},
-    onLocationPermissionChanged: (permissionGranted: Boolean) -> Unit,
+    onLocationPermissionChanged: (PermissionGranted) -> Unit,
     content: @Composable () -> Unit,
 ) {
     Box(modifier = modifier) {

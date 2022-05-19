@@ -21,6 +21,7 @@ import co.ke.xently.data.Recommendation
 import co.ke.xently.data.ShoppingListItem
 import co.ke.xently.data.TaskResult
 import co.ke.xently.data.getOrNull
+import co.ke.xently.feature.PermissionGranted
 import co.ke.xently.feature.SharedFunction
 import co.ke.xently.feature.ui.*
 import co.ke.xently.feature.utils.MAP_HEIGHT
@@ -98,7 +99,7 @@ private fun GoogleMapView(
     numberOfItems: Int,
     recommendations: List<Recommendation>,
     onInfoWindowClick: (Recommendation) -> Unit,
-    onLocationPermissionChanged: (permissionGranted: Boolean) -> Unit,
+    onLocationPermissionChanged: (PermissionGranted) -> Unit,
 ) {
     GoogleMapViewWithLoadingIndicator(
         modifier = modifier,

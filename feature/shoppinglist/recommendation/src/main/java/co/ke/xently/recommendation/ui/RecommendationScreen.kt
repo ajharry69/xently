@@ -24,6 +24,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.hilt.navigation.compose.hiltViewModel
 import co.ke.xently.common.KENYA
 import co.ke.xently.data.*
+import co.ke.xently.feature.PermissionGranted
 import co.ke.xently.feature.SharedFunction
 import co.ke.xently.feature.ui.*
 import co.ke.xently.recommendation.R
@@ -119,7 +120,7 @@ internal fun RecommendationScreen(
             when (snackbarResult) {
                 SnackbarResult.Dismissed -> TODO()
                 SnackbarResult.ActionPerformed -> {
-                    function.sharedFunction.onLocationPermissionChanged.invoke(false)
+                    function.sharedFunction.onLocationPermissionChanged(PermissionGranted(false))
                 }
             }
         }
