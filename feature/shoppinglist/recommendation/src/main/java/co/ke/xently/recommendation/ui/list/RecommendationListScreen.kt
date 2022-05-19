@@ -97,6 +97,7 @@ private fun GoogleMapView(
     modifier: Modifier,
     numberOfItems: Int,
     recommendations: List<Recommendation>,
+    onInfoWindowClick: (Recommendation) -> Unit,
     onLocationPermissionChanged: (permissionGranted: Boolean) -> Unit,
 ) {
     GoogleMapViewWithLoadingIndicator(
@@ -127,6 +128,9 @@ private fun GoogleMapView(
                         currency = Currency.getInstance(KENYA)
                     }.format(recommendation.expenditure.total),
                 ),
+                onInfoWindowClick = {
+                    onInfoWindowClick.invoke(recommendation)
+                },
             )
         }
     }
@@ -225,6 +229,16 @@ internal fun RecommendationListScreen(
                         modifier = modifier,
                         verticalArrangement = Arrangement.spacedBy(VIEW_SPACE_HALVED),
                     ) {
+                        val onItemClick: (Recommendation) -> Unit = {
+                            recommendation = it
+                            coroutineScope.launch {
+                                if (sheetState.isVisible) {
+                                    sheetState.hide()
+                                } else {
+                                    sheetState.show()
+                                }
+                            }
+                        }
                         item {
                             Box(
                                 modifier = Modifier
@@ -238,6 +252,7 @@ internal fun RecommendationListScreen(
                                             .fillMaxWidth(),
                                         numberOfItems = numberOfItems,
                                         recommendations = recommendations,
+                                        onInfoWindowClick = onItemClick,
                                         onLocationPermissionChanged = function.sharedFunction.onLocationPermissionChanged,
                                     )
                                 }
@@ -255,16 +270,6 @@ internal fun RecommendationListScreen(
                             }
                         }
                         itemsIndexed(recommendations) { index, _recommendation ->
-                            val onItemClick: (Recommendation) -> Unit = {
-                                recommendation = it
-                                coroutineScope.launch {
-                                    if (sheetState.isVisible) {
-                                        sheetState.hide()
-                                    } else {
-                                        sheetState.show()
-                                    }
-                                }
-                            }
                             RecommendationCardItem(
                                 modifier = Modifier.semantics {
                                     testTag = context.getString(
