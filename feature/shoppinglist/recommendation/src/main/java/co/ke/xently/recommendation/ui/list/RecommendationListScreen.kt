@@ -1,6 +1,5 @@
 package co.ke.xently.recommendation.ui.list
 
-import android.content.Context
 import androidx.annotation.VisibleForTesting
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -30,8 +29,9 @@ import co.ke.xently.recommendation.ui.detail.RecommendationDetailScreen
 import co.ke.xently.recommendation.ui.list.item.RecommendationCardItem
 import co.ke.xently.recommendation.ui.list.item.RecommendationCardItemFunction
 import co.ke.xently.recommendation.ui.list.item.RecommendationCardItemMenuItem
-import com.google.android.libraries.maps.model.LatLng
-import com.google.android.libraries.maps.model.MarkerOptions
+import com.google.android.gms.maps.model.LatLng
+import com.google.maps.android.compose.Marker
+import com.google.maps.android.compose.rememberMarkerState
 import kotlinx.coroutines.launch
 import java.text.NumberFormat
 import java.util.*
@@ -47,6 +47,21 @@ internal data class RecommendationListScreenArgs(
     internal val lookupId: String,
     internal val numberOfItems: Int,
 )
+
+@Composable
+private fun ConsiderFailure(
+    modifier: Modifier = Modifier,
+    function: RecommendationListScreenFunction,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    Column(modifier = modifier.fillMaxSize()) {
+        ToolbarWithProgressbar(
+            title = stringResource(R.string.fr_toolbar_title),
+            onNavigationIconClicked = function.sharedFunction.onNavigationIconClicked,
+        )
+        content()
+    }
+}
 
 @Composable
 internal fun RecommendationListScreen(
@@ -77,33 +92,43 @@ internal fun RecommendationListScreen(
     )
 }
 
-private fun Recommendation.createMarkerOption(context: Context) = MarkerOptions().apply {
-    title(shop.descriptiveName)
-    val subtitle = context.resources.getQuantityString(
-        R.plurals.fr_recommendation_item,
-        numberOfItems,
-        hit.count,
-        numberOfItems,
-        NumberFormat.getCurrencyInstance().apply {
-            currency = Currency.getInstance(KENYA)
-        }.format(expenditure.total),
-    )
-    snippet(subtitle)
-    position(LatLng(shop.coordinate!!.lat, shop.coordinate!!.lon))
-}
-
 @Composable
-private fun ConsiderFailure(
-    modifier: Modifier = Modifier,
-    function: RecommendationListScreenFunction,
-    content: @Composable ColumnScope.() -> Unit,
+private fun GoogleMapView(
+    modifier: Modifier,
+    numberOfItems: Int,
+    recommendations: List<Recommendation>,
+    onLocationPermissionChanged: (permissionGranted: Boolean) -> Unit,
 ) {
-    Column(modifier = modifier.fillMaxSize()) {
-        ToolbarWithProgressbar(
-            title = stringResource(R.string.fr_toolbar_title),
-            onNavigationIconClicked = function.sharedFunction.onNavigationIconClicked,
-        )
-        content()
+    GoogleMapViewWithLoadingIndicator(
+        modifier = modifier,
+        onLocationPermissionChanged = onLocationPermissionChanged,
+    ) {
+        val recommendationsWithCoordinates = remember(recommendations) {
+            recommendations.filter { recommendation ->
+                recommendation.shop.coordinate != null
+            }
+        }
+        for (recommendation in recommendationsWithCoordinates) {
+            val markerState = rememberMarkerState(
+                position = LatLng(
+                    recommendation.shop.coordinate!!.lat,
+                    recommendation.shop.coordinate!!.lon,
+                ),
+            )
+            Marker(
+                state = markerState,
+                title = recommendation.shop.descriptiveName,
+                snippet = LocalContext.current.resources.getQuantityString(
+                    R.plurals.fr_recommendation_item,
+                    numberOfItems,
+                    recommendation.hit.count,
+                    numberOfItems,
+                    NumberFormat.getCurrencyInstance().apply {
+                        currency = Currency.getInstance(KENYA)
+                    }.format(recommendation.expenditure.total),
+                ),
+            )
+        }
     }
 }
 
@@ -207,18 +232,12 @@ internal fun RecommendationListScreen(
                                     .fillMaxWidth(),
                             ) {
                                 if (showMap) {
-                                    val markerPositions = remember(recommendations) {
-                                        recommendations.filter { recommendation ->
-                                            recommendation.shop.coordinate != null
-                                        }.map { recommendation ->
-                                            recommendation.createMarkerOption(context)
-                                        }
-                                    }
                                     GoogleMapView(
                                         modifier = Modifier
                                             .height(MAP_HEIGHT)
                                             .fillMaxWidth(),
-                                        markerPositions = markerPositions,
+                                        numberOfItems = numberOfItems,
+                                        recommendations = recommendations,
                                         onLocationPermissionChanged = function.sharedFunction.onLocationPermissionChanged,
                                     )
                                 }
@@ -230,7 +249,7 @@ internal fun RecommendationListScreen(
                                     subTitle = context.resources.getQuantityString(
                                         R.plurals.fr_filter_toolbar_subtitle,
                                         numberOfItems,
-                                        numberOfItems
+                                        numberOfItems,
                                     ),
                                 )
                             }

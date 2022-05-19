@@ -69,6 +69,11 @@ dependencies {
     implementation project(path: ":data:source:local")
     implementation project(path: ":data:source:remote")
     implementation project(path: ":feature")
+
+    implementation 'com.google.maps.android:maps-compose:2.1.1'
+    // Make sure to also include the latest version of the Maps SDK for Android
+    implementation 'com.google.android.gms:play-services-maps:18.0.2'
+
     // DI
     implementation "com.google.dagger:hilt-android:$hilt_version"
     kapt "com.google.dagger:hilt-compiler:$hilt_version"

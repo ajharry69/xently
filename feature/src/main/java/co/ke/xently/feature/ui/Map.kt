@@ -1,81 +1,129 @@
 package co.ke.xently.feature.ui
 
-import android.annotation.SuppressLint
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.material.CircularProgressIndicator
+import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.viewinterop.AndroidView
-import androidx.compose.ui.viewinterop.NoOpUpdate
-import com.google.android.libraries.maps.CameraUpdateFactory
-import com.google.android.libraries.maps.GoogleMap
-import com.google.android.libraries.maps.MapView
-import com.google.android.libraries.maps.model.LatLng
-import com.google.android.libraries.maps.model.MarkerOptions
-import com.google.maps.android.ktx.awaitMap
+import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.maps.model.LatLng
+import com.google.maps.android.compose.*
 
+/*
+import android.content.SharedPreferences
+import android.content.SharedPreferences.OnSharedPreferenceChangeListener
+import androidx.compose.ui.platform.LocalContext
+import co.ke.xently.common.MY_LOCATION_LATITUDE_SHARED_PREFERENCE_KEY
+import co.ke.xently.common.MY_LOCATION_LONGITUDE_SHARED_PREFERENCE_KEY
+import co.ke.xently.source.local.di.StorageModule.provideEncryptedSharedPreference
+import com.google.android.gms.maps.model.LatLng
+
+internal const val DEFAULT_LATITUDE = -1.306635
+internal const val DEFAULT_LONGITUDE = -1.306635
 
 @Composable
-fun GoogleMapView(
-    modifier: Modifier,
-    currentPosition: LatLng = rememberMyLocation(),
-    markerPositions: List<MarkerOptions> = emptyList(),
-    onMapViewUpdated: (MapView) -> Unit = NoOpUpdate,
-    onLocationPermissionChanged: ((permissionGranted: Boolean) -> Unit) = {},
-    setUp: GoogleMap.() -> Unit = {},
-) {
-    // The MapView lifecycle is handled by this composable. As the MapView also needs to be updated
-    // with input from Compose UI, those updates are encapsulated into the GoogleMapViewContainer
-    // composable. In this way, when an update to the MapView happens, this composable won't
-    // recompose and the MapView won't need to be recreated.
-    val mapView = rememberMapViewWithLifecycle()
-    GoogleMapViewContainer(
-        modifier,
-        mapView,
-        currentPosition,
-        markerPositions,
-        onMapViewUpdated,
-        onLocationPermissionChanged,
-        setUp,
+fun rememberMyLocation(sharedPreference: SharedPreferences? = null): LatLng {
+    val preferences = sharedPreference ?: provideEncryptedSharedPreference(
+        LocalContext.current
     )
-}
 
-@SuppressLint("MissingPermission")
+    fun myLocation(): LatLng {
+        val latitude =
+            preferences.getString(MY_LOCATION_LATITUDE_SHARED_PREFERENCE_KEY, null)?.toDouble()
+                ?: DEFAULT_LATITUDE
+        val longitude =
+            preferences.getString(MY_LOCATION_LONGITUDE_SHARED_PREFERENCE_KEY, null)?.toDouble()
+                ?: DEFAULT_LONGITUDE
+        return LatLng(latitude, longitude)
+    }
+
+    var coordinates by remember { mutableStateOf(myLocation()) }
+
+    val preferenceChanged = OnSharedPreferenceChangeListener { _, _ ->
+        coordinates = myLocation()
+    }
+
+    DisposableEffect(preferences) {
+        preferences.registerOnSharedPreferenceChangeListener(preferenceChanged)
+        onDispose {
+            preferences.unregisterOnSharedPreferenceChangeListener(preferenceChanged)
+        }
+    }
+    return coordinates
+}
+*/
+
 @Composable
-private fun GoogleMapViewContainer(
-    modifier: Modifier,
-    map: MapView,
-    currentPosition: LatLng,
-    markerPositions: List<MarkerOptions>,
-    onMapViewUpdated: (MapView) -> Unit = NoOpUpdate,
-    onLocationPermissionChanged: (permissionGranted: Boolean) -> Unit,
-    setUp: GoogleMap.() -> Unit,
-) {
+fun isMyLocationEnabled(onLocationPermissionChanged: (permissionGranted: Boolean) -> Unit): Boolean {
     val permissionState =
         requestLocationPermission(onLocationPermissionChanged = onLocationPermissionChanged)
-    val myLocation by rememberSaveable(currentPosition.latitude, currentPosition.longitude) {
-        mutableStateOf(currentPosition)
-    }
 
     val enableMyLocation by remember(permissionState) {
         derivedStateOf {
             permissionState.allPermissionsGranted
         }
     }
-    LaunchedEffect(map, enableMyLocation) {
-        map.awaitMap().apply {
-            uiSettings.apply {
-                isZoomControlsEnabled = true
-                isZoomGesturesEnabled = true
-                isMyLocationButtonEnabled = enableMyLocation
+    return enableMyLocation
+}
+
+@Composable
+fun GoogleMapViewWithLoadingIndicator(
+    modifier: Modifier = Modifier,
+    onMapClick: (LatLng) -> Unit = {},
+    onLocationPermissionChanged: (permissionGranted: Boolean) -> Unit,
+    content: @Composable () -> Unit,
+) {
+    Box(modifier = modifier) {
+        var isMapLoaded by remember {
+            mutableStateOf(false)
+        }
+        val cameraPositionState = rememberCameraPositionState {
+            // TODO: Replace with real-time response values
+            val uthiru = LatLng(-1.268780651485453, 36.71817776897877)
+            position = CameraPosition.fromLatLngZoom(uthiru, 11f)
+        }
+        val isMyLocationEnabled =
+            isMyLocationEnabled(onLocationPermissionChanged = onLocationPermissionChanged)
+        val uiSettings: MapUiSettings by remember {
+            mutableStateOf(MapUiSettings(compassEnabled = false))
+        }
+        val mapProperties: MapProperties by remember(isMyLocationEnabled) {
+            mutableStateOf(
+                MapProperties(
+                    mapType = MapType.NORMAL,
+                    isMyLocationEnabled = isMyLocationEnabled,
+                )
+            )
+        }
+        GoogleMap(
+            content = content,
+            uiSettings = uiSettings,
+            properties = mapProperties,
+            modifier = Modifier.matchParentSize(),
+            cameraPositionState = cameraPositionState,
+            onMapLoaded = {
+                isMapLoaded = true
+            },
+            onMapClick = onMapClick,
+        )
+        if (!isMapLoaded) {
+            AnimatedVisibility(
+                exit = fadeOut(),
+                visible = !isMapLoaded,
+                enter = EnterTransition.None,
+                modifier = Modifier.matchParentSize(),
+            ) {
+                CircularProgressIndicator(
+                    modifier = Modifier
+                        .background(MaterialTheme.colors.background)
+                        .wrapContentSize()
+                )
             }
-            isMyLocationEnabled = enableMyLocation
-            setMinZoomPreference(15f)
-            markerPositions.forEach {
-                addMarker(it)
-            }
-            moveCamera(CameraUpdateFactory.newLatLng(myLocation))
-            setUp()
         }
     }
-    AndroidView(modifier = modifier, factory = { map }, update = onMapViewUpdated)
 }
