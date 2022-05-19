@@ -283,14 +283,14 @@ internal fun RecommendationListScreen(
                                 ),
                                 menuItems = listOf(
                                     RecommendationCardItemMenuItem(
-                                        label = R.string.fr_details,
-                                        onClick = onItemClick,
-                                    ),
-                                    RecommendationCardItemMenuItem(
                                         label = R.string.fr_directions,
                                         onClick = {
 
                                         },
+                                    ),
+                                    RecommendationCardItemMenuItem(
+                                        label = R.string.fr_details,
+                                        onClick = onItemClick,
                                     ),
                                 ),
                             )
