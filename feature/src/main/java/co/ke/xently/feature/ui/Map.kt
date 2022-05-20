@@ -4,13 +4,17 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.material.CircularProgressIndicator
-import androidx.compose.material.MaterialTheme
+import androidx.compose.foundation.layout.*
+import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Fullscreen
+import androidx.compose.material.icons.filled.FullscreenExit
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import co.ke.xently.feature.PermissionGranted
+import co.ke.xently.feature.R
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.*
@@ -59,23 +63,15 @@ fun rememberMyLocation(sharedPreference: SharedPreferences? = null): LatLng {
 }
 */
 
-@Composable
-fun isMyLocationEnabled(onLocationPermissionChanged: (PermissionGranted) -> Unit): Boolean {
-    val permissionState =
-        requestLocationPermission(onLocationPermissionChanged = onLocationPermissionChanged)
-
-    val enableMyLocation by remember(permissionState) {
-        derivedStateOf {
-            permissionState.allPermissionsGranted
-        }
-    }
-    return enableMyLocation
-}
+@JvmInline
+value class MapMaximized(val value: Boolean = false)
 
 @Composable
 fun GoogleMapViewWithLoadingIndicator(
-    modifier: Modifier = Modifier,
+    modifier: Modifier,
+    isMapMaximized: Boolean = false,
     onMapClick: (LatLng) -> Unit = {},
+    onMapMaximizedOrMinimized: (MapMaximized) -> Unit = {},
     onLocationPermissionChanged: (PermissionGranted) -> Unit,
     content: @Composable () -> Unit,
 ) {
@@ -88,8 +84,15 @@ fun GoogleMapViewWithLoadingIndicator(
             val uthiru = LatLng(-1.268780651485453, 36.71817776897877)
             position = CameraPosition.fromLatLngZoom(uthiru, 11f)
         }
-        val isMyLocationEnabled =
-            isMyLocationEnabled(onLocationPermissionChanged = onLocationPermissionChanged)
+        val permissionState =
+            requestLocationPermission(onLocationPermissionChanged = onLocationPermissionChanged)
+
+        val isMyLocationEnabled by remember(permissionState) {
+            derivedStateOf {
+                permissionState.allPermissionsGranted
+            }
+        }
+
         val uiSettings: MapUiSettings by remember {
             mutableStateOf(MapUiSettings(compassEnabled = false))
         }
@@ -112,7 +115,46 @@ fun GoogleMapViewWithLoadingIndicator(
             },
             onMapClick = onMapClick,
         )
-        if (!isMapLoaded) {
+        if (isMapLoaded) {
+            var mapMaximized by remember {
+                mutableStateOf(isMapMaximized)
+            }
+            Column(
+                modifier = Modifier
+                    .matchParentSize()
+                    .padding(PaddingValues(VIEW_SPACE)),
+                verticalArrangement = Arrangement.Bottom,
+            ) {
+                val backgroundColor = Color.White
+                IconToggleButton(
+                    modifier = Modifier
+                        .background(backgroundColor)
+                        .size(38.dp),
+                    checked = mapMaximized,
+                    onCheckedChange = {
+                        mapMaximized = it
+                        onMapMaximizedOrMinimized.invoke(MapMaximized(it))
+                    },
+                ) {
+                    val (icon, description) = if (mapMaximized) {
+                        Pair(
+                            Icons.Default.FullscreenExit,
+                            stringRes(R.string.maximize_or_minimize_map, R.string.minimize),
+                        )
+                    } else {
+                        Pair(
+                            Icons.Default.Fullscreen,
+                            stringRes(R.string.maximize_or_minimize_map, R.string.maximize),
+                        )
+                    }
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = description,
+                        tint = MaterialTheme.colors.contentColorFor(backgroundColor),
+                    )
+                }
+            }
+        } else {
             AnimatedVisibility(
                 exit = fadeOut(),
                 visible = !isMapLoaded,

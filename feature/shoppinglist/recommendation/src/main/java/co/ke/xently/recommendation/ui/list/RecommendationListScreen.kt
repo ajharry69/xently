@@ -8,6 +8,7 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -97,12 +98,16 @@ internal fun RecommendationListScreen(
 private fun GoogleMapView(
     modifier: Modifier,
     numberOfItems: Int,
+    isMapMaximized: Boolean,
     recommendations: List<Recommendation>,
     onInfoWindowClick: (Recommendation) -> Unit,
+    onMapMaximizedOrMinimized: (MapMaximized) -> Unit,
     onLocationPermissionChanged: (PermissionGranted) -> Unit,
 ) {
     GoogleMapViewWithLoadingIndicator(
         modifier = modifier,
+        isMapMaximized = isMapMaximized,
+        onMapMaximizedOrMinimized = onMapMaximizedOrMinimized,
         onLocationPermissionChanged = onLocationPermissionChanged,
     ) {
         val recommendationsWithCoordinates = remember(recommendations) {
@@ -226,75 +231,96 @@ internal fun RecommendationListScreen(
                         )
                     }
                 } else {
-                    LazyColumn(
-                        modifier = modifier,
-                        verticalArrangement = Arrangement.spacedBy(VIEW_SPACE_HALVED),
-                    ) {
-                        val onItemClick: (Recommendation) -> Unit = {
-                            recommendation = it
-                            coroutineScope.launch {
-                                if (sheetState.isVisible) {
-                                    sheetState.hide()
-                                } else {
-                                    sheetState.show()
-                                }
+                    var isMapMaximized by rememberSaveable {
+                        mutableStateOf(MapMaximized().value)
+                    }
+                    val onItemClick: (Recommendation) -> Unit = {
+                        recommendation = it
+                        coroutineScope.launch {
+                            if (sheetState.isVisible) {
+                                sheetState.hide()
+                            } else {
+                                sheetState.show()
                             }
                         }
-                        item {
-                            Box(
-                                modifier = Modifier
-                                    .height(IntrinsicSize.Min)
-                                    .fillMaxWidth(),
-                            ) {
-                                if (showMap) {
-                                    GoogleMapView(
-                                        modifier = Modifier
-                                            .height(MAP_HEIGHT)
-                                            .fillMaxWidth(),
-                                        numberOfItems = numberOfItems,
-                                        recommendations = recommendations,
-                                        onInfoWindowClick = onItemClick,
-                                        onLocationPermissionChanged = function.sharedFunction.onLocationPermissionChanged,
-                                    )
-                                }
-                                ToolbarWithProgressbar(
-                                    elevation = 0.dp,
-                                    backgroundColor = Color.Transparent,
-                                    title = stringResource(R.string.fr_toolbar_title),
-                                    onNavigationIconClicked = function.sharedFunction.onNavigationIconClicked,
-                                    subTitle = context.resources.getQuantityString(
-                                        R.plurals.fr_filter_toolbar_subtitle,
-                                        numberOfItems,
-                                        numberOfItems,
+                    }
+                    val mapWithToolbar: @Composable (
+                        boxModifier: Modifier,
+                        mapModifier: Modifier,
+                    ) -> Unit = { boxModifier, mapModifier ->
+                        Box(modifier = boxModifier) {
+                            if (showMap) {
+                                GoogleMapView(
+                                    modifier = mapModifier,
+                                    numberOfItems = numberOfItems,
+                                    onInfoWindowClick = onItemClick,
+                                    isMapMaximized = isMapMaximized,
+                                    recommendations = recommendations,
+                                    onLocationPermissionChanged = function.sharedFunction.onLocationPermissionChanged,
+                                    onMapMaximizedOrMinimized = { mapMaximized ->
+                                        isMapMaximized = mapMaximized.value
+                                    },
+                                )
+                            }
+                            ToolbarWithProgressbar(
+                                elevation = 0.dp,
+                                backgroundColor = Color.Transparent,
+                                title = stringResource(R.string.fr_toolbar_title),
+                                onNavigationIconClicked = function.sharedFunction.onNavigationIconClicked,
+                                subTitle = context.resources.getQuantityString(
+                                    R.plurals.fr_filter_toolbar_subtitle,
+                                    numberOfItems,
+                                    numberOfItems,
+                                ),
+                            )
+                        }
+                    }
+                    if (isMapMaximized) {
+                        mapWithToolbar(boxModifier = modifier, mapModifier = modifier)
+                    } else {
+                        LazyColumn(
+                            modifier = modifier,
+                            verticalArrangement = Arrangement.spacedBy(VIEW_SPACE_HALVED),
+                        ) {
+                            item {
+                                mapWithToolbar(
+                                    boxModifier = Modifier
+                                        .height(IntrinsicSize.Min)
+                                        .fillMaxWidth(),
+                                    mapModifier = Modifier
+                                        .height(MAP_HEIGHT)
+                                        .fillMaxWidth(),
+                                )
+                            }
+                            itemsIndexed(
+                                recommendations,
+                                key = { _, r -> r.shop.id },
+                            ) { index, _recommendation ->
+                                RecommendationCardItem(
+                                    modifier = Modifier.semantics {
+                                        testTag = context.getString(
+                                            R.string.fr_recommendation_card_test_tag,
+                                            index,
+                                        )
+                                    },
+                                    recommendation = _recommendation,
+                                    function = function.function.copy(
+                                        onItemClicked = onItemClick,
+                                    ),
+                                    menuItems = listOf(
+                                        RecommendationCardItemMenuItem(
+                                            label = R.string.fr_directions,
+                                            onClick = {
+
+                                            },
+                                        ),
+                                        RecommendationCardItemMenuItem(
+                                            label = R.string.fr_details,
+                                            onClick = onItemClick,
+                                        ),
                                     ),
                                 )
                             }
-                        }
-                        itemsIndexed(recommendations) { index, _recommendation ->
-                            RecommendationCardItem(
-                                modifier = Modifier.semantics {
-                                    testTag = context.getString(
-                                        R.string.fr_recommendation_card_test_tag,
-                                        index,
-                                    )
-                                },
-                                recommendation = _recommendation,
-                                function = function.function.copy(
-                                    onItemClicked = onItemClick,
-                                ),
-                                menuItems = listOf(
-                                    RecommendationCardItemMenuItem(
-                                        label = R.string.fr_directions,
-                                        onClick = {
-
-                                        },
-                                    ),
-                                    RecommendationCardItemMenuItem(
-                                        label = R.string.fr_details,
-                                        onClick = onItemClick,
-                                    ),
-                                ),
-                            )
                         }
                     }
                 }

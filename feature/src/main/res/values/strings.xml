@@ -31,4 +31,7 @@
     <string name="text_field_content_description">%1$s text field</string>
     <string name="progress_bar_content_description">Progress bar</string>
     <string name="drawer_item_test_tag">Drawer item \"%1$s\" test tag</string>
+    <string name="maximize_or_minimize_map">%1$s map</string>
+    <string name="maximize">Maximize</string>
+    <string name="minimize">Minimize</string>
 </resources>
