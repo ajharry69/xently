@@ -96,7 +96,7 @@ internal fun ShopDetailScreen(
     result: TaskResult<Shop?>,
     addResult: TaskResult<Shop?>,
     permitReAddition: Boolean = false,
-    isTestMode: Boolean = false,
+    hideMap: Boolean = false,
     args: ShopDetailScreenArgs = ShopDetailScreenArgs(),
     function: ShopDetailScreenFunction = ShopDetailScreenFunction(),
 ) {
@@ -149,7 +149,7 @@ internal fun ShopDetailScreen(
                     .height(IntrinsicSize.Min)
                     .fillMaxWidth()
             ) {
-                if (!isTestMode) {
+                if (!hideMap) {
                     GoogleMapViewWithLoadingIndicator(
                         modifier = Modifier
                             .height(MAP_HEIGHT)

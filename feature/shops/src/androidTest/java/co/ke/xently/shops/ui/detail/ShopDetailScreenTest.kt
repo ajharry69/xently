@@ -82,7 +82,7 @@ class ShopDetailScreenTest {
         composeTestRule.setContent {
             XentlyTheme {
                 ShopDetailScreen(
-                    isTestMode = true,
+                    hideMap = true,
                     modifier = Modifier.fillMaxSize(),
                     result = TaskResult.Success(null),
                     addResult = TaskResult.Success(null),
@@ -105,7 +105,7 @@ class ShopDetailScreenTest {
         composeTestRule.setContent {
             XentlyTheme {
                 ShopDetailScreen(
-                    isTestMode = true,
+                    hideMap = true,
                     modifier = Modifier.fillMaxSize(),
                     result = TaskResult.Success(null),
                     addResult = TaskResult.Success(null),
@@ -124,7 +124,7 @@ class ShopDetailScreenTest {
         composeTestRule.setContent {
             XentlyTheme {
                 ShopDetailScreen(
-                    isTestMode = true,
+                    hideMap = true,
                     modifier = Modifier.fillMaxSize(),
                     result = TaskResult.Success(Shop.default().copy(isDefault = false, id = 1)),
                     addResult = TaskResult.Success(null),
@@ -143,7 +143,7 @@ class ShopDetailScreenTest {
         composeTestRule.setContent {
             XentlyTheme {
                 ShopDetailScreen(
-                    isTestMode = true,
+                    hideMap = true,
                     modifier = Modifier.fillMaxSize(),
                     result = TaskResult.Success(null),
                     addResult = TaskResult.Success(null),
@@ -162,7 +162,7 @@ class ShopDetailScreenTest {
         composeTestRule.setContent {
             XentlyTheme {
                 ShopDetailScreen(
-                    isTestMode = true,
+                    hideMap = true,
                     modifier = Modifier.fillMaxSize(),
                     result = TaskResult.Success(null),
                     addResult = TaskResult.Success(null),
@@ -180,7 +180,7 @@ class ShopDetailScreenTest {
         composeTestRule.setContent {
             XentlyTheme {
                 ShopDetailScreen(
-                    isTestMode = true,
+                    hideMap = true,
                     modifier = Modifier.fillMaxSize(),
                     result = TaskResult.Success(Shop.default().copy(isDefault = false, id = 1)),
                     addResult = TaskResult.Success(null),
@@ -199,7 +199,7 @@ class ShopDetailScreenTest {
         composeTestRule.setContent {
             XentlyTheme {
                 ShopDetailScreen(
-                    isTestMode = true,
+                    hideMap = true,
                     modifier = Modifier.fillMaxSize(),
                     result = TaskResult.Success(
                         Shop.default().copy(
@@ -223,7 +223,7 @@ class ShopDetailScreenTest {
         composeTestRule.setContent {
             XentlyTheme {
                 ShopDetailScreen(
-                    isTestMode = true,
+                    hideMap = true,
                     modifier = Modifier.fillMaxSize(),
                     result = TaskResult.Success(
                         Shop.default().copy(
@@ -246,7 +246,7 @@ class ShopDetailScreenTest {
         composeTestRule.setContent {
             XentlyTheme {
                 ShopDetailScreen(
-                    isTestMode = true,
+                    hideMap = true,
                     modifier = Modifier.fillMaxSize(),
                     result = TaskResult.Success(null),
                     addResult = TaskResult.Success(null),
@@ -283,7 +283,7 @@ class ShopDetailScreenTest {
         composeTestRule.setContent {
             XentlyTheme {
                 ShopDetailScreen(
-                    isTestMode = true,
+                    hideMap = true,
                     modifier = Modifier.fillMaxSize(),
                     result = TaskResult.Success(
                         Shop.default()

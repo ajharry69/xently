@@ -5,12 +5,14 @@ import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Fullscreen
 import androidx.compose.material.icons.filled.FullscreenExit
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import co.ke.xently.feature.PermissionGranted
@@ -71,7 +73,7 @@ fun GoogleMapViewWithLoadingIndicator(
     modifier: Modifier,
     isMapMaximized: Boolean = false,
     onMapClick: (LatLng) -> Unit = {},
-    onMapMaximizedOrMinimized: (MapMaximized) -> Unit = {},
+    onMapMaximizedOrMinimized: ((MapMaximized) -> Unit)? = null,
     onLocationPermissionChanged: (PermissionGranted) -> Unit,
     content: @Composable () -> Unit,
 ) {
@@ -115,7 +117,20 @@ fun GoogleMapViewWithLoadingIndicator(
             },
             onMapClick = onMapClick,
         )
-        if (isMapLoaded) {
+        if (!isMapLoaded) {
+            AnimatedVisibility(
+                exit = fadeOut(),
+                visible = !isMapLoaded,
+                enter = EnterTransition.None,
+                modifier = Modifier.matchParentSize(),
+            ) {
+                CircularProgressIndicator(
+                    modifier = Modifier
+                        .background(MaterialTheme.colors.background)
+                        .wrapContentSize()
+                )
+            }
+        } else if (onMapMaximizedOrMinimized != null) {
             var mapMaximized by remember {
                 mutableStateOf(isMapMaximized)
             }
@@ -125,11 +140,19 @@ fun GoogleMapViewWithLoadingIndicator(
                     .padding(PaddingValues(VIEW_SPACE)),
                 verticalArrangement = Arrangement.Bottom,
             ) {
-                val backgroundColor = Color.White
+                val backgroundColor = Color.White.copy(alpha = 0.8f)
                 IconToggleButton(
                     modifier = Modifier
-                        .background(backgroundColor)
-                        .size(38.dp),
+                        .background(
+                            color = backgroundColor,
+                            shape = MaterialTheme.shapes.small.copy(CornerSize(2.dp)),
+                        )
+                        .shadow(
+                            elevation = 1.dp,
+                            shape = MaterialTheme.shapes.small.copy(CornerSize(2.dp)),
+                            spotColor = contentColorFor(backgroundColor).copy(alpha = 0.2f),
+                        )
+                        .size(38.dp), // Size must be last
                     checked = mapMaximized,
                     onCheckedChange = {
                         mapMaximized = it
@@ -153,19 +176,6 @@ fun GoogleMapViewWithLoadingIndicator(
                         tint = MaterialTheme.colors.contentColorFor(backgroundColor),
                     )
                 }
-            }
-        } else {
-            AnimatedVisibility(
-                exit = fadeOut(),
-                visible = !isMapLoaded,
-                enter = EnterTransition.None,
-                modifier = Modifier.matchParentSize(),
-            ) {
-                CircularProgressIndicator(
-                    modifier = Modifier
-                        .background(MaterialTheme.colors.background)
-                        .wrapContentSize()
-                )
             }
         }
     }
