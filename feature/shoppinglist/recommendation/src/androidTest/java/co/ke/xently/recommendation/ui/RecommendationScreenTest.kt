@@ -124,7 +124,69 @@ class RecommendationScreenTest {
     }
 
     @Test
-    fun recommendButtonIsDisabledIfMyLocationIsNull() {
+    fun messageShownWhenLocationPermissionIsGrantedAndMyLocationIsNull() {
+        val persistedShoppingList = listOf(
+            ShoppingListItem.default().copy(isDefault = false, id = 1),
+            ShoppingListItem.default().copy(
+                isDefault = false,
+                name = "White bread by superloaf",
+                unit = "grams",
+                unitQuantity = 400f,
+                id = 2,
+            ),
+        )
+        composeTestRule.setContent {
+            XentlyTheme {
+                RecommendationScreen(
+                    modifier = Modifier.fillMaxSize(),
+                    function = RecommendationScreenFunction(),
+                    result = TaskResult.Success(null),
+                    persistedShoppingListResult = TaskResult.Success(persistedShoppingList),
+                    myUpdatedLocation = MyUpdatedLocation(
+                        myLocation = null,
+                        isLocationPermissionGranted = true
+                    ),
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithText(activity.getString(R.string.fr_initiating_location_tracking))
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun locationTrackingMessageShownWhenLocationPermissionIsGrantedAndMyLocationIsNotNull() {
+        val persistedShoppingList = listOf(
+            ShoppingListItem.default().copy(isDefault = false, id = 1),
+            ShoppingListItem.default().copy(
+                isDefault = false,
+                name = "White bread by superloaf",
+                unit = "grams",
+                unitQuantity = 400f,
+                id = 2,
+            ),
+        )
+        composeTestRule.setContent {
+            XentlyTheme {
+                RecommendationScreen(
+                    modifier = Modifier.fillMaxSize(),
+                    function = RecommendationScreenFunction(),
+                    result = TaskResult.Success(null),
+                    persistedShoppingListResult = TaskResult.Success(persistedShoppingList),
+                    myUpdatedLocation = MyUpdatedLocation(
+                        myLocation = KICC,
+                        isLocationPermissionGranted = true,
+                    ),
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithText(activity.getString(R.string.fr_initiating_location_tracking))
+            .assertDoesNotExist()
+    }
+
+    @Test
+    fun recommendButtonIsRenamedIfLocationPermissionIsGrantedAndMyLocationIsNull() {
         val persistedShoppingList = listOf(
             ShoppingListItem.default().copy(isDefault = false, id = 1),
             ShoppingListItem.default().copy(
@@ -150,7 +212,9 @@ class RecommendationScreenTest {
             }
         }
 
-        composeTestRule.onNodeWithText(recommendButton).assertIsNotEnabled()
+        composeTestRule.onNodeWithText(recommendButton).assertDoesNotExist()
+        composeTestRule.onNodeWithText(activity.getString(R.string.fr_initiating_location_tracking))
+            .assertIsDisplayed()
     }
 
     @Test

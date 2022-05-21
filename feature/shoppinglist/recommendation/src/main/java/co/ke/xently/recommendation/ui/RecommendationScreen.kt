@@ -110,6 +110,20 @@ internal fun RecommendationScreen(
     val scaffoldState = rememberScaffoldState()
 
     val (myLocation, isLocationPermissionGranted) = myUpdatedLocation
+
+    val isMyLocationNull by remember(myLocation) {
+        derivedStateOf {
+            myLocation == null
+        }
+    }
+    val shouldShowRequestingMyUpdatedLocationMessage by remember(
+        isMyLocationNull,
+        isLocationPermissionGranted,
+    ) {
+        derivedStateOf {
+            isLocationPermissionGranted && isMyLocationNull
+        }
+    }
     if (!isLocationPermissionGranted) {
         val message = stringResource(R.string.location_permission_rationale_minified)
         val actionLabel = stringResource(R.string.grant_button_label)
@@ -232,14 +246,14 @@ internal fun RecommendationScreen(
                 Text(text = description)
             }
             val shouldEnableRecommendButton by remember(
-                myLocation,
                 isTaskLoading,
+                isMyLocationNull,
                 isLocationPermissionGranted,
                 isPersistedShoppingListNotEmpty,
                 isUnPersistedShoppingListNotEmpty,
             ) {
                 derivedStateOf {
-                    isLocationPermissionGranted && myLocation != null && !isTaskLoading &&
+                    isLocationPermissionGranted && !isMyLocationNull && !isTaskLoading &&
                             (isUnPersistedShoppingListNotEmpty || isPersistedShoppingListNotEmpty)
                 }
             }
@@ -262,7 +276,13 @@ internal fun RecommendationScreen(
                     )
                 },
             ) {
-                Text(text = stringResource(R.string.fr_filter_recommend).uppercase(KENYA))
+                Text(
+                    text = if (shouldShowRequestingMyUpdatedLocationMessage) {
+                        stringResource(R.string.fr_initiating_location_tracking)
+                    } else {
+                        stringResource(R.string.fr_filter_recommend).uppercase(KENYA)
+                    },
+                )
             }
             LazyColumn(
                 modifier = Modifier.semantics {
