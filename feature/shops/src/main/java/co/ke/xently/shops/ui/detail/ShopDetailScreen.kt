@@ -154,11 +154,14 @@ internal fun ShopDetailScreen(
                         modifier = Modifier
                             .height(MAP_HEIGHT)
                             .fillMaxWidth(),
-                        onLocationPermissionChanged = function.sharedFunction.onLocationPermissionChanged,
                         onMapClick = {
                             coordinate = Coordinate(it.latitude, it.longitude)
                             shop = shop.copy(coordinate = coordinate)
                         },
+                        myUpdatedLocationArgs = MyUpdatedLocationArgs(
+                            shouldRequestPermission = false,
+                            onLocationPermissionChanged = function.sharedFunction.onLocationPermissionChanged,
+                        ),
                     ) {
                         if (coordinate != null) {
                             val markerState = rememberMarkerState(

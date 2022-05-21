@@ -22,7 +22,6 @@ import co.ke.xently.data.Recommendation
 import co.ke.xently.data.ShoppingListItem
 import co.ke.xently.data.TaskResult
 import co.ke.xently.data.getOrNull
-import co.ke.xently.feature.PermissionGranted
 import co.ke.xently.feature.SharedFunction
 import co.ke.xently.feature.ui.*
 import co.ke.xently.feature.utils.MAP_HEIGHT
@@ -101,14 +100,14 @@ private fun GoogleMapView(
     isMapMaximized: Boolean,
     recommendations: List<Recommendation>,
     onInfoWindowClick: (Recommendation) -> Unit,
+    myUpdatedLocationArgs: MyUpdatedLocationArgs,
     onMapMaximizedOrMinimized: (MapMaximized) -> Unit,
-    onLocationPermissionChanged: (PermissionGranted) -> Unit,
 ) {
     GoogleMapViewWithLoadingIndicator(
         modifier = modifier,
         isMapMaximized = isMapMaximized,
+        myUpdatedLocationArgs = myUpdatedLocationArgs,
         onMapMaximizedOrMinimized = onMapMaximizedOrMinimized,
-        onLocationPermissionChanged = onLocationPermissionChanged,
     ) {
         val recommendationsWithCoordinates = remember(recommendations) {
             recommendations.filter { recommendation ->
@@ -253,14 +252,15 @@ internal fun RecommendationListScreen(
                                 GoogleMapView(
                                     modifier = mapModifier,
                                     numberOfItems = numberOfItems,
-                                    onInfoWindowClick = onItemClick,
                                     isMapMaximized = isMapMaximized,
                                     recommendations = recommendations,
-                                    onLocationPermissionChanged = function.sharedFunction.onLocationPermissionChanged,
-                                    onMapMaximizedOrMinimized = { mapMaximized ->
-                                        isMapMaximized = mapMaximized.value
-                                    },
-                                )
+                                    onInfoWindowClick = onItemClick,
+                                    myUpdatedLocationArgs = MyUpdatedLocationArgs(
+                                        onLocationPermissionChanged = function.sharedFunction.onLocationPermissionChanged,
+                                    ),
+                                ) { mapMaximized ->
+                                    isMapMaximized = mapMaximized.value
+                                }
                             }
                             ToolbarWithProgressbar(
                                 elevation = 0.dp,

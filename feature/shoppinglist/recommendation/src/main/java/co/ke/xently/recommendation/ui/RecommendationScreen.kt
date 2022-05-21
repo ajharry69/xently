@@ -30,7 +30,6 @@ import co.ke.xently.feature.ui.*
 import co.ke.xently.recommendation.R
 import co.ke.xently.shoppinglist.ui.list.item.ShoppingListItemCard
 import co.ke.xently.source.remote.DeferredRecommendation
-import com.google.accompanist.permissions.ExperimentalPermissionsApi
 
 internal const val TEST_TAG_RECOMMENDATION_BODY_CONTAINER = "TEST_TAG_RECOMMENDATION_BODY_CONTAINER"
 
@@ -41,7 +40,6 @@ internal data class RecommendationScreenFunction(
 )
 
 @Composable
-@OptIn(ExperimentalPermissionsApi::class)
 internal fun RecommendationScreen(
     modifier: Modifier,
     args: RecommendationScreenArgs,
@@ -66,14 +64,17 @@ internal fun RecommendationScreen(
         mutableStateOf(false)
     }
 
-    val permissionState = requestLocationPermission(
-        shouldRequestPermission = shouldRequestPermission,
-        onLocationPermissionChanged = function.sharedFunction.onLocationPermissionChanged,
+    val myUpdatedLocation = rememberMyUpdatedLocation(
+        args = MyUpdatedLocationArgs(
+            shouldRequestPermission = shouldRequestPermission,
+            onLocationPermissionChanged = function.sharedFunction.onLocationPermissionChanged,
+        ),
     )
 
     RecommendationScreen(
         modifier = modifier,
         result = result,
+        myUpdatedLocation = myUpdatedLocation,
         persistedShoppingListResult = persistedShoppingListResult,
         function = function.copy(
             onDetailSubmitted = viewModel::recommend,
@@ -83,7 +84,6 @@ internal fun RecommendationScreen(
                 }
             ),
         ),
-        isLocationPermissionGranted = permissionState.allPermissionsGranted,
     )
 }
 
@@ -91,11 +91,12 @@ internal fun RecommendationScreen(
 @VisibleForTesting
 internal fun RecommendationScreen(
     modifier: Modifier,
-    isLocationPermissionGranted: Boolean,
+    myUpdatedLocation: MyUpdatedLocation,
     function: RecommendationScreenFunction,
     result: TaskResult<DeferredRecommendation?>,
     persistedShoppingListResult: TaskResult<List<ShoppingListItem>>,
 ) {
+    val (myLocation, isLocationPermissionGranted) = myUpdatedLocation
     val unPersistedShoppingList = remember {
         mutableStateListOf<String>()
     }
@@ -228,6 +229,7 @@ internal fun RecommendationScreen(
                             persist = shouldPersist,
                             cacheRecommendationsForLater = true,
                             isLocationPermissionGranted = isLocationPermissionGranted,
+                            myLocation = Coordinate(myLocation.latitude, myLocation.longitude),
                         ),
                     )
                 },

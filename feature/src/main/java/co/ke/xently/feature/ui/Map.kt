@@ -1,5 +1,7 @@
 package co.ke.xently.feature.ui
 
+import android.annotation.SuppressLint
+import android.os.Looper
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.fadeOut
@@ -11,59 +13,152 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Fullscreen
 import androidx.compose.material.icons.filled.FullscreenExit
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.mapSaver
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import co.ke.xently.feature.PermissionGranted
 import co.ke.xently.feature.R
+import com.google.android.gms.location.LocationCallback
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationResult
+import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.*
+import java.util.concurrent.TimeUnit
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 
-/*
-import android.content.SharedPreferences
-import android.content.SharedPreferences.OnSharedPreferenceChangeListener
-import androidx.compose.ui.platform.LocalContext
-import co.ke.xently.common.MY_LOCATION_LATITUDE_SHARED_PREFERENCE_KEY
-import co.ke.xently.common.MY_LOCATION_LONGITUDE_SHARED_PREFERENCE_KEY
-import co.ke.xently.source.local.di.StorageModule.provideEncryptedSharedPreference
-import com.google.android.gms.maps.model.LatLng
+private val KICC = LatLng(-1.2890932945781504, 36.8209502554869)
 
-internal const val DEFAULT_LATITUDE = -1.306635
-internal const val DEFAULT_LONGITUDE = -1.306635
+data class MyUpdatedLocation(
+    val myLocation: LatLng = KICC,
+    val isLocationPermissionGranted: Boolean,
+)
 
+/**
+ * @param maxBatchWaitTime Sets the maximum time when batched location updates are delivered.
+ * Updates may be delivered sooner than this interval.
+ * @param fastestRefreshInterval Sets the fastest rate for active location updates. This
+ * interval is exact, and your application will never receive updates more frequently than
+ * this value.
+ * @param refreshInterval Sets the desired interval for active location updates. This interval
+ * is inexact. You may not receive updates at all if no location sources are available, or you
+ * may receive them less frequently than requested. You may also receive updates more frequently
+ * than requested if other applications are requesting location at a more frequent interval.
+ * IMPORTANT NOTE: Apps running on Android 8.0 and higher devices (regardless of targetSdkVersion)
+ * may receive updates less frequently than this interval when the app is no longer in the
+ * foreground.
+ */
+data class MyUpdatedLocationArgs(
+    val myDefaultLocation: LatLng = KICC,
+    val maxBatchWaitTime: Duration = 2.minutes,
+    val refreshInterval: Duration = 60.seconds,
+    val fastestRefreshInterval: Duration = 30.seconds,
+    val shouldRequestPermission: Boolean = true,
+    val onLocationPermissionChanged: (PermissionGranted) -> Unit,
+)
+
+/**
+ * Requests and returns frequent location updates provided location permissions are granted.
+ */
+@SuppressLint("MissingPermission")
 @Composable
-fun rememberMyLocation(sharedPreference: SharedPreferences? = null): LatLng {
-    val preferences = sharedPreference ?: provideEncryptedSharedPreference(
-        LocalContext.current
+fun rememberMyUpdatedLocation(args: MyUpdatedLocationArgs): MyUpdatedLocation {
+    val permissionState = requestLocationPermission(
+        shouldRequestPermission = args.shouldRequestPermission,
+        onLocationPermissionChanged = args.onLocationPermissionChanged,
     )
 
-    fun myLocation(): LatLng {
-        val latitude =
-            preferences.getString(MY_LOCATION_LATITUDE_SHARED_PREFERENCE_KEY, null)?.toDouble()
-                ?: DEFAULT_LATITUDE
-        val longitude =
-            preferences.getString(MY_LOCATION_LONGITUDE_SHARED_PREFERENCE_KEY, null)?.toDouble()
-                ?: DEFAULT_LONGITUDE
-        return LatLng(latitude, longitude)
-    }
-
-    var coordinates by remember { mutableStateOf(myLocation()) }
-
-    val preferenceChanged = OnSharedPreferenceChangeListener { _, _ ->
-        coordinates = myLocation()
-    }
-
-    DisposableEffect(preferences) {
-        preferences.registerOnSharedPreferenceChangeListener(preferenceChanged)
-        onDispose {
-            preferences.unregisterOnSharedPreferenceChangeListener(preferenceChanged)
+    val isLocationPermissionEnabled by remember(permissionState) {
+        derivedStateOf {
+            permissionState.allPermissionsGranted
         }
     }
-    return coordinates
+
+    val myUpdatedLocationSaver = run {
+        val latitudeKey = "latitude"
+        val longitudeKey = "longitude"
+        mapSaver(
+            save = {
+                mapOf(
+                    latitudeKey to it.myLocation.latitude,
+                    longitudeKey to it.myLocation.longitude,
+                )
+            },
+            restore = {
+                MyUpdatedLocation(
+                    myLocation = LatLng(
+                        it[latitudeKey] as Double,
+                        it[longitudeKey] as Double,
+                    ),
+                    isLocationPermissionGranted = isLocationPermissionEnabled,
+                )
+            },
+        )
+    }
+
+    var myUpdatedLocation by rememberSaveable(
+        args.myDefaultLocation,
+        isLocationPermissionEnabled,
+        stateSaver = myUpdatedLocationSaver,
+    ) {
+        mutableStateOf(MyUpdatedLocation(args.myDefaultLocation, isLocationPermissionEnabled))
+    }
+
+    if (!isLocationPermissionEnabled) {
+        // Do not continue receiving location updates if required location permissions are not
+        // granted.
+        return myUpdatedLocation
+    }
+
+    val locationCallback = object : LocationCallback() {
+        override fun onLocationResult(locationResult: LocationResult) {
+            super.onLocationResult(locationResult)
+
+            val myLocation = locationResult.lastLocation.run {
+                LatLng(latitude, longitude)
+            }
+            myUpdatedLocation = myUpdatedLocation.copy(myLocation = myLocation)
+        }
+    }
+
+    val context = LocalContext.current
+    val fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(context)
+
+    DisposableEffect(
+        args.refreshInterval,
+        args.maxBatchWaitTime,
+        args.fastestRefreshInterval,
+        fusedLocationProviderClient,
+    ) {
+        val locationRequest = LocationRequest.create().apply {
+            interval = TimeUnit.SECONDS.toMillis(args.refreshInterval.inWholeSeconds)
+
+            fastestInterval =
+                TimeUnit.SECONDS.toMillis(args.fastestRefreshInterval.inWholeSeconds)
+
+            maxWaitTime = TimeUnit.MINUTES.toMillis(args.maxBatchWaitTime.inWholeMinutes)
+
+            priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+        }
+        fusedLocationProviderClient.requestLocationUpdates(
+            locationRequest,
+            locationCallback,
+            Looper.getMainLooper(),
+        )
+        onDispose {
+            fusedLocationProviderClient.removeLocationUpdates(locationCallback)
+        }
+    }
+
+    return myUpdatedLocation
 }
-*/
 
 @JvmInline
 value class MapMaximized(val value: Boolean = false)
@@ -71,40 +166,37 @@ value class MapMaximized(val value: Boolean = false)
 @Composable
 fun GoogleMapViewWithLoadingIndicator(
     modifier: Modifier,
+    zoomLevel: Float = 13f,
     isMapMaximized: Boolean = false,
     onMapClick: (LatLng) -> Unit = {},
+    myUpdatedLocationArgs: MyUpdatedLocationArgs,
     onMapMaximizedOrMinimized: ((MapMaximized) -> Unit)? = null,
-    onLocationPermissionChanged: (PermissionGranted) -> Unit,
     content: @Composable () -> Unit,
 ) {
     Box(modifier = modifier) {
-        var isMapLoaded by remember {
-            mutableStateOf(false)
-        }
-        val cameraPositionState = rememberCameraPositionState {
-            // TODO: Replace with real-time response values
-            val uthiru = LatLng(-1.268780651485453, 36.71817776897877)
-            position = CameraPosition.fromLatLngZoom(uthiru, 11f)
-        }
-        val permissionState =
-            requestLocationPermission(onLocationPermissionChanged = onLocationPermissionChanged)
+        val (myLocation, isLocationPermissionGranted) = rememberMyUpdatedLocation(args = myUpdatedLocationArgs)
 
-        val isMyLocationEnabled by remember(permissionState) {
-            derivedStateOf {
-                permissionState.allPermissionsGranted
-            }
+        val cameraPositionState = rememberCameraPositionState()
+
+        LaunchedEffect(myLocation, zoomLevel) {
+            cameraPositionState.position = CameraPosition.fromLatLngZoom(myLocation, zoomLevel)
         }
 
         val uiSettings: MapUiSettings by remember {
             mutableStateOf(MapUiSettings(compassEnabled = false))
         }
-        val mapProperties: MapProperties by remember(isMyLocationEnabled) {
+
+        val mapProperties: MapProperties by remember(isLocationPermissionGranted) {
             mutableStateOf(
                 MapProperties(
                     mapType = MapType.NORMAL,
-                    isMyLocationEnabled = isMyLocationEnabled,
+                    isMyLocationEnabled = isLocationPermissionGranted,
                 )
             )
+        }
+
+        var isMapLoaded by remember {
+            mutableStateOf(false)
         }
         GoogleMap(
             content = content,
