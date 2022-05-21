@@ -16,6 +16,7 @@ import co.ke.xently.feature.theme.XentlyTheme
 import co.ke.xently.feature.ui.MyUpdatedLocation
 import co.ke.xently.recommendation.R
 import co.ke.xently.source.remote.DeferredRecommendation
+import com.google.android.gms.maps.model.LatLng
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.*
 import org.junit.Rule
@@ -26,6 +27,8 @@ import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 
 class RecommendationScreenTest {
+    private val KICC = LatLng(-1.2890932945781504, 36.8209502554869)
+
     @get:Rule
     val composeTestRule = createAndroidComposeRule<ComponentActivity>()
 
@@ -78,7 +81,10 @@ class RecommendationScreenTest {
                     function = RecommendationScreenFunction(),
                     result = TaskResult.Success(null),
                     persistedShoppingListResult = TaskResult.Success(emptyList()),
-                    myUpdatedLocation = MyUpdatedLocation(isLocationPermissionGranted = true),
+                    myUpdatedLocation = MyUpdatedLocation(
+                        myLocation = KICC,
+                        isLocationPermissionGranted = true
+                    ),
                 )
             }
         }
@@ -106,7 +112,40 @@ class RecommendationScreenTest {
                     function = RecommendationScreenFunction(),
                     result = TaskResult.Success(null),
                     persistedShoppingListResult = TaskResult.Success(persistedShoppingList),
-                    myUpdatedLocation = MyUpdatedLocation(isLocationPermissionGranted = false),
+                    myUpdatedLocation = MyUpdatedLocation(
+                        myLocation = KICC,
+                        isLocationPermissionGranted = false
+                    ),
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithText(recommendButton).assertIsNotEnabled()
+    }
+
+    @Test
+    fun recommendButtonIsDisabledIfMyLocationIsNull() {
+        val persistedShoppingList = listOf(
+            ShoppingListItem.default().copy(isDefault = false, id = 1),
+            ShoppingListItem.default().copy(
+                isDefault = false,
+                name = "White bread by superloaf",
+                unit = "grams",
+                unitQuantity = 400f,
+                id = 2,
+            ),
+        )
+        composeTestRule.setContent {
+            XentlyTheme {
+                RecommendationScreen(
+                    modifier = Modifier.fillMaxSize(),
+                    function = RecommendationScreenFunction(),
+                    result = TaskResult.Success(null),
+                    persistedShoppingListResult = TaskResult.Success(persistedShoppingList),
+                    myUpdatedLocation = MyUpdatedLocation(
+                        myLocation = null,
+                        isLocationPermissionGranted = true,
+                    ),
                 )
             }
         }
@@ -123,7 +162,10 @@ class RecommendationScreenTest {
                     function = RecommendationScreenFunction(),
                     result = TaskResult.Success(null),
                     persistedShoppingListResult = TaskResult.Success(emptyList()),
-                    myUpdatedLocation = MyUpdatedLocation(isLocationPermissionGranted = false),
+                    myUpdatedLocation = MyUpdatedLocation(
+                        myLocation = KICC,
+                        isLocationPermissionGranted = false
+                    ),
                 )
             }
         }
@@ -151,7 +193,10 @@ class RecommendationScreenTest {
                     ),
                     result = TaskResult.Success(null),
                     persistedShoppingListResult = TaskResult.Success(emptyList()),
-                    myUpdatedLocation = MyUpdatedLocation(isLocationPermissionGranted = false),
+                    myUpdatedLocation = MyUpdatedLocation(
+                        myLocation = KICC,
+                        isLocationPermissionGranted = false
+                    ),
                 )
             }
         }
@@ -175,7 +220,10 @@ class RecommendationScreenTest {
                     function = RecommendationScreenFunction(),
                     result = TaskResult.Success(null),
                     persistedShoppingListResult = TaskResult.Success(emptyList()),
-                    myUpdatedLocation = MyUpdatedLocation(isLocationPermissionGranted = true),
+                    myUpdatedLocation = MyUpdatedLocation(
+                        myLocation = KICC,
+                        isLocationPermissionGranted = true
+                    ),
                 )
             }
         }
@@ -192,7 +240,10 @@ class RecommendationScreenTest {
                     function = RecommendationScreenFunction(),
                     result = TaskResult.Loading,
                     persistedShoppingListResult = TaskResult.Success(emptyList()),
-                    myUpdatedLocation = MyUpdatedLocation(isLocationPermissionGranted = true),
+                    myUpdatedLocation = MyUpdatedLocation(
+                        myLocation = KICC,
+                        isLocationPermissionGranted = true
+                    ),
                 )
             }
         }
@@ -209,7 +260,10 @@ class RecommendationScreenTest {
                     function = RecommendationScreenFunction(),
                     result = TaskResult.Success(null),
                     persistedShoppingListResult = TaskResult.Loading,
-                    myUpdatedLocation = MyUpdatedLocation(isLocationPermissionGranted = true),
+                    myUpdatedLocation = MyUpdatedLocation(
+                        myLocation = KICC,
+                        isLocationPermissionGranted = true
+                    ),
                 )
             }
         }
@@ -226,7 +280,10 @@ class RecommendationScreenTest {
                     function = RecommendationScreenFunction(),
                     result = TaskResult.Loading,
                     persistedShoppingListResult = TaskResult.Success(emptyList()),
-                    myUpdatedLocation = MyUpdatedLocation(isLocationPermissionGranted = true),
+                    myUpdatedLocation = MyUpdatedLocation(
+                        myLocation = KICC,
+                        isLocationPermissionGranted = true
+                    ),
                 )
             }
         }
@@ -246,7 +303,10 @@ class RecommendationScreenTest {
                     function = RecommendationScreenFunction(),
                     result = TaskResult.Success(null),
                     persistedShoppingListResult = TaskResult.Loading,
-                    myUpdatedLocation = MyUpdatedLocation(isLocationPermissionGranted = true),
+                    myUpdatedLocation = MyUpdatedLocation(
+                        myLocation = KICC,
+                        isLocationPermissionGranted = true
+                    ),
                 )
             }
         }
@@ -266,7 +326,10 @@ class RecommendationScreenTest {
                     function = RecommendationScreenFunction(),
                     result = TaskResult.Success(null),
                     persistedShoppingListResult = TaskResult.Success(listOf(ShoppingListItem.default())),
-                    myUpdatedLocation = MyUpdatedLocation(isLocationPermissionGranted = true),
+                    myUpdatedLocation = MyUpdatedLocation(
+                        myLocation = KICC,
+                        isLocationPermissionGranted = true
+                    ),
                 )
             }
         }
@@ -284,7 +347,10 @@ class RecommendationScreenTest {
                     function = RecommendationScreenFunction(),
                     result = TaskResult.Success(null),
                     persistedShoppingListResult = TaskResult.Error("Sorry, something went wrong."),
-                    myUpdatedLocation = MyUpdatedLocation(isLocationPermissionGranted = true),
+                    myUpdatedLocation = MyUpdatedLocation(
+                        myLocation = KICC,
+                        isLocationPermissionGranted = true
+                    ),
                 )
             }
         }
@@ -302,7 +368,10 @@ class RecommendationScreenTest {
                     function = RecommendationScreenFunction(),
                     result = TaskResult.Error("Location access is required."),
                     persistedShoppingListResult = TaskResult.Success(emptyList()),
-                    myUpdatedLocation = MyUpdatedLocation(isLocationPermissionGranted = true),
+                    myUpdatedLocation = MyUpdatedLocation(
+                        myLocation = KICC,
+                        isLocationPermissionGranted = true
+                    ),
                 )
             }
         }
@@ -321,7 +390,10 @@ class RecommendationScreenTest {
                     function = RecommendationScreenFunction(onSuccess = onSuccessMock),
                     result = TaskResult.Success(DeferredRecommendation(id = "recommendation-lookup-key")),
                     persistedShoppingListResult = TaskResult.Success(emptyList()),
-                    myUpdatedLocation = MyUpdatedLocation(isLocationPermissionGranted = true),
+                    myUpdatedLocation = MyUpdatedLocation(
+                        myLocation = KICC,
+                        isLocationPermissionGranted = true
+                    ),
                 )
             }
         }
@@ -354,7 +426,10 @@ class RecommendationScreenTest {
                     function = RecommendationScreenFunction(onSuccess = onSuccessMock),
                     result = TaskResult.Success(DeferredRecommendation(id = "recommendation-lookup-key")),
                     persistedShoppingListResult = TaskResult.Success(persistedShoppingList),
-                    myUpdatedLocation = MyUpdatedLocation(isLocationPermissionGranted = true),
+                    myUpdatedLocation = MyUpdatedLocation(
+                        myLocation = KICC,
+                        isLocationPermissionGranted = true
+                    ),
                 )
             }
         }
@@ -376,7 +451,10 @@ class RecommendationScreenTest {
                     function = RecommendationScreenFunction(),
                     result = TaskResult.Success(null),
                     persistedShoppingListResult = TaskResult.Success(emptyList()),
-                    myUpdatedLocation = MyUpdatedLocation(isLocationPermissionGranted = true),
+                    myUpdatedLocation = MyUpdatedLocation(
+                        myLocation = KICC,
+                        isLocationPermissionGranted = true
+                    ),
                 )
             }
         }
@@ -394,7 +472,10 @@ class RecommendationScreenTest {
                     function = RecommendationScreenFunction(),
                     result = TaskResult.Success(null),
                     persistedShoppingListResult = TaskResult.Success(emptyList()),
-                    myUpdatedLocation = MyUpdatedLocation(isLocationPermissionGranted = true),
+                    myUpdatedLocation = MyUpdatedLocation(
+                        myLocation = KICC,
+                        isLocationPermissionGranted = true
+                    ),
                 )
             }
         }
@@ -411,7 +492,10 @@ class RecommendationScreenTest {
                     function = RecommendationScreenFunction(),
                     result = TaskResult.Success(null),
                     persistedShoppingListResult = TaskResult.Success(emptyList()),
-                    myUpdatedLocation = MyUpdatedLocation(isLocationPermissionGranted = true),
+                    myUpdatedLocation = MyUpdatedLocation(
+                        myLocation = KICC,
+                        isLocationPermissionGranted = true
+                    ),
                 )
             }
         }
@@ -430,7 +514,10 @@ class RecommendationScreenTest {
                     function = RecommendationScreenFunction(),
                     result = TaskResult.Success(null),
                     persistedShoppingListResult = TaskResult.Success(emptyList()),
-                    myUpdatedLocation = MyUpdatedLocation(isLocationPermissionGranted = true),
+                    myUpdatedLocation = MyUpdatedLocation(
+                        myLocation = KICC,
+                        isLocationPermissionGranted = true
+                    ),
                 )
             }
         }
@@ -453,7 +540,10 @@ class RecommendationScreenTest {
                     ),
                     result = TaskResult.Success(null),
                     persistedShoppingListResult = TaskResult.Success(emptyList()),
-                    myUpdatedLocation = MyUpdatedLocation(isLocationPermissionGranted = true),
+                    myUpdatedLocation = MyUpdatedLocation(
+                        myLocation = KICC,
+                        isLocationPermissionGranted = true
+                    ),
                 )
             }
         }
@@ -472,7 +562,10 @@ class RecommendationScreenTest {
                     function = RecommendationScreenFunction(),
                     result = TaskResult.Success(null),
                     persistedShoppingListResult = TaskResult.Success(emptyList()),
-                    myUpdatedLocation = MyUpdatedLocation(isLocationPermissionGranted = true),
+                    myUpdatedLocation = MyUpdatedLocation(
+                        myLocation = KICC,
+                        isLocationPermissionGranted = true
+                    ),
                 )
             }
         }
@@ -490,7 +583,10 @@ class RecommendationScreenTest {
                     function = RecommendationScreenFunction(),
                     result = TaskResult.Success(null),
                     persistedShoppingListResult = TaskResult.Success(emptyList()),
-                    myUpdatedLocation = MyUpdatedLocation(isLocationPermissionGranted = true),
+                    myUpdatedLocation = MyUpdatedLocation(
+                        myLocation = KICC,
+                        isLocationPermissionGranted = true
+                    ),
                 )
             }
         }
@@ -508,7 +604,10 @@ class RecommendationScreenTest {
                     function = RecommendationScreenFunction(),
                     result = TaskResult.Success(null),
                     persistedShoppingListResult = TaskResult.Success(emptyList()),
-                    myUpdatedLocation = MyUpdatedLocation(isLocationPermissionGranted = true),
+                    myUpdatedLocation = MyUpdatedLocation(
+                        myLocation = KICC,
+                        isLocationPermissionGranted = true
+                    ),
                 )
             }
         }
@@ -532,7 +631,10 @@ class RecommendationScreenTest {
                     ),
                     result = TaskResult.Success(null),
                     persistedShoppingListResult = TaskResult.Success(emptyList()),
-                    myUpdatedLocation = MyUpdatedLocation(isLocationPermissionGranted = true),
+                    myUpdatedLocation = MyUpdatedLocation(
+                        myLocation = KICC,
+                        isLocationPermissionGranted = true
+                    ),
                 )
             }
         }
@@ -554,7 +656,10 @@ class RecommendationScreenTest {
                     ),
                     result = TaskResult.Success(null),
                     persistedShoppingListResult = TaskResult.Success(emptyList()),
-                    myUpdatedLocation = MyUpdatedLocation(isLocationPermissionGranted = true),
+                    myUpdatedLocation = MyUpdatedLocation(
+                        myLocation = KICC,
+                        isLocationPermissionGranted = true
+                    ),
                 )
             }
         }
@@ -581,7 +686,10 @@ class RecommendationScreenTest {
                     ),
                     result = TaskResult.Success(null),
                     persistedShoppingListResult = TaskResult.Success(emptyList()),
-                    myUpdatedLocation = MyUpdatedLocation(isLocationPermissionGranted = true),
+                    myUpdatedLocation = MyUpdatedLocation(
+                        myLocation = KICC,
+                        isLocationPermissionGranted = true
+                    ),
                 )
             }
         }
@@ -608,7 +716,10 @@ class RecommendationScreenTest {
                     function = RecommendationScreenFunction(),
                     result = TaskResult.Success(null),
                     persistedShoppingListResult = TaskResult.Success(emptyList()),
-                    myUpdatedLocation = MyUpdatedLocation(isLocationPermissionGranted = true),
+                    myUpdatedLocation = MyUpdatedLocation(
+                        myLocation = KICC,
+                        isLocationPermissionGranted = true
+                    ),
                 )
             }
         }
@@ -626,7 +737,10 @@ class RecommendationScreenTest {
                     function = RecommendationScreenFunction(),
                     result = TaskResult.Success(null),
                     persistedShoppingListResult = TaskResult.Success(emptyList()),
-                    myUpdatedLocation = MyUpdatedLocation(isLocationPermissionGranted = true),
+                    myUpdatedLocation = MyUpdatedLocation(
+                        myLocation = KICC,
+                        isLocationPermissionGranted = true
+                    ),
                 )
             }
         }
@@ -645,7 +759,10 @@ class RecommendationScreenTest {
                     function = RecommendationScreenFunction(),
                     result = TaskResult.Success(null),
                     persistedShoppingListResult = TaskResult.Success(emptyList()),
-                    myUpdatedLocation = MyUpdatedLocation(isLocationPermissionGranted = true),
+                    myUpdatedLocation = MyUpdatedLocation(
+                        myLocation = KICC,
+                        isLocationPermissionGranted = true
+                    ),
                 )
             }
         }
@@ -665,7 +782,10 @@ class RecommendationScreenTest {
                     persistedShoppingListResult = TaskResult.Success(
                         listOf(ShoppingListItem.default().copy(isDefault = false))
                     ),
-                    myUpdatedLocation = MyUpdatedLocation(isLocationPermissionGranted = true),
+                    myUpdatedLocation = MyUpdatedLocation(
+                        myLocation = KICC,
+                        isLocationPermissionGranted = true
+                    ),
                 )
             }
         }
@@ -686,7 +806,10 @@ class RecommendationScreenTest {
                     ),
                     result = TaskResult.Success(null),
                     persistedShoppingListResult = TaskResult.Success(emptyList()),
-                    myUpdatedLocation = MyUpdatedLocation(isLocationPermissionGranted = true),
+                    myUpdatedLocation = MyUpdatedLocation(
+                        myLocation = KICC,
+                        isLocationPermissionGranted = true
+                    ),
                 )
             }
         }
@@ -736,7 +859,10 @@ class RecommendationScreenTest {
                     ),
                     result = TaskResult.Success(null),
                     persistedShoppingListResult = TaskResult.Success(persistedShoppingList),
-                    myUpdatedLocation = MyUpdatedLocation(isLocationPermissionGranted = true),
+                    myUpdatedLocation = MyUpdatedLocation(
+                        myLocation = KICC,
+                        isLocationPermissionGranted = true
+                    ),
                 )
             }
         }
@@ -766,7 +892,10 @@ class RecommendationScreenTest {
                     function = RecommendationScreenFunction(),
                     result = TaskResult.Success(null),
                     persistedShoppingListResult = TaskResult.Success(emptyList()),
-                    myUpdatedLocation = MyUpdatedLocation(isLocationPermissionGranted = true),
+                    myUpdatedLocation = MyUpdatedLocation(
+                        myLocation = KICC,
+                        isLocationPermissionGranted = true
+                    ),
                 )
             }
         }
@@ -793,7 +922,10 @@ class RecommendationScreenTest {
                     function = RecommendationScreenFunction(),
                     result = TaskResult.Success(null),
                     persistedShoppingListResult = TaskResult.Success(persistedShoppingList),
-                    myUpdatedLocation = MyUpdatedLocation(isLocationPermissionGranted = true),
+                    myUpdatedLocation = MyUpdatedLocation(
+                        myLocation = KICC,
+                        isLocationPermissionGranted = true
+                    ),
                 )
             }
         }
@@ -813,7 +945,10 @@ class RecommendationScreenTest {
                     function = RecommendationScreenFunction(),
                     result = TaskResult.Success(null),
                     persistedShoppingListResult = TaskResult.Success(persistedShoppingList),
-                    myUpdatedLocation = MyUpdatedLocation(isLocationPermissionGranted = true),
+                    myUpdatedLocation = MyUpdatedLocation(
+                        myLocation = KICC,
+                        isLocationPermissionGranted = true
+                    ),
                 )
             }
         }
@@ -833,7 +968,10 @@ class RecommendationScreenTest {
                     function = RecommendationScreenFunction(),
                     result = TaskResult.Success(null),
                     persistedShoppingListResult = TaskResult.Success(persistedShoppingList),
-                    myUpdatedLocation = MyUpdatedLocation(isLocationPermissionGranted = true),
+                    myUpdatedLocation = MyUpdatedLocation(
+                        myLocation = KICC,
+                        isLocationPermissionGranted = true
+                    ),
                 )
             }
         }
@@ -855,7 +993,10 @@ class RecommendationScreenTest {
                     function = RecommendationScreenFunction(),
                     result = TaskResult.Success(null),
                     persistedShoppingListResult = TaskResult.Success(persistedShoppingList),
-                    myUpdatedLocation = MyUpdatedLocation(isLocationPermissionGranted = true),
+                    myUpdatedLocation = MyUpdatedLocation(
+                        myLocation = KICC,
+                        isLocationPermissionGranted = true
+                    ),
                 )
             }
         }
@@ -878,7 +1019,10 @@ class RecommendationScreenTest {
                     function = RecommendationScreenFunction(),
                     result = TaskResult.Success(null),
                     persistedShoppingListResult = TaskResult.Success(emptyList()),
-                    myUpdatedLocation = MyUpdatedLocation(isLocationPermissionGranted = true),
+                    myUpdatedLocation = MyUpdatedLocation(
+                        myLocation = KICC,
+                        isLocationPermissionGranted = true
+                    ),
                 )
             }
         }
@@ -916,7 +1060,10 @@ class RecommendationScreenTest {
                     ),
                     result = TaskResult.Success(null),
                     persistedShoppingListResult = TaskResult.Success(persistedShoppingList),
-                    myUpdatedLocation = MyUpdatedLocation(isLocationPermissionGranted = true),
+                    myUpdatedLocation = MyUpdatedLocation(
+                        myLocation = KICC,
+                        isLocationPermissionGranted = true
+                    ),
                 )
             }
         }

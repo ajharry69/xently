@@ -232,13 +232,14 @@ internal fun RecommendationScreen(
                 Text(text = description)
             }
             val shouldEnableRecommendButton by remember(
+                myLocation,
                 isTaskLoading,
                 isLocationPermissionGranted,
                 isPersistedShoppingListNotEmpty,
                 isUnPersistedShoppingListNotEmpty,
             ) {
                 derivedStateOf {
-                    isLocationPermissionGranted && !isTaskLoading &&
+                    isLocationPermissionGranted && myLocation != null && !isTaskLoading &&
                             (isUnPersistedShoppingListNotEmpty || isPersistedShoppingListNotEmpty)
                 }
             }
