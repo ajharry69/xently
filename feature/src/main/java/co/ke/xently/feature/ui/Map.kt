@@ -34,10 +34,8 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
-private val KICC = LatLng(-1.2890932945781504, 36.8209502554869)
-
 data class MyUpdatedLocation(
-    val myLocation: LatLng = KICC,
+    val myLocation: LatLng? = null,
     val isLocationPermissionGranted: Boolean,
 )
 
@@ -56,7 +54,7 @@ data class MyUpdatedLocation(
  * foreground.
  */
 data class MyUpdatedLocationArgs(
-    val myDefaultLocation: LatLng = KICC,
+    val myDefaultLocation: LatLng? = null,
     val maxBatchWaitTime: Duration = 2.minutes,
     val refreshInterval: Duration = 60.seconds,
     val fastestRefreshInterval: Duration = 30.seconds,
@@ -86,17 +84,25 @@ fun rememberMyUpdatedLocation(args: MyUpdatedLocationArgs): MyUpdatedLocation {
         val longitudeKey = "longitude"
         mapSaver(
             save = {
-                mapOf(
-                    latitudeKey to it.myLocation.latitude,
-                    longitudeKey to it.myLocation.longitude,
-                )
+                if (it.myLocation == null) {
+                    emptyMap<String, Double>()
+                } else {
+                    mapOf(
+                        latitudeKey to it.myLocation.latitude,
+                        longitudeKey to it.myLocation.longitude,
+                    )
+                }
             },
             restore = {
                 MyUpdatedLocation(
-                    myLocation = LatLng(
-                        it[latitudeKey] as Double,
-                        it[longitudeKey] as Double,
-                    ),
+                    myLocation = if (it.isEmpty()) {
+                        null
+                    } else {
+                        LatLng(
+                            it[latitudeKey] as Double,
+                            it[longitudeKey] as Double,
+                        )
+                    },
                     isLocationPermissionGranted = isLocationPermissionEnabled,
                 )
             },
@@ -179,7 +185,9 @@ fun GoogleMapViewWithLoadingIndicator(
         val cameraPositionState = rememberCameraPositionState()
 
         LaunchedEffect(myLocation, zoomLevel) {
-            cameraPositionState.position = CameraPosition.fromLatLngZoom(myLocation, zoomLevel)
+            if (myLocation != null) {
+                cameraPositionState.position = CameraPosition.fromLatLngZoom(myLocation, zoomLevel)
+            }
         }
 
         val uiSettings: MapUiSettings by remember {
