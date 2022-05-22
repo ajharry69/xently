@@ -40,6 +40,7 @@ import java.util.*
 internal data class RecommendationListScreenFunction(
     internal val onRetryClicked: (Throwable) -> Unit = {},
     internal val onItemClicked: (ShoppingListItem) -> Unit = {},
+    internal val onDirectionClick: (Recommendation) -> Unit = {},
     internal val sharedFunction: SharedFunction = SharedFunction(),
     internal val function: RecommendationCardItemFunction = RecommendationCardItemFunction(),
 )
@@ -310,9 +311,7 @@ internal fun RecommendationListScreen(
                                     menuItems = listOf(
                                         RecommendationCardItemMenuItem(
                                             label = R.string.fr_directions,
-                                            onClick = {
-
-                                            },
+                                            onClick = function.onDirectionClick,
                                         ),
                                         RecommendationCardItemMenuItem(
                                             label = R.string.fr_details,

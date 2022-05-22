@@ -7,6 +7,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import androidx.navigation.navigation
+import co.ke.xently.data.Recommendation
 import co.ke.xently.feature.SharedFunction
 import co.ke.xently.feature.utils.Routes
 import co.ke.xently.feature.utils.buildRoute
@@ -17,13 +18,13 @@ import co.ke.xently.recommendation.ui.list.RecommendationListScreen
 import co.ke.xently.recommendation.ui.list.RecommendationListScreenArgs
 import co.ke.xently.recommendation.ui.list.RecommendationListScreenFunction
 import co.ke.xently.recommendation.ui.list.item.RecommendationCardItemFunction
-import co.ke.xently.recommendation.ui.list.item.RecommendationCardItemMenuItem
 import co.ke.xently.shoppinglist.GroupBy
 import co.ke.xently.shoppinglist.repository.ShoppingListGroup
 
 fun NavGraphBuilder.recommendationGraph(
     controller: NavHostController,
     sharedFunction: SharedFunction,
+    onDirectionClick: (Recommendation) -> Unit,
 ) {
     navigation(
         route = Routes.ShoppingList.Recommendation.toString(),
@@ -83,7 +84,10 @@ fun NavGraphBuilder.recommendationGraph(
         ) {
             RecommendationListScreen(
                 function = RecommendationListScreenFunction(
-                    onItemClicked = {},
+                    onItemClicked = {
+                        // TODO: ...
+                    },
+                    onDirectionClick = onDirectionClick,
                     sharedFunction = sharedFunction,
                     function = RecommendationCardItemFunction(
                         onItemClicked = {

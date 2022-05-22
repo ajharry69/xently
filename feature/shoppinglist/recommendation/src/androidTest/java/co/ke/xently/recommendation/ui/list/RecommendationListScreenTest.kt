@@ -12,8 +12,11 @@ import co.ke.xently.feature.SharedFunction
 import co.ke.xently.feature.theme.XentlyTheme
 import co.ke.xently.feature.ui.TEST_TAG_CIRCULAR_PROGRESS_BAR
 import co.ke.xently.recommendation.R
+import org.hamcrest.CoreMatchers.equalTo
+import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Rule
 import org.junit.Test
+import org.mockito.kotlin.argumentCaptor
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
@@ -49,6 +52,65 @@ class RecommendationListScreenTest {
         composeTestRule.onNodeWithContentDescription(activity.getString(R.string.move_back))
             .performClick()
         verify(onNavigationClickMock, times(1)).invoke()
+    }
+
+    @Test
+    fun directionsClick() {
+        val recommendations = listOf(
+            Recommendation(
+                shop = Shop.default().copy(isDefault = false, id = 1),
+                hit = Recommendation.Hit(
+                    items = listOf(
+                        Recommendation.Hit.Item(
+                            found = "Bread",
+                            requested = "Bread",
+                            unitPrice = 50f,
+                        ),
+                        Recommendation.Hit.Item(
+                            found = "Milk",
+                            requested = "Milk",
+                            unitPrice = 50f,
+                        ),
+                    ),
+                    count = 2,
+                ),
+                miss = Recommendation.Miss(
+                    items = listOf("Sugar"),
+                    count = 1,
+                ),
+                expenditure = Recommendation.Expenditure(
+                    unit = 100f,
+                    total = 100f,
+                ),
+            ),
+        )
+        val onDirectionsClickMock: (Recommendation) -> Unit = mock()
+        composeTestRule.setContent {
+            XentlyTheme {
+                RecommendationListScreen(
+                    modifier = Modifier.fillMaxSize(),
+                    numberOfItems = 1,
+                    showMap = false,
+                    result = TaskResult.Success(recommendations),
+                    function = RecommendationListScreenFunction(onDirectionClick = onDirectionsClickMock),
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithTag(
+            activity.getString(
+                R.string.fr_item_menu_content_description,
+                recommendations[0].shop.descriptiveName,
+            )
+        ).performClick()
+
+        composeTestRule.onNodeWithText(activity.getString(R.string.fr_directions))
+            .performClick()
+
+        with(argumentCaptor<Recommendation>()) {
+            verify(onDirectionsClickMock, times(1)).invoke(capture())
+            assertThat(firstValue, equalTo(recommendations[0]))
+        }
     }
 
     @Test
