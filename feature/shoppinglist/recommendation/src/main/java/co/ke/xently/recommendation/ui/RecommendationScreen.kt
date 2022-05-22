@@ -4,6 +4,7 @@ import androidx.annotation.VisibleForTesting
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
@@ -16,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
@@ -231,19 +233,32 @@ internal fun RecommendationScreen(
                     }
                 },
             )
-            Row(modifier = VerticalLayoutModifier, verticalAlignment = Alignment.CenterVertically) {
-                val description = stringResource(R.string.fr_filter_should_persist_shopping_lists)
+            val checkBoxDescription =
+                stringResource(R.string.fr_filter_should_persist_shopping_lists)
+            val onCheckedChange: (Boolean) -> Unit = {
+                shouldPersist = it
+                focusManager.clearFocus()
+            }
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = VerticalLayoutModifier
+                    .toggleable(
+                        role = Role.Checkbox,
+                        value = shouldPersist,
+                        onValueChange = onCheckedChange,
+                    )
+                    .semantics {
+                        testTag = checkBoxDescription
+                    },
+            ) {
                 Checkbox(
                     checked = shouldPersist,
-                    onCheckedChange = {
-                        shouldPersist = it
-                        focusManager.clearFocus()
-                    },
+                    onCheckedChange = onCheckedChange,
                     modifier = Modifier.semantics {
-                        contentDescription = description
+                        contentDescription = checkBoxDescription
                     },
                 )
-                Text(text = description)
+                Text(text = checkBoxDescription)
             }
             val shouldEnableRecommendButton by remember(
                 isTaskLoading,
