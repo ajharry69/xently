@@ -32,8 +32,9 @@ import co.ke.xently.feature.theme.XentlyTheme
 import co.ke.xently.feature.ui.*
 import co.ke.xently.feature.utils.MAP_HEIGHT
 import co.ke.xently.shops.R
-import com.google.android.libraries.maps.model.LatLng
-import com.google.android.libraries.maps.model.MarkerOptions
+import com.google.android.gms.maps.model.LatLng
+import com.google.maps.android.compose.Marker
+import com.google.maps.android.compose.rememberMarkerState
 
 const val TEST_TAG_SHOP_DETAIL_BODY_CONTAINER = "TEST_TAG_SHOP_DETAIL_BODY_CONTAINER"
 
@@ -95,7 +96,7 @@ internal fun ShopDetailScreen(
     result: TaskResult<Shop?>,
     addResult: TaskResult<Shop?>,
     permitReAddition: Boolean = false,
-    isTestMode: Boolean = false,
+    hideMap: Boolean = false,
     args: ShopDetailScreenArgs = ShopDetailScreenArgs(),
     function: ShopDetailScreenFunction = ShopDetailScreenFunction(),
 ) {
@@ -148,30 +149,32 @@ internal fun ShopDetailScreen(
                     .height(IntrinsicSize.Min)
                     .fillMaxWidth()
             ) {
-                if (!isTestMode) {
-                    val markerPositions = if (coordinate != null) {
-                        val marker = MarkerOptions().apply {
-                            position(LatLng(coordinate!!.lat, coordinate!!.lon))
-                        }
-                        listOf(marker)
-                    } else {
-                        emptyList()
-                    }
-                    GoogleMapView(
+                if (!hideMap) {
+                    GoogleMapViewWithLoadingIndicator(
                         modifier = Modifier
                             .height(MAP_HEIGHT)
                             .fillMaxWidth(),
-                        markerPositions = markerPositions,
-                        onLocationPermissionChanged = function.sharedFunction.onLocationPermissionChanged,
-                    ) {
-                        setOnMapClickListener {
+                        onMapClick = {
                             coordinate = Coordinate(it.latitude, it.longitude)
                             shop = shop.copy(coordinate = coordinate)
-                        }
-                        setOnMarkerClickListener {
-                            coordinate = null
-                            shop = shop.copy(coordinate = coordinate)
-                            true
+                        },
+                        myUpdatedLocationArgs = MyUpdatedLocationArgs(
+                            shouldRequestPermission = false,
+                            onLocationPermissionChanged = function.sharedFunction.onLocationPermissionChanged,
+                        ),
+                    ) {
+                        if (coordinate != null) {
+                            val markerState = rememberMarkerState(
+                                position = LatLng(coordinate!!.lat, coordinate!!.lon),
+                            )
+                            Marker(
+                                state = markerState,
+                                onClick = {
+                                    coordinate = null
+                                    shop = shop.copy(coordinate = coordinate)
+                                    true
+                                },
+                            )
                         }
                     }
                 }

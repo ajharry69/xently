@@ -17,4 +17,5 @@
     <string name="fr_detail_hit_heading">Items found</string>
     <string name="fr_detail_miss_heading">Items not found</string>
     <string name="fr_shop_details">Shop details</string>
+    <string name="fr_initiating_location_tracking">Please wait as we capture your location…</string>
 </resources>

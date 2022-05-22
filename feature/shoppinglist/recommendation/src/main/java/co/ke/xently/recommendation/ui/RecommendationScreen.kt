@@ -10,6 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -24,12 +25,12 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.hilt.navigation.compose.hiltViewModel
 import co.ke.xently.common.KENYA
 import co.ke.xently.data.*
+import co.ke.xently.feature.PermissionGranted
 import co.ke.xently.feature.SharedFunction
 import co.ke.xently.feature.ui.*
 import co.ke.xently.recommendation.R
 import co.ke.xently.shoppinglist.ui.list.item.ShoppingListItemCard
 import co.ke.xently.source.remote.DeferredRecommendation
-import com.google.accompanist.permissions.ExperimentalPermissionsApi
 
 internal const val TEST_TAG_RECOMMENDATION_BODY_CONTAINER = "TEST_TAG_RECOMMENDATION_BODY_CONTAINER"
 
@@ -40,7 +41,6 @@ internal data class RecommendationScreenFunction(
 )
 
 @Composable
-@OptIn(ExperimentalPermissionsApi::class)
 internal fun RecommendationScreen(
     modifier: Modifier,
     args: RecommendationScreenArgs,
@@ -65,14 +65,17 @@ internal fun RecommendationScreen(
         mutableStateOf(false)
     }
 
-    val permissionState = requestLocationPermission(
-        shouldRequestPermission = shouldRequestPermission,
-        onLocationPermissionChanged = function.sharedFunction.onLocationPermissionChanged,
+    val myUpdatedLocation = rememberMyUpdatedLocation(
+        args = MyUpdatedLocationArgs(
+            shouldRequestPermission = shouldRequestPermission,
+            onLocationPermissionChanged = function.sharedFunction.onLocationPermissionChanged,
+        ),
     )
 
     RecommendationScreen(
         modifier = modifier,
         result = result,
+        myUpdatedLocation = myUpdatedLocation,
         persistedShoppingListResult = persistedShoppingListResult,
         function = function.copy(
             onDetailSubmitted = viewModel::recommend,
@@ -82,7 +85,6 @@ internal fun RecommendationScreen(
                 }
             ),
         ),
-        isLocationPermissionGranted = permissionState.allPermissionsGranted,
     )
 }
 
@@ -90,7 +92,7 @@ internal fun RecommendationScreen(
 @VisibleForTesting
 internal fun RecommendationScreen(
     modifier: Modifier,
-    isLocationPermissionGranted: Boolean,
+    myUpdatedLocation: MyUpdatedLocation,
     function: RecommendationScreenFunction,
     result: TaskResult<DeferredRecommendation?>,
     persistedShoppingListResult: TaskResult<List<ShoppingListItem>>,
@@ -101,12 +103,27 @@ internal fun RecommendationScreen(
     val persistedShoppingList = remember(persistedShoppingListResult) {
         mutableStateListOf(*(persistedShoppingListResult.getOrNull() ?: emptyList()).toTypedArray())
     }
-    var shouldPersist by remember {
+    var shouldPersist by rememberSaveable {
         mutableStateOf(true)
     }
 
     val scaffoldState = rememberScaffoldState()
 
+    val (myLocation, isLocationPermissionGranted) = myUpdatedLocation
+
+    val isMyLocationNull by remember(myLocation) {
+        derivedStateOf {
+            myLocation == null
+        }
+    }
+    val shouldShowRequestingMyUpdatedLocationMessage by remember(
+        isMyLocationNull,
+        isLocationPermissionGranted,
+    ) {
+        derivedStateOf {
+            isLocationPermissionGranted && isMyLocationNull
+        }
+    }
     if (!isLocationPermissionGranted) {
         val message = stringResource(R.string.location_permission_rationale_minified)
         val actionLabel = stringResource(R.string.grant_button_label)
@@ -119,7 +136,7 @@ internal fun RecommendationScreen(
             when (snackbarResult) {
                 SnackbarResult.Dismissed -> TODO()
                 SnackbarResult.ActionPerformed -> {
-                    function.sharedFunction.onLocationPermissionChanged.invoke(false)
+                    function.sharedFunction.onLocationPermissionChanged(PermissionGranted(false))
                 }
             }
         }
@@ -143,21 +160,34 @@ internal fun RecommendationScreen(
         }
     }
 
-    val toolbarTitle = stringResource(R.string.fr_filter_toolbar_title)
-    val isTaskLoading =
-        result is TaskResult.Loading || persistedShoppingListResult is TaskResult.Loading
+    val isTaskLoading by remember(result, persistedShoppingListResult) {
+        derivedStateOf {
+            result is TaskResult.Loading || persistedShoppingListResult is TaskResult.Loading
+        }
+    }
+    val isUnPersistedShoppingListNotEmpty by remember(unPersistedShoppingList) {
+        derivedStateOf {
+            unPersistedShoppingList.isNotEmpty()
+        }
+    }
+    val isPersistedShoppingListNotEmpty by remember(persistedShoppingList) {
+        derivedStateOf {
+            persistedShoppingList.isNotEmpty()
+        }
+    }
+
     Scaffold(
         scaffoldState = scaffoldState,
         topBar = {
             ToolbarWithProgressbar(
-                title = toolbarTitle,
                 showProgress = isTaskLoading,
+                title = stringResource(R.string.fr_filter_toolbar_title),
                 onNavigationIconClicked = function.sharedFunction.onNavigationIconClicked,
                 subTitle = LocalContext.current.resources.getQuantityString(
                     R.plurals.fr_filter_toolbar_subtitle,
                     unPersistedShoppingList.size + persistedShoppingList.size,
                     unPersistedShoppingList.size + persistedShoppingList.size,
-                )
+                ),
             )
         },
     ) { paddingValues ->
@@ -189,7 +219,7 @@ internal fun RecommendationScreen(
                         enabled = productName.text.isNotBlank(),
                         modifier = Modifier.semantics { testTag = description },
                         onClick = {
-                            if (unPersistedShoppingList.isNotEmpty()) {
+                            if (isUnPersistedShoppingListNotEmpty) {
                                 unPersistedShoppingList.add(0, productName.text.trim())
                             } else {
                                 unPersistedShoppingList.add(productName.text.trim())
@@ -215,9 +245,21 @@ internal fun RecommendationScreen(
                 )
                 Text(text = description)
             }
+            val shouldEnableRecommendButton by remember(
+                isTaskLoading,
+                isMyLocationNull,
+                isLocationPermissionGranted,
+                isPersistedShoppingListNotEmpty,
+                isUnPersistedShoppingListNotEmpty,
+            ) {
+                derivedStateOf {
+                    isLocationPermissionGranted && !isMyLocationNull && !isTaskLoading &&
+                            (isUnPersistedShoppingListNotEmpty || isPersistedShoppingListNotEmpty)
+                }
+            }
             Button(
                 modifier = VerticalLayoutModifier,
-                enabled = isLocationPermissionGranted && !isTaskLoading && (unPersistedShoppingList.isNotEmpty() || persistedShoppingList.isNotEmpty()),
+                enabled = shouldEnableRecommendButton,
                 onClick = {
                     focusManager.clearFocus()
                     val items = unPersistedShoppingList + persistedShoppingList
@@ -227,18 +269,27 @@ internal fun RecommendationScreen(
                             persist = shouldPersist,
                             cacheRecommendationsForLater = true,
                             isLocationPermissionGranted = isLocationPermissionGranted,
+                            myLocation = myLocation?.let {
+                                Coordinate(it.latitude, myLocation.longitude)
+                            },
                         ),
                     )
                 },
             ) {
-                Text(text = stringResource(R.string.fr_filter_recommend).uppercase(KENYA))
+                Text(
+                    text = if (shouldShowRequestingMyUpdatedLocationMessage) {
+                        stringResource(R.string.fr_initiating_location_tracking)
+                    } else {
+                        stringResource(R.string.fr_filter_recommend).uppercase(KENYA)
+                    },
+                )
             }
             LazyColumn(
                 modifier = Modifier.semantics {
                     testTag = TEST_TAG_RECOMMENDATION_BODY_CONTAINER
                 },
             ) {
-                if (unPersistedShoppingList.isNotEmpty()) {
+                if (isUnPersistedShoppingListNotEmpty) {
                     item {
                         Text(
                             text = stringResource(R.string.fr_filter_un_persisted_list_subheading),
@@ -270,7 +321,7 @@ internal fun RecommendationScreen(
                         }
                     }
                 }
-                if (persistedShoppingList.isNotEmpty()) {
+                if (isPersistedShoppingListNotEmpty) {
                     item {
                         Text(
                             text = stringResource(R.string.fr_filter_persisted_list_subheading),
