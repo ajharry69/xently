@@ -739,7 +739,7 @@ class RecommendationScreenTest {
     }
 
     @Test
-    fun persistenceFlagCanBeToggledFromACheckbox() {
+    fun persistenceFlagCanBeToggledFromCheckbox() {
         val onDetailSubmittedMock: (RecommendationRequest) -> Unit = mock()
         composeTestRule.setContent {
             XentlyTheme {
@@ -763,6 +763,72 @@ class RecommendationScreenTest {
         composeTestRule.onNodeWithTag(addProductNameButton).performClick()
 
         composeTestRule.onNodeWithContentDescription(persistCheckbox).performClick()
+
+        composeTestRule.onNodeWithText(recommendButton).performClick()
+        with(argumentCaptor<RecommendationRequest> { }) {
+            verify(onDetailSubmittedMock, times(1)).invoke(capture())
+            assertThat(firstValue.persist, equalTo(false))
+        }
+    }
+
+    @Test
+    fun persistenceFlagCanBeToggledFromCheckboxLabel() {
+        val onDetailSubmittedMock: (RecommendationRequest) -> Unit = mock()
+        composeTestRule.setContent {
+            XentlyTheme {
+                RecommendationScreen(
+                    modifier = Modifier.fillMaxSize(),
+                    function = RecommendationScreenFunction(
+                        onDetailSubmitted = onDetailSubmittedMock,
+                    ),
+                    result = TaskResult.Success(null),
+                    persistedShoppingListResult = TaskResult.Success(emptyList()),
+                    myUpdatedLocation = MyUpdatedLocation(
+                        myLocation = KICC,
+                        isLocationPermissionGranted = true
+                    ),
+                )
+            }
+        }
+
+        addUnPersistedShoppingListItem("bread")
+
+        composeTestRule.onNodeWithTag(addProductNameButton).performClick()
+
+        composeTestRule.onNodeWithText(persistCheckbox).performClick()
+
+        composeTestRule.onNodeWithText(recommendButton).performClick()
+        with(argumentCaptor<RecommendationRequest> { }) {
+            verify(onDetailSubmittedMock, times(1)).invoke(capture())
+            assertThat(firstValue.persist, equalTo(false))
+        }
+    }
+
+    @Test
+    fun persistenceFlagCanBeToggledFromCheckboxContainer() {
+        val onDetailSubmittedMock: (RecommendationRequest) -> Unit = mock()
+        composeTestRule.setContent {
+            XentlyTheme {
+                RecommendationScreen(
+                    modifier = Modifier.fillMaxSize(),
+                    function = RecommendationScreenFunction(
+                        onDetailSubmitted = onDetailSubmittedMock,
+                    ),
+                    result = TaskResult.Success(null),
+                    persistedShoppingListResult = TaskResult.Success(emptyList()),
+                    myUpdatedLocation = MyUpdatedLocation(
+                        myLocation = KICC,
+                        isLocationPermissionGranted = true
+                    ),
+                )
+            }
+        }
+
+        addUnPersistedShoppingListItem("bread")
+
+        composeTestRule.onNodeWithTag(addProductNameButton).performClick()
+
+        composeTestRule.onNodeWithTag(persistCheckbox).performClick()
 
         composeTestRule.onNodeWithText(recommendButton).performClick()
         with(argumentCaptor<RecommendationRequest> { }) {
