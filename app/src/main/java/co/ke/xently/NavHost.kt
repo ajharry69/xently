@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import co.ke.xently.accounts.accountsGraph
+import co.ke.xently.data.Recommendation
 import co.ke.xently.data.User
 import co.ke.xently.feature.SharedFunction
 import co.ke.xently.feature.utils.Routes
@@ -19,6 +20,7 @@ internal fun XentlyNavHost(
     sharedFunction: SharedFunction,
     onSignInOrOut: (User?) -> Unit,
     navController: NavHostController,
+    onDirectionClick: (Recommendation) -> Unit,
 ) {
     NavHost(
         navController = navController,
@@ -27,6 +29,7 @@ internal fun XentlyNavHost(
         recommendationGraph(
             controller = navController,
             sharedFunction = sharedFunction,
+            onDirectionClick = onDirectionClick,
         )
         productsGraph(
             navController = navController,

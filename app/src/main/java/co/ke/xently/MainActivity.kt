@@ -1,5 +1,7 @@
 package co.ke.xently
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
@@ -14,6 +16,7 @@ import co.ke.xently.data.TaskResult
 import co.ke.xently.feature.SharedFunction
 import co.ke.xently.feature.theme.XentlyTheme
 import co.ke.xently.feature.ui.navigateToSignInScreen
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -29,14 +32,6 @@ class MainActivity : FragmentActivity() {
                     val scope = rememberCoroutineScope()
                     val navController = rememberNavController()
                     XentlyNavHost(
-                        navController = navController,
-                        onSignInOrOut = {
-                            if (it == null) {
-                                navigateToSignInScreen.invoke(this)
-                            } else {
-                                viewModel.signOut()
-                            }
-                        },
                         sharedFunction = SharedFunction(
                             onNavigationIconClicked = this::onBackPressed,
                             currentlyActiveUser = {
@@ -52,6 +47,38 @@ class MainActivity : FragmentActivity() {
                                 context = scope.coroutineContext,
                             )
                             signOutResult
+                        },
+                        onSignInOrOut = {
+                            if (it == null) {
+                                navigateToSignInScreen.invoke(this)
+                            } else {
+                                viewModel.signOut()
+                            }
+                        },
+                        navController = navController,
+                        onDirectionClick = { recommendation ->
+                            val navigationQuery = recommendation.shop.run {
+                                coordinate?.let {
+                                    "${it.lat},${it.lon}"
+                                } ?: descriptiveName
+                            }
+                            val uri = Uri.parse("google.navigation:q=$navigationQuery")
+                            val mapIntent = Intent(Intent.ACTION_VIEW, uri)
+                            if (mapIntent.resolveActivity(packageManager) == null) {
+                                MaterialAlertDialogBuilder(this)
+                                    .setMessage(R.string.fr_app_handling_directions_not_found)
+                                    .setPositiveButton(android.R.string.ok) { dialog, _ -> dialog.dismiss() }
+                                    .create().show()
+                            } else {
+                                mapIntent.run {
+                                    setPackage("com.google.android.apps.maps")
+                                    if (resolveActivity(packageManager) != null) {
+                                        startActivity(this)
+                                    } else {
+                                        startActivity(mapIntent)
+                                    }
+                                }
+                            }
                         },
                     )
                 }

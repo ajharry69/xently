@@ -18,4 +18,5 @@
     <string name="fr_detail_miss_heading">Items not found</string>
     <string name="fr_shop_details">Shop details</string>
     <string name="fr_initiating_location_tracking">Please wait as we capture your location…</string>
+    <string name="fr_app_handling_directions_not_found">Sorry, we did not find an application on your device that can handle map directions. As we work on a native implementation, please, consider installing Google Maps or an equivalent application before trying again.</string>
 </resources>
