@@ -1,5 +1,6 @@
 package co.ke.xently.recommendation.ui
 
+import android.annotation.SuppressLint
 import androidx.annotation.VisibleForTesting
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -11,7 +12,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -33,6 +36,7 @@ import co.ke.xently.feature.ui.*
 import co.ke.xently.recommendation.R
 import co.ke.xently.shoppinglist.ui.list.item.ShoppingListItemCard
 import co.ke.xently.source.remote.DeferredRecommendation
+import kotlin.time.Duration.Companion.seconds
 
 internal const val TEST_TAG_RECOMMENDATION_BODY_CONTAINER = "TEST_TAG_RECOMMENDATION_BODY_CONTAINER"
 
@@ -69,6 +73,7 @@ internal fun RecommendationScreen(
 
     val myUpdatedLocation = rememberMyUpdatedLocation(
         args = MyUpdatedLocationArgs(
+            fastestRefreshInterval = 10.seconds,
             shouldRequestPermission = shouldRequestPermission,
             onLocationPermissionChanged = function.sharedFunction.onLocationPermissionChanged,
         ),
@@ -90,6 +95,7 @@ internal fun RecommendationScreen(
     )
 }
 
+@SuppressLint("MutableCollectionMutableState")
 @Composable
 @VisibleForTesting
 internal fun RecommendationScreen(
@@ -99,8 +105,18 @@ internal fun RecommendationScreen(
     result: TaskResult<DeferredRecommendation?>,
     persistedShoppingListResult: TaskResult<List<ShoppingListItem>>,
 ) {
-    val unPersistedShoppingList = remember {
-        mutableStateListOf<String>()
+    val unPersistedShoppingListSaver = listSaver<SnapshotStateList<String>, String>(
+        save = { stateList ->
+            stateList.map {
+                it
+            }
+        },
+        restore = {
+            it.toMutableStateList()
+        },
+    )
+    val unPersistedShoppingList by rememberSaveable(stateSaver = unPersistedShoppingListSaver) {
+        mutableStateOf(mutableStateListOf())
     }
     val persistedShoppingList = remember(persistedShoppingListResult) {
         mutableStateListOf(*(persistedShoppingListResult.getOrNull() ?: emptyList()).toTypedArray())
