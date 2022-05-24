@@ -27,7 +27,9 @@ import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 
 class RecommendationScreenTest {
-    private val KICC = LatLng(-1.2890932945781504, 36.8209502554869)
+    companion object {
+        private val KICC = LatLng(-1.2890932945781504, 36.8209502554869)
+    }
 
     @get:Rule
     val composeTestRule = createAndroidComposeRule<ComponentActivity>()
@@ -91,6 +93,33 @@ class RecommendationScreenTest {
 
         composeTestRule.onNodeWithContentDescription(productNameDescription)
             .assert(hasImeAction(ImeAction.Done))
+    }
+
+    @Test
+    fun clickingOnProductNameFieldImeAction() {
+        composeTestRule.setContent {
+            XentlyTheme {
+                RecommendationScreen(
+                    modifier = Modifier.fillMaxSize(),
+                    function = RecommendationScreenFunction(),
+                    result = TaskResult.Success(null),
+                    persistedShoppingListResult = TaskResult.Success(emptyList()),
+                    myUpdatedLocation = MyUpdatedLocation(
+                        myLocation = KICC,
+                        isLocationPermissionGranted = true
+                    ),
+                )
+            }
+        }
+
+        addUnPersistedShoppingListItem("Bread", clickAddButton = false)
+
+        composeTestRule.onNodeWithText(activity.getString(R.string.fr_filter_un_persisted_list_subheading))
+            .assertDoesNotExist()
+        composeTestRule.onNodeWithContentDescription(productNameDescription)
+            .performImeAction()
+        composeTestRule.onNodeWithText(activity.getString(R.string.fr_filter_un_persisted_list_subheading))
+            .assertIsDisplayed()
     }
 
     @Test

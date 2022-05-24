@@ -214,6 +214,14 @@ internal fun RecommendationScreen(
             var productName by remember {
                 mutableStateOf(TextFieldValue(""))
             }
+            val addUnPersistedShoppingListItem = {
+                if (isUnPersistedShoppingListNotEmpty) {
+                    unPersistedShoppingList.add(0, productName.text.trim())
+                } else {
+                    unPersistedShoppingList.add(productName.text.trim())
+                }
+                productName = TextFieldValue("")
+            }
             TextInputLayout(
                 value = productName,
                 label = stringResource(R.string.fr_filter_product_name),
@@ -227,7 +235,7 @@ internal fun RecommendationScreen(
                 ),
                 keyboardActions = KeyboardActions(
                     onDone = {
-                        focusManager.clearFocus()
+                        addUnPersistedShoppingListItem.invoke()
                     }
                 ),
                 trailingIcon = {
@@ -235,15 +243,8 @@ internal fun RecommendationScreen(
                         stringResource(R.string.fr_filter_add_product_name_content_description)
                     IconButton(
                         enabled = productName.text.isNotBlank(),
+                        onClick = addUnPersistedShoppingListItem,
                         modifier = Modifier.semantics { testTag = description },
-                        onClick = {
-                            if (isUnPersistedShoppingListNotEmpty) {
-                                unPersistedShoppingList.add(0, productName.text.trim())
-                            } else {
-                                unPersistedShoppingList.add(productName.text.trim())
-                            }
-                            productName = TextFieldValue("")
-                        },
                     ) {
                         Icon(imageVector = Icons.Default.Add, contentDescription = description)
                     }
