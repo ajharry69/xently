@@ -21,10 +21,7 @@ import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.*
 import org.junit.Rule
 import org.junit.Test
-import org.mockito.kotlin.argumentCaptor
-import org.mockito.kotlin.mock
-import org.mockito.kotlin.times
-import org.mockito.kotlin.verify
+import org.mockito.kotlin.*
 
 class RecommendationScreenTest {
     companion object {
@@ -96,7 +93,7 @@ class RecommendationScreenTest {
     }
 
     @Test
-    fun clickingOnProductNameFieldImeAction() {
+    fun nonBlankProductNameFieldSubmittedThroughImeAction() {
         composeTestRule.setContent {
             XentlyTheme {
                 RecommendationScreen(
@@ -120,6 +117,37 @@ class RecommendationScreenTest {
             .performImeAction()
         composeTestRule.onNodeWithText(activity.getString(R.string.fr_filter_un_persisted_list_subheading))
             .assertIsDisplayed()
+        composeTestRule.onNodeWithContentDescription(productNameDescription)
+            .assert(hasText(""))
+    }
+
+    @Test
+    fun blankProductNameFieldSubmittedThroughImeAction() {
+        composeTestRule.setContent {
+            XentlyTheme {
+                RecommendationScreen(
+                    modifier = Modifier.fillMaxSize(),
+                    function = RecommendationScreenFunction(),
+                    result = TaskResult.Success(null),
+                    persistedShoppingListResult = TaskResult.Success(emptyList()),
+                    myUpdatedLocation = MyUpdatedLocation(
+                        myLocation = KICC,
+                        isLocationPermissionGranted = true,
+                    ),
+                )
+            }
+        }
+
+        addUnPersistedShoppingListItem("    ", clickAddButton = false)
+
+        composeTestRule.onNodeWithText(activity.getString(R.string.fr_filter_un_persisted_list_subheading))
+            .assertDoesNotExist()
+        composeTestRule.onNodeWithContentDescription(productNameDescription)
+            .performImeAction()
+        composeTestRule.onNodeWithContentDescription(productNameDescription)
+            .assert(hasText(""))
+        composeTestRule.onNodeWithText(activity.getString(R.string.fr_filter_un_persisted_list_subheading))
+            .assertDoesNotExist()
     }
 
     @Test

@@ -160,6 +160,10 @@ internal fun RecommendationScreen(
         }
     }
 
+    val persistedShoppingListSize = persistedShoppingList.size
+    val unPersistedShoppingListSize = unPersistedShoppingList.size
+    val totalShoppingListSize = unPersistedShoppingListSize + persistedShoppingListSize
+
     if (result is TaskResult.Error || persistedShoppingListResult is TaskResult.Error) {
         val errorMessage = result.errorMessage ?: persistedShoppingListResult.errorMessage
         ?: stringResource(R.string.generic_error_message)
@@ -171,10 +175,7 @@ internal fun RecommendationScreen(
         }
     } else if (result is TaskResult.Success && result.data != null) {
         LaunchedEffect(result.data) {
-            val deferredRecommendation = result.data!!.copy(
-                numberOfItems = unPersistedShoppingList.size + persistedShoppingList.size,
-            )
-            function.onSuccess.invoke(deferredRecommendation)
+            function.onSuccess.invoke(result.data!!.copy(numberOfItems = totalShoppingListSize))
         }
     }
 
@@ -203,8 +204,8 @@ internal fun RecommendationScreen(
                 onNavigationIconClicked = function.sharedFunction.onNavigationIconClicked,
                 subTitle = LocalContext.current.resources.getQuantityString(
                     R.plurals.fr_filter_toolbar_subtitle,
-                    unPersistedShoppingList.size + persistedShoppingList.size,
-                    unPersistedShoppingList.size + persistedShoppingList.size,
+                    totalShoppingListSize,
+                    totalShoppingListSize,
                 ),
             )
         },
@@ -215,7 +216,9 @@ internal fun RecommendationScreen(
                 mutableStateOf(TextFieldValue(""))
             }
             val addUnPersistedShoppingListItem = {
-                if (isUnPersistedShoppingListNotEmpty) {
+                if (productName.text.isBlank()) {
+                    focusManager.clearFocus()
+                } else if (isUnPersistedShoppingListNotEmpty) {
                     unPersistedShoppingList.add(0, productName.text.trim())
                 } else {
                     unPersistedShoppingList.add(productName.text.trim())
