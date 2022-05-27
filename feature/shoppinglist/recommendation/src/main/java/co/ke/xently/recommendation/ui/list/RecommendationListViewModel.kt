@@ -1,10 +1,10 @@
 package co.ke.xently.recommendation.ui.list
 
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.ke.xently.feature.utils.DEFAULT_SHARING_STARTED
 import co.ke.xently.feature.utils.flagLoadingOnStart
 import co.ke.xently.recommendation.repository.IRecommendationRepository
+import co.ke.xently.recommendation.ui.MyUpdatedLocationViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.flatMapLatest
@@ -15,7 +15,7 @@ import javax.inject.Inject
 @HiltViewModel
 internal class RecommendationListViewModel @Inject constructor(
     private val repository: IRecommendationRepository,
-) : ViewModel() {
+) : MyUpdatedLocationViewModel() {
     private val lookupId = MutableSharedFlow<String>()
 
     val result = lookupId.flatMapLatest {

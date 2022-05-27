@@ -40,8 +40,8 @@ internal const val TEST_TAG_RECOMMENDATION_BODY_CONTAINER = "TEST_TAG_RECOMMENDA
 internal data class RecommendationScreenFunction(
     internal val sharedFunction: SharedFunction = SharedFunction(),
     internal val onSuccess: (DeferredRecommendation) -> Unit = {},
-    internal val onDetailSubmitted: (RecommendationRequest) -> Unit = {},
     internal val addUnPersistedShoppingListItem: (String) -> Unit = {},
+    internal val onDetailSubmitted: (RecommendationRequest) -> Unit = {},
     internal val removeUnPersistedShoppingListItemAt: (Int) -> Unit = {},
 )
 
@@ -73,7 +73,9 @@ internal fun RecommendationScreen(
     val myUpdatedLocation = rememberMyUpdatedLocation(
         args = MyUpdatedLocationArgs(
             fastestRefreshInterval = 10.seconds,
+            myDefaultLocation = viewModel.myDefaultLocation,
             shouldRequestPermission = shouldRequestPermission,
+            onMyUpdatedLocationChanged = viewModel::setMyDefaultLocation,
             onLocationPermissionChanged = function.sharedFunction.onLocationPermissionChanged,
         ),
     )

@@ -1,6 +1,5 @@
 package co.ke.xently.recommendation.ui
 
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.ke.xently.data.RecommendationRequest
 import co.ke.xently.data.ShoppingListItem
@@ -17,7 +16,7 @@ import javax.inject.Inject
 @HiltViewModel
 internal class RecommendationViewModel @Inject constructor(
     private val repository: IRecommendationRepository
-) : ViewModel() {
+) : MyUpdatedLocationViewModel() {
     private val args = MutableSharedFlow<RecommendationScreenArgs>(replay = 1)
     val persistedShoppingListResult: Flow<TaskResult<List<ShoppingListItem>>> =
         args.flatMapLatest(repository::getShoppingListItems)

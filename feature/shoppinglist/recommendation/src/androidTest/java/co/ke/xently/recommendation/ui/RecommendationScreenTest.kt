@@ -832,8 +832,8 @@ class RecommendationScreenTest {
                 RecommendationScreen(
                     modifier = Modifier.fillMaxSize(),
                     function = RecommendationScreenFunction(
-                        onDetailSubmitted = onDetailSubmittedMock,
                         addUnPersistedShoppingListItem = addUnPersistedShoppingListItemMock,
+                        onDetailSubmitted = onDetailSubmittedMock,
                     ),
                     result = TaskResult.Success(null),
                     persistedShoppingListResult = TaskResult.Success(emptyList()),
@@ -863,8 +863,8 @@ class RecommendationScreenTest {
                 RecommendationScreen(
                     modifier = Modifier.fillMaxSize(),
                     function = RecommendationScreenFunction(
-                        onDetailSubmitted = onDetailSubmittedMock,
                         addUnPersistedShoppingListItem = addUnPersistedShoppingListItemMock,
+                        onDetailSubmitted = onDetailSubmittedMock,
                     ),
                     result = TaskResult.Success(null),
                     persistedShoppingListResult = TaskResult.Success(emptyList()),
@@ -898,8 +898,8 @@ class RecommendationScreenTest {
                 RecommendationScreen(
                     modifier = Modifier.fillMaxSize(),
                     function = RecommendationScreenFunction(
-                        onDetailSubmitted = onDetailSubmittedMock,
                         addUnPersistedShoppingListItem = addUnPersistedShoppingListItemMock,
+                        onDetailSubmitted = onDetailSubmittedMock,
                     ),
                     result = TaskResult.Success(null),
                     persistedShoppingListResult = TaskResult.Success(emptyList()),

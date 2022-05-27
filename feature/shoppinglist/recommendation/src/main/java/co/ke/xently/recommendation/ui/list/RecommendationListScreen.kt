@@ -41,6 +41,7 @@ internal data class RecommendationListScreenFunction(
     internal val onRetryClicked: (Throwable) -> Unit = {},
     internal val onItemClicked: (ShoppingListItem) -> Unit = {},
     internal val onDirectionClick: (Recommendation) -> Unit = {},
+    internal val onMyUpdatedLocationChanged: (LatLng) -> Unit = {},
     internal val sharedFunction: SharedFunction = SharedFunction(),
     internal val function: RecommendationCardItemFunction = RecommendationCardItemFunction(),
 )
@@ -86,10 +87,12 @@ internal fun RecommendationListScreen(
         result = result,
         modifier = modifier,
         numberOfItems = args.numberOfItems,
+        myDefaultLocation = viewModel.myDefaultLocation,
         function = function.copy(
             onRetryClicked = {
                 viewModel.recommend(args.lookupId)
             },
+            onMyUpdatedLocationChanged = viewModel::setMyDefaultLocation,
         ),
     )
 }
@@ -150,6 +153,7 @@ internal fun RecommendationListScreen(
     result: TaskResult<List<Recommendation>>,
     function: RecommendationListScreenFunction,
     showMap: Boolean = true,
+    myDefaultLocation: LatLng? = null,
 ) {
     var recommendation by remember {
         mutableStateOf<Recommendation?>(null)
@@ -257,6 +261,8 @@ internal fun RecommendationListScreen(
                                     recommendations = recommendations,
                                     onInfoWindowClick = onItemClick,
                                     myUpdatedLocationArgs = MyUpdatedLocationArgs(
+                                        myDefaultLocation = myDefaultLocation,
+                                        onMyUpdatedLocationChanged = function.onMyUpdatedLocationChanged,
                                         onLocationPermissionChanged = function.sharedFunction.onLocationPermissionChanged,
                                     ),
                                 ) { mapMaximized ->
