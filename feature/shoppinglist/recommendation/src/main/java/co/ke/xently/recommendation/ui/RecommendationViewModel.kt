@@ -11,6 +11,7 @@ import co.ke.xently.recommendation.repository.IRecommendationRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.util.*
 import javax.inject.Inject
 
 @HiltViewModel
@@ -42,5 +43,14 @@ internal class RecommendationViewModel @Inject constructor(
         viewModelScope.launch {
             this@RecommendationViewModel.args.emit(args)
         }
+    }
+
+    val unPersistedShoppingList: Stack<String> = Stack()
+    fun addUnPersistedShoppingListItem(item: String) {
+        unPersistedShoppingList.add(item)
+    }
+
+    fun removeUnPersistedShoppingListItemAt(index: Int) {
+        unPersistedShoppingList.removeAt(index)
     }
 }

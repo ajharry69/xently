@@ -1,6 +1,5 @@
 package co.ke.xently.recommendation.ui
 
-import android.annotation.SuppressLint
 import androidx.annotation.VisibleForTesting
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -12,9 +11,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -44,6 +41,8 @@ internal data class RecommendationScreenFunction(
     internal val sharedFunction: SharedFunction = SharedFunction(),
     internal val onSuccess: (DeferredRecommendation) -> Unit = {},
     internal val onDetailSubmitted: (RecommendationRequest) -> Unit = {},
+    internal val addUnPersistedShoppingListItem: (String) -> Unit = {},
+    internal val removeUnPersistedShoppingListItemAt: (Int) -> Unit = {},
 )
 
 @Composable
@@ -84,6 +83,7 @@ internal fun RecommendationScreen(
         result = result,
         myUpdatedLocation = myUpdatedLocation,
         persistedShoppingListResult = persistedShoppingListResult,
+        unpersistedShoppingList = viewModel.unPersistedShoppingList,
         function = function.copy(
             onDetailSubmitted = viewModel::recommend,
             sharedFunction = function.sharedFunction.copy(
@@ -91,11 +91,12 @@ internal fun RecommendationScreen(
                     shouldRequestPermission = true
                 }
             ),
+            addUnPersistedShoppingListItem = viewModel::addUnPersistedShoppingListItem,
+            removeUnPersistedShoppingListItemAt = viewModel::removeUnPersistedShoppingListItemAt,
         ),
     )
 }
 
-@SuppressLint("MutableCollectionMutableState")
 @Composable
 @VisibleForTesting
 internal fun RecommendationScreen(
@@ -104,19 +105,10 @@ internal fun RecommendationScreen(
     function: RecommendationScreenFunction,
     result: TaskResult<DeferredRecommendation?>,
     persistedShoppingListResult: TaskResult<List<ShoppingListItem>>,
+    unpersistedShoppingList: java.util.Stack<String> = java.util.Stack(),
 ) {
-    val unPersistedShoppingListSaver = listSaver<SnapshotStateList<String>, String>(
-        save = { stateList ->
-            stateList.map {
-                it
-            }
-        },
-        restore = {
-            it.toMutableStateList()
-        },
-    )
-    val unPersistedShoppingList by rememberSaveable(stateSaver = unPersistedShoppingListSaver) {
-        mutableStateOf(mutableStateListOf())
+    val unPersistedShoppingList = remember(unpersistedShoppingList) {
+        mutableStateListOf<String>(*unpersistedShoppingList.toTypedArray())
     }
     val persistedShoppingList = remember(persistedShoppingListResult) {
         mutableStateListOf(*(persistedShoppingListResult.getOrNull() ?: emptyList()).toTypedArray())
@@ -219,9 +211,17 @@ internal fun RecommendationScreen(
                 if (productName.text.isBlank()) {
                     focusManager.clearFocus()
                 } else if (isUnPersistedShoppingListNotEmpty) {
-                    unPersistedShoppingList.add(0, productName.text.trim())
+                    productName.text.trim().also {
+                        if (it in unPersistedShoppingList) return@also
+                        unPersistedShoppingList.add(0, it)
+                        function.addUnPersistedShoppingListItem.invoke(it)
+                    }
                 } else {
-                    unPersistedShoppingList.add(productName.text.trim())
+                    productName.text.trim().also {
+                        if (it in unPersistedShoppingList) return@also
+                        unPersistedShoppingList.add(it)
+                        function.addUnPersistedShoppingListItem.invoke(it)
+                    }
                 }
                 productName = TextFieldValue("")
             }
@@ -333,7 +333,7 @@ internal fun RecommendationScreen(
                         )
                     }
                 }
-                itemsIndexed(unPersistedShoppingList) { index, item ->
+                itemsIndexed(unPersistedShoppingList, key = { _, item -> item }) { index, item ->
                     ListItemSurface(modifier = Modifier.fillMaxWidth()) {
                         Text(
                             text = item,
@@ -346,6 +346,7 @@ internal fun RecommendationScreen(
                             onClick = {
                                 focusManager.clearFocus()
                                 unPersistedShoppingList.removeAt(index)
+                                function.removeUnPersistedShoppingListItemAt.invoke(index)
                             },
                             modifier = Modifier.semantics { testTag = description },
                         ) {
@@ -365,7 +366,10 @@ internal fun RecommendationScreen(
                         )
                     }
                 }
-                itemsIndexed(persistedShoppingList) { index, item: ShoppingListItem ->
+                itemsIndexed(
+                    persistedShoppingList,
+                    key = { _, item -> item.id },
+                ) { index, item: ShoppingListItem ->
                     val description =
                         stringResource(R.string.fr_filter_remove_persisted_item, item)
                     ShoppingListItemCard(
