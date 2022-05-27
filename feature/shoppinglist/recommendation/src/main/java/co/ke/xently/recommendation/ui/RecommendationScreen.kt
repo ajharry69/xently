@@ -33,13 +33,16 @@ import co.ke.xently.feature.ui.*
 import co.ke.xently.recommendation.R
 import co.ke.xently.shoppinglist.ui.list.item.ShoppingListItemCard
 import co.ke.xently.source.remote.DeferredRecommendation
+import kotlin.time.Duration.Companion.seconds
 
 internal const val TEST_TAG_RECOMMENDATION_BODY_CONTAINER = "TEST_TAG_RECOMMENDATION_BODY_CONTAINER"
 
 internal data class RecommendationScreenFunction(
     internal val sharedFunction: SharedFunction = SharedFunction(),
     internal val onSuccess: (DeferredRecommendation) -> Unit = {},
+    internal val addUnPersistedShoppingListItem: (String) -> Unit = {},
     internal val onDetailSubmitted: (RecommendationRequest) -> Unit = {},
+    internal val removeUnPersistedShoppingListItemAt: (Int) -> Unit = {},
 )
 
 @Composable
@@ -69,7 +72,10 @@ internal fun RecommendationScreen(
 
     val myUpdatedLocation = rememberMyUpdatedLocation(
         args = MyUpdatedLocationArgs(
+            fastestRefreshInterval = 10.seconds,
+            myDefaultLocation = viewModel.myDefaultLocation,
             shouldRequestPermission = shouldRequestPermission,
+            onMyUpdatedLocationChanged = viewModel::setMyDefaultLocation,
             onLocationPermissionChanged = function.sharedFunction.onLocationPermissionChanged,
         ),
     )
@@ -79,6 +85,7 @@ internal fun RecommendationScreen(
         result = result,
         myUpdatedLocation = myUpdatedLocation,
         persistedShoppingListResult = persistedShoppingListResult,
+        unpersistedShoppingList = viewModel.unPersistedShoppingList,
         function = function.copy(
             onDetailSubmitted = viewModel::recommend,
             sharedFunction = function.sharedFunction.copy(
@@ -86,6 +93,8 @@ internal fun RecommendationScreen(
                     shouldRequestPermission = true
                 }
             ),
+            addUnPersistedShoppingListItem = viewModel::addUnPersistedShoppingListItem,
+            removeUnPersistedShoppingListItemAt = viewModel::removeUnPersistedShoppingListItemAt,
         ),
     )
 }
@@ -98,9 +107,10 @@ internal fun RecommendationScreen(
     function: RecommendationScreenFunction,
     result: TaskResult<DeferredRecommendation?>,
     persistedShoppingListResult: TaskResult<List<ShoppingListItem>>,
+    unpersistedShoppingList: java.util.Stack<String> = java.util.Stack(),
 ) {
-    val unPersistedShoppingList = remember {
-        mutableStateListOf<String>()
+    val unPersistedShoppingList = remember(unpersistedShoppingList) {
+        mutableStateListOf<String>(*unpersistedShoppingList.toTypedArray())
     }
     val persistedShoppingList = remember(persistedShoppingListResult) {
         mutableStateListOf(*(persistedShoppingListResult.getOrNull() ?: emptyList()).toTypedArray())
@@ -144,6 +154,10 @@ internal fun RecommendationScreen(
         }
     }
 
+    val persistedShoppingListSize = persistedShoppingList.size
+    val unPersistedShoppingListSize = unPersistedShoppingList.size
+    val totalShoppingListSize = unPersistedShoppingListSize + persistedShoppingListSize
+
     if (result is TaskResult.Error || persistedShoppingListResult is TaskResult.Error) {
         val errorMessage = result.errorMessage ?: persistedShoppingListResult.errorMessage
         ?: stringResource(R.string.generic_error_message)
@@ -155,10 +169,7 @@ internal fun RecommendationScreen(
         }
     } else if (result is TaskResult.Success && result.data != null) {
         LaunchedEffect(result.data) {
-            val deferredRecommendation = result.data!!.copy(
-                numberOfItems = unPersistedShoppingList.size + persistedShoppingList.size,
-            )
-            function.onSuccess.invoke(deferredRecommendation)
+            function.onSuccess.invoke(result.data!!.copy(numberOfItems = totalShoppingListSize))
         }
     }
 
@@ -187,8 +198,8 @@ internal fun RecommendationScreen(
                 onNavigationIconClicked = function.sharedFunction.onNavigationIconClicked,
                 subTitle = LocalContext.current.resources.getQuantityString(
                     R.plurals.fr_filter_toolbar_subtitle,
-                    unPersistedShoppingList.size + persistedShoppingList.size,
-                    unPersistedShoppingList.size + persistedShoppingList.size,
+                    totalShoppingListSize,
+                    totalShoppingListSize,
                 ),
             )
         },
@@ -197,6 +208,24 @@ internal fun RecommendationScreen(
             val focusManager = LocalFocusManager.current
             var productName by remember {
                 mutableStateOf(TextFieldValue(""))
+            }
+            val addUnPersistedShoppingListItem = {
+                if (productName.text.isBlank()) {
+                    focusManager.clearFocus()
+                } else if (isUnPersistedShoppingListNotEmpty) {
+                    productName.text.trim().also {
+                        if (it in unPersistedShoppingList) return@also
+                        unPersistedShoppingList.add(0, it)
+                        function.addUnPersistedShoppingListItem.invoke(it)
+                    }
+                } else {
+                    productName.text.trim().also {
+                        if (it in unPersistedShoppingList) return@also
+                        unPersistedShoppingList.add(it)
+                        function.addUnPersistedShoppingListItem.invoke(it)
+                    }
+                }
+                productName = TextFieldValue("")
             }
             TextInputLayout(
                 value = productName,
@@ -211,7 +240,7 @@ internal fun RecommendationScreen(
                 ),
                 keyboardActions = KeyboardActions(
                     onDone = {
-                        focusManager.clearFocus()
+                        addUnPersistedShoppingListItem.invoke()
                     }
                 ),
                 trailingIcon = {
@@ -219,15 +248,8 @@ internal fun RecommendationScreen(
                         stringResource(R.string.fr_filter_add_product_name_content_description)
                     IconButton(
                         enabled = productName.text.isNotBlank(),
+                        onClick = addUnPersistedShoppingListItem,
                         modifier = Modifier.semantics { testTag = description },
-                        onClick = {
-                            if (isUnPersistedShoppingListNotEmpty) {
-                                unPersistedShoppingList.add(0, productName.text.trim())
-                            } else {
-                                unPersistedShoppingList.add(productName.text.trim())
-                            }
-                            productName = TextFieldValue("")
-                        },
                     ) {
                         Icon(imageVector = Icons.Default.Add, contentDescription = description)
                     }
@@ -313,7 +335,7 @@ internal fun RecommendationScreen(
                         )
                     }
                 }
-                itemsIndexed(unPersistedShoppingList) { index, item ->
+                itemsIndexed(unPersistedShoppingList, key = { _, item -> item }) { index, item ->
                     ListItemSurface(modifier = Modifier.fillMaxWidth()) {
                         Text(
                             text = item,
@@ -326,6 +348,7 @@ internal fun RecommendationScreen(
                             onClick = {
                                 focusManager.clearFocus()
                                 unPersistedShoppingList.removeAt(index)
+                                function.removeUnPersistedShoppingListItemAt.invoke(index)
                             },
                             modifier = Modifier.semantics { testTag = description },
                         ) {
@@ -345,7 +368,10 @@ internal fun RecommendationScreen(
                         )
                     }
                 }
-                itemsIndexed(persistedShoppingList) { index, item: ShoppingListItem ->
+                itemsIndexed(
+                    persistedShoppingList,
+                    key = { _, item -> item.id },
+                ) { index, item: ShoppingListItem ->
                     val description =
                         stringResource(R.string.fr_filter_remove_persisted_item, item)
                     ShoppingListItemCard(

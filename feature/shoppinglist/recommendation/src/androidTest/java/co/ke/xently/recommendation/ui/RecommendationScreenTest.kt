@@ -21,13 +21,13 @@ import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.*
 import org.junit.Rule
 import org.junit.Test
-import org.mockito.kotlin.argumentCaptor
-import org.mockito.kotlin.mock
-import org.mockito.kotlin.times
-import org.mockito.kotlin.verify
+import org.mockito.kotlin.*
+import java.util.*
 
 class RecommendationScreenTest {
-    private val KICC = LatLng(-1.2890932945781504, 36.8209502554869)
+    companion object {
+        private val KICC = LatLng(-1.2890932945781504, 36.8209502554869)
+    }
 
     @get:Rule
     val composeTestRule = createAndroidComposeRule<ComponentActivity>()
@@ -91,6 +91,146 @@ class RecommendationScreenTest {
 
         composeTestRule.onNodeWithContentDescription(productNameDescription)
             .assert(hasImeAction(ImeAction.Done))
+    }
+
+    @Test
+    fun nonBlankProductNameFieldSubmittedThroughImeAction() {
+        val addUnPersistedShoppingListItemMock: (String) -> Unit = mock()
+        composeTestRule.setContent {
+            XentlyTheme {
+                RecommendationScreen(
+                    modifier = Modifier.fillMaxSize(),
+                    function = RecommendationScreenFunction(
+                        addUnPersistedShoppingListItem = addUnPersistedShoppingListItemMock,
+                    ),
+                    result = TaskResult.Success(null),
+                    persistedShoppingListResult = TaskResult.Success(emptyList()),
+                    myUpdatedLocation = MyUpdatedLocation(
+                        myLocation = KICC,
+                        isLocationPermissionGranted = true
+                    ),
+                )
+            }
+        }
+
+        addUnPersistedShoppingListItem("Bread   ", clickAddButton = false)
+
+        composeTestRule.onNodeWithText(activity.getString(R.string.fr_filter_un_persisted_list_subheading))
+            .assertDoesNotExist()
+        verify(addUnPersistedShoppingListItemMock, times(0)).invoke("Bread")
+        composeTestRule.onNodeWithContentDescription(productNameDescription)
+            .performImeAction()
+        composeTestRule.onNodeWithText(activity.getString(R.string.fr_filter_un_persisted_list_subheading))
+            .assertIsDisplayed()
+        composeTestRule.onNodeWithContentDescription(productNameDescription)
+            .assert(hasText(""))
+        with(argumentCaptor<String>()) {
+            verify(addUnPersistedShoppingListItemMock, times(1)).invoke(capture())
+            assertThat(firstValue, equalTo("Bread"))
+        }
+    }
+
+    @Test
+    fun duplicateNonBlankProductNameFieldSubmittedThroughImeAction() {
+        val addUnPersistedShoppingListItemMock: (String) -> Unit = mock()
+        composeTestRule.setContent {
+            XentlyTheme {
+                RecommendationScreen(
+                    modifier = Modifier.fillMaxSize(),
+                    function = RecommendationScreenFunction(
+                        addUnPersistedShoppingListItem = addUnPersistedShoppingListItemMock,
+                    ),
+                    result = TaskResult.Success(null),
+                    persistedShoppingListResult = TaskResult.Success(emptyList()),
+                    myUpdatedLocation = MyUpdatedLocation(
+                        myLocation = KICC,
+                        isLocationPermissionGranted = true
+                    ),
+                )
+            }
+        }
+
+        addUnPersistedShoppingListItem("Bread   ", clickAddButton = false)
+
+        composeTestRule.onNodeWithContentDescription(productNameDescription)
+            .performImeAction()
+        with(argumentCaptor<String>()) {
+            verify(addUnPersistedShoppingListItemMock, times(1)).invoke(capture())
+            assertThat(firstValue, equalTo("Bread"))
+        }
+
+        addUnPersistedShoppingListItem("  Bread   ", clickAddButton = false)
+
+        composeTestRule.onNodeWithContentDescription(productNameDescription)
+            .performImeAction()
+        with(argumentCaptor<String>()) {
+            verify(addUnPersistedShoppingListItemMock, times(1)).invoke(capture())
+            assertThat(firstValue, equalTo("Bread"))
+        }
+    }
+
+    @Test
+    fun duplicateNonBlankProductNameFieldSubmittedThroughImeActionAlwaysClearTextField() {
+        val addUnPersistedShoppingListItemMock: (String) -> Unit = mock()
+        composeTestRule.setContent {
+            XentlyTheme {
+                RecommendationScreen(
+                    modifier = Modifier.fillMaxSize(),
+                    function = RecommendationScreenFunction(
+                        addUnPersistedShoppingListItem = addUnPersistedShoppingListItemMock,
+                    ),
+                    result = TaskResult.Success(null),
+                    persistedShoppingListResult = TaskResult.Success(emptyList()),
+                    myUpdatedLocation = MyUpdatedLocation(
+                        myLocation = KICC,
+                        isLocationPermissionGranted = true
+                    ),
+                )
+            }
+        }
+
+        addUnPersistedShoppingListItem("Bread   ", clickAddButton = false)
+
+        composeTestRule.onNodeWithContentDescription(productNameDescription)
+            .performImeAction()
+        composeTestRule.onNodeWithContentDescription(productNameDescription)
+            .assert(hasText(""))
+
+        addUnPersistedShoppingListItem("  Bread   ", clickAddButton = false)
+
+        composeTestRule.onNodeWithContentDescription(productNameDescription)
+            .performImeAction()
+        composeTestRule.onNodeWithContentDescription(productNameDescription)
+            .assert(hasText(""))
+    }
+
+    @Test
+    fun blankProductNameFieldSubmittedThroughImeAction() {
+        composeTestRule.setContent {
+            XentlyTheme {
+                RecommendationScreen(
+                    modifier = Modifier.fillMaxSize(),
+                    function = RecommendationScreenFunction(),
+                    result = TaskResult.Success(null),
+                    persistedShoppingListResult = TaskResult.Success(emptyList()),
+                    myUpdatedLocation = MyUpdatedLocation(
+                        myLocation = KICC,
+                        isLocationPermissionGranted = true,
+                    ),
+                )
+            }
+        }
+
+        addUnPersistedShoppingListItem("    ", clickAddButton = false)
+
+        composeTestRule.onNodeWithText(activity.getString(R.string.fr_filter_un_persisted_list_subheading))
+            .assertDoesNotExist()
+        composeTestRule.onNodeWithContentDescription(productNameDescription)
+            .performImeAction()
+        composeTestRule.onNodeWithContentDescription(productNameDescription)
+            .assert(hasText(""))
+        composeTestRule.onNodeWithText(activity.getString(R.string.fr_filter_un_persisted_list_subheading))
+            .assertDoesNotExist()
     }
 
     @Test
@@ -686,11 +826,13 @@ class RecommendationScreenTest {
     @Test
     fun clickingOnAddProductNameButtonClearsProductNameField() {
         val onDetailSubmittedMock: (RecommendationRequest) -> Unit = mock()
+        val addUnPersistedShoppingListItemMock: (String) -> Unit = mock()
         composeTestRule.setContent {
             XentlyTheme {
                 RecommendationScreen(
                     modifier = Modifier.fillMaxSize(),
                     function = RecommendationScreenFunction(
+                        addUnPersistedShoppingListItem = addUnPersistedShoppingListItemMock,
                         onDetailSubmitted = onDetailSubmittedMock,
                     ),
                     result = TaskResult.Success(null),
@@ -704,6 +846,76 @@ class RecommendationScreenTest {
         }
 
         addUnPersistedShoppingListItem("    bread    ")
+        with(argumentCaptor<String>()) {
+            verify(addUnPersistedShoppingListItemMock, times(1)).invoke(capture())
+            assertThat(firstValue, equalTo("bread"))
+        }
+
+        composeTestRule.onNodeWithContentDescription(productNameDescription).assert(hasText(""))
+    }
+
+    @Test
+    fun clickingOnAddProductNameButtonWhenItemIsAlreadyPresent() {
+        val onDetailSubmittedMock: (RecommendationRequest) -> Unit = mock()
+        val addUnPersistedShoppingListItemMock: (String) -> Unit = mock()
+        composeTestRule.setContent {
+            XentlyTheme {
+                RecommendationScreen(
+                    modifier = Modifier.fillMaxSize(),
+                    function = RecommendationScreenFunction(
+                        addUnPersistedShoppingListItem = addUnPersistedShoppingListItemMock,
+                        onDetailSubmitted = onDetailSubmittedMock,
+                    ),
+                    result = TaskResult.Success(null),
+                    persistedShoppingListResult = TaskResult.Success(emptyList()),
+                    myUpdatedLocation = MyUpdatedLocation(
+                        myLocation = KICC,
+                        isLocationPermissionGranted = true
+                    ),
+                )
+            }
+        }
+
+        addUnPersistedShoppingListItem("    bread    ")
+        with(argumentCaptor<String>()) {
+            verify(addUnPersistedShoppingListItemMock, times(1)).invoke(capture())
+            assertThat(firstValue, equalTo("bread"))
+        }
+
+        addUnPersistedShoppingListItem("    bread  ")
+        with(argumentCaptor<String>()) {
+            verify(addUnPersistedShoppingListItemMock, times(1)).invoke(capture())
+            assertThat(firstValue, equalTo("bread"))
+        }
+    }
+
+    @Test
+    fun clickingOnAddProductNameButtonWhenItemIsAlreadyPresentAlwaysClearsTextField() {
+        val onDetailSubmittedMock: (RecommendationRequest) -> Unit = mock()
+        val addUnPersistedShoppingListItemMock: (String) -> Unit = mock()
+        composeTestRule.setContent {
+            XentlyTheme {
+                RecommendationScreen(
+                    modifier = Modifier.fillMaxSize(),
+                    function = RecommendationScreenFunction(
+                        addUnPersistedShoppingListItem = addUnPersistedShoppingListItemMock,
+                        onDetailSubmitted = onDetailSubmittedMock,
+                    ),
+                    result = TaskResult.Success(null),
+                    persistedShoppingListResult = TaskResult.Success(emptyList()),
+                    myUpdatedLocation = MyUpdatedLocation(
+                        myLocation = KICC,
+                        isLocationPermissionGranted = true
+                    ),
+                )
+            }
+        }
+
+        addUnPersistedShoppingListItem("    bread    ")
+
+        composeTestRule.onNodeWithContentDescription(productNameDescription).assert(hasText(""))
+
+        addUnPersistedShoppingListItem("    bread  ")
 
         composeTestRule.onNodeWithContentDescription(productNameDescription).assert(hasText(""))
     }
@@ -927,12 +1139,14 @@ class RecommendationScreenTest {
     @Test
     fun clickingOnRemoveUnPersistedIconRemovesTheItemFromUnPersistedShoppingList() {
         val onDetailSubmittedMock: (RecommendationRequest) -> Unit = mock()
+        val removeUnPersistedShoppingListItemAtMock: (Int) -> Unit = mock()
         composeTestRule.setContent {
             XentlyTheme {
                 RecommendationScreen(
                     modifier = Modifier.fillMaxSize(),
                     function = RecommendationScreenFunction(
                         onDetailSubmitted = onDetailSubmittedMock,
+                        removeUnPersistedShoppingListItemAt = removeUnPersistedShoppingListItemAtMock,
                     ),
                     result = TaskResult.Success(null),
                     persistedShoppingListResult = TaskResult.Success(emptyList()),
@@ -955,9 +1169,15 @@ class RecommendationScreenTest {
             assertThat(firstValue.items[0], equalTo("milk"))
         }*/
 
+        verify(removeUnPersistedShoppingListItemAtMock, times(0)).invoke(0)
         composeTestRule.onNodeWithTag(
             activity.getString(R.string.fr_filter_remove_un_persisted_item, "milk")
         ).performClick()
+
+        with(argumentCaptor<Int>()) {
+            verify(removeUnPersistedShoppingListItemAtMock, times(1)).invoke(capture())
+            assertThat(firstValue, equalTo(0))
+        }
 
         composeTestRule.onNodeWithText(recommendButton)
             .performClick()
@@ -999,6 +1219,54 @@ class RecommendationScreenTest {
 
         addUnPersistedShoppingListItem("White sugar by Kibos")
         addUnPersistedShoppingListItem("Salt by Kensalt")
+
+        composeTestRule.onNodeWithText(activity.getString(R.string.fr_filter_persisted_list_subheading))
+            .assertIsDisplayed()
+        composeTestRule.onNodeWithText(activity.getString(R.string.fr_filter_un_persisted_list_subheading))
+            .assertIsDisplayed()
+
+        composeTestRule.onNodeWithText(recommendButton)
+            .performClick()
+        with(argumentCaptor<RecommendationRequest> { }) {
+            verify(onDetailSubmittedMock, times(1)).invoke(capture())
+            assertThat(firstValue.items.size, equalTo(4))
+        }
+    }
+
+    @Test
+    fun unPersistedShoppingListCanBePrePopulatedFromUnpersistedShoppingListArgument() {
+        val onDetailSubmittedMock: (RecommendationRequest) -> Unit = mock()
+        val persistedShoppingList = listOf(
+            ShoppingListItem.default().copy(isDefault = false, id = 1),
+            ShoppingListItem.default().copy(
+                isDefault = false,
+                name = "White bread by superloaf",
+                unit = "grams",
+                unitQuantity = 400f,
+                id = 2,
+            ),
+        )
+        val unPersistedShoppingList = java.util.Stack<String>()
+        unPersistedShoppingList.push("White sugar by Kibos")
+        unPersistedShoppingList.push("Salt by Kensalt")
+
+        composeTestRule.setContent {
+            XentlyTheme {
+                RecommendationScreen(
+                    modifier = Modifier.fillMaxSize(),
+                    function = RecommendationScreenFunction(
+                        onDetailSubmitted = onDetailSubmittedMock,
+                    ),
+                    result = TaskResult.Success(null),
+                    persistedShoppingListResult = TaskResult.Success(persistedShoppingList),
+                    myUpdatedLocation = MyUpdatedLocation(
+                        myLocation = KICC,
+                        isLocationPermissionGranted = true
+                    ),
+                    unpersistedShoppingList = unPersistedShoppingList,
+                )
+            }
+        }
 
         composeTestRule.onNodeWithText(activity.getString(R.string.fr_filter_persisted_list_subheading))
             .assertIsDisplayed()

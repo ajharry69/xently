@@ -36,7 +36,7 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.rememberMarkerState
 
-const val TEST_TAG_SHOP_DETAIL_BODY_CONTAINER = "TEST_TAG_SHOP_DETAIL_BODY_CONTAINER"
+internal const val TEST_TAG_SHOP_DETAIL_BODY_CONTAINER = "TEST_TAG_SHOP_DETAIL_BODY_CONTAINER"
 
 internal data class ShopDetailScreenArgs(
     val name: String = "",
@@ -44,8 +44,10 @@ internal data class ShopDetailScreenArgs(
 )
 
 internal data class ShopDetailScreenFunction(
+    internal val myDefaultLocation: LatLng? = null,
     internal val onAddShopClicked: (Shop) -> Unit = {},
     internal val sharedFunction: SharedFunction = SharedFunction(),
+    internal val onMyUpdatedLocationChanged: (LatLng) -> Unit = {},
 )
 
 @Composable
@@ -160,6 +162,7 @@ internal fun ShopDetailScreen(
                         },
                         myUpdatedLocationArgs = MyUpdatedLocationArgs(
                             shouldRequestPermission = false,
+                            onMyUpdatedLocationChanged = function.onMyUpdatedLocationChanged,
                             onLocationPermissionChanged = function.sharedFunction.onLocationPermissionChanged,
                         ),
                     ) {

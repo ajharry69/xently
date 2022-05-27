@@ -59,6 +59,7 @@ data class MyUpdatedLocationArgs(
     val refreshInterval: Duration = 60.seconds,
     val fastestRefreshInterval: Duration = 30.seconds,
     val shouldRequestPermission: Boolean = true,
+    val onMyUpdatedLocationChanged: (LatLng) -> Unit,
     val onLocationPermissionChanged: (PermissionGranted) -> Unit,
 )
 
@@ -128,7 +129,9 @@ fun rememberMyUpdatedLocation(args: MyUpdatedLocationArgs): MyUpdatedLocation {
             super.onLocationResult(locationResult)
 
             val myLocation = locationResult.lastLocation.run {
-                LatLng(latitude, longitude)
+                LatLng(latitude, longitude).also {
+                    args.onMyUpdatedLocationChanged.invoke(it)
+                }
             }
             myUpdatedLocation = myUpdatedLocation.copy(myLocation = myLocation)
         }

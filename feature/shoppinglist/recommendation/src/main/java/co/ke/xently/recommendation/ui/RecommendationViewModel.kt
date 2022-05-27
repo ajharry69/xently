@@ -1,6 +1,5 @@
 package co.ke.xently.recommendation.ui
 
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.ke.xently.data.RecommendationRequest
 import co.ke.xently.data.ShoppingListItem
@@ -11,12 +10,13 @@ import co.ke.xently.recommendation.repository.IRecommendationRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.util.*
 import javax.inject.Inject
 
 @HiltViewModel
 internal class RecommendationViewModel @Inject constructor(
     private val repository: IRecommendationRepository
-) : ViewModel() {
+) : MyUpdatedLocationViewModel() {
     private val args = MutableSharedFlow<RecommendationScreenArgs>(replay = 1)
     val persistedShoppingListResult: Flow<TaskResult<List<ShoppingListItem>>> =
         args.flatMapLatest(repository::getShoppingListItems)
@@ -42,5 +42,14 @@ internal class RecommendationViewModel @Inject constructor(
         viewModelScope.launch {
             this@RecommendationViewModel.args.emit(args)
         }
+    }
+
+    val unPersistedShoppingList: Stack<String> = Stack()
+    fun addUnPersistedShoppingListItem(item: String) {
+        unPersistedShoppingList.add(item)
+    }
+
+    fun removeUnPersistedShoppingListItemAt(index: Int) {
+        unPersistedShoppingList.removeAt(index)
     }
 }
