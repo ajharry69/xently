@@ -68,7 +68,7 @@ dependencies {
     implementation project(path: ":feature")
     implementation project(path: ":feature:products:shared")
 
-    implementation 'com.google.accompanist:accompanist-swiperefresh:0.24.7-alpha'
+    implementation 'com.google.accompanist:accompanist-swiperefresh:0.24.9-beta'
     // DI
     implementation "com.google.dagger:hilt-android:$hilt_version"
     kapt "com.google.dagger:hilt-compiler:$hilt_version"
